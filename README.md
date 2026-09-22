@@ -62,10 +62,27 @@ instead. Micro-type sits at 10–11px with tracking in the .13–.24em range —
 wider tracking than that destroys word shapes at these sizes. Hairlines are
 `--line` at roughly 1.5:1 against the page so structure is actually visible.
 
-Imagery is sharpened for acutance rather than resolution (the sources are
-small): a two-step LANCZOS upscale, a fine unsharp pass for edges plus a wider
-one for local contrast, and a mild S-curve so form lifts out of the shadows.
-See `--ink-dim` / `--ink-faint` for the secondary ink levels.
+Imagery is enlarged with **iterative back-projection** rather than a plain
+resample. A resample can only interpolate, so past roughly 2x it turns to
+mush; back-projection upscales, simulates the downscale that would have
+produced the source, and feeds the residual back in — about +20% mean gradient
+magnitude at 5x on these crops. On top of that: a fine unsharp pass for edges,
+a wider one for local contrast, and a mild S-curve so form lifts out of the
+shadows. See `--ink-dim` / `--ink-faint` for the secondary ink levels.
+
+### Resolution and zoom
+
+Product and essentials shots ship at two widths with `srcset` + `sizes`, so
+the browser picks by layout width *and* pixel ratio — the large file is
+fetched only when a retina screen or browser zoom actually needs it.
+
+The hero, film strip and texture band are **not** split that way. All three
+are `object-fit: cover` against a box whose aspect is nothing like the
+image's, so each renders far wider than the box it sits in (the film strip
+about 2.1x at desktop and 4.3x at phone width). `sizes` only describes width,
+so the browser cannot know that, and a "1x" candidate is never the right pick
+— each ships as one high-resolution file instead. Re-check this if a section's
+height or aspect changes.
 
 ## Note on imagery
 

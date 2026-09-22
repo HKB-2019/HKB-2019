@@ -46,6 +46,16 @@
     CONTACT:  'studio@masq.ng · +234 000 0000 · The Studio, 14 Ikoyi Crescent, Lagos. Monday to Friday, 10:00 – 18:00 WAT.'
   };
 
+  /* ---------------------------------------------------------------- media */
+
+  // Every shot ships at two widths. Handing the browser both plus a `sizes`
+  // hint lets it pick by layout width AND pixel ratio, so the image stays
+  // sharp when someone zooms instead of the browser stretching the small one.
+  const srcset = src => `${src} 1x, ${src.replace(/\.webp$/, '@2x.webp')} 2x`;
+
+  const CARD_SIZES  = '(max-width:900px) 46vw, (max-width:1464px) 21vw, 277px';
+  const SLIDE_SIZES = '(max-width:640px) 46vw, (max-width:1100px) 30vw, (max-width:1464px) 21vw, 290px';
+
   /* ------------------------------------------------------------- currency */
 
   let currency = load('masq:currency', 'NGN');
@@ -259,7 +269,8 @@
     return `
       <article class="card" data-card="${p.id}" style="animation-delay:${Math.random() * 0.12}s">
         <div class="card__media">
-          <img src="${p.img}" alt="${p.name}" loading="lazy">
+          <img src="${p.img}" srcset="${srcset(p.img)}" sizes="${CARD_SIZES}"
+               alt="${p.name}" loading="lazy">
           ${p.badge ? `<span class="card__badge">${p.badge}</span>` : ''}
           <button class="card__fav${wished ? ' is-on' : ''}" data-fav="${p.id}" aria-label="Save ${p.name}" aria-pressed="${wished}">
             <svg viewBox="0 0 20 18" aria-hidden="true"><path d="M10 16.5 2.9 9.6a4.3 4.3 0 0 1 6.1-6.1l1 1 1-1a4.3 4.3 0 0 1 6.1 6.1z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
@@ -348,7 +359,8 @@
 
   track.innerHTML = ESSENTIALS.map(p => `
     <article class="slide">
-      <img src="${p.img}" alt="${p.name}" loading="lazy">
+      <img src="${p.img}" srcset="${srcset(p.img)}" sizes="${SLIDE_SIZES}"
+           alt="${p.name}" loading="lazy">
       <div class="slide__meta">
         <button class="slide__name" data-ess="${p.id}">${p.name}</button>
         <span class="slide__price" data-ngn="${p.price}">${formatPrice(p.price)}</span>
