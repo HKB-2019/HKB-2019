@@ -190,9 +190,16 @@ def portrait(box, name, ratio=5/6, scale=3.55):
         for i in range(bot):
             f=0.42+0.58*(1-i/max(bot-1,1))**0.8
             cpx[x,top+h+i]=tuple(max(0,min(255,round(tb[k]*f)+random.randint(-1,1))) for k in range(3))
-    for a,b in [(max(0,top-8),top+8),(top+h-8,min(th,top+h+8))]:
-        bnd=canvas.crop((0,a,w,b)).filter(ImageFilter.GaussianBlur(2.2))
-        canvas.paste(bnd,(0,a))
+    # Soften ONLY where a graft actually meets the photograph. An edge that
+    # got no margin has no join to hide, and blurring it there just smears the
+    # real picture — on these garment shots that landed straight on the
+    # model's mouth and the back of his head.
+    joins = []
+    if top: joins.append((max(0, top - 8), top + 8))
+    if bot: joins.append((top + h - 8, min(th, top + h + 8)))
+    for a, b in joins:
+        bnd = canvas.crop((0, a, w, b)).filter(ImageFilter.GaussianBlur(2.2))
+        canvas.paste(bnd, (0, a))
     hi=crisp(upscale(canvas, scale*2))
     hi.save(OUT+name.replace(".webp","@2x.webp"),"WEBP",quality=80,method=6)
     lo=crisp(upscale(canvas, scale))

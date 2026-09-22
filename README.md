@@ -142,7 +142,9 @@ that resolution. Several assets needed repair or reframing:
   and an edge with a model's head on it scores 1.0–2.9, so an edge above 0.6
   gets no margin at all and the frame grows the other way. Without that, the
   hoodie and jacket shots — both cropped through the model — had their heads
-  extruded upward into a vertical smear.
+  extruded upward into a vertical smear. The softening pass that hides each
+  graft's join is applied only where a graft actually exists: an edge with no
+  margin has no join, and blurring it there smears the photograph itself.
 
 `tools/build-assets.py` regenerates everything in `public/assets/img/` from
 the mockup (`python3 tools/build-assets.py path/to/mockup.webp`, needs Pillow
