@@ -13,6 +13,7 @@
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
+<div class="grain" aria-hidden="true"></div>
 
 <!-- ============ HEADER ============ -->
 <header class="header" id="header">
@@ -81,13 +82,17 @@
     </div>
     <div class="hero__copy">
       <p class="eyebrow reveal">URBAN RITUALS</p>
-      <h1 class="hero__title reveal" style="--d:.06s">MASQ<span>.</span></h1>
-      <p class="hero__sub reveal" style="--d:.12s">Modern identity wear<br>rooted in culture.</p>
-      <div class="hero__actions reveal" style="--d:.18s">
+      <h1 class="hero__title reveal" style="--d:.08s">MASQ<span>.</span></h1>
+      <p class="hero__sub reveal" style="--d:.16s">Modern identity wear<br>rooted in culture.</p>
+      <div class="hero__actions reveal" style="--d:.24s">
         <a href="#drop" class="btn btn--solid" data-scroll>SHOP DROP 01</a>
         <a href="#craft" class="btn btn--ghost" data-scroll>EXPLORE</a>
       </div>
     </div>
+    <a class="hero__cue" href="#craft" data-scroll aria-label="Scroll to the collection">
+      <span>SCROLL</span>
+      <i aria-hidden="true"></i>
+    </a>
   </section>
 
   <!-- ============ CRAFT BAND ============ -->
@@ -98,7 +103,7 @@
         <path d="M20 2c7 0 12 6 12 15 0 12-5 24-12 37C13 41 8 29 8 17 8 8 13 2 20 2z" fill="none" stroke="currentColor" stroke-width="1.4"/>
         <path d="M20 8v34M13 17h5M22 17h5M13 25h5M22 25h5M15 33h10" stroke="currentColor" stroke-width="1.1"/>
       </svg>
-      <h2 class="craft__title">CRAFT. CULTURE. IDENTITY.</h2>
+      <h2 class="craft__title">Craft. Culture. Identity.</h2>
       <p class="craft__text">Each piece is designed as a modern artifact —<br>where heritage meets contemporary expression.</p>
     </div>
   </section>
@@ -106,7 +111,8 @@
   <!-- ============ DROP 01 ============ -->
   <section class="section drop" id="drop">
     <div class="section__head">
-      <h2 class="section__title">DROP 01 — URBAN RITUALS</h2>
+      <h2 class="section__title">Drop 01 — Urban Rituals</h2>
+      <span class="section__rule" aria-hidden="true"></span>
       <button class="link-arrow" id="viewAll" aria-expanded="false">
         <span id="viewAllLabel">VIEW ALL</span>
         <svg viewBox="0 0 22 8" aria-hidden="true"><path d="M0 4h20M16.5 .8 20.2 4l-3.7 3.2" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>
@@ -138,7 +144,8 @@
   <!-- ============ ESSENTIALS ============ -->
   <section class="section essentials" id="essentials">
     <div class="section__head">
-      <h2 class="section__title">THE ESSENTIALS</h2>
+      <h2 class="section__title">The Essentials</h2>
+      <span class="section__rule" aria-hidden="true"></span>
       <button class="link-arrow" id="shopAccessories">
         <span>SHOP ACCESSORIES</span>
         <svg viewBox="0 0 22 8" aria-hidden="true"><path d="M0 4h20M16.5 .8 20.2 4l-3.7 3.2" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>
@@ -160,10 +167,12 @@
   <!-- ============ NEWSLETTER ============ -->
   <section class="newsletter">
     <div class="newsletter__inner reveal">
-      <h2 class="newsletter__title">ENTER THE WORLD OF MASQ.</h2>
+      <p class="eyebrow">The List</p>
+      <h2 class="newsletter__title">Enter the world of MASQ.</h2>
+      <p class="newsletter__note">First access to every drop, and the story behind each mask. Nothing else.</p>
       <form class="newsletter__form" id="newsletterForm" novalidate>
         <label class="sr-only" for="email">Email address</label>
-        <input type="email" id="email" name="email" placeholder="Enter your email" autocomplete="email" required>
+        <input type="email" id="email" name="email" placeholder="Your email address" autocomplete="email" required>
         <button type="submit" class="btn btn--solid btn--join">JOIN</button>
       </form>
       <p class="form-msg" id="formMsg" role="status" aria-live="polite"></p>

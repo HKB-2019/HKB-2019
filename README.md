@@ -38,7 +38,7 @@ properties under `:root`.
 | Account icon | Sign in / create account modal with inline validation |
 | Currency `NGN` | Converts every price on the page, including the bag |
 | `PLAY FILM` | Opens the film modal; the player has a working play/pause and progress bar |
-| Essentials carousel | Arrows, dots, drag-to-scroll, arrow keys; slide titles add to the bag |
+| Essentials carousel | Arrows, dots, drag-to-scroll, arrow keys; slide titles add to the bag. Pages by whole screenfuls of slides |
 | Newsletter `JOIN` | Validates the email, shows success state |
 | Footer links | Open FAQ / shipping / returns / contact in a modal |
 
@@ -47,11 +47,26 @@ focus, close on `Escape` or scrim click, and return focus to whatever opened
 them. Everything reflows down to 390px, and `prefers-reduced-motion` disables
 the animation.
 
+## Design notes
+
+The layout runs on a 1320px measure with a generous vertical rhythm
+(`--sec-y`), portrait 4:5 product frames, and micro-typography in the 9–11px
+range at wide tracking. A fixed `.grain` overlay at 3% keeps the large black
+fields from banding. Type is Inter for the interface and EB Garamond for the
+editorial lines.
+
 ## Note on imagery
 
 The photography was cut from the supplied design mockup, so it is limited to
-that resolution. Three assets needed repair because the mockup's own interface
-text was baked into them — the hero's header row, the caption in the stone
-texture band, and the play button in the film strip. The scripts that produced
-`assets/img/` are not part of the site; replace the files with real product
-photography when it is available.
+that resolution. Several assets needed repair or reframing:
+
+- the hero had the mockup's own header row baked into it (the model's hair was
+  reconstructed by mirroring the head across its axis);
+- the stone texture band and the film strip were rebuilt from their text-free
+  regions;
+- product and essentials shots were extended into 4:5 frames by continuing
+  each column's sampled backdrop tone into the margin, so the pieces sit in
+  more air without duplicating any content.
+
+The scripts that produced `assets/img/` are not part of the site; replace the
+files with real product photography when it is available.

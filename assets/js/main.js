@@ -362,9 +362,22 @@
     addToCart({ id:p.id, name:p.name, price:p.price, img:p.img }, 'ONE SIZE');
   });
 
-  function pageCount() {
-    return Math.max(1, Math.ceil(track.scrollWidth / track.clientWidth));
+  function perView() {
+    const slide = $('.slide', track);
+    if (!slide) return 1;
+    const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+    return Math.max(1, Math.round((track.clientWidth + gap) / (slide.getBoundingClientRect().width + gap)));
   }
+
+  // Page on whole screenfuls of slides, so the last dot is a real position
+  // rather than the sliver left over by dividing the raw scroll width.
+  function pageCount() {
+    return Math.max(1, Math.ceil($$('.slide', track).length / perView()));
+  }
+
+  function maxScroll() { return track.scrollWidth - track.clientWidth; }
+
+  function pageOffset(i) { return Math.min(i * track.clientWidth, maxScroll()); }
 
   function buildDots() {
     const pages = pageCount();
@@ -374,13 +387,16 @@
   }
 
   function syncCarousel() {
-    const page = Math.round(track.scrollLeft / track.clientWidth);
+    const last = pageCount() - 1;
+    const page = track.scrollLeft >= maxScroll() - 4
+      ? last
+      : Math.min(last, Math.round(track.scrollLeft / track.clientWidth));
     $$('button', dotsWrap).forEach((d, i) => {
       d.classList.toggle('is-active', i === page);
       d.setAttribute('aria-selected', String(i === page));
     });
     $('#carPrev').disabled = track.scrollLeft <= 4;
-    $('#carNext').disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 4;
+    $('#carNext').disabled = track.scrollLeft >= maxScroll() - 4;
   }
 
   function slideStep() {
@@ -393,7 +409,7 @@
   $('#carNext').addEventListener('click', () => track.scrollBy({ left: track.clientWidth, behavior:'smooth' }));
   dotsWrap.addEventListener('click', e => {
     const dot = e.target.closest('[data-page]');
-    if (dot) track.scrollTo({ left: Number(dot.dataset.page) * track.clientWidth, behavior:'smooth' });
+    if (dot) track.scrollTo({ left: pageOffset(Number(dot.dataset.page)), behavior:'smooth' });
   });
 
   track.addEventListener('scroll', () => {
