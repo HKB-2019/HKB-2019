@@ -273,15 +273,15 @@ svg{ width:100%; height:100%; display:block; }
   width:min(50%, 760px);
 }
 .hero__media img{
-  width:100%; height:100%; object-fit:cover; object-position:50% 16%;
+  width:100%; height:100%; object-fit:cover; object-position:0% 18%;
   animation:heroIn 2.2s var(--ease-soft) both;
 }
 .hero__fade{
   position:absolute; inset:0;
   background:
-    linear-gradient(to right, var(--bg) 0%, rgba(5,4,7,.86) 16%, rgba(5,4,7,0) 52%),
-    linear-gradient(to bottom, rgba(5,4,7,.72) 0%, rgba(5,4,7,0) 30%),
-    linear-gradient(to top, var(--bg) 0%, rgba(5,4,7,0) 24%);
+    linear-gradient(to right, var(--bg) 0%, rgba(5,4,7,.82) 6%, rgba(5,4,7,0) 22%),
+    linear-gradient(to bottom, rgba(5,4,7,.72) 0px, rgba(5,4,7,0) calc(var(--header-h) + 26px)),
+    linear-gradient(to top, var(--bg) 0%, rgba(5,4,7,0) 22%);
 }
 @keyframes heroIn{ from{ opacity:0; transform:scale(1.1); } to{ opacity:1; transform:none; } }
 
@@ -829,7 +829,7 @@ svg{ width:100%; height:100%; display:block; }
     position:relative; width:100%; height:min(62vh, 480px);
     margin-bottom:clamp(30px,6vw,48px); order:-1;
   }
-  .hero__media img{ object-position:50% 14%; }
+  .hero__media img{ object-position:15% 14%; }
   .hero__fade{
     background:
       linear-gradient(to bottom, rgba(5,4,7,.45) 0%, rgba(5,4,7,0) 36%, var(--bg) 98%),
