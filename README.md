@@ -112,6 +112,11 @@ Product and essentials shots ship at two widths with `srcset` + `sizes`, so
 the browser picks by layout width *and* pixel ratio — the large file is
 fetched only when a retina screen or browser zoom actually needs it.
 
+The film strip's band height is capped so the strip is never magnified past
+what its file can cover. It is a `cover` crop of a 6.9:1 image, so a taller
+band both crops in harder and makes the browser stretch the file further — at
+440px tall the browser was adding a 1.58x stretch on top of everything else.
+
 The hero, film strip and texture band are **not** split that way. All three
 are `object-fit: cover` against a box whose aspect is nothing like the
 image's, so each renders far wider than the box it sits in (the film strip
@@ -130,9 +135,14 @@ that resolution. Several assets needed repair or reframing:
 - the stone texture band and the film strip were rebuilt from their text-free
   regions;
 - product and essentials shots were extended into 5:6 frames by continuing
-  each column's sampled backdrop tone into the margin. Columns where the
-  product meets the crop edge are pulled back towards the row median, or they
-  extend as bright streaks once the contrast pass runs.
+  each column's sampled backdrop tone into the margin. Which edge gets that
+  margin is decided per image: the script measures how much each edge differs
+  from one column to the next, because a studio vignette slides smoothly while
+  a subject has local structure. Clean edges score 0.03–0.15 on these crops
+  and an edge with a model's head on it scores 1.0–2.9, so an edge above 0.6
+  gets no margin at all and the frame grows the other way. Without that, the
+  hoodie and jacket shots — both cropped through the model — had their heads
+  extruded upward into a vertical smear.
 
 `tools/build-assets.py` regenerates everything in `public/assets/img/` from
 the mockup (`python3 tools/build-assets.py path/to/mockup.webp`, needs Pillow

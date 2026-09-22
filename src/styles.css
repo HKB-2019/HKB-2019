@@ -446,7 +446,9 @@ svg{ width:100%; height:100%; display:block; }
 /* ============ FILM ============ */
 .film{
   position:relative; overflow:hidden;
-  height:clamp(240px, 30vw, 440px);
+  /* Sized so the strip is never magnified past what the file can cover:
+     a taller band crops in harder AND makes the browser stretch it further. */
+  height:clamp(180px, 18.5vw, 280px);
 }
 .film__bg{
   position:absolute; inset:0; width:100%; height:100%; object-fit:cover;

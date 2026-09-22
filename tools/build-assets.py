@@ -113,6 +113,7 @@ film.save(OUT+"film-still.webp","WEBP",quality=76,method=6)
 print(f"{'film-still.webp':22} {film.size}")
 
 # ------------------------------------------------------------- products
+VERBOSE = os.environ.get("VERBOSE") == "1"
 INSET=3
 def portrait(box, name, ratio=5/6, scale=3.55):
     x0,y0,x1,y1=box
@@ -120,8 +121,7 @@ def portrait(box, name, ratio=5/6, scale=3.55):
     w,h=c.size
     th=round(w/ratio); extra=th-h
     top=round(extra*0.46); bot=extra-top
-    canvas=Image.new("RGB",(w,th)); canvas.paste(c,(0,top))
-    src=c.load(); cpx=canvas.load()
+    src=c.load()
 
     def edge_tone(x, rows):
         return tuple(round(statistics.median(src[x,k][ch] for k in rows)) for ch in range(3))
@@ -130,21 +130,58 @@ def portrait(box, name, ratio=5/6, scale=3.55):
     tones_t=[edge_tone(x,top_rows) for x in range(w)]
     tones_b=[edge_tone(x,bot_rows) for x in range(w)]
 
-    def damp(tones):
-        """Columns where the product meets the crop edge sample the product,
-        not the backdrop, and extend as a bright streak. Pull any column
-        brighter than the row's median back towards it."""
-        med=tuple(round(statistics.median(t[ch] for t in tones)) for ch in range(3))
-        ml=lum(med)
-        out=[]
-        for t in tones:
-            if lum(t)>ml:
-                out.append(tuple(round(med[ch]+(t[ch]-med[ch])*0.25) for ch in range(3)))
-            else:
-                out.append(t)
-        return out
+    def flatten(tones):
+        """Decide how much of the edge's own colour to carry into the margin.
 
-    tones_t=damp(tones_t); tones_b=damp(tones_b)
+        Where the edge is clean backdrop the per-column tones vary only with
+        the studio vignette, and extending them looks natural. Where the
+        SUBJECT touches the edge — a model's head at the top of the frame —
+        those columns sample the subject, and extruding them paints a vertical
+        smear where a head should be. So measure how busy the edge is and
+        collapse towards a flat tone in proportion: quiet edge keeps its
+        gradient, busy edge fades to an even darkness instead."""
+        med = tuple(round(statistics.median(t[ch] for t in tones)) for ch in range(3))
+        # Local structure, not overall brightness: a face differs from one
+        # column to the next, a studio vignette slides smoothly. Measured
+        # across these crops, clean edges score 0.03-0.15 and an edge with a
+        # model's head on it scores 1.0-2.9, so the two never overlap.
+        ls = [lum(t) for t in tones]
+        adjacent = (sum(abs(ls[i + 1] - ls[i]) for i in range(len(ls) - 1))
+                    / max(1, len(ls) - 1))
+        busy = min(1.0, adjacent / 1.2)
+        out = []
+        for t in tones:
+            keep = (1.0 - busy) * (0.25 if lum(t) > lum(med) else 1.0)
+            out.append(tuple(round(med[ch] + (t[ch] - med[ch]) * keep) for ch in range(3)))
+        return out, busy
+
+    tones_t, busy_t = flatten(tones_t)
+    tones_b, busy_b = flatten(tones_b)
+
+    # Put the added height against whichever edge is actually backdrop. Where
+    # the crop cuts through the subject — these garment shots stop mid-face —
+    # that edge gets nothing, so the photograph keeps the crop it was given
+    # instead of having a chin invented above it.
+    BUSY = 0.6
+    if busy_t > BUSY:
+        # A head, a face, a hand — whatever it is, it is not backdrop, and
+        # extruding it upward paints a smear where the subject should end.
+        # Grow the frame downward instead and keep the crop as shot.
+        top, bot = 0, extra
+    elif busy_b > BUSY:
+        top, bot = extra, 0
+    else:
+        wt = (1.0 - busy_t) ** 3
+        wb = (1.0 - busy_b) ** 3
+        share_t = wt / max(1e-6, wt + wb)
+        top = round(extra * min(0.66, share_t))
+        bot = extra - top
+    if VERBOSE:
+        print(f"    edge busyness  top {busy_t:.2f}  bottom {busy_b:.2f}"
+              f"   -> {top}px added above, {bot}px below")
+    canvas=Image.new("RGB",(w,th)); canvas.paste(c,(0,top))
+    cpx=canvas.load()
+
     for x in range(w):
         tt=tones_t[x]; tb=tones_b[x]
         for i in range(top):
