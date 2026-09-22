@@ -6,26 +6,26 @@
  * of source, not a change of every component. */
 
 export const PRODUCTS = [
-  { id:'tee',      name:'THE FACE TEE',         price:28000, img:'/assets/img/prod-tee.webp',      sizes:['S','M','L','XL'] },
-  { id:'cap',      name:'THE MARK CAP',         price:14000, img:'/assets/img/prod-cap.webp',      sizes:['ONE SIZE'] },
-  { id:'backpack', name:'THE CARRIER BACKPACK', price:65000, img:'/assets/img/prod-backpack.webp', sizes:['ONE SIZE'] },
-  { id:'scarf',    name:'THE PATTERN SCARF',    price:18000, img:'/assets/img/prod-scarf.webp',    sizes:['ONE SIZE'] },
+  { id:'tee',      name:'THE FACE TEE',         price:28000, img:'assets/img/prod-tee.webp',      sizes:['S','M','L','XL'] },
+  { id:'cap',      name:'THE MARK CAP',         price:14000, img:'assets/img/prod-cap.webp',      sizes:['ONE SIZE'] },
+  { id:'backpack', name:'THE CARRIER BACKPACK', price:65000, img:'assets/img/prod-backpack.webp', sizes:['ONE SIZE'] },
+  { id:'scarf',    name:'THE PATTERN SCARF',    price:18000, img:'assets/img/prod-scarf.webp',    sizes:['ONE SIZE'] },
   // revealed by "VIEW ALL"
-  { id:'hoodie',   name:'THE RITUAL HOODIE',    price:52000, img:'/assets/img/ess-hoodie.webp',    sizes:['S','M','L','XL'], extra:true },
-  { id:'jacket',   name:'THE SYMBOL JACKET',    price:98000, img:'/assets/img/ess-jacket.webp',    sizes:['M','L','XL'],     extra:true, badge:'LIMITED' },
-  { id:'wallet',   name:'THE ARTIFACT WALLET',  price:22000, img:'/assets/img/ess-wallet.webp',    sizes:['ONE SIZE'],       extra:true },
-  { id:'phone',    name:'THE MASK CASE',        price:12000, img:'/assets/img/ess-phone.webp',     sizes:['ONE SIZE'],       extra:true, soldOut:true }
+  { id:'hoodie',   name:'THE RITUAL HOODIE',    price:52000, img:'assets/img/ess-hoodie.webp',    sizes:['S','M','L','XL'], extra:true },
+  { id:'jacket',   name:'THE SYMBOL JACKET',    price:98000, img:'assets/img/ess-jacket.webp',    sizes:['M','L','XL'],     extra:true, badge:'LIMITED' },
+  { id:'wallet',   name:'THE ARTIFACT WALLET',  price:22000, img:'assets/img/ess-wallet.webp',    sizes:['ONE SIZE'],       extra:true },
+  { id:'phone',    name:'THE MASK CASE',        price:12000, img:'assets/img/ess-phone.webp',     sizes:['ONE SIZE'],       extra:true, soldOut:true }
 ];
 
 export const ESSENTIALS = [
-  { id:'phone',    name:'THE MASK CASE',        price:12000, img:'/assets/img/ess-phone.webp' },
-  { id:'airpods',  name:'THE POD SHELL',        price:9000,  img:'/assets/img/ess-airpods.webp' },
-  { id:'wallet',   name:'THE ARTIFACT WALLET',  price:22000, img:'/assets/img/ess-wallet.webp' },
-  { id:'hoodie',   name:'THE RITUAL HOODIE',    price:52000, img:'/assets/img/ess-hoodie.webp' },
-  { id:'jacket',   name:'THE SYMBOL JACKET',    price:98000, img:'/assets/img/ess-jacket.webp' },
-  { id:'cap',      name:'THE MARK CAP',         price:14000, img:'/assets/img/prod-cap.webp' },
-  { id:'scarf',    name:'THE PATTERN SCARF',    price:18000, img:'/assets/img/prod-scarf.webp' },
-  { id:'backpack', name:'THE CARRIER BACKPACK', price:65000, img:'/assets/img/prod-backpack.webp' }
+  { id:'phone',    name:'THE MASK CASE',        price:12000, img:'assets/img/ess-phone.webp' },
+  { id:'airpods',  name:'THE POD SHELL',        price:9000,  img:'assets/img/ess-airpods.webp' },
+  { id:'wallet',   name:'THE ARTIFACT WALLET',  price:22000, img:'assets/img/ess-wallet.webp' },
+  { id:'hoodie',   name:'THE RITUAL HOODIE',    price:52000, img:'assets/img/ess-hoodie.webp' },
+  { id:'jacket',   name:'THE SYMBOL JACKET',    price:98000, img:'assets/img/ess-jacket.webp' },
+  { id:'cap',      name:'THE MARK CAP',         price:14000, img:'assets/img/prod-cap.webp' },
+  { id:'scarf',    name:'THE PATTERN SCARF',    price:18000, img:'assets/img/prod-scarf.webp' },
+  { id:'backpack', name:'THE CARRIER BACKPACK', price:65000, img:'assets/img/prod-backpack.webp' }
 ];
 
 export const CURRENCIES = {

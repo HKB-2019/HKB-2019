@@ -7,7 +7,7 @@ export default function FilmStrip() {
     <section className="film" id="film">
       <img
         className="film__bg"
-        src="/assets/img/film-still.webp"
+        src="assets/img/film-still.webp"
         alt="Close detail of hand-beaded MASQ. mask embroidery"
         width="3800" height="548" loading="lazy"
       />

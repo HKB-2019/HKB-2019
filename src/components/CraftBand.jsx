@@ -4,7 +4,9 @@ import { CraftMark } from './Icons.jsx';
 export default function CraftBand() {
   return (
     <section className="craft" id="craft">
-      <div className="craft__bg" aria-hidden="true" />
+      <div className="craft__bg" aria-hidden="true">
+        <img src="assets/img/band-texture.webp" alt="" />
+      </div>
       <Reveal className="craft__inner">
         <CraftMark />
         <h2 className="craft__title">Craft. Culture. Identity.</h2>

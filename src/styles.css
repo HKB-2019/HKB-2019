@@ -5,12 +5,12 @@
 /* Self-hosted so the page renders identically offline and behind a proxy. */
 @font-face{
   font-family:'Inter';
-  src:url('/assets/fonts/inter-latin-var.woff2') format('woff2');
+  src:url('./assets/fonts/inter-latin-var.woff2') format('woff2');
   font-weight:200 600; font-style:normal; font-display:swap;
 }
 @font-face{
   font-family:'EB Garamond';
-  src:url('/assets/fonts/ebgaramond-latin-400.woff2') format('woff2');
+  src:url('./assets/fonts/ebgaramond-latin-400.woff2') format('woff2');
   font-weight:400; font-style:normal; font-display:swap;
 }
 
@@ -312,8 +312,10 @@ svg{ width:100%; height:100%; display:block; }
 }
 .craft__bg{
   position:absolute; inset:0;
-  background:url('/assets/img/band-texture.webp') center/cover no-repeat;
   opacity:1;
+}
+.craft__bg img{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
 }
 .craft__bg::after{
   content:''; position:absolute; inset:0;

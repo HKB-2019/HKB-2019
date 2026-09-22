@@ -10,7 +10,7 @@ export default function Hero() {
     <section className="hero">
       <div className="hero__media">
         <motion.img
-          src="/assets/img/hero-model.webp"
+          src="assets/img/hero-model.webp"
           alt="Model wearing the MASQ. Face Tee in ultraviolet"
           width="2530" height="2337" fetchPriority="high"
           initial={{ opacity: 0, scale: 1.1 }}

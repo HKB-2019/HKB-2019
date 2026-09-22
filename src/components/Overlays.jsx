@@ -238,7 +238,7 @@ function FilmModal() {
   return (
     <Modal label="MASQ. film" wide>
       <div className="film-frame">
-        <img src="/assets/img/film-still.webp" alt="" aria-hidden="true" />
+        <img src="assets/img/film-still.webp" alt="" aria-hidden="true" />
         <div className="film-frame__body">
           <p className="eyebrow">URBAN RITUALS — THE FILM</p>
           <p className="film-frame__title">A 3-minute study of mask, movement and memory.</p>
