@@ -1,0 +1,10 @@
+/* Every product shot ships at two widths. Handing the browser both plus a
+ * `sizes` hint lets it pick by layout width AND pixel ratio, so the image
+ * stays sharp when someone zooms instead of the browser stretching the small
+ * one. The hero, film strip and texture band are deliberately NOT split this
+ * way — see the resolution note in the README. */
+
+export const srcSet = (src) => `${src} 1x, ${src.replace(/\.webp$/, '@2x.webp')} 2x`;
+
+export const CARD_SIZES  = '(max-width:900px) 46vw, (max-width:1464px) 21vw, 277px';
+export const SLIDE_SIZES = '(max-width:640px) 46vw, (max-width:1100px) 30vw, (max-width:1464px) 21vw, 290px';

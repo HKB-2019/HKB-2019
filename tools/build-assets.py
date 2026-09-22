@@ -1,4 +1,4 @@
-"""Rebuild every image asset in assets/img/ from the source design mockup.
+"""Rebuild every image asset in public/assets/img/ from the source design mockup.
 
     python3 tools/build-assets.py path/to/mockup.webp
 
@@ -18,7 +18,7 @@ except ImportError:
 if len(sys.argv) < 2:
     sys.exit("usage: build-assets.py <mockup image>")
 SRC = sys.argv[1]
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "img") + os.sep
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "public", "assets", "img") + os.sep
 base=Image.open(SRC).convert("RGB")
 random.seed(5)
 lum=lambda p:(p[0]*299+p[1]*587+p[2]*114)/1000
