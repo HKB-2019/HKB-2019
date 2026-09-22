@@ -18,6 +18,8 @@ assets/
   js/main.js         every interaction; product data lives at the top
   fonts/             Inter + EB Garamond (latin subsets, self-hosted)
   img/               product, hero, texture and film imagery
+tools/
+  build-assets.py    regenerates assets/img/ from the design mockup
 ```
 
 Product catalogue, essentials carousel contents, exchange rates and the footer
@@ -50,10 +52,20 @@ the animation.
 ## Design notes
 
 The layout runs on a 1320px measure with a generous vertical rhythm
-(`--sec-y`), portrait 4:5 product frames, and micro-typography in the 9–11px
-range at wide tracking. A fixed `.grain` overlay at 3% keeps the large black
-fields from banding. Type is Inter for the interface and EB Garamond for the
-editorial lines.
+(`--sec-y`) and portrait 5:6 product frames. Type is Inter for the interface
+and EB Garamond for the editorial lines.
+
+The page deliberately carries **no blur and no grain**. Frosted panels and a
+noise overlay both soften every edge underneath them, which on a near-black
+palette reads as haze rather than atmosphere; overlays use solid fills
+instead. Micro-type sits at 10–11px with tracking in the .13–.24em range —
+wider tracking than that destroys word shapes at these sizes. Hairlines are
+`--line` at roughly 1.5:1 against the page so structure is actually visible.
+
+Imagery is sharpened for acutance rather than resolution (the sources are
+small): a two-step LANCZOS upscale, a fine unsharp pass for edges plus a wider
+one for local contrast, and a mild S-curve so form lifts out of the shadows.
+See `--ink-dim` / `--ink-faint` for the secondary ink levels.
 
 ## Note on imagery
 
@@ -64,9 +76,13 @@ that resolution. Several assets needed repair or reframing:
   reconstructed by mirroring the head across its axis);
 - the stone texture band and the film strip were rebuilt from their text-free
   regions;
-- product and essentials shots were extended into 4:5 frames by continuing
+- product and essentials shots were extended into 5:6 frames by continuing
   each column's sampled backdrop tone into the margin, so the pieces sit in
-  more air without duplicating any content.
+  more air without duplicating any content. Columns where the product meets
+  the crop edge are pulled back towards the row median, or they extend as
+  bright streaks once the contrast pass runs.
 
-The scripts that produced `assets/img/` are not part of the site; replace the
-files with real product photography when it is available.
+`tools/build-assets.py` regenerates everything in `assets/img/` from the
+mockup (`python3 tools/build-assets.py path/to/mockup.webp`, needs Pillow). It
+is a build tool, not part of the site — replace the files with real product
+photography when it is available.
