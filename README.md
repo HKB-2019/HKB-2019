@@ -20,8 +20,15 @@ src/
   styles.css            all styling; design tokens at the top under :root
   data/catalogue.js     products, essentials, currencies, info copy
   store/ShopContext.jsx bag, saved list, currency, overlays, toasts
-  lib/                  money-free helpers: storage, smooth scroll, srcset
+  lib/                  helpers: storage, smooth scroll, srcset, API client
   components/           one file per section, plus overlays and toasts
+server/
+  index.js              express app
+  schema.sql            tables; money is integer kobo throughout
+  db.js  seed.js        sqlite connection, catalogue + stock
+  routes/               products, checkout, webhook, orders
+  lib/                  money helpers, Paystack REST client
+  test/shop.test.js     the tests that stop a shop being robbed
 public/assets/          images and self-hosted fonts
 tools/build-assets.py   regenerates public/assets/img from the design mockup
 ```
@@ -51,21 +58,53 @@ Bag, saved list and currency persist in `localStorage`. Overlays trap focus,
 close on `Escape` or a scrim click, and hand focus back to whatever opened
 them. Everything reflows down to 390px.
 
-## ⚠️ This is a storefront, not a working shop
+## The shop
 
-Nothing behind the glass is real yet:
+```bash
+npm install
+cp .env.example .env     # add your Paystack test keys
+npm run seed             # load the catalogue and stock
+npm run server           # API on :3001
+npm run dev              # front end on :5173, proxies /api to the API
+npm test                 # the money tests
+```
 
-- **Checkout takes no money.** It shows a "nothing was charged" message.
-- **Sign in creates no account.** No authentication, no session.
-- **Stock is fiction.** `soldOut` is typed into the catalogue by hand.
-- **The bag lives in the browser.** Clearing site data empties it, and it does
-  not follow a customer between devices.
-- **Nobody is told about an order,** because no order is created.
+### What works
 
-Still to build: a database and API (products, variants, stock, orders,
-customers), payments via a provider, real authentication, an admin view, and
-transactional email. `ShopContext.jsx` is the seam — it is where the bag stops
-talking to `localStorage` and starts talking to the server.
+- **Real checkout.** The bag posts to `POST /api/checkout`, the server prices
+  it from its own catalogue, holds the stock, creates a pending order and asks
+  Paystack for a payment page.
+- **Real stock.** `soldOut` now comes from the `variants` table, not a hand-typed
+  flag. Stock is held at checkout, released if payment fails.
+- **Real fulfilment.** Paystack's webhook flips the order to `paid`, after the
+  amount is confirmed with Paystack directly.
+
+### Three rules the code will not bend
+
+**The browser never states a price.** It says what is in the bag; every figure
+comes from the database. A request claiming the jacket costs ₦1 is charged
+₦98,000, because the number it sent is not read. There is a test for this.
+
+**Money is integer kobo, never naira as a float.** `0.1 + 0.2` is not `0.3` in
+binary floating point, and a shop that loses a fraction of a kobo per line
+eventually disagrees with its payment provider. Paystack also speaks kobo, so
+it is one unit end to end.
+
+**A webhook is not trusted because it arrived.** It is HMAC-SHA512 verified
+against the raw body — which is why that route is mounted before the JSON
+parser, since re-serialising the body breaks the signature. Then the amount is
+confirmed with Paystack. Then it is deduplicated, because Paystack retries.
+
+### Still to build
+
+Customer accounts and sessions (the account modal is still cosmetic), an admin
+view for orders and stock, transactional email, and shipping/delivery.
+
+### On the database
+
+SQLite via Node's built-in driver — no native build, and its serialised writes
+make overselling during a drop harder rather than easier. `schema.sql` is plain
+SQL, so moving to Postgres is a change of driver, not of design.
 
 ## Animation
 

@@ -723,6 +723,10 @@ svg{ width:100%; height:100%; display:block; }
 .field input:focus{ outline:none; border-bottom-color:var(--violet-soft); }
 .field input.is-error{ border-bottom-color:#c9566d; }
 
+.field--tight{ margin-bottom:16px; }
+.field--tight span{ margin-bottom:7px; }
+.field--tight input{ height:38px; }
+
 .film-frame{ position:relative; }
 .film-frame img{ width:100%; height:clamp(170px,22vw,260px); object-fit:cover; opacity:.46; }
 .film-frame__body{ padding:34px 42px 42px; }

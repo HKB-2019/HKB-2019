@@ -6,9 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "node server/index.js",
+    "seed": "node server/seed.js",
+    "seed:reset": "node server/seed.js --reset",
+    "test": "node --test server/test/*.test.js"
   },
   "dependencies": {
+    "express": "^5.2.1",
     "framer-motion": "^13.4.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

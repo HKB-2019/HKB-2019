@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShop } from '../store/ShopContext.jsx';
 import { INFO_COPY } from '../data/catalogue.js';
+import { startCheckout } from '../lib/api.js';
 import { scrollToId } from '../lib/scroll.js';
 import { Close, Play, Pause } from './Icons.jsx';
 
@@ -48,15 +49,25 @@ function CartDrawer() {
   const ref = useFocusTrap(true);
   const [busy, setBusy] = useState(false);
 
-  const onCheckout = () => {
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState(null);
+
+  /* Sends only what is in the bag. The server prices it, holds the stock and
+   * asks Paystack for a payment page — this side never states an amount. */
+  const onCheckout = async () => {
     if (!cart.length) { toast('YOUR BAG IS EMPTY'); return; }
+    if (!isEmail(email)) { setError('Enter the email for your receipt.'); return; }
+
     setBusy(true);
-    // TODO: hand off to the payment provider once the back end exists
-    setTimeout(() => {
+    setError(null);
+    try {
+      const { authorizationUrl } = await startCheckout(email, cart);
+      window.location.href = authorizationUrl;   // hand off to Paystack
+    } catch (err) {
       setBusy(false);
-      closeOverlay();
-      toast('CHECKOUT IS A DEMO — NOTHING WAS CHARGED', 'violet');
-    }, 1100);
+      setError(err.message);
+      toast('CHECKOUT COULD NOT START');
+    }
   };
 
   return (
@@ -119,9 +130,27 @@ function CartDrawer() {
       <div className="drawer__foot">
         <div className="drawer__row"><span>SUBTOTAL</span><span>{format(cartSubtotal)}</span></div>
         <p className="drawer__note">Shipping and duties calculated at checkout.</p>
+
+        {cart.length > 0 && (
+          <label className="field field--tight">
+            <span>EMAIL FOR RECEIPT</span>
+            <input
+              type="email" name="email" placeholder="you@example.com"
+              autoComplete="email"
+              className={error ? 'is-error' : ''}
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); if (error) setError(null); }}
+            />
+          </label>
+        )}
+
         <button className="btn btn--solid btn--block" disabled={busy} onClick={onCheckout}>
-          {busy ? 'PROCESSING…' : 'CHECKOUT'}
+          {busy ? 'REDIRECTING…' : 'CHECKOUT'}
         </button>
+
+        <p className={`form-msg${error ? ' is-show is-error' : ''}`} role="status" aria-live="polite">
+          {error ?? ''}
+        </p>
       </div>
     </motion.aside>
   );
