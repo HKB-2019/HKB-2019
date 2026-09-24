@@ -14,6 +14,15 @@ export const db = new DatabaseSync(process.env.DATABASE_PATH || join(here, 'masq
 
 db.exec(readFileSync(join(here, 'schema.sql'), 'utf8'));
 
+/* Small additive migrations. CREATE TABLE IF NOT EXISTS will not add a column
+ * to a table that already exists, so new columns are applied here. */
+for (const [table, column, definition] of [
+  ['orders', 'fulfilled_at', 'TEXT']
+]) {
+  const has = db.prepare(`SELECT 1 FROM pragma_table_info(?) WHERE name = ?`).get(table, column);
+  if (!has) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+
 export function transaction(fn) {
   db.exec('BEGIN IMMEDIATE');
   try {

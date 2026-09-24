@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS orders (
   currency       TEXT    NOT NULL DEFAULT 'NGN',
   paystack_id    TEXT,
   paid_at        TEXT,
+  fulfilled_at   TEXT,
   created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 

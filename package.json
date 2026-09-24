@@ -10,9 +10,11 @@
     "server": "node server/index.js",
     "seed": "node server/seed.js",
     "seed:reset": "node server/seed.js --reset",
-    "test": "node --test server/test/*.test.js"
+    "test": "node --test server/test/*.test.js",
+    "admin:password": "node server/tools/hash-password.js"
   },
   "dependencies": {
+    "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
     "framer-motion": "^13.4.1",
     "react": "^19.3.0",

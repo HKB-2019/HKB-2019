@@ -25,3 +25,19 @@ export const startCheckout = (email, items) =>
   });
 
 export const getOrder = (reference) => request(`/orders/${encodeURIComponent(reference)}`);
+
+/* ---------------------------------------------------------------- admin */
+
+const adminRequest = (path, options = {}) =>
+  request(path, { credentials: 'same-origin', ...options });
+
+export const adminLogin    = (password) => adminRequest('/admin/login', { method:'POST', body: JSON.stringify({ password }) });
+export const adminLogout   = ()         => adminRequest('/admin/logout', { method:'POST' });
+export const adminMe       = ()         => adminRequest('/admin/me');
+export const adminOrders   = (status)   => adminRequest('/admin/orders' + (status ? `?status=${status}` : ''));
+export const adminSummary  = ()         => adminRequest('/admin/summary');
+export const adminStock    = ()         => adminRequest('/admin/stock');
+export const adminSetStock = (variantId, stock) =>
+  adminRequest(`/admin/stock/${variantId}`, { method:'POST', body: JSON.stringify({ stock }) });
+export const adminFulfil   = (reference) =>
+  adminRequest(`/admin/orders/${encodeURIComponent(reference)}/fulfil`, { method:'POST' });

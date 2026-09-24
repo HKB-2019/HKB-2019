@@ -816,3 +816,207 @@ svg{ width:100%; height:100%; display:block; }
     transition-duration:.01ms !important; scroll-behavior:auto !important;
   }
 }
+
+/* ==========================================================================
+   ORDER STATUS — where Paystack sends the customer back
+   ========================================================================== */
+.status{ min-height:100vh; display:flex; flex-direction:column; background:var(--bg); }
+.status__bar{
+  height:var(--header-h-sm); display:flex; align-items:center;
+  padding:0 var(--pad); border-bottom:1px solid var(--line-soft);
+}
+.status__panel{
+  width:min(520px, 100%); margin:auto; padding:clamp(40px,7vw,72px) var(--pad);
+  text-align:left;
+}
+.status__title{
+  margin:16px 0 12px; font-family:var(--serif); font-weight:400;
+  font-size:clamp(28px,4.4vw,44px); line-height:1.16;
+}
+.status__note{ margin:0 0 30px; color:var(--ink-dim); font-size:14px; }
+.status__ref{
+  margin:0 0 30px;
+  font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size:12px; color:var(--ink-faint);
+}
+
+/* A quiet pulse, not a spinner: nothing is failing, we are simply waiting. */
+.status__wait{
+  height:2px; margin:0 0 30px; background:var(--line-soft); overflow:hidden; position:relative;
+}
+.status__wait::after{
+  content:''; position:absolute; inset:0 auto 0 0; width:34%;
+  background:var(--violet-soft); animation:status-wait 1.5s var(--ease-soft) infinite;
+}
+@keyframes status-wait{
+  0%{ transform:translateX(-100%); } 100%{ transform:translateX(320%); }
+}
+
+.status__items{ list-style:none; margin:0 0 4px; padding:0; }
+.status__items li{
+  display:flex; justify-content:space-between; gap:18px;
+  padding:13px 0; border-top:1px solid var(--line-soft);
+  font-size:13px; color:var(--ink-dim);
+}
+.status__items em{ font-style:normal; color:var(--ink-faint); letter-spacing:.12em; font-size:11px; }
+.status__total{
+  display:flex; justify-content:space-between;
+  margin:0; padding:15px 0; border-top:1px solid var(--line);
+  font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+}
+.status__email{ margin:0 0 30px; font-size:12px; color:var(--ink-faint); }
+
+/* ==========================================================================
+   ADMIN — the back room. Dense on purpose: this is a working screen, not a
+   shop window, so rows beat cards and numbers stay readable at a glance.
+   ========================================================================== */
+.admin{ min-height:100vh; background:var(--bg); }
+
+.admin-gate{ min-height:100vh; display:grid; place-items:center; padding:var(--pad); }
+.admin-gate__form{ width:min(360px, 100%); }
+.admin-gate__title{
+  margin:14px 0 30px; font-family:var(--serif); font-weight:400;
+  font-size:clamp(28px,4vw,38px);
+}
+
+.admin-header{
+  position:sticky; top:0; z-index:20;
+  background:rgba(5,4,7,.92); backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line-soft);
+}
+.admin-header__inner{
+  max-width:var(--maxw); margin:0 auto; padding:0 var(--pad);
+  height:var(--header-h-sm); display:flex; align-items:center; gap:18px;
+}
+.admin-badge{
+  font-size:8.5px; letter-spacing:.24em; color:var(--violet-soft);
+  border:1px solid var(--line); padding:4px 8px;
+}
+.admin-tabs{ display:flex; gap:22px; margin-left:auto; }
+.admin-tab{
+  padding:0; font-size:10px; letter-spacing:.2em; color:var(--ink-faint);
+  border-bottom:1px solid transparent; padding-bottom:3px; transition:color .3s, border-color .3s;
+}
+.admin-tab:hover{ color:var(--ink-dim); }
+.admin-tab.is-on{ color:var(--ink); border-bottom-color:var(--violet-soft); }
+.admin-signout{
+  padding:0; font-size:10px; letter-spacing:.18em; color:var(--ink-faint);
+  transition:color .3s;
+}
+.admin-signout:hover{ color:var(--ink); }
+
+.admin-main{ max-width:var(--maxw); margin:0 auto; padding:34px var(--pad) 90px; }
+
+.admin-tiles{
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:1px;
+  background:var(--line-soft); border:1px solid var(--line-soft); margin-bottom:14px;
+}
+.admin-tile{ background:var(--bg-2); padding:20px 22px; display:grid; gap:9px; }
+.admin-tile__label{
+  font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-faint);
+}
+.admin-tile__value{
+  font-family:var(--serif); font-size:clamp(22px,2.4vw,30px); line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.admin-lowstock{
+  margin:0 0 34px; padding:11px 14px; font-size:12px; color:var(--ink-dim);
+  background:rgba(35,21,78,.3); border-left:2px solid var(--violet-soft);
+}
+.admin-lowstock strong{ font-weight:500; color:var(--ink); }
+
+.admin-section{ margin-top:34px; }
+.admin-section__head{
+  display:flex; align-items:center; gap:20px; flex-wrap:wrap; margin-bottom:16px;
+}
+.admin-h2{
+  margin:0; font-size:11px; letter-spacing:.22em; text-transform:uppercase; font-weight:400;
+}
+.admin-filters{ display:flex; gap:7px; margin-left:auto; flex-wrap:wrap; }
+.admin-chip{
+  padding:5px 12px; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-faint); border:1px solid var(--line-soft); transition:.3s;
+}
+.admin-chip:hover{ color:var(--ink-dim); border-color:var(--line); }
+.admin-chip.is-on{ color:var(--ink); border-color:var(--violet-soft); background:rgba(35,21,78,.4); }
+
+.admin-empty{ margin:0; padding:40px 0; color:var(--ink-faint); font-size:13px; }
+
+/* Tables scroll sideways on a phone rather than squeezing the numbers. */
+.admin-table-wrap{ overflow-x:auto; border:1px solid var(--line-soft); }
+.admin-table{ width:100%; border-collapse:collapse; font-size:13px; min-width:760px; }
+.admin-table th{
+  text-align:left; font-weight:400; padding:12px 16px;
+  font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-faint);
+  background:var(--bg-2); border-bottom:1px solid var(--line-soft); white-space:nowrap;
+}
+.admin-table td{
+  padding:14px 16px; border-bottom:1px solid var(--line-soft);
+  color:var(--ink-dim); vertical-align:middle;
+}
+.admin-table tr:last-child td{ border-bottom:0; }
+.admin-table tr:hover td{ background:rgba(255,255,255,.015); }
+.admin-table .num{ text-align:right; font-variant-numeric:tabular-nums; color:var(--ink); }
+.admin-table .mono{
+  font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size:11.5px; letter-spacing:.02em; color:var(--ink);
+}
+.admin-when{ white-space:nowrap; color:var(--ink-faint); font-size:12px; }
+
+/* Stays a real table cell: a td set to grid or flex stops being one, and its
+   border and padding then sit a few pixels off from every other column. */
+.admin-items{ font-size:12px; }
+.admin-items > span{ display:block; }
+.admin-items > span + span{ margin-top:3px; }
+.admin-items em{ font-style:normal; color:var(--ink-faint); letter-spacing:.1em; font-size:10.5px; }
+
+.admin-status{
+  display:inline-block; margin-right:6px; padding:3px 9px;
+  font-size:9px; letter-spacing:.16em; text-transform:uppercase;
+  border:1px solid var(--line);
+}
+.admin-status--paid      { color:#7fd6a6; border-color:rgba(127,214,166,.4); }
+.admin-status--pending   { color:#d9c07f; border-color:rgba(217,192,127,.4); }
+.admin-status--failed    { color:#d4697e; border-color:rgba(212,105,126,.4); }
+.admin-status--abandoned { color:var(--ink-faint); }
+.admin-status--sent      { color:var(--violet-soft); border-color:rgba(169,162,205,.45); }
+
+.admin-action{
+  padding:6px 13px; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+  border:1px solid var(--line); color:var(--ink-dim); white-space:nowrap; transition:.3s;
+}
+.admin-action:hover:not(:disabled){ color:var(--ink); border-color:var(--violet-soft); }
+.admin-action:disabled{ opacity:.45; cursor:default; }
+
+.admin-stock-input{
+  width:82px; height:34px; padding:0 10px;
+  background:var(--bg-2); border:1px solid var(--line-soft);
+  color:var(--ink); font:inherit; font-size:13px; font-variant-numeric:tabular-nums;
+  transition:border-color .3s;
+}
+.admin-stock-input:focus{ outline:none; border-color:var(--violet-soft); }
+/* The browser's own up/down arrows render as a white chip on this background,
+   and there is a SAVE button right next to the field anyway. */
+.admin-stock-input::-webkit-outer-spin-button,
+.admin-stock-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+.admin-stock-input{ -moz-appearance:textfield; appearance:textfield; }
+
+.admin-note{ margin-left:10px; font-size:10.5px; letter-spacing:.1em; color:var(--ink-faint); }
+.admin-note--ok{ color:#7fd6a6; }
+.admin-note--bad{ color:#d4697e; }
+
+@media (max-width:760px){
+  .admin-tiles{ grid-template-columns:repeat(2, 1fr); }
+  /* The badge is the first thing to go: at this width the row has to hold the
+     logo, both tabs and SIGN OUT, and a decorative label pushes SIGN OUT off. */
+  .admin-badge{ display:none; }
+  .admin-header__inner{ gap:14px; }
+  .admin-tabs{ gap:15px; }
+  .admin-tab, .admin-signout{ font-size:9px; letter-spacing:.14em; }
+  .admin-filters{ margin-left:0; }
+  .admin-main{ padding-top:26px; }
+}
+@media (max-width:420px){
+  .admin-header__inner{ gap:11px; }
+  .admin-header .logo{ font-size:15px; }
+}

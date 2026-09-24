@@ -82,6 +82,10 @@ export function ShopProvider({ children }) {
     });
   }, [toast]);
 
+  /* Emptied once an order is confirmed paid — the bag has become an order,
+     and leaving it in localStorage invites a second, accidental purchase. */
+  const clearCart = useCallback(() => setCart([]), []);
+
   const cartQty      = useMemo(() => cart.reduce((n, i) => n + i.qty, 0), [cart]);
   const cartSubtotal = useMemo(() => cart.reduce((n, i) => n + i.price * i.qty, 0), [cart]);
 
@@ -104,7 +108,7 @@ export function ShopProvider({ children }) {
   }, [overlay, closeOverlay]);
 
   const value = {
-    cart, cartQty, cartSubtotal, addToCart, changeQty, removeItem,
+    cart, cartQty, cartSubtotal, addToCart, changeQty, removeItem, clearCart,
     wishlist, toggleWish,
     currency, setCurrency, format,
     overlay, openOverlay, closeOverlay,
