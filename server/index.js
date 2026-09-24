@@ -48,10 +48,23 @@ export function createApp() {
 // Only listen when run directly, so tests can import the app without a port.
 if (process.argv[1] && process.argv[1].endsWith('server/index.js')) {
   const port = Number(process.env.PORT || 3001);
+
+  // A shop with no catalogue is a blank page, and on a fresh host there is no
+  // chance to run the seed by hand before the first visitor arrives.
+  const { db } = await import('./db.js');
+  if (!db.prepare('SELECT COUNT(*) AS n FROM products').get().n) {
+    const { seed } = await import('./seed.js');
+    console.log(`Empty database — loaded ${seed()} pieces.`);
+  }
+
   createApp().listen(port, () => {
-    console.log(`MASQ. API listening on http://localhost:${port}`);
+    console.log(`MASQ. running on http://localhost:${port}`);
+    console.log(`Admin at      http://localhost:${port}/admin`);
+    if (!process.env.ADMIN_PASSWORD_HASH) {
+      console.warn('ADMIN_PASSWORD_HASH is not set — run `npm run setup` before signing in.');
+    }
     if (!process.env.PAYSTACK_SECRET_KEY) {
-      console.warn('PAYSTACK_SECRET_KEY is not set — checkout will fail until it is.');
+      console.warn('PAYSTACK_SECRET_KEY is not set — checkout stays off until it is.');
     }
   });
 }
