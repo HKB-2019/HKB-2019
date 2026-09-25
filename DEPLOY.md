@@ -40,7 +40,7 @@ database: never post it anywhere or put it in the code.
 
    | Box | What to put |
    | --- | --- |
-   | `DATABASE_URL` | the Neon string from step 1 |
+   | `DATABASE_URL` | the Neon string from step 1. Required — the shop will not start without it. |
    | `PAYSTACK_SECRET_KEY` | your Paystack **test** secret key (starts `sk_test_`). No keys yet? Leave it blank — the shop and admin work without it; only checkout waits. |
    | `ADMIN_PASSWORD_HASH` | leave blank |
 
@@ -113,6 +113,10 @@ one setting to change; nothing else moves.
 ---
 
 ## If something goes wrong
+
+**The log says `DATABASE_URL is not set`.** The database box was left empty
+in step 2. In Render: service → **Environment** → add `DATABASE_URL` with the
+Neon string → save. It restarts by itself.
 
 **Forgot the admin password.** In Neon, open the **SQL Editor** and run:
 

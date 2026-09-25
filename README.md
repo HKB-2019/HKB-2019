@@ -224,6 +224,12 @@ through `pg` — that is production. Without it, **PGlite**: the whole of
 Postgres compiled to WebAssembly, running inside the app and keeping its files
 in `server/data/`. Nothing to install, and the same SQL either way.
 
+PGlite is for your own machine only. With `NODE_ENV=production` the server
+refuses to start without `DATABASE_URL`: on a host, PGlite's files would sit
+on a disk that is wiped at every restart, and it needs about 580 MB of memory
+where Render's free plan gives 512. With `pg` the whole shop runs in about
+65 MB.
+
 It was SQLite until the shop needed free hosting. Free hosts wipe the app's
 disk on every restart, and the orders would have gone with it; the database
 has to live somewhere that outlasts the app.

@@ -58,6 +58,17 @@ async function connect() {
     };
   }
 
+  // On a host, the built-in database is the wrong choice twice over: its files
+  // sit on a disk that free hosts wipe on every restart, and it needs about
+  // 580 MB of memory against the 512 MB a free plan gives. Better to stop
+  // here with a reason than to crash for lack of memory, or run and lose orders.
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'DATABASE_URL is not set. In production the shop needs a hosted Postgres ' +
+      '(see DEPLOY.md, step 1): the built-in database would be wiped on every ' +
+      'restart and needs more memory than a free plan has.');
+  }
+
   const { PGlite } = await import('@electric-sql/pglite');
   const dir = process.env.PGLITE_DIR || join(here, 'data');
   const lite = await PGlite.create(dir, { parsers: { [INT8]: toNumber } });
