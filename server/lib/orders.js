@@ -96,7 +96,7 @@ async function confirmPayment(orderId, paystackId) {
  */
 export async function reconcile(reference, { release = false, giveUp = false } = {}) {
   const order = await one(
-    'SELECT id, status, subtotal_kobo FROM orders WHERE reference = $1', [reference]);
+    'SELECT id, status, subtotal_kobo, shipping_kobo FROM orders WHERE reference = $1', [reference]);
   if (!order) return null;
   if (order.status === 'paid' || order.status === 'refund_due') return order.status;
 
@@ -113,10 +113,12 @@ export async function reconcile(reference, { release = false, giveUp = false } =
   }
 
   if (data.status === 'success') {
-    if (data.amount !== order.subtotal_kobo) {
+    // What Paystack was asked for: the items plus delivery.
+    const due = order.subtotal_kobo + order.shipping_kobo;
+    if (data.amount !== due || (data.currency && data.currency !== 'NGN')) {
       console.error(
-        `[orders] ${reference} AMOUNT MISMATCH: paid ${data.amount} kobo, ` +
-        `order is ${order.subtotal_kobo} kobo. Not marking paid.`);
+        `[orders] ${reference} AMOUNT MISMATCH: paid ${data.amount} ${data.currency ?? ''} kobo, ` +
+        `order is ${due} kobo. Not marking paid.`);
       return order.status;
     }
     return confirmPayment(order.id, String(data.id));

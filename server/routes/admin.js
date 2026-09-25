@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { one, query } from '../db.js';
+import { openZones, getSettings, setSetting, SETTING_KEYS, ZONE_LABELS } from '../lib/settings.js';
+import { toCsv } from '../lib/csv.js';
 import {
   verifyPassword, issueSession, requireAdmin, COOKIE,
   recordFailure, isLockedOut, clearFailures,
@@ -116,7 +118,8 @@ adminRouter.get('/admin/orders', requireAdmin, async (req, res) => {
   // $1 IS NULL rather than two versions of the query: a missing filter is a
   // value, not a different statement.
   const orders = await query(`
-    SELECT id, reference, email, status, subtotal_kobo, currency,
+    SELECT id, reference, email, status, subtotal_kobo, shipping_kobo, currency,
+           customer_name, phone, address, delivery_zone,
            paid_at, fulfilled_at, created_at
       FROM orders
      WHERE ($1::text IS NULL OR status = $1)
@@ -137,8 +140,14 @@ adminRouter.get('/admin/orders', requireAdmin, async (req, res) => {
     id: o.id,
     reference: o.reference,
     email: o.email,
+    name: o.customer_name,
+    phone: o.phone,
+    address: o.address,
+    zone: o.delivery_zone,
     status: o.status,
     subtotalKobo: o.subtotal_kobo,
+    shippingKobo: o.shipping_kobo,
+    totalKobo: o.subtotal_kobo + o.shipping_kobo,
     currency: o.currency,
     paidAt: o.paid_at,
     fulfilledAt: o.fulfilled_at,
@@ -153,7 +162,7 @@ adminRouter.get('/admin/orders', requireAdmin, async (req, res) => {
 adminRouter.get('/admin/summary', requireAdmin, async (_req, res) => {
   const counts = await one(`
     SELECT COUNT(*) FILTER (WHERE status = 'paid')                         AS paid,
-           COALESCE(SUM(subtotal_kobo) FILTER (WHERE status = 'paid'), 0)  AS revenue_kobo,
+           COALESCE(SUM(subtotal_kobo + shipping_kobo) FILTER (WHERE status = 'paid'), 0) AS revenue_kobo,
            COUNT(*) FILTER (WHERE status = 'paid' AND fulfilled_at IS NULL) AS awaiting,
            COUNT(*) FILTER (WHERE status = 'pending')                      AS pending,
            COUNT(*) FILTER (WHERE status = 'refund_due')                   AS refund_due
@@ -175,7 +184,10 @@ adminRouter.get('/admin/summary', requireAdmin, async (_req, res) => {
     // Customers charged for something that could not be sent. Not revenue,
     // and the one number here that means someone is owed money.
     refundDue: counts.refund_due,
-    lowStock
+    lowStock,
+    // Checkout takes nothing until the owner has priced delivery somewhere.
+    checkoutOpen: (await openZones()).length > 0,
+    subscribers: (await one('SELECT COUNT(*) AS n FROM subscribers')).n
   });
 });
 
@@ -235,4 +247,90 @@ adminRouter.post('/admin/stock/:variantId', requireAdmin, async (req, res) => {
   if (!updated) return res.status(404).json({ error: 'Variant not found.' });
 
   res.json({ ok: true, variantId, stock });
+});
+
+/* ---------------------------------------------------------- exports */
+
+const stamp = () => new Date().toISOString().slice(0, 10);
+
+/** Orders as a spreadsheet, for packing and dispatch. */
+adminRouter.get('/admin/orders.csv', requireAdmin, async (req, res) => {
+  const status = STATUSES.includes(req.query.status) ? req.query.status : null;
+  const orders = await query(`
+    SELECT o.id, o.reference, o.status, o.created_at, o.paid_at, o.fulfilled_at,
+           o.customer_name, o.email, o.phone, o.address, o.delivery_zone,
+           o.subtotal_kobo, o.shipping_kobo,
+           COALESCE(string_agg(i.qty || '× ' || i.name || ' (' || i.size || ')', '; ' ORDER BY i.id), '') AS items
+      FROM orders o LEFT JOIN order_items i ON i.order_id = o.id
+     WHERE ($1::text IS NULL OR o.status = $1)
+     GROUP BY o.id
+     ORDER BY o.id DESC
+  `, [status]);
+
+  const naira = (k) => (k / 100).toFixed(2);
+  const csv = toCsv(
+    ['Reference', 'Status', 'Placed', 'Paid', 'Sent', 'Name', 'Email', 'Phone',
+     'Address', 'City', 'State', 'Country', 'Delivery', 'Items', 'Items ₦', 'Delivery ₦', 'Total ₦'],
+    orders.map(o => {
+      const a = o.address ?? {};
+      return [
+        o.reference, o.status, o.created_at?.toISOString?.() ?? o.created_at,
+        o.paid_at?.toISOString?.() ?? o.paid_at ?? '', o.fulfilled_at?.toISOString?.() ?? o.fulfilled_at ?? '',
+        o.customer_name ?? '', o.email, o.phone ?? '',
+        [a.line1, a.line2].filter(Boolean).join(', '), a.city ?? '', a.state ?? '', a.country ?? '',
+        ZONE_LABELS[o.delivery_zone] ?? '', o.items,
+        naira(o.subtotal_kobo), naira(o.shipping_kobo), naira(o.subtotal_kobo + o.shipping_kobo)
+      ];
+    })
+  );
+
+  res.set({
+    'Content-Type': 'text/csv; charset=utf-8',
+    'Content-Disposition': `attachment; filename="masq-orders-${stamp()}.csv"`,
+    'Cache-Control': 'no-store'
+  });
+  res.send(csv);
+});
+
+/* ------------------------------------------------------ mailing list */
+
+adminRouter.get('/admin/subscribers', requireAdmin, async (_req, res) => {
+  const rows = await query('SELECT id, email, created_at FROM subscribers ORDER BY id DESC LIMIT 5000');
+  res.json(rows.map(r => ({ id: r.id, email: r.email, joinedAt: r.created_at })));
+});
+
+adminRouter.get('/admin/subscribers.csv', requireAdmin, async (_req, res) => {
+  const rows = await query('SELECT email, created_at FROM subscribers ORDER BY id');
+  res.set({
+    'Content-Type': 'text/csv; charset=utf-8',
+    'Content-Disposition': `attachment; filename="masq-list-${stamp()}.csv"`,
+    'Cache-Control': 'no-store'
+  });
+  res.send(toCsv(['Email', 'Joined'],
+    rows.map(r => [r.email, r.created_at?.toISOString?.() ?? r.created_at])));
+});
+
+/** Remove someone from the list — for when they ask. */
+adminRouter.delete('/admin/subscribers/:id', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1 || id > 2_147_483_647) {
+    return res.status(400).json({ error: 'Bad subscriber.' });
+  }
+  const gone = await one('DELETE FROM subscribers WHERE id = $1 RETURNING id', [id]);
+  if (!gone) return res.status(404).json({ error: 'Not on the list.' });
+  res.json({ ok: true });
+});
+
+/* ---------------------------------------------------------- settings */
+
+adminRouter.get('/admin/settings', requireAdmin, async (_req, res) => {
+  res.json(await getSettings());
+});
+
+/** Save one setting: delivery, pages, social or film. Validated before storing. */
+adminRouter.put('/admin/settings/:key', requireAdmin, async (req, res) => {
+  if (!SETTING_KEYS.includes(req.params.key)) {
+    return res.status(404).json({ error: 'There is no such setting.' });
+  }
+  res.json(await setSetting(req.params.key, req.body));
 });

@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
 
 /* Paystack's REST API, called directly.
  *
@@ -7,7 +7,11 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
  * is two calls, and a payment path is a bad place to depend on a broken
  * package. */
 
-const BASE = 'https://api.paystack.co';
+/* The address can be pointed at a stand-in Paystack for the browser tests —
+ * never in production, where it is always the real one. */
+const BASE = process.env.NODE_ENV !== 'production' && process.env.PAYSTACK_API_BASE
+  ? process.env.PAYSTACK_API_BASE.replace(/\/$/, '')
+  : 'https://api.paystack.co';
 
 /**
  * Whether a real Paystack secret key is set. Placeholders ("none", "xxx", the
@@ -85,8 +89,14 @@ export function verifyWebhookSignature(rawBody, signature) {
   return timingSafeEqual(a, b);
 }
 
-/** Reference the customer and our records share. Unpredictable on purpose. */
+/**
+ * Reference the customer and our records share.
+ *
+ * It is the key to the order's status page, so it must be unguessable: 96
+ * bits from the operating system's random source, not Math.random, whose
+ * output can be predicted from a few samples. Hex only, because Paystack
+ * accepts nothing in a reference but letters, digits, '-', '.' and '='.
+ */
 export function newReference() {
-  return 'masq_' + Date.now().toString(36) + '_' +
-    Math.random().toString(36).slice(2, 10);
+  return 'masq-' + randomBytes(12).toString('hex');
 }

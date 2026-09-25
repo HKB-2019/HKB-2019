@@ -17,12 +17,31 @@ else { process.env.PGLITE_DIR = 'memory://'; delete process.env.DATABASE_URL; }
 process.env.PAYSTACK_SECRET_KEY = 'sk_test_' + 'f'.repeat(40);   // the shape of a real key
 
 let one, query, seed, request, server;
-let sweepPending, reconcile;
+let sweepPending, reconcile, setSetting, checkoutLimit;
+
+/* Delivery as the tests assume it: Lagos ₦2,500, Abuja ₦3,500, rest of
+ * Nigeria ₦5,000, nowhere abroad. */
+const LAGOS_FEE = 250_000;
+const DELIVERY = {
+  lagos:         { enabled: true,  feeKobo: LAGOS_FEE },
+  abuja:         { enabled: true,  feeKobo: 350_000 },
+  nigeria:       { enabled: true,  feeKobo: 500_000 },
+  international: { enabled: false, feeKobo: null }
+};
+
+/** A complete, valid set of delivery details, overridable per test. */
+const WHO = {
+  name: 'Ada Obi',
+  phone: '+234 803 123 4567',
+  address: { line1: '12 Admiralty Way', line2: '', city: 'Lekki', state: 'Lagos', country: 'Nigeria' }
+};
 
 before(async () => {
   ({ one, query } = await import('../db.js'));
   ({ seed } = await import('../seed.js'));
   ({ sweepPending, reconcile } = await import('../lib/orders.js'));
+  ({ setSetting } = await import('../lib/settings.js'));
+  ({ checkoutLimit } = await import('../routes/checkout.js'));
   const { createApp } = await import('../index.js');
   const { createServer } = await import('node:http');
 
@@ -46,6 +65,8 @@ after(async () => {
 
 beforeEach(async () => {
   await seed({ reset: true });
+  await setSetting('delivery', DELIVERY);
+  checkoutLimit.reset();            // every test here checks out from 127.0.0.1
 });
 
 /* ---- helpers ---------------------------------------------------------- */
@@ -90,10 +111,11 @@ function stubPaystack({ initFails = false, verifyAmount = null, verifyStatus = '
     if (u.includes('/transaction/verify/')) {
       if (verifyFails) return new Response(JSON.stringify({ status: false, message: 'down' }), { status: 503 });
       const ref = decodeURIComponent(u.split('/verify/')[1]);
-      const order = await one('SELECT subtotal_kobo FROM orders WHERE reference = $1', [ref]);
+      const order = await one('SELECT subtotal_kobo + shipping_kobo AS due FROM orders WHERE reference = $1', [ref]);
       return new Response(JSON.stringify({
         status: true,
-        data: { id: 99887766, status: verifyStatus, reference: ref, amount: verifyAmount ?? order?.subtotal_kobo ?? 0 }
+        data: { id: 99887766, status: verifyStatus, reference: ref, currency: 'NGN',
+                amount: verifyAmount ?? order?.due ?? 0 }
       }), { status: 200 });
     }
     return new Response('{}', { status: 200 });
@@ -118,7 +140,7 @@ const settle = () => new Promise(r => setTimeout(r, 150));
 const checkout = (body) => request('/api/checkout', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(body)
+  body: JSON.stringify({ ...WHO, ...body })
 });
 
 const buy = async (productId, size, qty = 1, email = 'a@example.com') => {
@@ -139,9 +161,10 @@ test('a forged price in the request is ignored; the catalogue decides', async ()
 
   assert.equal(res.status, 200);
   assert.equal(res.body.subtotalKobo, 9_800_000, 'must charge the jacket price from the database');
+  assert.equal(res.body.totalKobo, 9_800_000 + LAGOS_FEE, 'plus Lagos delivery');
 
   const sentToPaystack = paystackCalls.find(c => c.url.includes('initialize'));
-  assert.equal(sentToPaystack.body.amount, 9_800_000, 'Paystack must be asked for the real amount');
+  assert.equal(sentToPaystack.body.amount, 9_800_000 + LAGOS_FEE, 'Paystack must be asked for the real amount');
 });
 
 test('subtotal is exact across mixed quantities (integer kobo, no float drift)', async () => {
@@ -475,7 +498,15 @@ test('the catalogue reports real stock and computes soldOut', async () => {
   const tee = res.body.find(p => p.id === 'tee');
   assert.equal(tee.soldOut, false);
   assert.equal(tee.priceKobo, 2_800_000);
-  assert.deepEqual(tee.sizes, ['S', 'M', 'L', 'XL']);
+  assert.deepEqual(tee.sizes.map(s => s.size), ['S', 'M', 'L', 'XL']);
+  assert.ok(tee.sizes.every(s => s.available));
+  assert.equal(tee.sizes.find(s => s.size === 'XL').left, 6, 'a low count is shown');
+  assert.equal(tee.sizes.find(s => s.size === 'M').left, null, 'a healthy count is nobody\'s business');
+  assert.equal(tee.img, 'assets/img/prod-tee.webp');
+  assert.equal(tee.img2x, 'assets/img/prod-tee@2x.webp');
+
+  assert.ok(!res.body.find(p => p.id === 'airpods').inDrop, 'the pod shell is carousel-only');
+  assert.ok(res.body.find(p => p.id === 'airpods').inEssentials);
 
   assert.deepEqual(res.body.map(p => p.id).slice(0, 4), ['tee', 'cap', 'backpack', 'scarf'],
     'display order is the catalogue order');

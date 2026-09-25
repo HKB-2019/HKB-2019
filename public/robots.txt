@@ -1,0 +1,5 @@
+# The back room and the API are not for search engines.
+User-agent: *
+Disallow: /admin
+Disallow: /api/
+Disallow: /order

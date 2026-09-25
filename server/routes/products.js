@@ -1,30 +1,48 @@
 import { Router } from 'express';
-import { query } from '../db.js';
+import { one } from '../db.js';
+import { loadProducts } from '../lib/catalogue.js';
+import { getSettings, openZones, NIGERIAN_STATES } from '../lib/settings.js';
 
 export const productsRouter = Router();
 
-/* GET /api/products — the catalogue, with real stock.
- * `soldOut` is computed from the variants table rather than typed by hand. */
+/* GET /api/products — the catalogue the storefront shows: on-sale products,
+ * their prices, photos and which sizes can be bought. This is the only place
+ * the shop page gets any of that from. */
 productsRouter.get('/products', async (_req, res) => {
-  const products = await query(`
-    SELECT id, name, price_kobo, img, badge, is_extra FROM products ORDER BY position, id
-  `);
+  res.set('Cache-Control', 'no-store');   // a price change must show at once
+  res.json(await loadProducts());
+});
 
-  const variants = await query('SELECT product_id, size, stock FROM variants ORDER BY id');
+/* GET /api/site — everything else the public pages need from the admin:
+ * footer pages, social links, the film, and where delivery is open. */
+productsRouter.get('/site', async (_req, res) => {
+  const { pages, social, film } = await getSettings(['pages', 'social', 'film']);
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    pages,
+    social,
+    film: film.kind ? { kind: film.kind, url: film.url, youtubeId: film.youtubeId } : null,
+    delivery: await openZones(),
+    states: NIGERIAN_STATES
+  });
+});
 
-  res.json(products.map(p => {
-    const sizes = variants.filter(v => v.product_id === p.id);
-    return {
-      id: p.id,
-      name: p.name,
-      price: p.price_kobo / 100,          // naira, for display only
-      priceKobo: p.price_kobo,
-      img: p.img,
-      badge: p.badge ?? undefined,
-      extra: Boolean(p.is_extra),
-      sizes: sizes.map(s => s.size),
-      stock: Object.fromEntries(sizes.map(s => [s.size, s.stock])),
-      soldOut: sizes.every(s => s.stock === 0)
-    };
-  }));
+/* GET /api/images/:id and /api/images/:id/2x — uploaded product photos.
+ *
+ * An image id never changes its bytes (a new upload is a new id), so the
+ * browser may keep it for a year. nosniff and a no-everything CSP mean that
+ * even a file opened on its own can only ever be treated as a picture. */
+productsRouter.get(/^\/images\/(\d{1,9})(\/2x)?$/, async (req, res) => {
+  const id = Number(req.params[0]);
+  const column = req.params[1] ? 'data_2x' : 'data';
+  const row = await one(`SELECT mime, ${column} AS bytes FROM images WHERE id = $1`, [id]);
+  if (!row) return res.status(404).json({ error: 'No such image.' });
+
+  res.set({
+    'Content-Type': row.mime,
+    'Cache-Control': 'public, max-age=31536000, immutable',
+    'X-Content-Type-Options': 'nosniff',
+    'Content-Security-Policy': "default-src 'none'; sandbox"
+  });
+  res.send(Buffer.from(row.bytes));
 });

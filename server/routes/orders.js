@@ -16,32 +16,38 @@ export const ordersRouter = Router();
 ordersRouter.get('/orders/:reference', async (req, res) => {
   const { reference } = req.params;
 
-  let order = await one(`
-    SELECT id, reference, email, status, subtotal_kobo, currency, paid_at, created_at
+  const load = () => one(`
+    SELECT id, reference, email, status, subtotal_kobo, shipping_kobo, currency,
+           address, paid_at, created_at
       FROM orders WHERE reference = $1
   `, [reference]);
+
+  let order = await load();
 
   if (!order) return res.status(404).json({ error: 'Order not found.' });
 
   if (['pending', 'abandoned', 'failed'].includes(order.status) && paystackConfigured()) {
     const status = await reconcile(reference);   // never releases stock from here
-    if (status !== order.status) {
-      order = await one(`
-        SELECT id, reference, email, status, subtotal_kobo, currency, paid_at, created_at
-          FROM orders WHERE reference = $1
-      `, [reference]);
-    }
+    if (status !== order.status) order = await load();
   }
 
   const items = await query(`
     SELECT name, size, unit_price_kobo, qty FROM order_items WHERE order_id = $1 ORDER BY id
   `, [order.id]);
 
+  // Anyone holding the link sees this page, so it says enough for the
+  // customer to recognise their order and no more: part of the email, the
+  // town it is going to, never the phone number or the street.
+  const addr = order.address ?? null;
+  res.set('Cache-Control', 'no-store');
   res.json({
     reference: order.reference,
     status: order.status,
-    email: order.email,
+    email: maskEmail(order.email),
     subtotalKobo: order.subtotal_kobo,
+    shippingKobo: order.shipping_kobo,
+    totalKobo: order.subtotal_kobo + order.shipping_kobo,
+    deliveryTo: addr ? [addr.city, addr.state].filter(Boolean).join(', ') : null,
     currency: order.currency,
     paidAt: order.paid_at,
     createdAt: order.created_at,
@@ -50,3 +56,11 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
     }))
   });
 });
+
+/** ada.obi@gmail.com → a•••i@gmail.com */
+export function maskEmail(email) {
+  const [user, domain] = String(email ?? '').split('@');
+  if (!domain) return '';
+  const shown = user.length <= 2 ? user[0] : user[0] + '•••' + user[user.length - 1];
+  return `${shown}@${domain}`;
+}
