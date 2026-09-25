@@ -9,10 +9,19 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const BASE = 'https://api.paystack.co';
 
+/**
+ * Whether a real Paystack secret key is set. Placeholders ("none", "xxx", the
+ * .env.example sample) count as unset: the key also signs webhooks, so a
+ * guessable placeholder would let anyone forge one.
+ */
+export function paystackConfigured() {
+  const key = process.env.PAYSTACK_SECRET_KEY ?? '';
+  return /^sk_(test|live)_[A-Za-z0-9]{20,}$/.test(key) && !/x{8}/i.test(key);
+}
+
 function secretKey() {
-  const key = process.env.PAYSTACK_SECRET_KEY;
-  if (!key) throw new Error('PAYSTACK_SECRET_KEY is not set');
-  return key;
+  if (!paystackConfigured()) throw new Error('PAYSTACK_SECRET_KEY is not set to a real Paystack key');
+  return process.env.PAYSTACK_SECRET_KEY;
 }
 
 async function call(path, { method = 'GET', body } = {}) {
@@ -68,7 +77,7 @@ export function verifyTransaction(reference) {
  * so the comparison itself cannot be used to guess a valid signature.
  */
 export function verifyWebhookSignature(rawBody, signature) {
-  if (!signature) return false;
+  if (!signature || !paystackConfigured()) return false;
   const expected = createHmac('sha512', secretKey()).update(rawBody).digest('hex');
   const a = Buffer.from(expected, 'utf8');
   const b = Buffer.from(String(signature), 'utf8');

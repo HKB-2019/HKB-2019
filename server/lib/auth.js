@@ -73,6 +73,58 @@ export function readSession(token) {
   return data;
 }
 
+/* ------------------------------------------------ where the hash lives */
+
+/* Two places, env first:
+ *
+ *   ADMIN_PASSWORD_HASH   set on the host, from `npm run admin:password`
+ *   settings table        set in the browser through the one-time setup code
+ *
+ * The second exists because the first needs Node on your own computer, and
+ * a shop run from a phone has no computer to run it on. */
+
+const SETTING = 'admin_password_hash';
+
+export async function storedPasswordHash() {
+  if (process.env.ADMIN_PASSWORD_HASH) return process.env.ADMIN_PASSWORD_HASH;
+  const { one } = await import('../db.js');
+  return (await one('SELECT value FROM settings WHERE key = $1', [SETTING]))?.value ?? null;
+}
+
+/**
+ * Store the first password. Returns false if one already exists — including
+ * one that landed a moment ago from a second browser, which is why this is
+ * a single INSERT that does nothing on conflict rather than check-then-write.
+ */
+export async function claimPassword(password) {
+  if (process.env.ADMIN_PASSWORD_HASH) return false;
+  const { one } = await import('../db.js');
+  const row = await one(`
+    INSERT INTO settings (key, value) VALUES ($1, $2)
+    ON CONFLICT (key) DO NOTHING
+    RETURNING key
+  `, [SETTING, hashPassword(password)]);
+  if (row) setupCode = null;          // spent
+  return Boolean(row);
+}
+
+/* The setup code. Lives only in this process's memory and the host's log,
+ * which only the account owner can read — so reaching /admin first is not
+ * enough to claim it. 72 random bits: not guessable inside the lockout. */
+let setupCode = null;
+
+export function currentSetupCode() {
+  setupCode ??= randomBytes(9).toString('base64url');
+  return setupCode;
+}
+
+export function checkSetupCode(given) {
+  if (!setupCode || typeof given !== 'string') return false;
+  const a = Buffer.from(setupCode);
+  const b = Buffer.from(given.trim());
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 /* ---------------------------------------------------- brute force guard */
 
 /* In memory, which is the right scope for one process. If this ever runs on

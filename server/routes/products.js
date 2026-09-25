@@ -1,16 +1,16 @@
 import { Router } from 'express';
-import { db } from '../db.js';
+import { query } from '../db.js';
 
 export const productsRouter = Router();
 
 /* GET /api/products — the catalogue, with real stock.
- * `soldOut` is now computed from the variants table rather than typed by hand. */
-productsRouter.get('/products', (_req, res) => {
-  const products = db.prepare(`
-    SELECT id, name, price_kobo, img, badge, is_extra FROM products ORDER BY rowid
-  `).all();
+ * `soldOut` is computed from the variants table rather than typed by hand. */
+productsRouter.get('/products', async (_req, res) => {
+  const products = await query(`
+    SELECT id, name, price_kobo, img, badge, is_extra FROM products ORDER BY position, id
+  `);
 
-  const variants = db.prepare('SELECT product_id, size, stock FROM variants ORDER BY id').all();
+  const variants = await query('SELECT product_id, size, stock FROM variants ORDER BY id');
 
   res.json(products.map(p => {
     const sizes = variants.filter(v => v.product_id === p.id);

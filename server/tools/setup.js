@@ -98,13 +98,23 @@ writeFileSync(ENV, env);
 
 /* ------------------------------------------------------------ catalogue */
 
-// Imported here, after .env exists, so DATABASE_PATH is whatever .env says.
-process.env.DATABASE_PATH ||= get('DATABASE_PATH') || './server/masq.db';
+// Imported here, after .env is written, so the database is whichever one
+// .env names: DATABASE_URL if set, otherwise the built-in one in server/data/.
+if (get('DATABASE_URL')) process.env.DATABASE_URL ||= get('DATABASE_URL');
 const { seed } = await import('../seed.js');
-console.log(`Catalogue: ${seed()} pieces loaded.`);
+const { one, close } = await import('../db.js');
+const existing = (await one('SELECT COUNT(*) AS n FROM products')).n;
+if (existing) {
+  // Seeding resets every stock count, so never over a catalogue already there.
+  console.log(`Catalogue: already loaded (${existing} pieces). Left as it is.`);
+} else {
+  console.log(`Catalogue: ${await seed()} pieces loaded.`);
+}
+await close();
 
-const key = get('PAYSTACK_SECRET_KEY');
-const paystack = key.startsWith('sk_') && !key.includes('xxx');
+process.env.PAYSTACK_SECRET_KEY = get('PAYSTACK_SECRET_KEY');
+const { paystackConfigured } = await import('../lib/paystack.js');
+const paystack = paystackConfigured();
 console.log(`Paystack keys: ${paystack ? 'set.' : 'not set yet — checkout stays switched off until they are.'}`);
 
 console.log(`

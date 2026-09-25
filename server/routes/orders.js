@@ -1,40 +1,41 @@
 import { Router } from 'express';
-import { db } from '../db.js';
-import { verifyTransaction } from '../lib/paystack.js';
+import { one, query } from '../db.js';
+import { reconcile } from '../lib/orders.js';
+import { paystackConfigured } from '../lib/paystack.js';
 
 export const ordersRouter = Router();
 
 /* GET /api/orders/:reference — what the customer sees when Paystack sends them
- * back. The webhook usually lands first, but not always, so if the order is
- * still pending we ask Paystack directly rather than showing a false negative. */
+ * back. The webhook usually lands first, but not always — on a free host it
+ * may have arrived while the server was asleep — so any order not yet known
+ * to be paid is checked with Paystack directly.
+ *
+ * That includes orders already given up on. A customer who paid on a stale
+ * tab, whose webhook was missed, would otherwise be told "nothing was taken"
+ * about money that was. */
 ordersRouter.get('/orders/:reference', async (req, res) => {
   const { reference } = req.params;
 
-  const order = db.prepare(`
+  let order = await one(`
     SELECT id, reference, email, status, subtotal_kobo, currency, paid_at, created_at
-      FROM orders WHERE reference = ?
-  `).get(reference);
+      FROM orders WHERE reference = $1
+  `, [reference]);
 
   if (!order) return res.status(404).json({ error: 'Order not found.' });
 
-  if (order.status === 'pending' && process.env.PAYSTACK_SECRET_KEY) {
-    try {
-      const data = await verifyTransaction(reference);
-      if (data.status === 'success' && data.amount === order.subtotal_kobo) {
-        db.prepare(`
-          UPDATE orders SET status = 'paid', paystack_id = ?, paid_at = datetime('now')
-           WHERE id = ? AND status = 'pending'
-        `).run(String(data.id), order.id);
-        order.status = 'paid';
-      }
-    } catch (err) {
-      console.warn(`[orders] verify ${reference} failed:`, err.message);
+  if (['pending', 'abandoned', 'failed'].includes(order.status) && paystackConfigured()) {
+    const status = await reconcile(reference);   // never releases stock from here
+    if (status !== order.status) {
+      order = await one(`
+        SELECT id, reference, email, status, subtotal_kobo, currency, paid_at, created_at
+          FROM orders WHERE reference = $1
+      `, [reference]);
     }
   }
 
-  const items = db.prepare(`
-    SELECT name, size, unit_price_kobo, qty FROM order_items WHERE order_id = ?
-  `).all(order.id);
+  const items = await query(`
+    SELECT name, size, unit_price_kobo, qty FROM order_items WHERE order_id = $1 ORDER BY id
+  `, [order.id]);
 
   res.json({
     reference: order.reference,

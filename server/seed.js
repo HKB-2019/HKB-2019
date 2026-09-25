@@ -1,6 +1,6 @@
 /* Seeds the catalogue. Prices here are the single source of truth for what a
  * customer is charged — the browser's copy is only ever for display. */
-import { db, transaction } from './db.js';
+import { transaction, close } from './db.js';
 
 const CATALOGUE = [
   { id:'tee',      name:'THE FACE TEE',         naira:28000, img:'assets/img/prod-tee.webp',      extra:0, sizes:{ S:12, M:18, L:14, XL:6 } },
@@ -14,32 +14,42 @@ const CATALOGUE = [
   { id:'airpods',  name:'THE POD SHELL',        naira:9000,  img:'assets/img/ess-airpods.webp',   extra:1, sizes:{ 'ONE SIZE':24 } }
 ];
 
-export function seed({ reset = false } = {}) {
-  transaction(() => {
+export async function seed({ reset = false } = {}) {
+  await transaction(async (tx) => {
     if (reset) {
-      db.exec('DELETE FROM order_items; DELETE FROM orders; DELETE FROM variants; DELETE FROM products;');
+      // RESTART IDENTITY so ids start from 1 again, which keeps tests stable.
+      await tx.query(`TRUNCATE order_items, orders, customers, webhook_events, variants, products
+                      RESTART IDENTITY CASCADE`);
     }
-    const product = db.prepare(`
-      INSERT INTO products (id, name, price_kobo, img, badge, is_extra)
-      VALUES (?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        name = excluded.name, price_kobo = excluded.price_kobo,
-        img = excluded.img, badge = excluded.badge, is_extra = excluded.is_extra
-    `);
-    const variant = db.prepare(`
-      INSERT INTO variants (product_id, size, stock) VALUES (?, ?, ?)
-      ON CONFLICT(product_id, size) DO UPDATE SET stock = excluded.stock
-    `);
 
-    for (const p of CATALOGUE) {
-      product.run(p.id, p.name, Math.round(p.naira * 100), p.img, p.badge ?? null, p.extra);
-      for (const [size, stock] of Object.entries(p.sizes)) variant.run(p.id, size, stock);
+    for (const [position, p] of CATALOGUE.entries()) {
+      await tx.query(`
+        INSERT INTO products (id, name, price_kobo, img, badge, is_extra, position)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (id) DO UPDATE SET
+          name = EXCLUDED.name, price_kobo = EXCLUDED.price_kobo, img = EXCLUDED.img,
+          badge = EXCLUDED.badge, is_extra = EXCLUDED.is_extra, position = EXCLUDED.position
+      `, [p.id, p.name, Math.round(p.naira * 100), p.img, p.badge ?? null, Boolean(p.extra), position]);
+
+      for (const [size, stock] of Object.entries(p.sizes)) {
+        await tx.query(`
+          INSERT INTO variants (product_id, size, stock) VALUES ($1, $2, $3)
+          ON CONFLICT (product_id, size) DO UPDATE SET stock = EXCLUDED.stock
+        `, [p.id, size, stock]);
+      }
     }
   });
   return CATALOGUE.length;
 }
 
 if (process.argv[1] && process.argv[1].endsWith('server/seed.js')) {
-  const n = seed({ reset: process.argv.includes('--reset') });
+  // Seeding overwrites every stock count with the numbers above, and --reset
+  // deletes every order. Neither belongs anywhere near a live shop.
+  if (process.env.NODE_ENV === 'production') {
+    console.error('Refusing to seed in production: it would overwrite live stock counts.');
+    process.exit(1);
+  }
+  const n = await seed({ reset: process.argv.includes('--reset') });
   console.log(`seeded ${n} products`);
+  await close();
 }

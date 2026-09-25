@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { db, transaction } from '../db.js';
+import { transaction } from '../db.js';
 import { assertKobo } from '../lib/money.js';
 import { initializeTransaction, newReference } from '../lib/paystack.js';
+import { releaseStock } from '../lib/orders.js';
 
 export const checkoutRouter = Router();
 
@@ -30,7 +31,7 @@ checkoutRouter.post('/checkout', async (req, res) => {
 
   let order;
   try {
-    order = transaction(() => {
+    order = await transaction(async (tx) => {
       const lines = [];
       let subtotal = 0;
 
@@ -46,28 +47,37 @@ checkoutRouter.post('/checkout', async (req, res) => {
         }
 
         // Price comes from here. Not from the request.
-        const row = db.prepare(`
-          SELECT p.id, p.name, p.price_kobo, v.id AS variant_id, v.stock
+        const row = await tx.one(`
+          SELECT p.id, p.name, p.price_kobo, v.id AS variant_id
             FROM products p
             JOIN variants v ON v.product_id = p.id
-           WHERE p.id = ? AND v.size = ?
-        `).get(productId, size);
+           WHERE p.id = $1 AND v.size = $2
+        `, [productId, size]);
 
         if (!row) {
           throw Object.assign(new Error(`${productId} in size ${size} is not available.`), { status: 404 });
         }
-        if (row.stock < qty) {
+
+        // Hold the stock in one statement that only succeeds if there is
+        // enough. Reading the count and then subtracting would be two steps,
+        // and on a real server two buyers can both pass the read before either
+        // writes. Here the second waits on the row, re-checks, and gets no row
+        // back. The CHECK constraint on variants.stock is the backstop.
+        const held = await tx.one(`
+          UPDATE variants SET stock = stock - $1
+           WHERE id = $2 AND stock >= $1
+          RETURNING stock
+        `, [qty, row.variant_id]);
+
+        if (!held) {
+          const { stock } = await tx.one('SELECT stock FROM variants WHERE id = $1', [row.variant_id]);
           throw Object.assign(
-            new Error(`${row.name} (${size}) — only ${row.stock} left.`),
+            new Error(stock === 0
+              ? `${row.name} (${size}) has sold out.`
+              : `${row.name} (${size}) — only ${stock} left.`),
             { status: 409 }
           );
         }
-
-        // Hold the stock now, while we are inside the transaction. The CHECK
-        // constraint on variants.stock makes a negative result impossible even
-        // if this arithmetic is ever wrong.
-        db.prepare('UPDATE variants SET stock = stock - ? WHERE id = ?')
-          .run(qty, row.variant_id);
 
         subtotal += row.price_kobo * qty;
         lines.push({
@@ -80,32 +90,45 @@ checkoutRouter.post('/checkout', async (req, res) => {
         });
       }
 
-      assertKobo(subtotal, 'order subtotal');
+      try { assertKobo(subtotal, 'order subtotal'); }
+      catch {
+        throw Object.assign(
+          new Error('That is over ₦1,000,000 for one checkout. Please split it into two orders.'),
+          { status: 400 });
+      }
 
       const reference = newReference();
       const normalisedEmail = String(email).trim().toLowerCase();
 
-      db.prepare('INSERT OR IGNORE INTO customers (email) VALUES (?)').run(normalisedEmail);
-      const customer = db.prepare('SELECT id FROM customers WHERE email = ?').get(normalisedEmail);
+      // DO UPDATE rather than DO NOTHING so RETURNING hands back the id for
+      // a returning customer too.
+      const customer = await tx.one(`
+        INSERT INTO customers (email) VALUES ($1)
+        ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+        RETURNING id
+      `, [normalisedEmail]);
 
-      const { lastInsertRowid } = db.prepare(`
+      const { id } = await tx.one(`
         INSERT INTO orders (reference, customer_id, email, status, subtotal_kobo, currency)
-        VALUES (?, ?, ?, 'pending', ?, 'NGN')
-      `).run(reference, customer.id, normalisedEmail, subtotal);
+        VALUES ($1, $2, $3, 'pending', $4, 'NGN')
+        RETURNING id
+      `, [reference, customer.id, normalisedEmail, subtotal]);
 
-      const insertItem = db.prepare(`
-        INSERT INTO order_items
-          (order_id, product_id, variant_id, name, size, unit_price_kobo, qty)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `);
       for (const l of lines) {
-        insertItem.run(lastInsertRowid, l.productId, l.variantId, l.name, l.size, l.unitPriceKobo, l.qty);
+        await tx.query(`
+          INSERT INTO order_items
+            (order_id, product_id, variant_id, name, size, unit_price_kobo, qty)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `, [id, l.productId, l.variantId, l.name, l.size, l.unitPriceKobo, l.qty]);
       }
 
-      return { id: lastInsertRowid, reference, subtotal, email: normalisedEmail, lines };
+      return { id, reference, subtotal, email: normalisedEmail, lines };
     });
   } catch (err) {
-    return res.status(err.status || 400).json({ error: err.message });
+    if (!err.status) console.error('[checkout] failed:', err);
+    return res.status(err.status || 500).json({
+      error: err.status ? err.message : 'Something went wrong. Nothing has been charged.'
+    });
   }
 
   // Paystack is called AFTER the order exists, so a failure here leaves a
@@ -115,7 +138,7 @@ checkoutRouter.post('/checkout', async (req, res) => {
       email: order.email,
       amountKobo: order.subtotal,
       reference: order.reference,
-      callbackUrl: process.env.PAYSTACK_CALLBACK_URL,
+      callbackUrl: callbackUrl(),
       metadata: { order_id: order.id, items: order.lines.length }
     });
 
@@ -125,22 +148,16 @@ checkoutRouter.post('/checkout', async (req, res) => {
       subtotalKobo: order.subtotal
     });
   } catch (err) {
-    releaseStock(order.reference, 'abandoned');
+    await releaseStock(order.reference, 'abandoned');
     res.status(502).json({ error: 'Could not reach the payment provider. Nothing has been charged.' });
     console.error('[checkout] paystack initialize failed:', err.message);
   }
 });
 
-/** Put held stock back and mark the order done-for. Safe to call twice. */
-export function releaseStock(reference, status) {
-  transaction(() => {
-    const order = db.prepare("SELECT id, status FROM orders WHERE reference = ?").get(reference);
-    if (!order || order.status !== 'pending') return;   // already settled; leave it alone
-
-    const items = db.prepare('SELECT variant_id, qty FROM order_items WHERE order_id = ?').all(order.id);
-    const give = db.prepare('UPDATE variants SET stock = stock + ? WHERE id = ?');
-    for (const i of items) give.run(i.qty, i.variant_id);
-
-    db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, order.id);
-  });
+/* Where Paystack sends the customer back to. Render sets RENDER_EXTERNAL_URL
+ * to the service's own address, so on Render this needs no configuring. */
+function callbackUrl() {
+  if (process.env.PAYSTACK_CALLBACK_URL) return process.env.PAYSTACK_CALLBACK_URL;
+  if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL.replace(/\/$/, '') + '/order';
+  return undefined;   // Paystack falls back to the callback set in its dashboard
 }

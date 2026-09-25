@@ -34,6 +34,9 @@ const adminRequest = (path, options = {}) =>
 export const adminLogin    = (password) => adminRequest('/admin/login', { method:'POST', body: JSON.stringify({ password }) });
 export const adminLogout   = ()         => adminRequest('/admin/logout', { method:'POST' });
 export const adminMe       = ()         => adminRequest('/admin/me');
+export const adminStatus   = ()         => adminRequest('/admin/status');
+export const adminSetup    = (code, password) =>
+  adminRequest('/admin/setup', { method:'POST', body: JSON.stringify({ code, password }) });
 export const adminOrders   = (status)   => adminRequest('/admin/orders' + (status ? `?status=${status}` : ''));
 export const adminSummary  = ()         => adminRequest('/admin/summary');
 export const adminStock    = ()         => adminRequest('/admin/stock');

@@ -18,7 +18,11 @@ const COPY = {
   paid:      { title: 'Payment received',  note: 'Your order is confirmed. A note goes out when it ships.' },
   pending:   { title: 'Still confirming',  note: 'Your bank has not finished telling us yet. This page updates itself.' },
   failed:    { title: 'Payment failed',    note: 'Nothing was taken. Your bag is still where you left it.' },
-  abandoned: { title: 'Payment cancelled', note: 'Nothing was taken. Your bag is still where you left it.' }
+  abandoned: { title: 'Payment cancelled', note: 'Nothing was taken. Your bag is still where you left it.' },
+  // Paid after the order lapsed, and the last one had gone. Say so plainly:
+  // they have been charged, and they need to know they will get it back.
+  refund_due:{ title: 'This piece sold out',
+               note: 'Your payment came through after your order had timed out, and the last one had gone to someone else. You will be refunded in full to the card you paid with.' }
 };
 
 export default function OrderStatus() {

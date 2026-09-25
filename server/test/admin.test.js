@@ -5,22 +5,23 @@
  */
 import { test, before, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { rmSync } from 'node:fs';
 
-const DB = './server/test-admin.db';
 const PASSWORD = 'a-long-enough-test-password';
 
-process.env.DATABASE_PATH = DB;
-process.env.PAYSTACK_SECRET_KEY = 'sk_test_fake';
+// In-memory Postgres by default. Set TEST_DATABASE_URL to run the same tests
+// against a real server — it must be a throwaway database: every test wipes it.
+if (process.env.TEST_DATABASE_URL) process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+else { process.env.PGLITE_DIR = 'memory://'; delete process.env.DATABASE_URL; }
+process.env.PAYSTACK_SECRET_KEY = 'sk_test_' + 'f'.repeat(40);
 process.env.SESSION_SECRET = 'x'.repeat(48);
 
-let db, seed, request, server, base;
+let one, query, seed, request, server, base;
 
 before(async () => {
   const { hashPassword } = await import('../lib/auth.js');
   process.env.ADMIN_PASSWORD_HASH = hashPassword(PASSWORD);
 
-  ({ db } = await import('../db.js'));
+  ({ one, query } = await import('../db.js'));
   ({ seed } = await import('../seed.js'));
   const { createApp } = await import('../index.js');
   const { createServer } = await import('node:http');
@@ -44,12 +45,15 @@ before(async () => {
   };
 });
 
-after(() => {
+after(async () => {
   server?.close();
-  for (const s of ['', '-shm', '-wal']) { try { rmSync(DB + s); } catch {} }
+  const { close } = await import('../db.js');
+  await close();
 });
 
-beforeEach(() => seed({ reset: true }));
+beforeEach(async () => { await seed({ reset: true }); });
+
+const stockOfVariant = async (id) => (await one('SELECT stock FROM variants WHERE id = $1', [id])).stock;
 
 const login = async (password = PASSWORD) => {
   const res = await request('/api/admin/login', {
@@ -170,7 +174,7 @@ test('stock can be set, and nonsense values are refused', async () => {
     method: 'POST', cookie, body: JSON.stringify({ stock: 42 })
   });
   assert.equal(ok.status, 200);
-  assert.equal(db.prepare('SELECT stock FROM variants WHERE id = ?').get(target.variantId).stock, 42);
+  assert.equal(await stockOfVariant(target.variantId), 42);
 
   for (const bad of [-1, 1.5, '5', null, undefined, 1e9]) {
     const res = await request(`/api/admin/stock/${target.variantId}`, {
@@ -179,7 +183,19 @@ test('stock can be set, and nonsense values are refused', async () => {
     assert.equal(res.status, 400, `stock ${JSON.stringify(bad)} must be refused`);
   }
   // unchanged by the bad attempts
-  assert.equal(db.prepare('SELECT stock FROM variants WHERE id = ?').get(target.variantId).stock, 42);
+  assert.equal(await stockOfVariant(target.variantId), 42);
+
+  // an id Postgres cannot even hold as an integer is a bad request, not a crash
+  for (const id of ['99999999999', 'abc', '0']) {
+    const res = await request(`/api/admin/stock/${id}`, {
+      method: 'POST', cookie, body: JSON.stringify({ stock: 1 })
+    });
+    assert.equal(res.status, 400, `variant id ${id} must be refused`);
+  }
+  const missing = await request('/api/admin/stock/424242', {
+    method: 'POST', cookie, body: JSON.stringify({ stock: 1 })
+  });
+  assert.equal(missing.status, 404);
 });
 
 test('only a paid order can be marked fulfilled', async () => {
@@ -187,21 +203,28 @@ test('only a paid order can be marked fulfilled', async () => {
   clearFailures('::ffff:127.0.0.1'); clearFailures('127.0.0.1'); clearFailures('::1');
   const { cookie } = await login();
 
-  db.prepare(`
+  await query(`
     INSERT INTO orders (reference, email, status, subtotal_kobo)
     VALUES ('ref_pending', 'a@example.com', 'pending', 100000)
-  `).run();
-  db.prepare(`
+  `);
+  await query(`
     INSERT INTO orders (reference, email, status, subtotal_kobo, paid_at)
-    VALUES ('ref_paid', 'b@example.com', 'paid', 100000, datetime('now'))
-  `).run();
+    VALUES ('ref_paid', 'b@example.com', 'paid', 100000, now())
+  `);
+  await query(`
+    INSERT INTO orders (reference, email, status, subtotal_kobo, paid_at)
+    VALUES ('ref_refund', 'c@example.com', 'refund_due', 100000, now())
+  `);
 
   const pending = await request('/api/admin/orders/ref_pending/fulfil', { method: 'POST', cookie });
   assert.equal(pending.status, 409, 'an unpaid order must not be fulfillable');
 
   const paid = await request('/api/admin/orders/ref_paid/fulfil', { method: 'POST', cookie });
   assert.equal(paid.status, 200);
-  assert.ok(db.prepare("SELECT fulfilled_at FROM orders WHERE reference='ref_paid'").get().fulfilled_at);
+  assert.ok((await one("SELECT fulfilled_at FROM orders WHERE reference = 'ref_paid'")).fulfilled_at);
+
+  const refund = await request('/api/admin/orders/ref_refund/fulfil', { method: 'POST', cookie });
+  assert.equal(refund.status, 409, 'an order owed a refund must not be marked sent');
 
   const missing = await request('/api/admin/orders/nope/fulfil', { method: 'POST', cookie });
   assert.equal(missing.status, 404);
@@ -212,13 +235,160 @@ test('summary counts only paid orders as revenue', async () => {
   clearFailures('::ffff:127.0.0.1'); clearFailures('127.0.0.1'); clearFailures('::1');
   const { cookie } = await login();
 
-  db.prepare("INSERT INTO orders (reference,email,status,subtotal_kobo) VALUES ('p1','a@b.co','paid',2800000)").run();
-  db.prepare("INSERT INTO orders (reference,email,status,subtotal_kobo) VALUES ('p2','a@b.co','paid',1400000)").run();
-  db.prepare("INSERT INTO orders (reference,email,status,subtotal_kobo) VALUES ('x1','a@b.co','pending',9800000)").run();
-  db.prepare("INSERT INTO orders (reference,email,status,subtotal_kobo) VALUES ('x2','a@b.co','failed',9800000)").run();
+  await query(`
+    INSERT INTO orders (reference, email, status, subtotal_kobo) VALUES
+      ('p1', 'a@b.co', 'paid',       2800000),
+      ('p2', 'a@b.co', 'paid',       1400000),
+      ('x1', 'a@b.co', 'pending',    9800000),
+      ('x2', 'a@b.co', 'failed',     9800000),
+      ('x3', 'a@b.co', 'refund_due', 9800000)
+  `);
 
   const { body } = await request('/api/admin/summary', { cookie });
   assert.equal(body.paidOrders, 2);
-  assert.equal(body.revenueKobo, 4_200_000, 'pending and failed orders are not revenue');
+  assert.equal(body.revenueKobo, 4_200_000, 'pending, failed and refunded orders are not revenue');
+  assert.equal(typeof body.revenueKobo, 'number', 'a number, not the string Postgres would send');
   assert.equal(body.pendingPayment, 1);
+  assert.equal(body.refundDue, 1, 'a customer owed money must show up');
+});
+
+test('orders can be filtered by status, and a made-up status is ignored', async () => {
+  const { clearFailures } = await import('../lib/auth.js');
+  clearFailures('::ffff:127.0.0.1'); clearFailures('127.0.0.1'); clearFailures('::1');
+  const { cookie } = await login();
+
+  await query(`
+    INSERT INTO orders (reference, email, status, subtotal_kobo) VALUES
+      ('a1', 'a@b.co', 'paid', 100), ('a2', 'a@b.co', 'refund_due', 100), ('a3', 'a@b.co', 'pending', 100)
+  `);
+
+  const paid = await request('/api/admin/orders?status=paid', { cookie });
+  assert.deepEqual(paid.body.map(o => o.reference), ['a1']);
+
+  const refunds = await request('/api/admin/orders?status=refund_due', { cookie });
+  assert.deepEqual(refunds.body.map(o => o.reference), ['a2']);
+
+  const junk = await request("/api/admin/orders?status=' OR 1=1 --", { cookie });
+  assert.equal(junk.status, 200);
+  assert.equal(junk.body.length, 3, 'an unknown status means no filter, not an error or an injection');
+});
+
+/* ---- first run: choosing a password in the browser -------------------- */
+
+const resetLockouts = async () => {
+  const { clearFailures } = await import('../lib/auth.js');
+  clearFailures('::ffff:127.0.0.1'); clearFailures('127.0.0.1'); clearFailures('::1');
+};
+
+/** Run `fn` as a shop with no ADMIN_PASSWORD_HASH and nothing stored yet. */
+async function unconfigured(fn) {
+  const saved = process.env.ADMIN_PASSWORD_HASH;
+  delete process.env.ADMIN_PASSWORD_HASH;
+  await query('DELETE FROM settings');
+  await resetLockouts();
+  try { await fn(); }
+  finally {
+    process.env.ADMIN_PASSWORD_HASH = saved;
+    await query('DELETE FROM settings');
+    await resetLockouts();
+  }
+}
+
+const setup = (code, password) => request('/api/admin/setup', {
+  method: 'POST', body: JSON.stringify({ code, password })
+});
+
+test('with a password configured, the page is told to show sign-in, and setup is closed', async () => {
+  await resetLockouts();
+  assert.deepEqual((await request('/api/admin/status')).body, { configured: true });
+
+  const { currentSetupCode } = await import('../lib/auth.js');
+  const res = await setup(currentSetupCode(), 'an-attacker-password');
+  assert.equal(res.status, 409, 'setup must never replace an existing password');
+  assert.equal(res.setCookie.length, 0);
+});
+
+test('with no password yet, sign-in explains itself instead of failing', async () => {
+  await unconfigured(async () => {
+    assert.deepEqual((await request('/api/admin/status')).body, { configured: false });
+    const { res } = await login('anything-at-all');
+    assert.equal(res.status, 409);
+    assert.equal(res.body.needsSetup, true);
+  });
+});
+
+test('reaching /admin first is not enough: setup needs the code from the log', async () => {
+  await unconfigured(async () => {
+    const { currentSetupCode } = await import('../lib/auth.js');
+    const real = currentSetupCode();
+
+    for (const code of [undefined, '', 'guess', real.slice(0, -1), real + 'x', real.toLowerCase() === real ? real.toUpperCase() : real.toLowerCase()]) {
+      const res = await setup(code, 'a-perfectly-good-password');
+      assert.equal(res.status, 401, `setup code ${JSON.stringify(code)} must be refused`);
+      assert.equal(res.setCookie.length, 0);
+    }
+    assert.deepEqual((await request('/api/admin/status')).body, { configured: false }, 'still unclaimed');
+  });
+});
+
+test('guessing setup codes hits the same lockout as guessing passwords', async () => {
+  await unconfigured(async () => {
+    let locked = false;
+    for (let i = 0; i < 12; i++) {
+      const res = await setup('wrong-' + i, 'a-perfectly-good-password');
+      if (res.status === 429) { locked = true; break; }
+    }
+    assert.ok(locked);
+  });
+});
+
+test('the right code and a short password is refused without spending the code', async () => {
+  await unconfigured(async () => {
+    const { currentSetupCode } = await import('../lib/auth.js');
+    const code = currentSetupCode();
+    assert.equal((await setup(code, 'short')).status, 400);
+    assert.equal((await setup(code, 'now-long-enough-pw')).status, 200, 'the code still works');
+  });
+});
+
+test('the right code sets the password once, signs you in, and is then spent', async () => {
+  await unconfigured(async () => {
+    const { currentSetupCode, checkSetupCode } = await import('../lib/auth.js');
+    const code = currentSetupCode();
+
+    const res = await setup(code, 'my-brand-new-admin-password');
+    assert.equal(res.status, 200);
+    assert.match(res.setCookie.join(';'), /HttpOnly/i);
+
+    const cookie = res.setCookie.map(c => c.split(';')[0]).join('; ');
+    assert.equal((await request('/api/admin/orders', { cookie })).status, 200, 'signed in straight away');
+
+    assert.equal(checkSetupCode(code), false, 'the code works once');
+    assert.equal((await setup(code, 'a-second-attempt-password')).status, 409);
+
+    const stored = await one("SELECT value FROM settings WHERE key = 'admin_password_hash'");
+    assert.match(stored.value, /^scrypt\$/, 'only a hash is stored');
+    assert.ok(!stored.value.includes('my-brand-new-admin-password'));
+
+    assert.equal((await login('my-brand-new-admin-password')).res.status, 200);
+    assert.equal((await login('a-second-attempt-password')).res.status, 401);
+  });
+});
+
+test('two browsers claiming at the same moment: exactly one wins', async () => {
+  await unconfigured(async () => {
+    const { currentSetupCode } = await import('../lib/auth.js');
+    const code = currentSetupCode();
+    const results = await Promise.all([
+      setup(code, 'first-browser-password'),
+      setup(code, 'second-browser-password')
+    ]);
+    // The loser sees 409 if it got past the code check before the winner
+    // spent the code, 401 if after. Either way it did not get in.
+    const statuses = results.map(r => r.status);
+    assert.equal(statuses.filter(s => s === 200).length, 1);
+    assert.ok(statuses.every(s => [200, 401, 409].includes(s)), String(statuses));
+    assert.equal(results.filter(r => r.setCookie.length).length, 1, 'only the winner is signed in');
+    assert.equal((await one('SELECT COUNT(*) AS n FROM settings')).n, 1);
+  });
 });

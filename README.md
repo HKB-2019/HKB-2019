@@ -28,15 +28,19 @@ src/
 server/
   index.js              express app
   schema.sql            tables; money is integer kobo throughout
-  db.js  seed.js        sqlite connection, catalogue + stock
+  db.js                 Postgres: a hosted server, or PGlite built in
+  seed.js               catalogue + starting stock
   routes/               products, checkout, webhook, orders, admin
-  lib/                  money helpers, Paystack REST client, admin auth
+  lib/orders.js         every change of order status, and the sweeper
+  lib/                  also money helpers, Paystack REST client, admin auth
   tools/setup.js        first run: .env, admin password, catalogue
   tools/hash-password.js generates ADMIN_PASSWORD_HASH and SESSION_SECRET
   test/shop.test.js     the tests that stop a shop being robbed
   test/admin.test.js    the tests that stop the back room being walked into
 public/assets/          images and self-hosted fonts
 tools/build-assets.py   regenerates public/assets/img from the design mockup
+render.yaml             how Render builds and runs the shop
+DEPLOY.md               putting it online for free, step by step
 ```
 
 Catalogue, exchange rates and footer copy are plain objects in
@@ -86,11 +90,26 @@ Then:
 Checkout needs Paystack test keys in `.env`; nothing else does. Everything
 else — the catalogue, the admin, stock — runs without them.
 
+**Putting it online:** see [DEPLOY.md](DEPLOY.md). Free, about twenty minutes,
+all in the browser.
+
 While working on the front end, `npm run dev` gives Vite on :5173 with hot
 reload and proxies `/api` to `npm run server` on :3001. `npm start` is the one
 that matches production: one process, one port, `dist/` served by the API with
 any non-`/api` path falling back to `index.html`, so a refresh on `/admin`
-works. `npm test` runs the money tests and the admin tests.
+works.
+
+`npm test` runs the money tests and the admin tests against an in-memory
+Postgres. To run the same tests against a real server:
+
+```bash
+TEST_DATABASE_URL=postgres://user@host/throwaway_db npm test
+```
+
+It must be a database you do not mind losing — every test wipes it. Both
+ways are worth running before a change to checkout or stock: the in-memory
+one queues transactions, so only a real server shows whether two buyers
+racing for the last jacket are handled.
 
 Every script loads `.env` through Node's own `--env-file-if-exists`, so there
 is no dotenv dependency and no `require('dotenv')` to forget.
@@ -101,12 +120,40 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   it from its own catalogue, holds the stock, creates a pending order and asks
   Paystack for a payment page.
 - **Real stock.** `soldOut` now comes from the `variants` table, not a hand-typed
-  flag. Stock is held at checkout, released if payment fails.
+  flag. Stock is held at checkout, released if payment fails or the customer
+  walks away.
 - **Real fulfilment.** Paystack's webhook flips the order to `paid`, after the
   amount is confirmed with Paystack directly.
 - **An admin view.** `/admin` shows takings, orders with their line items, a
   `MARK SENT` button for paid orders, and an editable stock count per size
   with a running-low line at the top.
+
+### Orders nobody tells us about
+
+Paystack sends nothing when a customer closes its page. Without something
+checking, their items would stay reserved forever — every abandoned checkout
+during a drop would quietly take a piece off sale.
+
+`lib/orders.js` runs a **sweeper** a few seconds after every boot and every
+five minutes while the server is up. For each order still `pending`:
+
+| Age | Paystack says | Then |
+| --- | --- | --- |
+| over 5 min | success | marked `paid` — the webhook was missed |
+| over 30 min | abandoned or failed | stock returned, order `abandoned` |
+| any | ongoing, processing | left alone — the customer may still be paying |
+| over 24 h | cannot be reached | stock returned anyway |
+
+The customer's own return page asks Paystack too, but it never releases
+stock: a slow bank is not an abandoned basket.
+
+A customer can still find the old Paystack tab an hour later and pay. Their
+stock was released, so it is taken back if it is still there. If someone else
+bought it in between, the order becomes **`refund_due`** — charged, nothing to
+send — and the admin shows a red line until a person refunds them. That is
+the one outcome that must never happen silently.
+
+`ABANDON_AFTER_MINUTES` and `CHECK_AFTER_MINUTES` change the thresholds.
 
 ### Three rules the code will not bend
 
@@ -127,8 +174,21 @@ confirmed with Paystack. Then it is deduplicated, because Paystack retries.
 ### The admin door
 
 One operator, one password. The password is never stored or committed — only a
-scrypt hash of it, in `ADMIN_PASSWORD_HASH`, which `npm run setup` writes for
-you (`npm run admin:password` prints the same two values to paste by hand).
+scrypt hash of it. It lives in one of two places:
+
+- `ADMIN_PASSWORD_HASH`, which `npm run setup` writes to `.env` for you
+  (`npm run admin:password` prints it to paste by hand); or
+- the database, chosen in the browser at `/admin` the first time. With no
+  password set, the server prints a one-time **setup code** to its log at
+  boot, and `/admin` asks for it. The log is only readable by whoever runs the
+  server, so finding `/admin` first is not enough to claim it. The code is
+  72 random bits, compared in constant time, subject to the same lockout as
+  passwords, and spent once used. Two browsers claiming at the same moment
+  cannot both win: the password is stored by a single `INSERT … ON CONFLICT
+  DO NOTHING`.
+
+This second way exists so a shop can be set up entirely from a phone. The
+environment variable, if set, always wins.
 
 Signing in sets a session cookie that is HttpOnly (JavaScript cannot read it),
 SameSite (not sent cross-site), `Secure` in production, and signed with
@@ -143,6 +203,11 @@ refuse a caller with no session, a forged cookie, a tampered payload and an
 expired session, and to refuse setting stock to anything that is not a whole
 number.
 
+Behind a host's load balancer, `TRUST_PROXY=1` makes the lockout count each
+visitor's real address rather than the balancer's. It trusts exactly that many
+proxies and never `true`, which would believe any `X-Forwarded-For` a client
+sent and let an attacker invent a new address for every guess.
+
 If this ever runs on more than one instance, move the lockout counter out of
 memory and into the database — a per-process counter gives an attacker eight
 attempts *per instance*.
@@ -154,9 +219,25 @@ transactional email, and shipping/delivery.
 
 ### On the database
 
-SQLite via Node's built-in driver — no native build, and its serialised writes
-make overselling during a drop harder rather than easier. `schema.sql` is plain
-SQL, so moving to Postgres is a change of driver, not of design.
+Postgres, from one of two places. With `DATABASE_URL` set, a real server
+through `pg` — that is production. Without it, **PGlite**: the whole of
+Postgres compiled to WebAssembly, running inside the app and keeping its files
+in `server/data/`. Nothing to install, and the same SQL either way.
+
+It was SQLite until the shop needed free hosting. Free hosts wipe the app's
+disk on every restart, and the orders would have gone with it; the database
+has to live somewhere that outlasts the app.
+
+The move changed how stock is held. SQLite serialises every write, so reading
+a count and then subtracting was safe there. Postgres runs checkouts truly in
+parallel, and the same two steps sold **ten jackets out of two** in a test
+against a real server. Stock is now held by one statement —
+`UPDATE … SET stock = stock - $1 WHERE id = $2 AND stock >= $1` — which a
+second buyer waits on, re-checks, and loses cleanly.
+
+COUNT and SUM come back from Postgres as 64-bit integers, which both drivers
+return as strings. `db.js` parses them to numbers; the admin summary would
+otherwise report revenue as `"4200000"`.
 
 ## Animation
 

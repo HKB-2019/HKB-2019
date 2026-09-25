@@ -13,6 +13,14 @@ export function createApp() {
   const app = express();
   app.disable('x-powered-by');
 
+  // Behind a host's load balancer every request arrives from the balancer's
+  // address, so the admin lockout would count everyone as one person. This
+  // trusts exactly the number of proxies named — never `true`, which would
+  // believe whatever X-Forwarded-For a client chose to send and let an
+  // attacker dodge the lockout by inventing a new address per guess.
+  const hops = Number.parseInt(process.env.TRUST_PROXY ?? '', 10);
+  if (hops > 0) app.set('trust proxy', hops);
+
   // The webhook is mounted BEFORE the JSON parser on purpose: its signature is
   // an HMAC over the raw bytes, and a parsed-then-reserialised body no longer
   // matches. It attaches its own raw parser.
@@ -51,20 +59,40 @@ if (process.argv[1] && process.argv[1].endsWith('server/index.js')) {
 
   // A shop with no catalogue is a blank page, and on a fresh host there is no
   // chance to run the seed by hand before the first visitor arrives.
-  const { db } = await import('./db.js');
-  if (!db.prepare('SELECT COUNT(*) AS n FROM products').get().n) {
+  const { one, driver } = await import('./db.js');
+  if (!(await one('SELECT COUNT(*) AS n FROM products')).n) {
     const { seed } = await import('./seed.js');
-    console.log(`Empty database — loaded ${seed()} pieces.`);
+    console.log(`Empty database — loaded ${await seed()} pieces.`);
+  }
+  console.log(`Database: ${(await driver()) === 'pglite'
+    ? 'built-in (server/data/) — set DATABASE_URL to use a hosted one'
+    : 'Postgres at DATABASE_URL'}`);
+
+  const { startSweeper } = await import('./lib/orders.js');
+  startSweeper();
+
+  // No password yet: print the one-time code that lets the owner choose one
+  // at /admin. Only the host's log shows it, and only the owner reads that.
+  const { storedPasswordHash, currentSetupCode } = await import('./lib/auth.js');
+  if (!(await storedPasswordHash())) {
+    console.log('');
+    console.log('  ┌──────────────────────────────────────────────────────────┐');
+    console.log('  │  No admin password yet. Open /admin and enter this code: │');
+    console.log(`  │      ${currentSetupCode().padEnd(52)}│`);
+    console.log('  │  It works once, and a new one appears after a restart.   │');
+    console.log('  └──────────────────────────────────────────────────────────┘');
+    console.log('');
   }
 
-  createApp().listen(port, () => {
+  createApp().listen(port, async () => {
     console.log(`MASQ. running on http://localhost:${port}`);
     console.log(`Admin at      http://localhost:${port}/admin`);
-    if (!process.env.ADMIN_PASSWORD_HASH) {
-      console.warn('ADMIN_PASSWORD_HASH is not set — run `npm run setup` before signing in.');
+    if (!process.env.SESSION_SECRET) {
+      console.warn('SESSION_SECRET is not set — nobody can sign in to the admin until it is.');
     }
-    if (!process.env.PAYSTACK_SECRET_KEY) {
-      console.warn('PAYSTACK_SECRET_KEY is not set — checkout stays off until it is.');
+    const { paystackConfigured } = await import('./lib/paystack.js');
+    if (!paystackConfigured()) {
+      console.warn('No Paystack secret key yet — the shop and admin work, checkout stays off until it is set.');
     }
   });
 }

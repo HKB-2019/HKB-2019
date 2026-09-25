@@ -1,0 +1,52 @@
+# Render Blueprint — tells Render how to build and run the shop.
+# In Render: New > Blueprint, pick this repository, and it reads this file.
+# Spec: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: masq
+    runtime: node
+    plan: free
+    # Nearest Render region to Lagos. Put the Neon database in Frankfurt too
+    # (AWS eu-central-1), or every query crosses a continent.
+    region: frankfurt
+
+    # --include=dev because NODE_ENV=production below would otherwise make
+    # npm skip Vite, and the front end cannot be built without it.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node server/index.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # Render's load balancer sits in front of the app. One hop is trusted so
+      # the admin lockout sees each visitor's address, not the balancer's.
+      - key: TRUST_PROXY
+        value: "1"
+
+      # Signs admin sessions. Render generates a long random value once and
+      # keeps it; nobody needs to see or type it.
+      - key: SESSION_SECRET
+        generateValue: true
+
+      # The three below are asked for when the Blueprint is created.
+      # sync: false means the value lives only in Render, never in this repo.
+
+      # From Neon: Dashboard > Connect, the "pooled" connection string.
+      - key: DATABASE_URL
+        sync: false
+
+      # From Paystack: Settings > API Keys & Webhooks. Start with the TEST key.
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+
+      # Optional. Leave it blank and choose the admin password in the browser
+      # at /admin, using the one-time code printed in Render's logs.
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+
+      # PAYSTACK_CALLBACK_URL is not needed here: the app builds it from
+      # RENDER_EXTERNAL_URL, which Render sets to the service's own address.
