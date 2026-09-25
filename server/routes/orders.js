@@ -26,8 +26,14 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
 
   if (!order) return res.status(404).json({ error: 'Order not found.' });
 
+  // What Paystack says about the payment itself, when we asked. Lets the page
+  // tell someone who cancelled on Paystack that nothing was taken, instead of
+  // "still confirming" about a payment that is not coming.
+  let paystackStatus = null;
+
   if (['pending', 'abandoned', 'failed'].includes(order.status) && paystackConfigured()) {
-    const status = await reconcile(reference);   // never releases stock from here
+    const status = await reconcile(reference, { onVerify: (d) => { paystackStatus = d.status; } });
+    // ↑ never releases stock from here
     if (status !== order.status) order = await load();
   }
 
@@ -48,6 +54,10 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
     shippingKobo: order.shipping_kobo,
     totalKobo: order.subtotal_kobo + order.shipping_kobo,
     deliveryTo: addr ? [addr.city, addr.state].filter(Boolean).join(', ') : null,
+    // 'not_completed': still pending here, but Paystack says the customer
+    // left or the charge failed. Stock stays held; the sweeper returns it.
+    payment: order.status === 'pending' && ['abandoned', 'failed'].includes(paystackStatus)
+      ? 'not_completed' : null,
     currency: order.currency,
     paidAt: order.paid_at,
     createdAt: order.created_at,

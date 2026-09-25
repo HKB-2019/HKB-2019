@@ -272,3 +272,16 @@ test('pages get a strict CSP, the admin is not indexed, and a missing file is a 
   const forged = await shop.request('/', { headers: { host: 'evil.test"><script>alert(1)</script>' } });
   assert.ok(!forged.raw.includes('<script>alert(1)'), 'a forged Host header cannot write into the page');
 });
+
+test('a customer who cancelled on Paystack is told nothing was taken — and their stock is not released early', async () => {
+  const res = await shop.checkout({ email: 'a@example.com', items: [{ productId: 'jacket', size: 'XL', qty: 1 }] });
+  paystack.verify = { status: 'abandoned', amount: null };
+  const page = (await shop.request(`/api/orders/${res.body.reference}`)).body;
+  assert.equal(page.status, 'pending');
+  assert.equal(page.payment, 'not_completed');
+  assert.equal(await stockOf('jacket', 'XL'), 0, 'still held — the sweeper decides, not the page');
+
+  paystack.verify = { status: 'ongoing', amount: null };
+  const slow = (await shop.request(`/api/orders/${res.body.reference}`)).body;
+  assert.equal(slow.payment, null, 'a payment still going through is not "not completed"');
+});

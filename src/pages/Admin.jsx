@@ -353,13 +353,19 @@ export default function Admin() {
 
   // Tabs switch without a reload; the address keeps the tab, so a refresh or
   // a bookmark lands where the owner was.
+  // Follows the address too — typing #settings, or Back after a tab change.
   useEffect(() => {
-    const fromHash = window.location.hash.slice(1);
-    if (TABS.some(([t]) => t === fromHash)) setTab(fromHash);
+    const follow = () => {
+      const fromHash = window.location.hash.slice(1);
+      if (TABS.some(([t]) => t === fromHash)) setTab(fromHash);
+    };
+    follow();
+    window.addEventListener('hashchange', follow);
+    return () => window.removeEventListener('hashchange', follow);
   }, []);
   const goTo = (t) => {
     setTab(t);
-    history.replaceState(null, '', `#${t}`);
+    if (window.location.hash !== `#${t}`) history.pushState(null, '', `#${t}`);
     if (t === 'orders' || t === 'stock') load().catch(() => {});
   };
 

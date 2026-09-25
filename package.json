@@ -13,7 +13,9 @@
     "seed": "node --env-file-if-exists=.env server/seed.js",
     "seed:reset": "node --env-file-if-exists=.env server/seed.js --reset",
     "test": "node --test --test-concurrency=1 server/test/*.test.js",
-    "admin:password": "node --env-file-if-exists=.env server/tools/hash-password.js"
+    "admin:password": "node --env-file-if-exists=.env server/tools/hash-password.js",
+    "test:e2e": "playwright test",
+    "test:all": "npm test && npm run test:e2e"
   },
   "engines": {
     "node": ">=22"
@@ -29,6 +31,7 @@
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@vitejs/plugin-react": "^6.1.1",
     "vite": "^8.3.0"
   }

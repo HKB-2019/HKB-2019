@@ -6,3 +6,5 @@ server/*.db
 server/*.db-shm
 server/*.db-wal
 server/data/
+test-results/
+playwright-report/

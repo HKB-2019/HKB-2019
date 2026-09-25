@@ -21,6 +21,8 @@ const COPY = {
   abandoned: { title: 'Payment cancelled', note: 'Nothing was taken. Your bag is still where you left it.' },
   // Paid after the order lapsed, and the last one had gone. Say so plainly:
   // they have been charged, and they need to know they will get it back.
+  unpaid:    { title: 'Payment not completed',
+               note: 'Nothing was taken. Your bag is still here if you want to try again.' },
   refund_due:{ title: 'This piece sold out',
                note: 'Your payment came through after your order had timed out, and the last one had gone to someone else. You will be refunded in full to the card you paid with.' }
 };
@@ -49,8 +51,11 @@ export default function OrderStatus() {
         // Only a confirmed payment empties the bag.
         if (data.status === 'paid' && !cleared.current) { cleared.current = true; clearCart(); }
 
-        // The webhook is usually first, but not always. Give it a little while.
-        if (data.status === 'pending' && ++tries < 10) setTimeout(check, 3000);
+        // The webhook is usually first, but not always. Give it a little while —
+        // unless Paystack has already said the payment was not completed.
+        if (data.status === 'pending' && data.payment !== 'not_completed' && ++tries < 10) {
+          setTimeout(check, 3000);
+        }
       } catch (err) {
         if (live) setError(err.message);
       }
@@ -60,7 +65,9 @@ export default function OrderStatus() {
     return () => { live = false; };
   }, [reference, clearCart]);
 
-  const status = order?.status ?? 'pending';
+  const status = order?.status === 'pending' && order.payment === 'not_completed'
+    ? 'unpaid'
+    : (order?.status ?? 'pending');
   const copy = COPY[status] ?? COPY.pending;
 
   return (
@@ -89,6 +96,9 @@ export default function OrderStatus() {
             <p className="status__ref">{reference}</p>
 
             {status === 'pending' && !error && <div className="status__wait" aria-hidden="true" />}
+            {status === 'unpaid' && (
+              <Link className="btn btn--ghost btn--block status__retry" to="/?bag=open">BACK TO YOUR BAG</Link>
+            )}
 
             {order && (
               <>

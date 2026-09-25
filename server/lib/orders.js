@@ -94,7 +94,7 @@ async function confirmPayment(orderId, paystackId) {
  *             stuck for a day. If money turns up later, confirmPayment above
  *             handles it.
  */
-export async function reconcile(reference, { release = false, giveUp = false } = {}) {
+export async function reconcile(reference, { release = false, giveUp = false, onVerify } = {}) {
   const order = await one(
     'SELECT id, status, subtotal_kobo, shipping_kobo FROM orders WHERE reference = $1', [reference]);
   if (!order) return null;
@@ -103,6 +103,7 @@ export async function reconcile(reference, { release = false, giveUp = false } =
   let data;
   try {
     data = await verifyTransaction(reference);
+    onVerify?.(data);
   } catch (err) {
     console.warn(`[orders] could not verify ${reference}: ${err.message}`);
     if (giveUp && order.status === 'pending') {

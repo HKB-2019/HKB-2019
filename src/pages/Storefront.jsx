@@ -13,10 +13,20 @@ import { useEffect } from 'react';
 import { useShop } from '../store/ShopContext.jsx';
 
 export default function Storefront() {
-  const { loadCatalogue } = useShop();
+  const { loadCatalogue, openOverlay } = useShop();
   // Prices, photos and stock come from the server every visit, so a change
   // made in the admin shows the next time anyone opens the shop.
   useEffect(() => { loadCatalogue(); }, [loadCatalogue]);
+
+  // "Back to your bag" from an unfinished payment lands with the bag open.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('bag') === 'open') {
+      openOverlay('cart');
+      url.searchParams.delete('bag');
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+    }
+  }, [openOverlay]);
 
   return (
     <>
