@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal from './Reveal.jsx';
 import { useShop } from '../store/ShopContext.jsx';
+import { subscribe } from '../lib/api.js';
 
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
 
@@ -11,20 +12,25 @@ export default function Newsletter() {
   const [msg, setMsg]       = useState(null);   // { text, error }
   const [busy, setBusy]     = useState(false);
 
-  const onSubmit = (e) => {
+  /* This used to show "You're in" and throw the address away. Now it is
+   * stored, and the owner sees the list in the admin. */
+  const onSubmit = async (e) => {
     e.preventDefault();
     if (!isEmail(email)) {
       setMsg({ text: 'PLEASE ENTER A VALID EMAIL ADDRESS', error: true });
       return;
     }
     setBusy(true);
-    // TODO: post to the mailing list once the back end exists
-    setTimeout(() => {
-      setBusy(false);
+    try {
+      await subscribe(email.trim());
       setEmail('');
       setMsg({ text: 'YOU’RE IN. WATCH YOUR INBOX FOR DROP 02.', error: false });
       toast('WELCOME TO THE WORLD OF MASQ.', 'violet');
-    }, 900);
+    } catch (err) {
+      setMsg({ text: err.message.toUpperCase(), error: true });
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (

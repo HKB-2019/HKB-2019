@@ -2,8 +2,21 @@ import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   adminLogin, adminLogout, adminMe, adminStatus, adminSetup, adminOrders,
-  adminSummary, adminStock, adminSetStock, adminFulfil
+  adminSummary, adminStock, adminSetStock, adminFulfil, adminDownload
 } from '../lib/api.js';
+import ProductsTab from './admin/ProductsTab.jsx';
+import SettingsTab from './admin/SettingsTab.jsx';
+import ListTab from './admin/ListTab.jsx';
+
+const TABS = [
+  ['orders', 'ORDERS'],
+  ['products', 'PRODUCTS'],
+  ['stock', 'STOCK'],
+  ['list', 'LIST'],
+  ['settings', 'SETTINGS']
+];
+
+const ZONE_LABELS = { lagos: 'Lagos', abuja: 'Abuja', nigeria: 'Nigeria', international: 'Abroad' };
 
 const naira = (kobo) => '₦' + (kobo / 100).toLocaleString('en-NG');
 // The API sends ISO 8601 with a timezone, so the browser shows local time.
@@ -120,7 +133,7 @@ function Setup({ onDone }) {
 
 /* --------------------------------------------------------------- summary */
 
-function Summary({ data }) {
+function Summary({ data, goTo }) {
   if (!data) return null;
   const tiles = [
     { label: 'Revenue',            value: naira(data.revenueKobo) },
@@ -138,6 +151,13 @@ function Summary({ data }) {
           </div>
         ))}
       </div>
+      {data.checkoutOpen === false && (
+        <p className="admin-alert" role="alert">
+          <strong>Checkout is closed.</strong> Customers can browse and fill their bags, but cannot pay
+          until you set delivery prices.{' '}
+          <button className="admin-link admin-link--strong" onClick={() => goTo('settings')}>Set delivery prices →</button>
+        </p>
+      )}
       {data.refundDue > 0 && (
         <p className="admin-alert" role="alert">
           <strong>{data.refundDue === 1 ? '1 customer is' : `${data.refundDue} customers are`} owed a refund.</strong>{' '}
@@ -161,10 +181,17 @@ function Summary({ data }) {
 const STATUSES = ['', 'paid', 'pending', 'refund_due', 'failed', 'abandoned'];
 
 function Orders({ orders, onFulfil, filter, setFilter, busyRef }) {
+  const [exportError, setExportError] = useState(null);
+  const exportCsv = () => {
+    setExportError(null);
+    adminDownload('/admin/orders.csv' + (filter ? `?status=${filter}` : '')).catch(err => setExportError(err.message));
+  };
   return (
     <section className="admin-section">
       <div className="admin-section__head">
         <h2 className="admin-h2">Orders</h2>
+        <button className="admin-action" onClick={exportCsv} disabled={!orders.length}>DOWNLOAD CSV</button>
+        {exportError && <span className="admin-note admin-note--bad">{exportError}</span>}
         <div className="admin-filters">
           {STATUSES.map(s => (
             <button
@@ -183,7 +210,7 @@ function Orders({ orders, onFulfil, filter, setFilter, busyRef }) {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Reference</th><th>Customer</th><th>Items</th>
+                <th>Reference</th><th>Deliver to</th><th>Items</th>
                 <th className="num">Total</th><th>Status</th><th>Placed</th><th></th>
               </tr>
             </thead>
@@ -191,13 +218,28 @@ function Orders({ orders, onFulfil, filter, setFilter, busyRef }) {
               {orders.map(o => (
                 <tr key={o.id}>
                   <td className="mono">{o.reference}</td>
-                  <td>{o.email}</td>
+                  <td className="admin-who">
+                    {o.name && <strong>{o.name}</strong>}
+                    {o.phone && <a href={`tel:${o.phone.replace(/[^\d+]/g, '')}`}>{o.phone}</a>}
+                    <span>{o.email}</span>
+                    {o.address && (
+                      <span className="admin-who__addr">
+                        {[o.address.line1, o.address.line2].filter(Boolean).join(', ')}<br />
+                        {[o.address.city, o.address.state, o.address.country !== 'Nigeria' ? o.address.country : null].filter(Boolean).join(', ')}
+                      </span>
+                    )}
+                  </td>
                   <td className="admin-items">
                     {o.items.map((i, n) => (
                       <span key={n}>{i.qty}× {i.name} <em>{i.size}</em></span>
                     ))}
                   </td>
-                  <td className="num">{naira(o.subtotalKobo)}</td>
+                  <td className="num">
+                    {naira(o.totalKobo ?? o.subtotalKobo)}
+                    {o.shippingKobo > 0 && (
+                      <em className="admin-sub">incl. {naira(o.shippingKobo)} delivery{o.zone ? ` · ${ZONE_LABELS[o.zone] ?? o.zone}` : ''}</em>
+                    )}
+                  </td>
                   <td>
                     <span className={`admin-status admin-status--${o.status}`}>{label(o.status)}</span>
                     {o.fulfilledAt && <span className="admin-status admin-status--sent">sent</span>}
@@ -306,6 +348,21 @@ export default function Admin() {
     await load();
   };
 
+  // Summary tiles and banners follow what the other tabs change.
+  const refreshSummary = useCallback(() => { adminSummary().then(setSummary).catch(() => {}); }, []);
+
+  // Tabs switch without a reload; the address keeps the tab, so a refresh or
+  // a bookmark lands where the owner was.
+  useEffect(() => {
+    const fromHash = window.location.hash.slice(1);
+    if (TABS.some(([t]) => t === fromHash)) setTab(fromHash);
+  }, []);
+  const goTo = (t) => {
+    setTab(t);
+    history.replaceState(null, '', `#${t}`);
+    if (t === 'orders' || t === 'stock') load().catch(() => {});
+  };
+
   if (signedIn === null) return <div className="admin-gate"><p className="admin-empty">Checking…</p></div>;
   if (!signedIn && needsSetup) return <Setup onDone={() => { setNeedsSetup(false); setSignedIn(true); }} />;
   if (!signedIn) return <Login onDone={() => setSignedIn(true)} />;
@@ -314,22 +371,24 @@ export default function Admin() {
     <div className="admin">
       <header className="admin-header">
         <div className="admin-header__inner">
-          <a href="/" className="logo">MASQ<span>.</span></a>
+          <a href="/" className="logo" aria-label="MASQ. — back to the shop">MASQ<span>.</span></a>
           <span className="admin-badge">ADMIN</span>
-          <nav className="admin-tabs">
-            {['orders', 'stock'].map(t => (
-              <button key={t}
-                className={`admin-tab${tab === t ? ' is-on' : ''}`}
-                onClick={() => setTab(t)}>{t.toUpperCase()}</button>
-            ))}
-          </nav>
           <button className="admin-signout"
                   onClick={() => adminLogout().then(() => setSignedIn(false))}>SIGN OUT</button>
         </div>
+        <nav className="admin-tabs" aria-label="Admin sections">
+          <div className="admin-tabs__inner">
+            {TABS.map(([t, label]) => (
+              <button key={t} aria-current={tab === t ? 'page' : undefined}
+                className={`admin-tab${tab === t ? ' is-on' : ''}`}
+                onClick={() => goTo(t)}>{label}</button>
+            ))}
+          </div>
+        </nav>
       </header>
 
       <main className="admin-main">
-        <Summary data={summary} />
+        <Summary data={summary} goTo={goTo} />
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -339,14 +398,17 @@ export default function Admin() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25 }}
           >
-            {tab === 'orders' ? (
+            {tab === 'orders' && (
               <Orders
                 orders={orders} onFulfil={onFulfil}
                 filter={filter} setFilter={setFilter} busyRef={busyRef}
               />
-            ) : (
+            )}
+            {tab === 'products' && <ProductsTab onSummaryChange={refreshSummary} />}
+            {tab === 'stock' && (
               <section className="admin-section">
                 <div className="admin-section__head"><h2 className="admin-h2">Stock</h2></div>
+                <p className="admin-help">Count the shelf and type what is there. Held stock for unfinished payments is already taken off.</p>
                 <div className="admin-table-wrap">
                   <table className="admin-table">
                     <thead>
@@ -361,6 +423,8 @@ export default function Admin() {
                 </div>
               </section>
             )}
+            {tab === 'list' && <ListTab onSummaryChange={refreshSummary} />}
+            {tab === 'settings' && <SettingsTab onSummaryChange={refreshSummary} />}
           </motion.div>
         </AnimatePresence>
       </main>

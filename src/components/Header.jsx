@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShop } from '../store/ShopContext.jsx';
 import { scrollToId } from '../lib/scroll.js';
-import { CURRENCIES } from '../data/catalogue.js';
-import { ChevronDown, AccountIcon, BagIcon } from './Icons.jsx';
+import { CURRENCIES } from '../data/currencies.js';
+import { ChevronDown, AccountIcon, BagIcon, Heart } from './Icons.jsx';
 
 const LINKS = [
   { href: '#drop',       label: 'SHOP' },
@@ -13,7 +13,7 @@ const LINKS = [
 ];
 
 export default function Header() {
-  const { cartQty, currency, setCurrency, openOverlay } = useShop();
+  const { cartQty, currency, setCurrency, openOverlay, wishlist } = useShop();
   const [stuck, setStuck]       = useState(false);
   const [active, setActive]     = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -102,8 +102,14 @@ export default function Header() {
             </ul>
           </div>
 
-          <button className="icon-btn" aria-label="Account" aria-haspopup="dialog"
-                  onClick={() => openOverlay('account')}>
+          <button className="icon-btn saved-btn" aria-label={`Saved pieces (${wishlist.length})`} aria-haspopup="dialog"
+                  onClick={() => openOverlay('saved')}>
+            <Heart />
+            {wishlist.length > 0 && <span className="saved-count" aria-hidden="true">{wishlist.length}</span>}
+          </button>
+
+          <button className="icon-btn" aria-label="Track an order" aria-haspopup="dialog"
+                  onClick={() => openOverlay('track')}>
             <AccountIcon />
           </button>
 

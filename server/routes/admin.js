@@ -169,10 +169,12 @@ adminRouter.get('/admin/summary', requireAdmin, async (_req, res) => {
       FROM orders
   `);
 
+  // Only what customers can buy: a product still being set up, or taken off
+  // sale, is at zero on purpose and would bury the warnings that matter.
   const lowStock = await query(`
     SELECT p.name, v.size, v.stock
       FROM variants v JOIN products p ON p.id = v.product_id
-     WHERE v.stock <= 3
+     WHERE v.stock <= 3 AND p.hidden = FALSE
      ORDER BY v.stock ASC, p.name, v.id
   `);
 

@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ESSENTIALS } from '../data/catalogue.js';
 import { useShop } from '../store/ShopContext.jsx';
 import { srcSet, SLIDE_SIZES } from '../lib/media.js';
-import { expandDropGrid } from './DropGrid.jsx';
+import { expandDropGrid, SizeButtons } from './DropGrid.jsx';
 import { Arrow, CaretLeft, CaretRight } from './Icons.jsx';
 
 const DRAG_THRESHOLD = 5;
 
 export default function Essentials() {
-  const { addToCart, format, toast } = useShop();
+  const { addToCart, format, toast, products, catalogueStatus } = useShop();
+  const essentials = products.filter(p => p.inEssentials);
+  const [picking, setPicking] = useState(null);
   const trackRef = useRef(null);
   const [pages, setPages]   = useState(1);
   const [page, setPage]     = useState(0);
@@ -28,18 +29,18 @@ export default function Essentials() {
   const measure = useCallback(() => {
     const track = trackRef.current;
     if (!track) return;
-    setPages(Math.max(1, Math.ceil(ESSENTIALS.length / perView())));
-  }, [perView]);
+    setPages(Math.max(1, Math.ceil(essentials.length / perView())));
+  }, [perView, essentials.length]);
 
   const sync = useCallback(() => {
     const track = trackRef.current;
     if (!track) return;
     const max  = track.scrollWidth - track.clientWidth;
-    const last = Math.max(1, Math.ceil(ESSENTIALS.length / perView())) - 1;
+    const last = Math.max(1, Math.ceil(essentials.length / perView())) - 1;
     setPage(track.scrollLeft >= max - 4 ? last : Math.min(last, Math.round(track.scrollLeft / track.clientWidth)));
     setStart(track.scrollLeft <= 4);
     setEnd(track.scrollLeft >= max - 4);
-  }, [perView]);
+  }, [perView, essentials.length]);
 
   useEffect(() => {
     measure(); sync();
@@ -117,6 +118,8 @@ export default function Essentials() {
     if (e.key === 'ArrowLeft')  { e.preventDefault(); track.scrollBy({ left: -step, behavior: 'smooth' }); }
   };
 
+  if (catalogueStatus === 'ready' && essentials.length === 0) return null;
+
   return (
     <section className="section essentials" id="essentials">
       <div className="section__head">
@@ -146,16 +149,35 @@ export default function Essentials() {
           onPointerDown={onPointerDown}
           onKeyDown={onKeyDown}
         >
-          {ESSENTIALS.map(p => (
-            <article className="slide" key={p.id}>
-              <img src={p.img} srcSet={srcSet(p.img)} sizes={SLIDE_SIZES} alt={p.name} loading="lazy" />
-              <div className="slide__meta">
-                <button className="slide__name"
-                        onClick={() => addToCart(p, 'ONE SIZE')}>{p.name}</button>
-                <span className="slide__price">{format(p.price)}</span>
-              </div>
-            </article>
-          ))}
+          {essentials.map(p => {
+            // One size: add it. Several: ask which — the old carousel added
+            // the hoodie in "ONE SIZE", which it does not come in.
+            const only = p.sizes.length === 1 ? p.sizes[0] : null;
+            const onPick = () => {
+              if (p.soldOut) { toast('SOLD OUT — JOIN THE LIST FOR RESTOCKS'); return; }
+              if (only) addToCart(p, only.size);
+              else setPicking(id => id === p.id ? null : p.id);
+            };
+            return (
+              <article className={`slide${picking === p.id ? ' is-picking' : ''}`} key={p.id}>
+                {p.img && <img src={p.img} srcSet={srcSet(p)} sizes={SLIDE_SIZES} alt={p.name} loading="lazy" />}
+                <div className="slide__meta">
+                  <button className="slide__name" onClick={onPick}
+                          aria-label={p.soldOut ? `${p.name}, sold out` : only ? `Add ${p.name} to bag` : `Choose a size of ${p.name}`}>
+                    {p.name}
+                  </button>
+                  <span className={`slide__price${p.soldOut ? ' card__sold' : ''}`}>
+                    {p.soldOut ? 'SOLD OUT' : format(p.price)}
+                  </span>
+                </div>
+                {!only && (
+                  <div className="card__sizes slide__sizes" aria-hidden={picking !== p.id}>
+                    <SizeButtons product={p} onPicked={() => setPicking(null)} />
+                  </div>
+                )}
+              </article>
+            );
+          })}
         </div>
 
         <button className="carousel__arrow carousel__arrow--next" aria-label="Next essentials"

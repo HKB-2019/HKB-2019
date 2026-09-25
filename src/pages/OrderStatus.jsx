@@ -100,8 +100,14 @@ export default function OrderStatus() {
                     </li>
                   ))}
                 </ul>
+                {order.shippingKobo > 0 && (
+                  <p className="status__line">
+                    <span>Delivery{order.deliveryTo ? ` to ${order.deliveryTo}` : ''}</span>
+                    <span className="num">{naira(order.shippingKobo)}</span>
+                  </p>
+                )}
                 <p className="status__total">
-                  <span>Total</span><span className="num">{naira(order.subtotalKobo)}</span>
+                  <span>Total</span><span className="num">{naira(order.totalKobo ?? order.subtotalKobo)}</span>
                 </p>
                 <p className="status__email">Receipt to {order.email}</p>
               </>

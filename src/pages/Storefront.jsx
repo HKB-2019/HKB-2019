@@ -9,8 +9,15 @@ import Newsletter from '../components/Newsletter.jsx';
 import Footer from '../components/Footer.jsx';
 import Overlays from '../components/Overlays.jsx';
 import Toasts from '../components/Toasts.jsx';
+import { useEffect } from 'react';
+import { useShop } from '../store/ShopContext.jsx';
 
 export default function Storefront() {
+  const { loadCatalogue } = useShop();
+  // Prices, photos and stock come from the server every visit, so a change
+  // made in the admin shows the next time anyone opens the shop.
+  useEffect(() => { loadCatalogue(); }, [loadCatalogue]);
+
   return (
     <>
       <a className="skip-link" href="#main">Skip to content</a>

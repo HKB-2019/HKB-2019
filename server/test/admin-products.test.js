@@ -343,3 +343,11 @@ test('orders show the admin who and where', async () => {
   assert.equal(o.shippingKobo, 250_000);
   assert.equal(o.totalKobo, 1_400_000 + 250_000);
 });
+
+test('running low counts only what is on sale', async () => {
+  const { body: p } = await api('/products', 'POST', { name: 'Setting Up', priceNaira: 5000, sizes: ['S'] });
+  const low = (await api('/summary')).body.lowStock;
+  assert.ok(!low.some(s => s.name === 'Setting Up'), 'a product being set up is at zero on purpose');
+  assert.ok(low.some(s => s.name === 'THE MASK CASE'), 'the sold-out case on sale still shows');
+  assert.ok(p.id);
+});
