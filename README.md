@@ -1,14 +1,18 @@
 # MASQ. — Urban Rituals
 
-Storefront for a fashion label. React + Vite, with Framer Motion driving the
-movement.
+A shop for a fashion label: the storefront, checkout through Paystack, and
+an admin where the owner runs it — products, prices, photos, stock, delivery
+fees, orders. React + Vite with Framer Motion at the front; Node, Express and
+Postgres behind.
 
 ```bash
 npm install
-npm run dev      # local dev server
-npm run build    # production build into dist/
-npm run preview  # serve the production build
+npm run setup    # first run: admin password, .env, catalogue
+npm start        # the whole shop on http://localhost:3001
+npm run test:all # every test: API on the database, then in a real browser
 ```
+
+To put it online for free, see [DEPLOY.md](DEPLOY.md).
 
 ## Where things live
 
@@ -19,32 +23,39 @@ src/
   App.jsx               the three routes
   pages/Storefront.jsx  the shop itself
   pages/OrderStatus.jsx /order — where Paystack returns the customer
-  pages/Admin.jsx       /admin — orders, fulfilment, stock
+  pages/Admin.jsx       /admin — the shell, orders and stock
+  pages/admin/          products (with photo upload), settings, the list
   styles.css            all styling; design tokens at the top under :root
-  data/catalogue.js     products, essentials, currencies, info copy
-  store/ShopContext.jsx bag, saved list, currency, overlays, toasts
-  lib/                  helpers: storage, smooth scroll, srcset, API client
+  data/currencies.js    display currencies and their rough rates
+  store/ShopContext.jsx catalogue from the server, bag, saved, overlays
+  lib/                  API client, delivery rules, storage, srcset, scroll
   components/           one file per section, plus overlays and toasts
 server/
   index.js              express app
   schema.sql            tables; money is integer kobo throughout
   db.js                 Postgres: a hosted server, or PGlite built in
-  seed.js               catalogue + starting stock
-  routes/               products, checkout, webhook, orders, admin
+  seed.js               the catalogue as designed, for an empty database
+  routes/               products, checkout, webhook, orders, subscribe,
+                        admin, admin-products (incl. photo upload)
   lib/orders.js         every change of order status, and the sweeper
-  lib/                  also money helpers, Paystack REST client, admin auth
+  lib/settings.js       delivery fees, footer pages, links — validated
+  lib/catalogue.js      product rows → what the shop and admin show
+  lib/                  also auth, Paystack client, photo checks, CSV,
+                        rate limits, money helpers
   tools/setup.js        first run: .env, admin password, catalogue
   tools/hash-password.js generates ADMIN_PASSWORD_HASH and SESSION_SECRET
-  test/shop.test.js     the tests that stop a shop being robbed
-  test/admin.test.js    the tests that stop the back room being walked into
+  test/                 API tests: money, admin door, products, delivery
+e2e/                    browser tests, with a stand-in Paystack
+.github/workflows/      runs every test on every push
 public/assets/          images and self-hosted fonts
 tools/build-assets.py   regenerates public/assets/img from the design mockup
 render.yaml             how Render builds and runs the shop
 DEPLOY.md               putting it online for free, step by step
 ```
 
-Catalogue, exchange rates and footer copy are plain objects in
-`src/data/catalogue.js`. Colour, spacing and type scale are CSS custom
+Products, prices, photos, delivery fees and footer copy are all in the
+database and changed in the admin. Display currency rates are in
+`src/data/currencies.js`. Colour, spacing and type scale are CSS custom
 properties under `:root` in `styles.css`.
 
 ## Interactions
@@ -52,21 +63,25 @@ properties under `:root` in `styles.css`.
 | Control | Behaviour |
 | --- | --- |
 | `SHOP DROP 01` / `EXPLORE` / nav | Smooth-scroll to the section; nav underlines whatever is in view |
-| Product card hover | Reveals `QUICK ADD`; picking a size adds to the bag |
-| Heart on a card | Toggles the saved list (persisted) |
-| `VIEW ALL` | Expands the grid from 4 to 8 pieces; existing cards glide to their new positions |
+| Product card | `QUICK ADD` opens the sizes (sold-out sizes struck out); a one-size piece adds straight away. On phones the button stays visible — there is no hover |
+| Heart on a card | Saves it; the heart in the header opens the saved list, from which it can be bought |
+| `VIEW ALL` | Shows the pieces the owner has placed behind it; existing cards glide to their new positions |
 | `SHOP ACCESSORIES` | Expands the grid and scrolls to it |
-| Bag icon | Slide-out drawer: quantity +/−, remove, live subtotal, checkout |
-| Account icon | Sign in / create account with inline validation |
-| Currency `NGN` | Converts every price on the page, including the bag |
-| `PLAY FILM` | Film modal with a working play/pause and progress bar |
-| Essentials carousel | Arrows, dots, drag-to-scroll, arrow keys; slide titles add to the bag |
-| Newsletter `JOIN` | Validates the email, shows a success state |
-| Footer links | FAQ / shipping / returns / contact in a modal |
+| Bag icon | Quantity (up to 10, or what is left), remove, subtotal → **Delivery** step: name, phone, state, city, address, the fee for that address and the total → Paystack |
+| Person icon | Track an order by its reference |
+| Currency `NGN` | Shows prices in USD/GBP/EUR as a guide; the bag says payment is in naira |
+| `PLAY FILM` | Plays the film linked in the admin, or says it is coming |
+| Essentials carousel | Arrows, dots, drag-to-scroll, arrow keys; a slide's name adds it, or asks for a size |
+| Newsletter `JOIN` | Adds the address to the list the owner sees in the admin |
+| Footer links | FAQ / shipping / returns / contact / privacy, as written in the admin |
 
-Bag, saved list and currency persist in `localStorage`. Overlays trap focus,
-close on `Escape` or a scrim click, and hand focus back to whatever opened
-them. Everything reflows down to 390px.
+Bag, saved list and currency persist in `localStorage`. The bag is checked
+against the catalogue on every visit: pieces no longer on sale leave it, new
+prices apply, and a quantity above what is left comes down, each with a
+note. The delivery address is kept in memory only — not in `localStorage`
+on a shared phone. Overlays trap focus, close on `Escape` or a scrim click,
+and hand focus back to whatever opened them. Everything reflows down to
+390px.
 
 ## The shop
 
@@ -99,8 +114,10 @@ that matches production: one process, one port, `dist/` served by the API with
 any non-`/api` path falling back to `index.html`, so a refresh on `/admin`
 works.
 
-`npm test` runs the money tests and the admin tests against an in-memory
-Postgres. To run the same tests against a real server:
+### Tests
+
+`npm test` runs the API tests (96) against an in-memory Postgres. To run the
+same tests against a real server:
 
 ```bash
 TEST_DATABASE_URL=postgres://user@host/throwaway_db npm test
@@ -110,6 +127,17 @@ It must be a database you do not mind losing — every test wipes it. Both
 ways are worth running before a change to checkout or stock: the in-memory
 one queues transactions, so only a real server shows whether two buyers
 racing for the last jacket are handled.
+
+`npm run test:e2e` runs the browser tests (22) with Playwright: a robot
+customer and a robot owner clicking through the built site, on desktop and a
+phone-sized screen. They run against a stand-in Paystack (`e2e/fake-paystack.js`)
+with a real payment page, so a whole purchase — bag, delivery, pay, webhook,
+order page, "mark sent" in the admin — runs without a Paystack account. Any
+page error or Content-Security-Policy violation fails the test that caused
+it. First time on a new machine: `npx playwright install chromium`.
+
+Both suites run on every push (`.github/workflows/test.yml`), the API tests
+against Postgres 16 as well.
 
 Every script loads `.env` through Node's own `--env-file-if-exists`, so there
 is no dotenv dependency and no `require('dotenv')` to forget.
@@ -124,9 +152,13 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   walks away.
 - **Real fulfilment.** Paystack's webhook flips the order to `paid`, after the
   amount is confirmed with Paystack directly.
-- **An admin view.** `/admin` shows takings, orders with their line items, a
-  `MARK SENT` button for paid orders, and an editable stock count per size
-  with a running-low line at the top.
+- **Real delivery.** Checkout asks for name, phone and address, prices
+  delivery by area from the owner's settings, and charges items plus
+  delivery. It stays closed until at least one area has a fee.
+- **An admin that runs the shop.** Orders with who and where, `MARK SENT`,
+  spreadsheet export; products — name, price, badge, placement, on or off
+  sale, order, sizes, counts, photo; stock take; the mailing list; delivery
+  fees, footer pages, social links and the film. See *The admin* below.
 
 ### Orders nobody tells us about
 
@@ -154,6 +186,33 @@ send — and the admin shows a red line until a person refunds them. That is
 the one outcome that must never happen silently.
 
 `ABANDON_AFTER_MINUTES` and `CHECK_AFTER_MINUTES` change the thresholds.
+
+### The admin
+
+Five tabs, all usable on a phone:
+
+| Tab | What it does |
+| --- | --- |
+| **Orders** | Every order with the customer's name, phone (tap to call), address, items and total including delivery. `MARK SENT` on paid orders. Filters by status. `DOWNLOAD CSV` for packing and dispatch |
+| **Products** | One card per product: name, price, badge (save with a button), and switches for on sale, in the drop grid, before `VIEW ALL`, in the carousel (save at once). Reorder with ↑ ↓. Sizes with their counts; add a size; remove one once its count is 0 and nobody is paying for it. `+ NEW PRODUCT` starts off sale — add a photo and counts, then switch it on |
+| **Stock** | Every size of everything in one list, for counting the shelf |
+| **List** | Everyone who joined from the footer. Download as CSV into your email tool; remove someone who asks |
+| **Settings** | Delivery fee per area (Lagos, Abuja, rest of Nigeria, abroad); footer pages; Instagram / TikTok / X links; the film link |
+
+Banners at the top say when checkout is closed (no delivery prices yet),
+when a customer is owed a refund, and what is running low.
+
+**Photos** are prepared in the owner's browser before upload: turned the right
+way up, cropped from the centre to the 5:6 frame every product uses, and made
+at 700 and 1,400 px wide as WebP (JPEG in Safari, which cannot write WebP). A
+phone photo of several MB arrives as a few hundred KB. They are stored in
+Postgres rather than on disk, because a free host wipes its disk at every
+restart, and served with a year's cache — a new upload is a new address.
+
+The server does not trust the browser about any of this: the file type is
+read from the file's first bytes (JPEG, PNG and WebP only — SVG can carry
+script), each size is capped, and the sign-in check runs before a large body
+is even read.
 
 ### Three rules the code will not bend
 
@@ -212,10 +271,38 @@ If this ever runs on more than one instance, move the lockout counter out of
 memory and into the database — a per-process counter gives an attacker eight
 attempts *per instance*.
 
+### What else the scan fixed
+
+A pass over the whole codebase before this round found, and fixed:
+
+- Order references came from `Math.random` and contained `_`, which Paystack
+  does not allow in a reference — the first real checkout would have failed.
+  They are now 96 random bits from `crypto`, in hex.
+- The public order page returned the customer's full email. It now shows
+  `a•••a@example.com` and the town, never the phone or street.
+- Broken JSON got a 500, unknown `/api` paths got the home page, missing
+  files got the home page. Now 400, a JSON 404, and a 404.
+- Security headers on everything, a strict CSP on pages (scripts only from
+  the shop itself; no framing), `/admin` not indexed, `robots.txt`.
+- Checkout and the mailing list are rate limited — every checkout holds
+  stock for half an hour, so a script could otherwise empty the shelves.
+- Spreadsheet exports neutralise cells a spreadsheet would run as formulas —
+  a customer's "name" could otherwise run on the owner's computer.
+- Link previews on WhatsApp, Instagram and X now show a picture.
+
 ### Still to build
 
-Customer accounts and sessions (the account modal is still cosmetic),
-transactional email, and shipping/delivery.
+- **Customer accounts.** The person icon tracks an order by reference;
+  there is no sign-in for customers yet.
+- **Our own emails.** Paystack emails the customer a receipt and the owner a
+  payment notice, so nobody is left without word — but the shop does not yet
+  send its own confirmation or "your order has shipped".
+- **Courier booking.** Delivery is priced and the address collected; the
+  parcel is booked with a courier by hand, using the orders spreadsheet.
+- **International duties.** Abroad can be switched on with a flat fee; duties
+  are not calculated.
+- **Currency rates** for the price guide are set by hand in
+  `src/data/currencies.js`.
 
 ### On the database
 

@@ -74,7 +74,28 @@ finds `/admin` before you have done this still cannot claim it.
 
 ---
 
-## 4. Connecting Paystack (when you have test keys)
+## 4. Before your first sale
+
+Everything below is in the admin — no code.
+
+1. **Set delivery prices.** *Settings → Delivery.* Switch on the areas you
+   deliver to and type a fee for each. Until at least one is on, the shop
+   shows "Checkout opens soon" and takes no orders. This is on purpose: a
+   default fee of ₦0 would give delivery away.
+2. **Replace the contact details.** *Settings → Footer pages → Contact.* The
+   phone number and address there came with the design and are not real. The
+   admin shows a warning until they change.
+3. **Read the Privacy page.** It says what the shop collects (name, email,
+   phone, address) and why, as the code actually does it. Change it if your
+   practice is different.
+4. **Add your social links** and, when you have it, the film link.
+5. **Check your products.** *Products.* Prices, names, photos, sizes, counts.
+   To use your own photos, choose **Change photo** — any phone photo works;
+   it is cropped and shrunk before it uploads.
+
+---
+
+## 5. Connecting Paystack (when you have test keys)
 
 1. In Paystack: **Settings → API Keys & Webhooks**, test mode.
 2. Copy the **Test Secret Key** into Render: service → **Environment** →
@@ -84,7 +105,10 @@ finds `/admin` before you have done this still cannot claim it.
    `https://masq-ab12.onrender.com/api/paystack/webhook`.
 
 Then buy something from your own shop with one of Paystack's test cards, and
-watch the order appear in the admin.
+watch the order appear in the admin with the name and address you typed.
+
+When a payment goes through, Paystack emails the customer a receipt and you
+a notice. The shop does not send its own emails yet.
 
 You do not need to set a callback URL — the shop works out its own address.
 
@@ -136,5 +160,14 @@ out, and the last one had already sold to someone else. The admin shows a red
 line at the top when this happens. Refund them from the Paystack dashboard.
 It should be rare.
 
+**Customers say checkout is closed.** No delivery area is switched on.
+*Settings → Delivery*.
+
+**A photo will not upload.** It must be a JPEG, PNG or WebP. On an iPhone,
+photos are converted automatically when you choose them.
+
 **The build failed.** Open **Events** in Render, then the failed deploy, and
 send the last twenty lines of its log.
+
+**A red cross next to a commit on GitHub.** The automatic tests found
+something broken in that change. Send me the link.

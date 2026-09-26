@@ -119,7 +119,9 @@ export default function OrderStatus() {
                 <p className="status__total">
                   <span>Total</span><span className="num">{naira(order.totalKobo ?? order.subtotalKobo)}</span>
                 </p>
-                <p className="status__email">Receipt to {order.email}</p>
+                <p className="status__email">
+                  {order.status === 'paid' ? 'Receipt to' : 'Order for'} {order.email}
+                </p>
               </>
             )}
           </>

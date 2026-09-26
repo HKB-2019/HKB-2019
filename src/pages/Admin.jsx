@@ -16,7 +16,7 @@ const TABS = [
   ['settings', 'SETTINGS']
 ];
 
-const ZONE_LABELS = { lagos: 'Lagos', abuja: 'Abuja', nigeria: 'Nigeria', international: 'Abroad' };
+const ZONE_LABELS = { lagos: 'Lagos', abuja: 'Abuja', nigeria: 'rest of Nigeria', international: 'abroad' };
 
 const naira = (kobo) => '₦' + (kobo / 100).toLocaleString('en-NG');
 // The API sends ISO 8601 with a timezone, so the browser shows local time.
