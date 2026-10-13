@@ -123,6 +123,6 @@ test('the price-guide rates set in Settings change the prices shown in dollars',
 
 test('the footer has a terms of sale page', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('navigation', { name: 'Footer' }).getByRole('button', { name: 'TERMS' }).click();
+  await page.getByRole('navigation', { name: 'Footer' }).getByRole('button', { name: 'Terms of sale' }).click();
   await expect(page.getByRole('dialog')).toContainText('TERMS OF SALE');
 });

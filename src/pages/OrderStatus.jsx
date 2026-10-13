@@ -89,7 +89,11 @@ export default function OrderStatus() {
           <>
             <p className="eyebrow">Order</p>
             <h1 className="status__title">We could not find that order</h1>
-            <p className="status__note">{error}</p>
+            <p className="status__note">
+              {/not found|no order reference/i.test(error)
+                ? 'Check the link in the receipt Paystack emailed you, or use “Track an order” with the reference that starts masq-.'
+                : error}
+            </p>
           </>
         ) : (
           <>

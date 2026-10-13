@@ -453,8 +453,11 @@ function Modal({ label, labelledBy, wide, children }) {
   const { closeOverlay } = useShop();
   const ref = useFocusTrap(true);
   return (
+    // The dark space around the panel belongs to the dialog, so a tap there
+    // closes it — the same as the scrim it sits over.
     <div className="modal" role="dialog" aria-modal="true"
-         aria-label={label} aria-labelledby={labelledBy}>
+         aria-label={label} aria-labelledby={labelledBy}
+         onClick={(e) => { if (e.target === e.currentTarget) closeOverlay(); }}>
       <motion.div
         ref={ref}
         className={`modal__panel ${wide ? 'modal__panel--film' : 'modal__panel--sm'}`}
@@ -564,7 +567,7 @@ function FilmModal() {
 
 /* --------------------------------------------------------------- info modal */
 
-const PAGE_TITLES = { FAQ: 'FAQ', SHIPPING: 'Shipping', RETURNS: 'Returns', CONTACT: 'Contact', PRIVACY: 'Privacy', SIZE_GUIDE: 'Size guide', TERMS: 'Terms of sale' };
+const PAGE_TITLES = { FAQ: 'FAQ', SHIPPING: 'Delivery', RETURNS: 'Returns', CONTACT: 'Contact', PRIVACY: 'Privacy', SIZE_GUIDE: 'Size guide', TERMS: 'Terms of sale' };
 
 function InfoModal({ title }) {
   const { site } = useShop();

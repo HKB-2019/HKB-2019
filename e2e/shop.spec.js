@@ -195,7 +195,7 @@ test('joining the list is real: the owner sees the address', async ({ page }) =>
 
 test('"track an order" takes a reference to its order page', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Track an order' }).click();
+  await page.locator('.header').getByRole('button', { name: 'Track an order' }).click();
   await page.fill('#track-ref', 'not a reference!');
   await page.getByRole('button', { name: 'SEE MY ORDER' }).click();
   await expect(page.locator('.modal .form-msg')).toContainText('does not look like');
@@ -218,11 +218,39 @@ test('footer pages, links and the film come from the admin', async ({ page }) =>
   await page.goto('/');
   await expect(page.locator('.footer__social a')).toHaveCount(1);
   await expect(page.locator('.footer__social a')).toHaveAttribute('href', 'https://instagram.com/masq');
-  await expect(page.locator('.footer__copy')).toContainText(String(new Date().getFullYear()));
+  await expect(page.locator('.footer__base')).toContainText(String(new Date().getFullYear()));
 
-  await page.locator('.footer__link', { hasText: 'CONTACT' }).click();
+  await page.getByRole('navigation', { name: 'Footer' }).getByRole('button', { name: 'Contact' }).click();
   await expect(page.locator('.modal__text--pre')).toHaveText('hello@masq.ng\n+234 803 000 1111');
   await page.keyboard.press('Escape');
 
   await expect(page.locator('.film__label')).toHaveText('FILM — COMING SOON');
+});
+
+test('the footer is grouped, and every link in it goes somewhere', async ({ page }) => {
+  await page.goto('/');
+  const footer = page.getByRole('navigation', { name: 'Footer' });
+  await expect(footer.locator('.footer__head')).toHaveText(['Shop', 'Help', 'The small print']);
+
+  await footer.getByRole('button', { name: 'Track an order' }).click();
+  await expect(page.locator('#track-ref')).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  await footer.getByRole('button', { name: 'Saved pieces' }).click();
+  await expect(page.getByRole('dialog', { name: 'Saved' })).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  for (const [label, title] of [['Size guide', 'Size guide'], ['Delivery', 'Delivery'], ['Returns', 'Returns'],
+    ['FAQ', 'FAQ'], ['Terms of sale', 'Terms of sale'], ['Privacy', 'Privacy']]) {
+    await footer.getByRole('button', { name: label }).click();
+    await expect(page.locator('.modal h2')).toHaveText(title.toUpperCase());
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.modal')).toHaveCount(0);
+  }
+
+  // From a product page, a shop link brings the shopper back to that part of the home page.
+  await page.goto('/product/tee');
+  await footer.getByRole('link', { name: 'The Essentials' }).click();
+  await expect(page).toHaveURL(/\/#essentials$/);
+  await expect(page.locator('#essentials')).toBeInViewport();
 });

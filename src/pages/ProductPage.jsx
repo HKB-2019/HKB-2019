@@ -207,7 +207,7 @@ function BuyBox({ product }) {
         <summary>DELIVERY &amp; RETURNS</summary>
         <p className="pdp__text pdp__text--sm">
           The delivery fee for your address is shown in the bag, before you pay.{' '}
-          <button type="button" className="pdp__inline" onClick={() => openOverlay({ info: 'SHIPPING' })}>Shipping</button>
+          <button type="button" className="pdp__inline" onClick={() => openOverlay({ info: 'SHIPPING' })}>Delivery</button>
           {' · '}
           <button type="button" className="pdp__inline" onClick={() => openOverlay({ info: 'RETURNS' })}>Returns</button>
         </p>

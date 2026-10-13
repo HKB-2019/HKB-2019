@@ -90,13 +90,13 @@ properties under `:root` in `styles.css`.
 | `PLAY FILM` | Plays the film linked in the admin, or says it is coming |
 | Essentials carousel | Arrows, dots, drag-to-scroll, arrow keys; a slide's name adds it, or asks for a size |
 | Newsletter `JOIN` | Adds the address to the list the owner sees in the admin |
-| Footer links | Size guide / FAQ / shipping / returns / contact / privacy / terms, as written in the admin |
+| Footer | Three short groups. **Shop**: the drop, the Essentials, about MASQ., saved pieces — from a product page these go back to that part of the home page. **Help**: size guide, delivery, returns, FAQ, track an order, contact. **The small print**: terms of sale, privacy. Pages are as written in the admin and open in a panel that scrolls on a small phone |
 
 Bag, saved list and currency persist in `localStorage`. The bag is checked
 against the catalogue on every visit: pieces no longer on sale leave it, new
 prices apply, and a quantity above what is left comes down, each with a
 note. The delivery address is kept in memory only — not in `localStorage`
-on a shared phone. Overlays trap focus, close on `Escape` or a scrim click,
+on a shared phone. Overlays trap focus, close on `Escape` or a tap outside them,
 and hand focus back to whatever opened them. Everything reflows down to
 390px.
 
@@ -239,7 +239,9 @@ the one outcome that must never happen silently.
 
 ### The admin
 
-Eight tabs, all usable on a phone:
+Eight tabs, all usable on a phone — the row of tabs slides sideways, and the
+open one is always in view. The admin is a separate file, fetched only when
+someone opens it, so a shopper's phone never downloads it.
 
 | Tab | What it does |
 | --- | --- |

@@ -13,7 +13,7 @@ const ZONES = [
 
 const PAGES = [
   ['FAQ', 'FAQ'],
-  ['SHIPPING', 'Shipping'],
+  ['SHIPPING', 'Delivery'],
   ['RETURNS', 'Returns'],
   ['CONTACT', 'Contact'],
   ['PRIVACY', 'Privacy'],

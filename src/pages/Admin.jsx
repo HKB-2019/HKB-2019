@@ -423,6 +423,17 @@ export default function Admin() {
     await load();
   };
 
+  // On a phone the tab row scrolls sideways: bring the open tab into view,
+  // sideways only, so the page itself never jumps.
+  useEffect(() => {
+    const row = document.querySelector('.admin-tabs__inner');
+    const on = row?.querySelector('.admin-tab.is-on');
+    if (!row || !on) return;
+    const left = on.offsetLeft - row.offsetLeft, right = left + on.offsetWidth;
+    if (left < row.scrollLeft + 16) row.scrollLeft = Math.max(0, left - 24);
+    else if (right > row.scrollLeft + row.clientWidth - 48) row.scrollLeft = right - row.clientWidth + 56;
+  }, [tab, signedIn]);
+
   // Summary tiles and banners follow what the other tabs change.
   const refreshSummary = useCallback(() => { adminSummary().then(setSummary).catch(() => {}); }, []);
 

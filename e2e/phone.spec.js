@@ -59,5 +59,28 @@ test('a product page fits a phone, and its photos can be swiped', async ({ page 
   await expect(page.locator('.cart-count')).toHaveText('1');
 });
 
+test('a long page in a panel can be read to the end, and a tap outside closes it', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 }); // a small phone
+  await page.goto('/');
+  await page.getByRole('navigation', { name: 'Footer' }).getByRole('button', { name: 'Terms of sale' }).tap();
+  const modal = page.locator('.modal');
+  await expect(modal.locator('h2')).toHaveText('TERMS OF SALE');
+  await expect(modal.locator('.modal__panel')).toHaveCSS('opacity', '1');
+  await noSidewaysScroll(page);
+
+  // Taller than the screen, so it scrolls, and the last line can be reached.
+  const tall = await modal.evaluate(el => el.scrollHeight > el.clientHeight);
+  expect(tall, 'the terms are longer than a phone screen').toBe(true);
+  await modal.evaluate(el => el.scrollTo({ top: el.scrollHeight }));
+  await expect(modal.locator('.modal__text')).toBeInViewport({ ratio: 0.1 });
+  const end = await modal.locator('.modal__panel').evaluate(el => el.getBoundingClientRect().bottom);
+  expect(end).toBeLessThanOrEqual(page.viewportSize().height);
+
+  // Tapping the dimmed space around the panel closes it.
+  await modal.evaluate(el => el.scrollTo({ top: 0 }));
+  await page.mouse.click(4, 4);
+  await expect(modal).toHaveCount(0);
+});
+
 /** The smallest real WebP: one pixel. Enough for the server to accept as a photo. */
 const PIXEL = 'UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==';
