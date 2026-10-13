@@ -5,6 +5,7 @@ import { getProducts, getSite } from '../lib/api.js';
 import { HOME_DEFAULT } from '../data/home.js';
 import { track } from '../lib/analytics.js';
 import { holdSmoothScroll } from '../lib/smoothScroll.js';
+import { hasColours, sizesFor, photoFor, optionLabel } from '../lib/colours.js';
 
 /* One place for everything the shop needs to remember: the catalogue and site
  * settings from the server, the bag, the saved list, the chosen currency,
@@ -39,9 +40,11 @@ export function useHome() {
   };
 }
 
-/** How many of one size may go in the bag: the per-line cap, or fewer if stock is low. */
-function maxFor(product, size) {
-  const s = product?.sizes.find(x => x.size === size);
+/** How many of one colour and size may go in the bag: the per-line cap, or fewer if stock is low. */
+function maxFor(product, size, colour = '') {
+  // A piece sold in colours is bought in one of them; without colours, in none.
+  if (!product || hasColours(product) !== Boolean(colour)) return 0;
+  const s = sizesFor(product, colour).find(x => x.size === size);
   if (!s || !s.available) return 0;
   return Math.min(MAX_PER_LINE, s.left ?? MAX_PER_LINE);
 }
@@ -126,17 +129,22 @@ export function ShopProvider({ children }) {
     const next = [];
     for (const line of cart) {
       const p = products.find(x => x.id === line.id);
-      const max = maxFor(p, line.size);
+      const colour = line.colour ?? '';
+      const what = optionLabel(colour, line.size);
+      const max = maxFor(p, line.size, colour);
       if (!p || max === 0) {
-        notes.push(`${line.name} (${line.size}) is no longer available — removed from your bag`);
+        notes.push(p && hasColours(p) && !colour
+          ? `${line.name} now comes in colours — choose yours again`
+          : `${line.name} (${what}) is no longer available — removed from your bag`);
         changed = true;
         continue;
       }
       const qty = Math.min(line.qty, max);
-      if (qty !== line.qty) notes.push(`Only ${max} ${p.name} (${line.size}) left — your bag has been updated`);
+      if (qty !== line.qty) notes.push(`Only ${max} ${p.name} (${what}) left — your bag has been updated`);
       if (p.price !== line.price) notes.push(`${p.name} is now ${format(p.price)}`);
-      const updated = { ...line, name: p.name, price: p.price, img: p.img, qty };
-      if (qty !== line.qty || p.price !== line.price || p.name !== line.name || p.img !== line.img) changed = true;
+      const { img } = photoFor(p, colour);
+      const updated = { ...line, name: p.name, price: p.price, img, qty };
+      if (qty !== line.qty || p.price !== line.price || p.name !== line.name || img !== line.img) changed = true;
       next.push(updated);
     }
     if (changed) setCart(next);
@@ -147,20 +155,23 @@ export function ShopProvider({ children }) {
 
   /* --------------------------------------------------------------- bag */
 
-  const addToCart = useCallback((product, size) => {
+  const addToCart = useCallback((product, size, colour = '') => {
     const p = products.find(x => x.id === product.id) ?? product;
-    const max = maxFor(p, size);
-    if (max === 0) { toast(`${p.name} (${size}) HAS SOLD OUT`); return; }
+    if (hasColours(p) && !colour) { toast('CHOOSE A COLOUR FIRST'); return; }
+    const what = optionLabel(colour, size);
+    const max = maxFor(p, size, colour);
+    if (max === 0) { toast(`${p.name} (${what}) HAS SOLD OUT`); return; }
 
-    const key = `${p.id}|${size}`;
+    const key = `${p.id}|${colour}|${size}`;
     const existing = cart.find(i => i.key === key);
     if (existing && existing.qty >= max) {
-      toast(max < MAX_PER_LINE ? `ONLY ${max} LEFT IN ${size}` : `UP TO ${MAX_PER_LINE} PER ORDER`);
+      toast(max < MAX_PER_LINE ? `ONLY ${max} LEFT IN ${what}` : `UP TO ${MAX_PER_LINE} PER ORDER`);
       return;
     }
+    const { img } = photoFor(p, colour);
     setCart(items => existing
       ? items.map(i => i.key === key ? { ...i, qty: i.qty + 1 } : i)
-      : [...items, { key, id: p.id, name: p.name, price: p.price, img: p.img, size, qty: 1 }]);
+      : [...items, { key, id: p.id, name: p.name, price: p.price, img, colour, size, qty: 1 }]);
     toast(`${p.name} ADDED TO BAG`, 'violet');
     track('add_to_cart', { productId: p.id, size, valueKobo: p.priceKobo });
   }, [products, cart, toast]);
@@ -169,7 +180,7 @@ export function ShopProvider({ children }) {
     const line = cart.find(i => i.key === key);
     if (!line) return;
     if (delta > 0) {
-      const max = maxFor(products.find(p => p.id === line.id), line.size);
+      const max = maxFor(products.find(p => p.id === line.id), line.size, line.colour ?? '');
       if (line.qty + delta > max) {
         toast(max === 0 ? 'SOLD OUT' : max < MAX_PER_LINE ? `ONLY ${max} LEFT` : `UP TO ${MAX_PER_LINE} PER ORDER`);
         return;

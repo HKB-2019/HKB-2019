@@ -74,7 +74,10 @@ function deliveryDetails(body) {
 /**
  * POST /api/checkout
  * Body: { email, name, phone, address: { line1, line2, city, state, country },
- *         items: [{ productId, size, qty }] }
+ *         items: [{ productId, colour, size, qty }] }
+ *
+ * `colour` is the colour's name for a product sold in colours, and left out
+ * (or '') for one that is not.
  *
  * The browser sends WHAT is being bought and WHERE it is going, never WHAT IT
  * COSTS. Every price and the delivery fee are read from this database. A
@@ -128,6 +131,7 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
       for (const raw of items) {
         const productId = String(raw?.productId ?? '');
         const size = String(raw?.size ?? '');
+        const colour = String(raw?.colour ?? '');
         // Deliberately not Number(): that coerces "2", [2] and true into 2.
         // A JSON API should be told a number, and say so when it is not.
         const qty = raw?.qty;
@@ -142,15 +146,19 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
           SELECT p.id, p.name, p.price_kobo, v.id AS variant_id
             FROM products p
             JOIN variants v ON v.product_id = p.id
-           WHERE p.id = $1 AND v.size = $2 AND ${onSale()}
-        `, [productId, size]);
+           WHERE p.id = $1 AND v.colour = $2 AND v.size = $3 AND ${onSale()}
+        `, [productId, colour, size]);
 
         if (!row) {
-          const p = await tx.one(`SELECT name FROM products p WHERE id = $1 AND ${onSale()}`, [productId]);
+          const p = await tx.one(`
+            SELECT name, EXISTS (SELECT 1 FROM product_colours c WHERE c.product_id = p.id) AS coloured
+              FROM products p WHERE id = $1 AND ${onSale()}`, [productId]);
+          if (p?.coloured && !colour) throw fail(400, `Please choose a colour of ${p.name}.`);
           throw fail(404, p
-            ? `${p.name} is no longer available in size ${size}.`
+            ? `${p.name} is no longer available in ${colour ? `${colour}, ` : ''}size ${size}.`
             : 'Something in your bag is no longer available.');
         }
+        const what = colour ? `${row.name} (${colour}, ${size})` : `${row.name} (${size})`;
 
         // Hold the stock in one statement that only succeeds if there is
         // enough. Reading the count and then subtracting would be two steps,
@@ -166,8 +174,8 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
         if (!held) {
           const { stock } = await tx.one('SELECT stock FROM variants WHERE id = $1', [row.variant_id]);
           throw fail(409, stock === 0
-            ? `${row.name} (${size}) has sold out.`
-            : `${row.name} (${size}) — only ${stock} left.`);
+            ? `${what} has sold out.`
+            : `${what} — only ${stock} left.`);
         }
 
         subtotal += row.price_kobo * qty;
@@ -175,6 +183,7 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
           productId: row.id,
           variantId: row.variant_id,
           name: row.name,
+          colour,
           size,
           unitPriceKobo: row.price_kobo,
           qty
@@ -219,9 +228,9 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
       for (const l of lines) {
         await tx.query(`
           INSERT INTO order_items
-            (order_id, product_id, variant_id, name, size, unit_price_kobo, qty)
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
-        `, [id, l.productId, l.variantId, l.name, l.size, l.unitPriceKobo, l.qty]);
+            (order_id, product_id, variant_id, name, colour, size, unit_price_kobo, qty)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `, [id, l.productId, l.variantId, l.name, l.colour, l.size, l.unitPriceKobo, l.qty]);
       }
 
       return { id, reference, subtotal, shipping, discount, discountKobo, email: normalisedEmail, lines };

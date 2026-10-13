@@ -79,6 +79,16 @@ adminSalesRouter.get('/admin/sales', async (_req, res) => {
      LIMIT 8
   `);
 
+  // Best-selling colours, for pieces sold in colours: what to reorder.
+  const colours = await query(`
+    SELECT i.name, i.colour, SUM(i.qty) AS qty
+      FROM order_items i JOIN orders o ON o.id = i.order_id
+     WHERE o.status = 'paid' AND i.colour <> ''
+     GROUP BY i.name, i.colour
+     ORDER BY qty DESC, i.name, i.colour
+     LIMIT 8
+  `);
+
   const codes = await query(`
     SELECT discount_code AS code, COUNT(*) AS orders, SUM(discount_kobo) AS discount_kobo
       FROM orders WHERE status = 'paid' AND discount_code IS NOT NULL
@@ -95,6 +105,7 @@ adminSalesRouter.get('/admin/sales', async (_req, res) => {
     },
     pieces: pieces.map(p => ({ productId: p.product_id, name: p.name, qty: p.qty, revenueKobo: p.revenue_kobo })),
     sizes: sizes.map(s => ({ size: s.size, qty: s.qty })),
+    colours: colours.map(c => ({ name: c.name, colour: c.colour, qty: c.qty })),
     codes: codes.map(c => ({ code: c.code, orders: c.orders, discountKobo: c.discount_kobo }))
   });
 });
@@ -196,21 +207,21 @@ adminSalesRouter.delete('/admin/discounts/:code', async (req, res) => {
 /* --------------------------------------------------- back-in-stock list */
 
 const ALERTS = `
-  SELECT a.id, a.product_id, a.size, a.email, a.created_at, p.name, v.stock
+  SELECT a.id, a.product_id, a.colour, a.size, a.email, a.created_at, p.name, v.stock
     FROM stock_alerts a
     JOIN products p ON p.id = a.product_id
-    LEFT JOIN variants v ON v.product_id = a.product_id AND v.size = a.size
-   ORDER BY p.position, p.id, a.size, a.id
+    LEFT JOIN variants v ON v.product_id = a.product_id AND v.colour = a.colour AND v.size = a.size
+   ORDER BY p.position, p.id, a.colour, a.size, a.id
 `;
 
-/** Grouped by piece and size, with whether that size is back in stock now. */
+/** Grouped by piece, colour and size, with whether that one is back in stock now. */
 adminSalesRouter.get('/admin/stock-alerts', async (_req, res) => {
   const rows = await query(ALERTS);
   const groups = [];
   for (const r of rows) {
     let g = groups.at(-1);
-    if (!g || g.productId !== r.product_id || g.size !== r.size) {
-      g = { productId: r.product_id, name: r.name, size: r.size, stock: r.stock ?? 0, people: [] };
+    if (!g || g.productId !== r.product_id || g.colour !== (r.colour || null) || g.size !== r.size) {
+      g = { productId: r.product_id, name: r.name, colour: r.colour || null, size: r.size, stock: r.stock ?? 0, people: [] };
       groups.push(g);
     }
     g.people.push({ id: r.id, email: r.email, askedAt: iso(r.created_at) });
@@ -225,15 +236,17 @@ adminSalesRouter.get('/admin/stock-alerts.csv', async (_req, res) => {
     'Content-Disposition': `attachment; filename="masq-waiting-${new Date().toISOString().slice(0, 10)}.csv"`,
     'Cache-Control': 'no-store'
   });
-  res.send(toCsv(['Email', 'Piece', 'Size', 'In stock now', 'Asked'],
-    rows.map(r => [r.email, r.name, r.size, r.stock ?? 0, iso(r.created_at)])));
+  res.send(toCsv(['Email', 'Piece', 'Colour', 'Size', 'In stock now', 'Asked'],
+    rows.map(r => [r.email, r.name, r.colour, r.size, r.stock ?? 0, iso(r.created_at)])));
 });
 
 /** Clear one size's waiting list — once those people have been told. */
 adminSalesRouter.post('/admin/stock-alerts/clear', async (req, res) => {
   const productId = String(req.body?.productId ?? '');
+  const colour = String(req.body?.colour ?? '');
   const size = String(req.body?.size ?? '');
-  const gone = await query('DELETE FROM stock_alerts WHERE product_id = $1 AND size = $2 RETURNING id', [productId, size]);
+  const gone = await query('DELETE FROM stock_alerts WHERE product_id = $1 AND colour = $2 AND size = $3 RETURNING id',
+    [productId, colour, size]);
   res.json({ ok: true, cleared: gone.length });
 });
 

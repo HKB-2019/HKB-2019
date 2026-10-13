@@ -119,7 +119,7 @@ export default function OrderStatus() {
                 <ul className="status__items">
                   {order.items.map((i, n) => (
                     <li key={n}>
-                      <span>{i.qty}× {i.name} <em>{i.size}</em></span>
+                      <span>{i.qty}× {i.name} <em>{i.colour ? `${i.colour}, ${i.size}` : i.size}</em></span>
                       <span className="num">{naira(i.unitPriceKobo * i.qty)}</span>
                     </li>
                   ))}

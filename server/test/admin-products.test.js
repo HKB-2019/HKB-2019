@@ -138,9 +138,16 @@ test('a size can only be removed once it is empty and nobody is paying for one',
   assert.equal(counted.status, 409, 'it still has stock');
   assert.match(counted.body.error, /count to 0/);
 
-  const order = await shop.checkout({ email: 'a@example.com', items: [{ productId: 'tee', size: 'XL', qty: 1 }] });
+  const order = await shop.checkout({ email: 'a@example.com', items: [{ productId: 'tee', colour: 'Indigo', size: 'XL', qty: 1 }] });
   assert.equal(order.status, 200, order.raw);
+  // XL in every colour has to be at 0: one colour still counted keeps the size.
+  const xls = sizes.filter(s => s.size === 'XL');
+  assert.equal(xls.length, 3, 'one count per colour');
   await api(`/stock/${xl.variantId}`, 'POST', { stock: 0 });
+  const otherColour = await api(`/products/tee/sizes/${xl.variantId}`, 'DELETE');
+  assert.equal(otherColour.status, 409);
+  assert.match(otherColour.body.error, /Black XL count to 0/);
+  for (const s of xls) await api(`/stock/${s.variantId}`, 'POST', { stock: 0 });
   const held = await api(`/products/tee/sizes/${xl.variantId}`, 'DELETE');
   assert.equal(held.status, 409, 'an unfinished order holds one');
 

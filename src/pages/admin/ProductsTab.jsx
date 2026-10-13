@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import {
   adminProducts, adminCreateProduct, adminUpdateProduct, adminMoveProduct,
   adminAddSize, adminRemoveSize, adminUploadPhoto, adminRemovePhoto, adminSetStock,
-  adminAddGalleryPhoto, adminRemoveGalleryPhoto
+  adminAddGalleryPhoto, adminRemoveGalleryPhoto,
+  adminAddColour, adminUpdateColour, adminRemoveColour, adminUploadColourPhoto, adminRemoveColourPhoto
 } from '../../lib/api.js';
 import { preparePhoto } from './photo.js';
 import { pageHref, NEW_TAB } from '../../lib/media.js';
@@ -263,14 +264,25 @@ function ProductCard({ product: p, first, last, onChanged, onReordered }) {
 
         <DropTime product={p} onChanged={onChanged} />
 
+        <Colours product={p} onChanged={onChanged} />
+
         <div className="admin-product__sizes">
-          <span className="admin-product__label">Sizes and stock</span>
-          <ul>
-            {p.sizes.map(s => (
-              <SizeStock key={s.variantId} product={p} size={s} onChanged={onChanged}
-                         onRemove={() => runSize(() => adminRemoveSize(p.id, s.variantId))} />
-            ))}
-          </ul>
+          <span className="admin-product__label">Sizes and stock{p.colours?.length ? <em> counted for each colour</em> : null}</span>
+          {(p.colours?.length ? p.colours.map(c => c.name) : ['']).map(colour => (
+            <div className="admin-sizes__group" key={colour || 'one'}>
+              {colour && (
+                <span className="admin-sizes__colour">
+                  <i style={{ '--swatch': p.colours.find(c => c.name === colour).hex }} aria-hidden="true" />{colour}
+                </span>
+              )}
+              <ul>
+                {p.sizes.filter(s => (s.colour ?? '') === colour).map(s => (
+                  <SizeStock key={s.variantId} product={p} size={s} onChanged={onChanged}
+                             onRemove={() => runSize(() => adminRemoveSize(p.id, s.variantId))} />
+                ))}
+              </ul>
+            </div>
+          ))}
           <form className="admin-product__addsize" onSubmit={(e) => {
             e.preventDefault();
             if (!size.trim()) return;
@@ -284,6 +296,105 @@ function ProductCard({ product: p, first, last, onChanged, onReordered }) {
         </div>
       </div>
     </article>
+  );
+}
+
+/* ------------------------------------------------------------- colours */
+
+const COLOUR_PRESETS = { black: '#141416', white: '#efece6', indigo: '#3d2f9e', blue: '#2a4b8d', navy: '#1b2340',
+  grey: '#7d7b80', gray: '#7d7b80', cream: '#e9e0cc', red: '#9e2b2b', green: '#2f5a3c', brown: '#5b3b26', purple: '#5a2d82' };
+
+/**
+ * The colours a piece comes in. None: it is sold by size alone. The first one
+ * named takes over the stock already counted, and is the colour in the main
+ * photo; each can have a photo of its own.
+ */
+function Colours({ product: p, onChanged }) {
+  const [name, setName] = useState('');
+  const [hex, setHex] = useState('#141416');
+  const [touchedHex, setTouchedHex] = useState(false);
+  const [state, run] = useAction(onChanged);
+  const colours = p.colours ?? [];
+
+  // Typing a common colour name picks its swatch, until the owner picks one.
+  const onName = (v) => {
+    setName(v);
+    const preset = COLOUR_PRESETS[v.trim().toLowerCase()];
+    if (preset && !touchedHex) setHex(preset);
+  };
+
+  const add = (e) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    run(async () => {
+      const r = await adminAddColour(p.id, name, hex);
+      setName(''); setTouchedHex(false);
+      return r;
+    });
+  };
+
+  return (
+    <div className="admin-product__colours">
+      <span className="admin-product__label">
+        Colours <em>{colours.length
+          ? 'the first is the one in the main photo'
+          : 'only if it comes in more than one — the stock above becomes the first colour you add'}</em>
+      </span>
+      {colours.length > 0 && (
+        <ul className="admin-colours">
+          {colours.map((c, i) => <ColourRow key={c.id} product={p} colour={c} first={i === 0} onChanged={onChanged} />)}
+        </ul>
+      )}
+      <form className="admin-product__addsize admin-colours__add" onSubmit={add}>
+        <input type="color" value={hex} aria-label={`Swatch for a new colour of ${p.name}`}
+               onChange={(e) => { setHex(e.target.value); setTouchedHex(true); }} />
+        <input value={name} maxLength={24} placeholder={colours.length ? 'Add a colour, e.g. White' : 'Name its colour, e.g. Black'}
+               aria-label={`New colour for ${p.name}`} onChange={(e) => onName(e.target.value)} />
+        <button className="admin-action" disabled={!name.trim()}>ADD</button>
+        <Note state={state} />
+      </form>
+    </div>
+  );
+}
+
+function ColourRow({ product: p, colour: c, first, onChanged }) {
+  const [name, setName] = useState(c.name);
+  const [state, run, setState] = useAction(onChanged);
+  const fileRef = useRef(null);
+  useEffect(() => { setName(c.name); }, [c.name]);
+  const dirty = name.trim() !== c.name && name.trim() !== '';
+
+  const onPhoto = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setState('saving');
+    let prepared;
+    try { prepared = await preparePhoto(file); }
+    catch (err) { setState(err.message); return; }
+    run(() => adminUploadColourPhoto(p.id, c.id, prepared.image, prepared.image2x));
+  };
+
+  return (
+    <li className="admin-colour">
+      <input type="color" value={c.hex} aria-label={`Swatch for ${c.name}`}
+             onChange={(e) => run(() => adminUpdateColour(p.id, c.id, { hex: e.target.value }))} />
+      <form className="admin-colour__name" onSubmit={(e) => { e.preventDefault(); if (dirty) run(() => adminUpdateColour(p.id, c.id, { name })); }}>
+        <input value={name} maxLength={24} aria-label={`Name of colour ${c.name}`} onChange={(e) => setName(e.target.value)} />
+        {dirty && <button className="admin-action">RENAME</button>}
+      </form>
+      <span className="admin-colour__photo">
+        {c.img
+          ? <img src={c.img} alt={`${p.name} in ${c.name}`} />
+          : <em>{first ? 'main photo' : 'no photo yet'}</em>}
+      </span>
+      <button className="admin-link" onClick={() => fileRef.current?.click()}>{c.img ? 'change photo' : 'add photo'}</button>
+      {c.img && <button className="admin-link" onClick={() => run(() => adminRemoveColourPhoto(p.id, c.id))}>remove photo</button>}
+      <button className="admin-link" aria-label={`Remove colour ${c.name}`} onClick={() => run(() => adminRemoveColour(p.id, c.id))}>remove</button>
+      <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp,image/heic"
+             aria-label={`Photo of ${p.name} in ${c.name}`} onChange={onPhoto} />
+      <Note state={state} />
+    </li>
   );
 }
 
@@ -303,12 +414,13 @@ function SizeStock({ product, size, onChanged, onRemove }) {
     <li className="admin-size">
       <span className="admin-size__name">{size.size}</span>
       <input className="admin-stock-input" type="number" min="0" inputMode="numeric"
-             aria-label={`${product.name}, size ${size.size}, in stock`}
+             aria-label={`${product.name}, ${size.colour ? `${size.colour}, ` : ''}size ${size.size}, in stock`}
              value={value} onChange={(e) => setValue(e.target.value)}
              onKeyDown={(e) => { if (e.key === 'Enter' && dirty) { e.preventDefault(); save(); } }} />
       {dirty && <button className="admin-action" onClick={save}>SAVE</button>}
       {!dirty && size.stock === 0 && (
-        <button className="admin-link" aria-label={`Remove size ${size.size}`} onClick={onRemove}>remove</button>
+        <button className="admin-link" aria-label={size.colour ? `Remove size ${size.size} in every colour` : `Remove size ${size.size}`}
+                onClick={onRemove}>remove</button>
       )}
       <Note state={state} />
     </li>

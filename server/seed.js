@@ -11,7 +11,7 @@ export async function seed({ reset = false } = {}) {
       // except the home page's photos, which live in the images being emptied.
       await tx.query("DELETE FROM settings WHERE key = 'home_images'");
       await tx.query(`TRUNCATE order_items, orders, customers, webhook_events, variants,
-                               product_photos, products, images, subscribers,
+                               product_colours, product_photos, products, images, subscribers,
                                discount_codes, stock_alerts, events, analytics_daily
                       RESTART IDENTITY CASCADE`);
     }
@@ -27,11 +27,20 @@ export async function seed({ reset = false } = {}) {
       `, [p.id, p.name, Math.round(p.naira * 100), p.img, p.badge ?? null,
           Boolean(p.drop), Boolean(p.featured), Boolean(p.essential), position]);
 
-      for (const [size, stock] of Object.entries(p.sizes)) {
-        await tx.query(`
-          INSERT INTO variants (product_id, size, stock) VALUES ($1, $2, $3)
-          ON CONFLICT (product_id, size) DO UPDATE SET stock = EXCLUDED.stock
-        `, [p.id, size, stock]);
+      const colours = p.colours ?? [{ name: '', sizes: p.sizes }];
+      for (const [i, c] of colours.entries()) {
+        if (c.name) {
+          await tx.query(`
+            INSERT INTO product_colours (product_id, name, hex, position) VALUES ($1, $2, $3, $4)
+            ON CONFLICT (product_id, name) DO UPDATE SET hex = EXCLUDED.hex, position = EXCLUDED.position
+          `, [p.id, c.name, c.hex, i]);
+        }
+        for (const [size, stock] of Object.entries(c.sizes)) {
+          await tx.query(`
+            INSERT INTO variants (product_id, colour, size, stock) VALUES ($1, $2, $3, $4)
+            ON CONFLICT (product_id, colour, size) DO UPDATE SET stock = EXCLUDED.stock
+          `, [p.id, c.name, size, stock]);
+        }
       }
     }
   });

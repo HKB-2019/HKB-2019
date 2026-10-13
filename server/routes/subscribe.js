@@ -29,7 +29,7 @@ subscribeRouter.post('/subscribe', subscribeLimit, async (req, res) => {
 });
 
 /**
- * POST /api/stock-alerts  { productId, size, email }
+ * POST /api/stock-alerts  { productId, colour, size, email }
  * "Tell me when it's back" for a size that has sold out. Only for a size that
  * exists and is at zero — anything else is a mistake, or someone fishing.
  * Shares the sign-up limit: it is the same kind of form.
@@ -41,14 +41,16 @@ subscribeRouter.post('/stock-alerts', subscribeLimit, async (req, res) => {
   }
   const productId = String(req.body?.productId ?? '');
   const size = String(req.body?.size ?? '');
+  const colour = String(req.body?.colour ?? '');
   const v = await one(`
     SELECT v.stock FROM variants v JOIN products p ON p.id = v.product_id
-     WHERE p.id = $1 AND v.size = $2 AND ${onSale()}
-  `, [productId, size]);
+     WHERE p.id = $1 AND v.colour = $2 AND v.size = $3 AND ${onSale()}
+  `, [productId, colour, size]);
   if (!v) return res.status(404).json({ error: 'That piece is not available.' });
-  if (v.stock > 0) return res.status(409).json({ error: `${size} is in stock — you can buy it now.` });
+  const what = colour ? `${colour}, ${size}` : size;
+  if (v.stock > 0) return res.status(409).json({ error: `${what} is in stock — you can buy it now.` });
 
-  await query(`INSERT INTO stock_alerts (product_id, size, email) VALUES ($1, $2, $3)
-               ON CONFLICT (product_id, size, email) DO NOTHING`, [productId, size, email]);
+  await query(`INSERT INTO stock_alerts (product_id, colour, size, email) VALUES ($1, $2, $3, $4)
+               ON CONFLICT (product_id, colour, size, email) DO NOTHING`, [productId, colour, size, email]);
   res.json({ ok: true });
 });

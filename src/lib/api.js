@@ -34,7 +34,7 @@ export const startCheckout = ({ email, name, phone, address }, items, discountCo
       email, name, phone, address,
       ...(discountCode ? { discountCode } : {}),
       ...(analyticsSession ? { analyticsSession } : {}),
-      items: items.map(i => ({ productId: i.id, size: i.size, qty: i.qty }))
+      items: items.map(i => ({ productId: i.id, colour: i.colour ?? '', size: i.size, qty: i.qty }))
     })
   });
 
@@ -42,12 +42,12 @@ export const startCheckout = ({ email, name, phone, address }, items, discountCo
 export const checkDiscount = (code, items) =>
   request('/discount', {
     method: 'POST',
-    body: JSON.stringify({ code, items: items.map(i => ({ productId: i.id, size: i.size, qty: i.qty })) })
+    body: JSON.stringify({ code, items: items.map(i => ({ productId: i.id, colour: i.colour ?? '', size: i.size, qty: i.qty })) })
   });
 
 /** "Tell me when it's back" for a sold-out size. */
-export const askForRestock = (productId, size, email) =>
-  request('/stock-alerts', { method: 'POST', body: JSON.stringify({ productId, size, email }) });
+export const askForRestock = (productId, size, email, colour = '') =>
+  request('/stock-alerts', { method: 'POST', body: JSON.stringify({ productId, colour, size, email }) });
 
 export const subscribe = (email) =>
   request('/subscribe', { method: 'POST', body: JSON.stringify({ email }) });
@@ -96,6 +96,14 @@ export const adminAddGalleryPhoto = (id, image, image2x) =>
 export const adminRemoveGalleryPhoto = (id, photoId) =>
   adminRequest(`/admin/products/${encodeURIComponent(id)}/photos/${photoId}`, { method:'DELETE' });
 
+const colourPath = (id, colourId) => `/admin/products/${encodeURIComponent(id)}/colours${colourId ? `/${colourId}` : ''}`;
+export const adminAddColour      = (id, name, hex)      => adminRequest(colourPath(id), { method:'POST', body: JSON.stringify({ name, hex }) });
+export const adminUpdateColour   = (id, colourId, change) => adminRequest(colourPath(id, colourId), { method:'PATCH', body: JSON.stringify(change) });
+export const adminRemoveColour   = (id, colourId)       => adminRequest(colourPath(id, colourId), { method:'DELETE' });
+export const adminUploadColourPhoto = (id, colourId, image, image2x) =>
+  adminRequest(`${colourPath(id, colourId)}/image`, { method:'POST', body: JSON.stringify({ image, image2x }) });
+export const adminRemoveColourPhoto = (id, colourId)    => adminRequest(`${colourPath(id, colourId)}/image`, { method:'DELETE' });
+
 /* --------------------------------------------- admin: sales and waiting */
 
 export const adminSales          = ()             => adminRequest('/admin/sales');
@@ -104,8 +112,8 @@ export const adminCreateDiscount = (d)            => adminRequest('/admin/discou
 export const adminUpdateDiscount = (code, change) => adminRequest(`/admin/discounts/${encodeURIComponent(code)}`, { method:'PATCH', body: JSON.stringify(change) });
 export const adminDeleteDiscount = (code)         => adminRequest(`/admin/discounts/${encodeURIComponent(code)}`, { method:'DELETE' });
 export const adminStockAlerts    = ()             => adminRequest('/admin/stock-alerts');
-export const adminClearAlerts    = (productId, size) =>
-  adminRequest('/admin/stock-alerts/clear', { method:'POST', body: JSON.stringify({ productId, size }) });
+export const adminClearAlerts    = (productId, size, colour = '') =>
+  adminRequest('/admin/stock-alerts/clear', { method:'POST', body: JSON.stringify({ productId, colour: colour ?? '', size }) });
 export const adminRemoveAlert    = (id)           => adminRequest(`/admin/stock-alerts/${id}`, { method:'DELETE' });
 
 export const adminAnalytics = (range) => adminRequest(`/admin/analytics?range=${encodeURIComponent(range)}`);

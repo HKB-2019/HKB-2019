@@ -16,13 +16,19 @@ test('a product card opens its page, where a size is chosen and bought', async (
   await expect(page.getByRole('alert')).toHaveText('CHOOSE A SIZE FIRST');
   await expect(page.locator('.cart-count')).toHaveText('0');
 
+  // It comes in colours: the first in stock is chosen, and another can be.
+  await expect(page.getByRole('radio', { name: 'Indigo' })).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('radio', { name: 'Black' }).click();
+  await expect(page.getByText('COLOUR — BLACK')).toBeVisible();
+  await expect(page).toHaveURL(/\/product\/tee\?colour=Black$/);
+
   await page.getByRole('button', { name: 'L', exact: true }).click();
   await expect(page.getByRole('button', { name: 'L', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', { name: 'ADD TO BAG' }).click();
   await expect(page.locator('.cart-count')).toHaveText('1');
 
   await page.locator('.cart-btn').click();
-  await expect(page.locator('.line-item__variant')).toHaveText('SIZE L');
+  await expect(page.locator('.line-item__variant')).toHaveText('BLACK · SIZE L');
 });
 
 test('the size guide, low-stock note and other pieces are on the product page', async ({ page }) => {

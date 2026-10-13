@@ -5,7 +5,7 @@
 import { test, before, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { startShop, stubPaystack, paystack, sign, WHO, DELIVERY } from './helpers.js';
+import { startShop, stubPaystack, paystack, sign, WHO, DELIVERY, colourOf } from './helpers.js';
 
 let shop;
 before(async () => { shop = await startShop(); stubPaystack(shop.one); });
@@ -13,9 +13,9 @@ after(async () => { await shop.close(); });
 beforeEach(async () => { await shop.reset(); paystack.verify = { status: 'success', amount: null }; });
 
 const stockOf = async (productId, size) =>
-  (await shop.one('SELECT stock FROM variants WHERE product_id = $1 AND size = $2', [productId, size])).stock;
+  (await shop.one('SELECT stock FROM variants WHERE product_id = $1 AND colour = $2 AND size = $3', [productId, colourOf(productId), size])).stock;
 
-const item = (productId = 'cap', size = 'ONE SIZE', qty = 1) => ({ items: [{ productId, size, qty }] });
+const item = (productId = 'cap', size = 'ONE SIZE', qty = 1) => ({ items: [{ productId, colour: colourOf(productId), size, qty }] });
 
 const orderRow = (reference) => shop.one('SELECT * FROM orders WHERE reference = $1', [reference]);
 

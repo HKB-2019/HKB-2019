@@ -1843,3 +1843,82 @@ html{ scrollbar-color:var(--line) var(--bg); }
    edge ever shows. */
 .has-drift .craft__bg{ top:-6%; bottom:-6%; }
 .has-drift .film__bg{ top:-6%; height:112%; }
+
+/* ============ COLOURS ============ */
+/* A swatch: the colour itself in a ring that shows which is chosen. Light
+   colours get a faint edge so white still reads on the dark page. */
+.swatches{ display:flex; flex-wrap:wrap; gap:8px; }
+.swatch{
+  position:relative; width:22px; height:22px; padding:0; border-radius:50%;
+  background:var(--swatch); box-shadow:inset 0 0 0 1px rgba(244,241,235,.28);
+  outline:1px solid transparent; outline-offset:3px;
+  transition:outline-color .25s var(--ease), transform .25s var(--ease);
+}
+.swatch:hover{ transform:scale(1.08); }
+.swatch.is-on{ outline-color:var(--ink); }
+.swatch:focus-visible{ outline:1px solid var(--violet-soft); }
+/* sold out in every size: struck through, still choosable */
+.swatch.is-out::after{
+  content:''; position:absolute; left:50%; top:-3px; bottom:-3px; width:1px;
+  background:var(--ink-dim); transform:rotate(45deg);
+}
+.swatch::before{ content:''; position:absolute; inset:-9px; }   /* a finger-sized target */
+.swatches--large{ gap:12px; }
+.swatches--large .swatch{ width:30px; height:30px; }
+
+/* in a card's quick-add, the swatches sit on their own line above the sizes */
+.card__sizes--colours{ flex-wrap:wrap; row-gap:10px; }
+.pick__colours{ flex:0 0 100%; display:flex; align-items:center; justify-content:center; gap:12px; }
+.pick__colour-name{ font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-dim); min-width:5ch; }
+/* the size buttons' look is not for swatches */
+.card__sizes .swatch, .card__sizes .swatch:hover:not(:disabled){
+  min-width:0; width:18px; height:18px; padding:0; border:0;
+  background:var(--swatch); color:inherit;
+}
+
+/* "3 colours" under a card's price */
+.card__colours{
+  display:flex; align-items:center; gap:8px; margin:9px 0 0;
+  font-size:10px; letter-spacing:.08em; color:var(--ink-faint);
+}
+.card__dots{ display:flex; gap:4px; }
+.card__dots i{
+  width:9px; height:9px; border-radius:50%; background:var(--swatch);
+  box-shadow:inset 0 0 0 1px rgba(244,241,235,.3);
+}
+
+/* the product page */
+.pdp__colours{ border:0; padding:0; margin:30px 0 0; min-width:0; }
+.pdp__colours legend{ padding:0; margin-bottom:14px; font-size:10px; letter-spacing:.18em; color:var(--ink-dim); }
+.pdp__pictured{
+  position:absolute; left:12px; bottom:12px; margin:0; padding:6px 10px;
+  font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink);
+  background:rgba(5,4,7,.72); pointer-events:none;
+}
+@media (max-width:900px){ .pdp__pictured{ bottom:auto; top:12px; } }
+
+/* ---- admin: colours (ProductsTab.jsx) ---- */
+.admin-colours{ list-style:none; margin:0 0 12px; padding:0; display:grid; gap:10px; }
+.admin-colour{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; }
+.admin-colour__name{ display:flex; gap:8px; align-items:center; }
+.admin-colour__name input{
+  width:140px; height:32px; padding:0 10px; font:inherit; font-size:13px;
+  color:var(--ink); background:var(--bg); border:1px solid var(--line-soft);
+}
+.admin-colour__name input:focus{ outline:none; border-color:var(--violet-soft); }
+.admin-colour__photo{ display:inline-flex; align-items:center; min-width:72px; font-size:11px; color:var(--ink-faint); }
+.admin-colour__photo img{ width:34px; height:40px; object-fit:cover; background:var(--bg-3); }
+/* the browser's colour picker, as a plain square swatch */
+.admin-product__colours input[type=color]{
+  width:34px; height:34px; padding:2px; flex:none; cursor:pointer;
+  background:var(--bg); border:1px solid var(--line-soft);
+}
+.admin-product__colours input[type=color]::-webkit-color-swatch-wrapper{ padding:0; }
+.admin-product__colours input[type=color]::-webkit-color-swatch{ border:0; }
+.admin-colours__add input:not([type=color]){ width:190px; }
+.admin-sizes__group + .admin-sizes__group{ margin-top:4px; }
+.admin-sizes__colour{ display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:12px; color:var(--ink-dim); }
+.admin-sizes__colour i{
+  width:12px; height:12px; border-radius:50%; background:var(--swatch);
+  box-shadow:inset 0 0 0 1px rgba(244,241,235,.3);
+}

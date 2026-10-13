@@ -54,9 +54,10 @@ function ShopButton() {
 }
 
 /** A product's name in a drawer, opening its page. */
-function NameLink({ id, name }) {
+function NameLink({ id, name, colour }) {
   const { closeOverlay } = useShop();
-  return <Link to={`/product/${id}`} onClick={closeOverlay}>{name}</Link>;
+  const to = `/product/${id}${colour ? `?colour=${encodeURIComponent(colour)}` : ''}`;
+  return <Link to={to} onClick={closeOverlay}>{name}</Link>;
 }
 
 function BagLines() {
@@ -83,8 +84,8 @@ function BagLines() {
         >
           <img className="line-item__img" src={item.img} alt={item.name} />
           <div>
-            <h3 className="line-item__name"><NameLink id={item.id} name={item.name} /></h3>
-            <p className="line-item__variant">SIZE {item.size}</p>
+            <h3 className="line-item__name"><NameLink id={item.id} name={item.name} colour={item.colour} /></h3>
+            <p className="line-item__variant">{item.colour ? `${item.colour.toUpperCase()} · ` : ''}SIZE {item.size}</p>
             <p className="line-item__price">{format(item.price * item.qty)}</p>
             <div className="qty">
               <button aria-label={`Decrease quantity of ${item.name}`}
@@ -140,7 +141,7 @@ function DiscountBox({ applied, onApplied }) {
   const [state, setState] = useState(null);     // null | 'checking' | error message
 
   // The bag changed (or the drawer reopened): ask again what the code is worth.
-  const lines = cart.map(i => `${i.id}|${i.size}|${i.qty}`).join(',');
+  const lines = cart.map(i => `${i.id}|${i.colour ?? ''}|${i.size}|${i.qty}`).join(',');
   useEffect(() => {
     if (!discountCode) { onApplied(null); return; }
     let live = true;
@@ -403,7 +404,7 @@ function SavedDrawer() {
             <h3 className="line-item__name"><NameLink id={p.id} name={p.name} /></h3>
             <p className="line-item__price">{p.soldOut ? 'SOLD OUT' : format(p.price)}</p>
             {!p.soldOut && (
-              <div className="saved-item__sizes card__sizes" role="group" aria-label={`Add ${p.name} in a size`}>
+              <div className={`saved-item__sizes card__sizes${p.colours?.length ? ' card__sizes--colours' : ''}`} role="group" aria-label={`Add ${p.name} in a size`}>
                 <SizeButtons product={p} />
               </div>
             )}

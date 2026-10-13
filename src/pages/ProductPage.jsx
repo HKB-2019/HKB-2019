@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ShopLayout from '../components/ShopLayout.jsx';
 import { useShop } from '../store/ShopContext.jsx';
@@ -11,6 +11,8 @@ import { track } from '../lib/analytics.js';
 import { isEmail } from '../lib/delivery.js';
 import { jumpToTop } from '../lib/smoothScroll.js';
 import { useGlideToProduct, arrivedByPhoto } from '../lib/pageMorph.js';
+import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel } from '../lib/colours.js';
+import Swatches from '../components/Swatches.jsx';
 
 const ease = [0.33, 0.02, 0.18, 1];
 const TITLE = document.title;
@@ -21,8 +23,13 @@ const TITLE = document.title;
  * The main photo and any extra ones. On a wide screen: one large photo and a
  * row of thumbnails. On a phone: a strip to swipe through, with dots.
  */
-function Gallery({ product }) {
-  const photos = product.photos?.length ? product.photos : (product.img ? [{ img: product.img, img2x: product.img2x }] : []);
+function Gallery({ product, colour }) {
+  // A colour with a photo of its own shows it first, in place of the main one.
+  const own = product.colours?.find(c => c.name === colour && c.img);
+  const base = product.photos?.length ? product.photos : (product.img ? [{ img: product.img, img2x: product.img2x }] : []);
+  const photos = own ? [{ img: own.img, img2x: own.img2x }, ...base.slice(1)] : base;
+  // Picked a colour nobody has photographed yet: say which colour is shown.
+  const pictured = hasColours(product) && !own && colour !== product.colours[0].name ? product.colours[0].name : null;
   const { openOverlay } = useShop();
   const [index, setIndex] = useState(0);
   const [lens, setLens] = useState(null);   // where the mouse is over the photo, in %, and whether it is there
@@ -39,7 +46,7 @@ function Gallery({ product }) {
     setLens({ x: (e.clientX - r.left) / r.width * 100, y: (e.clientY - r.top) / r.height * 100, on: true });
   };
 
-  useEffect(() => { setIndex(0); strip.current?.scrollTo({ left: 0 }); }, [product.id]);
+  useEffect(() => { setIndex(0); strip.current?.scrollTo({ left: 0 }); }, [product.id, own?.img]);
 
   const show = (i) => {
     setIndex(i);
@@ -81,6 +88,7 @@ function Gallery({ product }) {
         ))}
       </div>
       {product.badge && <span className="card__badge">{product.badge}</span>}
+      {pictured && <p className="pdp__pictured">Shown in {pictured}</p>}
 
       {photos.length > 1 && (
         <>
@@ -108,23 +116,24 @@ function Gallery({ product }) {
  * you when it is back. Nothing is sent automatically yet — the owner sees the
  * list in the admin — so the words promise no more than that.
  */
-function RestockAsk({ product }) {
-  const gone = product.sizes.filter(s => !s.available);
+function RestockAsk({ product, colour = '' }) {
+  const gone = sizesFor(product, colour).filter(s => !s.available);
+  const colourOut = hasColours(product) && gone.length === sizesFor(product, colour).length;
   const [open, setOpen] = useState(false);
   const [size, setSize] = useState(gone[0]?.size ?? '');
   const [email, setEmail] = useState('');
   const [state, setState] = useState(null);   // null | 'sending' | 'done' | error message
 
-  useEffect(() => { setOpen(false); setState(null); setSize(gone[0]?.size ?? ''); }, [product.id]);   // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setOpen(false); setState(null); setSize(gone[0]?.size ?? ''); }, [product.id, colour]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!gone.length) return null;
   if (state === 'done') {
-    return <p className="restock restock--done" role="status">WE’LL LET YOU KNOW WHEN {size} IS BACK.</p>;
+    return <p className="restock restock--done" role="status">WE’LL LET YOU KNOW WHEN {optionLabel(colour, size).toUpperCase()} IS BACK.</p>;
   }
   if (!open) {
     return (
       <button type="button" className="restock__open" onClick={() => setOpen(true)}>
-        {product.soldOut ? 'TELL ME WHEN IT’S BACK' : 'SOLD OUT IN YOUR SIZE? TELL ME WHEN IT’S BACK'}
+        {product.soldOut || colourOut ? 'TELL ME WHEN IT’S BACK' : 'SOLD OUT IN YOUR SIZE? TELL ME WHEN IT’S BACK'}
       </button>
     );
   }
@@ -133,13 +142,13 @@ function RestockAsk({ product }) {
     e.preventDefault();
     if (!isEmail(email)) { setState('Enter a valid email address.'); return; }
     setState('sending');
-    try { await askForRestock(product.id, size, email.trim()); setState('done'); track('restock_request', { productId: product.id, size }); }
+    try { await askForRestock(product.id, size, email.trim(), colour); setState('done'); track('restock_request', { productId: product.id, size }); }
     catch (err) { setState(err.message); }
   };
 
   return (
     <form className="restock" onSubmit={send} noValidate>
-      <p className="restock__lead">Leave your email and we’ll tell you when it’s back.</p>
+      <p className="restock__lead">Leave your email and we’ll tell you when {colour ? `${colour} is` : 'it’s'} back.</p>
       <div className="restock__row">
         {gone.length > 1 && (
           <>
@@ -161,21 +170,37 @@ function RestockAsk({ product }) {
 
 /* ------------------------------------------------------- buying box */
 
-function BuyBox({ product }) {
+function BuyBox({ product, colour, onColour }) {
   const { addToCart, format, wishlist, toggleWish, openOverlay, toast } = useShop();
-  const only = product.sizes.length === 1 ? product.sizes[0] : null;
-  const [size, setSize] = useState(only?.available ? only.size : null);
+  const sizes = sizesFor(product, colour);
+  // One size and no colours: nothing to choose. One size in colours: the size
+  // needs no choosing, the colour does.
+  const single = sizes.length === 1 ? sizes[0] : null;
+  const only = onlyChoice(product);
+  const [size, setSize] = useState(single?.available ? single.size : null);
   const [asked, setAsked] = useState(false);
   const saved = wishlist.includes(product.id);
+  const colourOut = hasColours(product) && sizes.every(s => !s.available);
 
-  useEffect(() => { setSize(only?.available ? only.size : null); setAsked(false); }, [product.id]);   // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setSize(single?.available ? single.size : null); setAsked(false); }, [product.id]);   // eslint-disable-line react-hooks/exhaustive-deps
 
-  const chosen = product.sizes.find(s => s.size === size);
+  // A new colour keeps the size chosen if that colour has it, else asks again.
+  const pickColour = (name) => {
+    onColour(name);
+    const next = sizesFor(product, name);
+    const keep = next.find(s => s.size === size && s.available);
+    const one = next.length === 1 && next[0].available ? next[0].size : null;
+    setSize(keep ? size : one);
+    setAsked(false);
+  };
+
+  const chosen = sizes.find(s => s.size === size && s.available);
 
   const add = () => {
     if (product.soldOut) { toast('SOLD OUT — JOIN THE LIST FOR RESTOCKS'); return; }
+    if (colourOut) { toast(`${colour.toUpperCase()} HAS SOLD OUT — TRY ANOTHER COLOUR`); return; }
     if (!chosen) { setAsked(true); return; }
-    addToCart(product, chosen.size);
+    addToCart(product, chosen.size, colour);
   };
 
   return (
@@ -185,14 +210,21 @@ function BuyBox({ product }) {
         {product.soldOut ? 'SOLD OUT' : format(product.price)}
       </p>
 
-      {!only && (
+      {hasColours(product) && (
+        <fieldset className="pdp__colours">
+          <legend>COLOUR — {colour.toUpperCase()}{colourOut ? ' (SOLD OUT)' : ''}</legend>
+          <Swatches product={product} value={colour} onChange={pickColour} large />
+        </fieldset>
+      )}
+
+      {!only && !single && (
         <fieldset className="pdp__sizes">
           <legend>
             <span>SIZE{chosen ? ` — ${chosen.size}` : ''}</span>
             <button type="button" className="pdp__guide" onClick={() => openOverlay({ info: 'SIZE_GUIDE' })}>SIZE GUIDE</button>
           </legend>
           <div className="pdp__size-row">
-            {product.sizes.map(s => (
+            {sizes.map(s => (
               <button key={s.size} type="button" aria-pressed={size === s.size}
                       disabled={!s.available}
                       className={size === s.size ? 'is-on' : ''}
@@ -207,18 +239,18 @@ function BuyBox({ product }) {
           </p>
         </fieldset>
       )}
-      {only?.left ? <p className="pdp__hint">ONLY {only.left} LEFT</p> : null}
+      {single?.left ? <p className="pdp__hint">ONLY {single.left} LEFT</p> : null}
 
       <div className="pdp__actions">
-        <button className="btn btn--solid pdp__add" onClick={add} disabled={product.soldOut}>
-          {product.soldOut ? 'SOLD OUT' : 'ADD TO BAG'}
+        <button className="btn btn--solid pdp__add" onClick={add} disabled={product.soldOut || colourOut}>
+          {product.soldOut || colourOut ? 'SOLD OUT' : 'ADD TO BAG'}
         </button>
         <button className={`pdp__save${saved ? ' is-on' : ''}`} aria-pressed={saved}
                 aria-label={saved ? `Remove ${product.name} from saved` : `Save ${product.name}`}
                 onClick={() => toggleWish(product.id)}><Heart /></button>
       </div>
 
-      <RestockAsk product={product} />
+      <RestockAsk product={product} colour={colour} />
 
       {product.description && <p className="pdp__text">{product.description}</p>}
 
@@ -284,6 +316,19 @@ export default function ProductPage() {
   const goTo = useSectionLink();
   const product = productById(id);
 
+  // The colour being looked at: the one a link names (?colour=Black), else
+  // the first in stock. Kept in the address, so a shared link opens on it.
+  const [params, setParams] = useSearchParams();
+  const asked = params.get('colour');
+  const colour = product && hasColours(product)
+    ? (product.colours.find(c => c.name.toLowerCase() === asked?.toLowerCase())?.name ?? firstColour(product))
+    : '';
+  const setColour = (name) => {
+    const next = new URLSearchParams(params);
+    next.set('colour', name);
+    setParams(next, { replace: true, preventScrollReset: true });
+  };
+
   // Before the browser draws the new page (and before a gliding photo's
   // "after" picture is taken), so it opens at the top.
   useLayoutEffect(() => { jumpToTop(); }, [id]);
@@ -308,8 +353,8 @@ export default function ProductPage() {
             <span aria-hidden="true">/</span>
             <span aria-current="page">{product.name}</span>
           </nav>
-          <Gallery product={product} />
-          <BuyBox product={product} />
+          <Gallery product={product} colour={colour} />
+          <BuyBox product={product} colour={colour} onColour={setColour} />
         </motion.div>
         <MoreLike product={product} />
       </>

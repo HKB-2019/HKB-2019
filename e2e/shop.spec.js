@@ -9,7 +9,7 @@ test('a customer buys a tee, pays, and the owner sees who to send it to', async 
   const tee = card(page, 'THE FACE TEE');
   await tee.hover();
   await tee.getByRole('button', { name: 'QUICK ADD' }).click();
-  await tee.getByRole('button', { name: 'Add THE FACE TEE in M', exact: true }).click();
+  await tee.getByRole('button', { name: 'Add THE FACE TEE in Indigo, M', exact: true }).click();
   await expect(page.locator('.cart-count')).toHaveText('1');
 
   // Bag → delivery → pay.
@@ -79,11 +79,12 @@ test('the carousel asks for a size instead of adding one that does not exist', a
   const hoodie = page.locator('.slide', { hasText: 'THE RITUAL HOODIE' });
   await hoodie.scrollIntoViewIfNeeded();
   await hoodie.hover();
-  await hoodie.getByRole('button', { name: 'Choose a size of THE RITUAL HOODIE' }).click();
-  await hoodie.getByRole('button', { name: 'Add THE RITUAL HOODIE in L', exact: true }).click();
+  await hoodie.getByRole('button', { name: 'Choose a colour and size of THE RITUAL HOODIE' }).click();
+  await hoodie.getByRole('radio', { name: 'Indigo' }).click();
+  await hoodie.getByRole('button', { name: 'Add THE RITUAL HOODIE in Indigo, L', exact: true }).click();
 
   await page.locator('.cart-btn').click();
-  await expect(page.locator('.line-item__variant')).toHaveText('SIZE L');
+  await expect(page.locator('.line-item__variant')).toHaveText('INDIGO · SIZE L');
 });
 
 test('a sold-out piece cannot go in the bag', async ({ page }) => {
@@ -118,16 +119,19 @@ test('a size set to zero in the admin is struck out on the shop, and leaves the 
   const tee = card(page, 'THE FACE TEE');
   await tee.hover();
   await tee.getByRole('button', { name: 'QUICK ADD' }).click();
-  await tee.getByRole('button', { name: 'Add THE FACE TEE in S', exact: true }).click();
+  await tee.getByRole('button', { name: 'Add THE FACE TEE in Indigo, S', exact: true }).click();
 
   await signIn(page);
-  await setStock(page, 'tee', 'S', 0);
+  await setStock(page, 'tee', 'S', 0, 'Indigo');
   await page.reload();
 
   const again = card(page, 'THE FACE TEE');
   await again.hover();
   await again.getByRole('button', { name: 'QUICK ADD' }).click();
-  await expect(again.getByRole('button', { name: 'S sold out' })).toBeDisabled();
+  await expect(again.getByRole('button', { name: 'Indigo, S sold out' })).toBeDisabled();
+  // Only that colour: the black S is still there to buy.
+  await again.getByRole('radio', { name: 'Black' }).click();
+  await expect(again.getByRole('button', { name: 'Add THE FACE TEE in Black, S', exact: true })).toBeEnabled();
   await expect(page.locator('.cart-count')).toHaveText('0');
   await expect(page.locator('.toast').first()).toContainText('NO LONGER AVAILABLE');
 });

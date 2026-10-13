@@ -94,6 +94,11 @@ Everything below is in the admin — no code.
    it is cropped and shrunk before it uploads.
    Write a description for each — it shows on the product's own page, and
    in the preview when someone shares the link on WhatsApp.
+   **Colours:** the sample tee (Indigo, Black, White) and hoodie (Black,
+   Indigo) have made-up colours and counts. Set the real ones under
+   *Colours* on each card: the first colour is the one in the main photo,
+   and each colour can have a photo of its own. A piece with no colours is
+   sold by size alone.
 6. **Make the home page yours.** *Home page.* Your own photos for the top of
    the page and the two bands, and every line of words. The menu names
    COLLECTIONS and JOURNAL came with the design: rename them, or switch them

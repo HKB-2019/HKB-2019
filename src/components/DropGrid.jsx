@@ -5,22 +5,40 @@ import { useShop, useHome } from '../store/ShopContext.jsx';
 import { srcSet, CARD_SIZES } from '../lib/media.js';
 import { scrollToId } from '../lib/scroll.js';
 import { useGlideToProduct } from '../lib/pageMorph.js';
+import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel } from '../lib/colours.js';
+import Swatches, { ColourDots } from './Swatches.jsx';
 import { Arrow, Heart } from './Icons.jsx';
 
 const ease = [0.33, 0.02, 0.18, 1];
 
-/** Size buttons for one product: sold-out sizes shown, but struck through and disabled. */
+/**
+ * Size buttons for one product: sold-out sizes shown, but struck through and
+ * disabled. A piece sold in colours gets its swatches first, and the sizes
+ * are that colour's.
+ */
 export function SizeButtons({ product, onPicked }) {
   const { addToCart } = useShop();
-  return product.sizes.map(s => (
-    <button
-      key={s.size}
-      disabled={!s.available}
-      aria-label={s.available ? `Add ${product.name} in ${s.size}` : `${s.size} sold out`}
-      title={s.left ? `Only ${s.left} left` : undefined}
-      onClick={() => { addToCart(product, s.size); onPicked?.(); }}
-    >{s.size}</button>
-  ));
+  const [colour, setColour] = useState(() => firstColour(product));
+  const sizes = sizesFor(product, colour);
+  return (
+    <>
+      {hasColours(product) && (
+        <div className="pick__colours">
+          <Swatches product={product} value={colour} onChange={setColour} />
+          <span className="pick__colour-name" aria-hidden="true">{colour}</span>
+        </div>
+      )}
+      {sizes.map(s => (
+        <button
+          key={s.size}
+          disabled={!s.available}
+          aria-label={s.available ? `Add ${product.name} in ${optionLabel(colour, s.size)}` : `${optionLabel(colour, s.size)} sold out`}
+          title={s.left ? `Only ${s.left} left` : undefined}
+          onClick={() => { addToCart(product, s.size, colour); onPicked?.(); }}
+        >{s.size}</button>
+      ))}
+    </>
+  );
 }
 
 function ProductCard({ product, picking, onPick, onClosePick }) {
@@ -28,7 +46,7 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
   const glide = useGlideToProduct();
   const to = `/product/${product.id}`;
   const saved = wishlist.includes(product.id);
-  const only = product.sizes.length === 1 ? product.sizes[0] : null;
+  const only = onlyChoice(product);
 
   const onQuickAdd = () => {
     if (product.soldOut) { toast('SOLD OUT — JOIN THE LIST FOR RESTOCKS'); return; }
@@ -70,7 +88,7 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
           {product.soldOut ? 'SOLD OUT' : only ? 'ADD TO BAG' : 'QUICK ADD'}
         </button>
 
-        <div className="card__sizes">
+        <div className={`card__sizes${hasColours(product) ? ' card__sizes--colours' : ''}`}>
           <SizeButtons product={product} onPicked={onClosePick} />
         </div>
       </div>
@@ -79,6 +97,7 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
       <p className={`card__price${product.soldOut ? ' card__sold' : ''}`}>
         {product.soldOut ? 'SOLD OUT' : format(product.price)}
       </p>
+      <ColourDots product={product} />
     </motion.article>
   );
 }

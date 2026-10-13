@@ -46,9 +46,10 @@ export async function adminPatch(page, id, change) {
   return res.json();
 }
 
-export async function setStock(page, productId, size, stock) {
+/** Set one count. For a piece sold in colours, name the colour (else its first). */
+export async function setStock(page, productId, size, stock, colour) {
   const list = await (await page.request.get('/api/admin/products')).json();
-  const v = list.find(p => p.id === productId).sizes.find(s => s.size === size);
+  const v = list.find(p => p.id === productId).sizes.find(s => s.size === size && (!colour || s.colour === colour));
   const res = await page.request.post(`/api/admin/stock/${v.variantId}`, { data: { stock } });
   expect(res.status()).toBe(200);
 }

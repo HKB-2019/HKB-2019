@@ -9,6 +9,7 @@
 import { test, before, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
+import { colourOf } from './helpers.js';
 
 // In-memory Postgres by default. Set TEST_DATABASE_URL to run the same tests
 // against a real server — it must be a throwaway database: every test wipes it.
@@ -72,7 +73,7 @@ beforeEach(async () => {
 /* ---- helpers ---------------------------------------------------------- */
 
 const stockOf = async (productId, size) =>
-  (await one('SELECT stock FROM variants WHERE product_id = $1 AND size = $2', [productId, size])).stock;
+  (await one('SELECT stock FROM variants WHERE product_id = $1 AND colour = $2 AND size = $3', [productId, colourOf(productId), size])).stock;
 
 const statusOf = async (reference) =>
   (await one('SELECT status FROM orders WHERE reference = $1', [reference])).status;
@@ -144,7 +145,7 @@ const checkout = (body) => request('/api/checkout', {
 });
 
 const buy = async (productId, size, qty = 1, email = 'a@example.com') => {
-  const res = await checkout({ email, items: [{ productId, size, qty }] });
+  const res = await checkout({ email, items: [{ productId, colour: colourOf(productId), size, qty }] });
   assert.equal(res.status, 200, JSON.stringify(res.body));
   return res.body.reference;
 };
@@ -172,7 +173,7 @@ test('subtotal is exact across mixed quantities (integer kobo, no float drift)',
   const res = await checkout({
     email: 'buyer@example.com',
     items: [
-      { productId: 'tee',   size: 'M',        qty: 3 },   // 3 x 28,000
+      { productId: 'tee',   colour: 'Indigo', size: 'M',        qty: 3 },   // 3 x 28,000
       { productId: 'scarf', size: 'ONE SIZE', qty: 2 },   // 2 x 18,000
       { productId: 'cap',   size: 'ONE SIZE', qty: 1 }    // 1 x 14,000
     ]
@@ -500,8 +501,14 @@ test('the catalogue reports real stock and computes soldOut', async () => {
   assert.equal(tee.priceKobo, 2_800_000);
   assert.deepEqual(tee.sizes.map(s => s.size), ['S', 'M', 'L', 'XL']);
   assert.ok(tee.sizes.every(s => s.available));
-  assert.equal(tee.sizes.find(s => s.size === 'XL').left, 6, 'a low count is shown');
-  assert.equal(tee.sizes.find(s => s.size === 'M').left, null, 'a healthy count is nobody\'s business');
+  // Sold in colours, each with its own counts.
+  assert.deepEqual(tee.colours.map(c => [c.name, c.hex]), [['Indigo', '#3d2f9e'], ['Black', '#141416'], ['White', '#efece6']]);
+  const indigo = tee.colours[0];
+  assert.equal(indigo.sizes.find(s => s.size === 'XL').left, 6, 'a low count is shown');
+  assert.equal(indigo.sizes.find(s => s.size === 'M').left, null, 'a healthy count is nobody\'s business');
+  assert.equal(tee.colours[2].sizes.find(s => s.size === 'XL').left, 2);
+  assert.equal(indigo.img, null, 'no photo of its own: the main photo shows');
+  assert.deepEqual(res.body.find(p => p.id === 'cap').colours, [], 'one colour: no choice to make');
   assert.equal(tee.img, '/assets/img/prod-tee.webp');
   assert.equal(tee.img2x, '/assets/img/prod-tee@2x.webp');
 

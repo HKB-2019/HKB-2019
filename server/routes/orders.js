@@ -38,7 +38,7 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
   }
 
   const items = await query(`
-    SELECT name, size, unit_price_kobo, qty FROM order_items WHERE order_id = $1 ORDER BY id
+    SELECT name, colour, size, unit_price_kobo, qty FROM order_items WHERE order_id = $1 ORDER BY id
   `, [order.id]);
 
   // Anyone holding the link sees this page, so it says enough for the
@@ -69,7 +69,7 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
     paidAt: order.paid_at,
     createdAt: order.created_at,
     items: items.map(i => ({
-      name: i.name, size: i.size, qty: i.qty, unitPriceKobo: i.unit_price_kobo
+      name: i.name, colour: i.colour || null, size: i.size, qty: i.qty, unitPriceKobo: i.unit_price_kobo
     }))
   });
 });

@@ -5,7 +5,7 @@
  */
 import { test, before, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { startShop, stubPaystack, paystack, sign } from './helpers.js';
+import { startShop, stubPaystack, paystack, sign, colourOf } from './helpers.js';
 
 let shop, cookie, releaseStock, reconcile;
 before(async () => {
@@ -21,11 +21,11 @@ beforeEach(async () => {
 });
 
 const api = (path, method = 'GET', json) => shop.request(`/api/admin${path}`, { method, cookie, json });
-const item = (productId = 'tee', size = 'M', qty = 1) => ({ items: [{ productId, size, qty }] });
+const item = (productId = 'tee', size = 'M', qty = 1) => ({ items: [{ productId, colour: colourOf(productId), size, qty }] });
 const orderRow = (reference) => shop.one('SELECT * FROM orders WHERE reference = $1', [reference]);
 const usesOf = async (code) => (await shop.one('SELECT uses FROM discount_codes WHERE code = $1', [code])).uses;
 const stockOf = async (productId, size) =>
-  (await shop.one('SELECT stock FROM variants WHERE product_id = $1 AND size = $2', [productId, size])).stock;
+  (await shop.one('SELECT stock FROM variants WHERE product_id = $1 AND colour = $2 AND size = $3', [productId, colourOf(productId), size])).stock;
 
 const makeCode = (body) => api('/discounts', 'POST', { kind: 'percent', amount: 10, ...body });
 
@@ -209,7 +209,7 @@ test('a refund is recorded, takes the order out of revenue, and can put the stoc
 
 test('a sold-out size takes a "tell me when it is back" request; the owner sees who is waiting', async () => {
   const alert = (body) => shop.request('/api/stock-alerts', { method: 'POST', json: body });
-  const inStock = await alert({ productId: 'tee', size: 'M', email: 'a@example.com' });
+  const inStock = await alert({ productId: 'tee', colour: 'Indigo', size: 'M', email: 'a@example.com' });
   assert.equal(inStock.status, 409, 'M is in stock — buy it');
   const ok = await alert({ productId: 'phone', size: 'ONE SIZE', email: ' Ada@Example.com ' });
   assert.equal(ok.status, 200, ok.raw);
@@ -228,7 +228,7 @@ test('a sold-out size takes a "tell me when it is back" request; the owner sees 
   assert.equal((await api('/summary')).body.alertsReady, 2, 'the admin says these people can be told');
 
   const csv = await shop.request('/api/admin/stock-alerts.csv', { cookie });
-  assert.match(csv.raw, /"bayo@example\.com","THE MASK CASE","ONE SIZE","5"/);
+  assert.match(csv.raw, /"bayo@example\.com","THE MASK CASE","","ONE SIZE","5"/);
 
   await api(`/stock-alerts/${groups[0].people[0].id}`, 'DELETE');
   const cleared = await api('/stock-alerts/clear', 'POST', { productId: 'phone', size: 'ONE SIZE' });

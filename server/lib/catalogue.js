@@ -44,11 +44,22 @@ export async function loadProducts({ forAdmin = false } = {}) {
      ${forAdmin ? '' : `WHERE ${onSale()}`}
      ORDER BY position, id
   `);
-  const variants = await query('SELECT id, product_id, size, stock FROM variants ORDER BY id');
+  const variants = await query('SELECT id, product_id, colour, size, stock FROM variants ORDER BY id');
   const extras = await query('SELECT id, product_id, image_id FROM product_photos ORDER BY position, id');
+  const colourRows = await query('SELECT id, product_id, name, hex, image_id FROM product_colours ORDER BY position, id');
 
   return products.map(p => {
     const sizes = variants.filter(v => v.product_id === p.id);
+    const colours = colourRows.filter(c => c.product_id === p.id);
+    // Each size once, in the order first added, whatever the colour.
+    const sizeNames = [...new Set(sizes.map(s => s.size))];
+    const shopSize = (rows) => sizeNames.map(size => {
+      const stock = rows.filter(r => r.size === size).reduce((n, r) => n + Math.max(0, r.stock), 0);
+      return { size, available: stock > 0, left: stock > 0 && stock < SHOW_COUNT_BELOW ? stock : null };
+    });
+    const colourPhoto = (c) => c.image_id
+      ? { img: `/api/images/${c.image_id}`, img2x: `/api/images/${c.image_id}/2x` }
+      : { img: null, img2x: null };
     const { img, img2x } = photoUrls(p);
     const more = extras.filter(x => x.product_id === p.id);
     // The gallery: the main photo first, then the extra ones in order.
@@ -75,21 +86,21 @@ export async function loadProducts({ forAdmin = false } = {}) {
     if (forAdmin) {
       return {
         ...base,
+        colours: colours.map(c => ({ id: c.id, name: c.name, hex: c.hex, ...colourPhoto(c), hasPhoto: Boolean(c.image_id) })),
         hidden: p.hidden,
         // A drop time still to come; null once it has passed or if there is none.
         availableAt: p.available_at && new Date(p.available_at) > new Date() ? new Date(p.available_at).toISOString() : null,
         hasUpload: Boolean(p.image_id),
         hasBuiltInPhoto: Boolean(p.img),
-        sizes: sizes.map(s => ({ variantId: s.id, size: s.size, stock: s.stock }))
+        sizes: sizes.map(s => ({ variantId: s.id, colour: s.colour || null, size: s.size, stock: s.stock }))
       };
     }
-    return {
-      ...base,
-      sizes: sizes.map(s => ({
-        size: s.size,
-        available: s.stock > 0,
-        left: s.stock > 0 && s.stock < SHOW_COUNT_BELOW ? s.stock : null
-      }))
-    };
+    // Colours, each with its own sizes. A product without colours has an
+    // empty list and is bought by size alone. `sizes` is any colour's.
+    const shopColours = colours.map(c => {
+      const own = shopSize(sizes.filter(s => s.colour === c.name));
+      return { name: c.name, hex: c.hex, ...colourPhoto(c), soldOut: own.every(s => !s.available), sizes: own };
+    });
+    return { ...base, colours: shopColours, sizes: shopSize(sizes) };
   });
 }

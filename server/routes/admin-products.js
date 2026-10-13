@@ -7,7 +7,8 @@ import { decodePhoto, MAX_IMAGE_BYTES } from '../lib/images.js';
 import { cleanText, HOME_SLOTS, setHomeImage } from '../lib/settings.js';
 
 /* Everything the owner can change about a product: its name, price, badge,
- * where it appears, whether it is on sale, its order, its sizes and its photo.
+ * where it appears, whether it is on sale, its order, its colours, its sizes
+ * and its photos.
  *
  * Prices here only affect new orders. An order already placed keeps the price
  * it was charged at, because its line items carry their own copy. */
@@ -55,6 +56,47 @@ function cleanSize(v) {
   if (!size) throw fail(400, 'Type a size.');
   if (size.length > 12) throw fail(400, 'Keep a size under 12 characters.');
   return size;
+}
+
+/** Colours per product. More than this is a different product. */
+export const MAX_COLOURS = 12;
+
+function cleanColourName(v) {
+  if (typeof v !== 'string') throw fail(400, 'Name the colour.');
+  const name = v.replace(/[\u0000-\u001F\u007F]/g, '').replace(/\s+/g, ' ').trim();
+  if (!name) throw fail(400, 'Name the colour.');
+  if (name.length > 24) throw fail(400, 'Keep a colour name under 24 characters.');
+  // Title case, so "black" and "Black" are one colour and read the same everywhere.
+  return name.toLowerCase().replace(/(^|[\s-])\p{L}/gu, (m) => m.toUpperCase());
+}
+
+function cleanHex(v) {
+  const hex = String(v ?? '').trim().toLowerCase();
+  if (!/^#[0-9a-f]{6}$/.test(hex)) throw fail(400, 'Pick the colour of its swatch.');
+  return hex;
+}
+
+/** Is an unfinished payment holding any of these sizes? Then they cannot go yet. */
+async function heldByPayment(tx, variantIds) {
+  if (!variantIds.length) return false;
+  return Boolean(await tx.one(`
+    SELECT 1 FROM order_items oi JOIN orders o ON o.id = oi.order_id
+     WHERE oi.variant_id = ANY($1::int[]) AND o.status = 'pending' LIMIT 1
+  `, [variantIds]));
+}
+
+/** The colours of a product, by name, or [''] when it has none. */
+async function colourNames(tx, productId) {
+  const rows = await tx.query('SELECT name FROM product_colours WHERE product_id = $1 ORDER BY position, id', [productId]);
+  return rows.length ? rows.map(r => r.name) : [''];
+}
+
+async function colourOr404(tx, productId, colourId) {
+  const id = Number(colourId);
+  if (!Number.isInteger(id) || id < 1 || id > 2_147_483_647) throw fail(400, 'Bad colour.');
+  const c = await tx.one('SELECT * FROM product_colours WHERE id = $1 AND product_id = $2 FOR UPDATE', [id, productId]);
+  if (!c) throw fail(404, 'That colour does not exist.');
+  return c;
 }
 
 // Shown on the product page as plain text; line breaks kept, blank allowed.
@@ -197,21 +239,23 @@ adminProductsRouter.post('/admin/products/:id/sizes', async (req, res) => {
   const size = cleanSize(req.body?.size);
   await transaction(async (tx) => {
     const p = await productOr404(req.params.id, tx);
-    const { n } = await tx.one('SELECT COUNT(*) AS n FROM variants WHERE product_id = $1', [p.id]);
+    const { n } = await tx.one('SELECT COUNT(DISTINCT size) AS n FROM variants WHERE product_id = $1', [p.id]);
     if (n >= 12) throw fail(400, 'That is more sizes than a product needs.');
-    const added = await tx.one(`
-      INSERT INTO variants (product_id, size, stock) VALUES ($1, $2, 0)
-      ON CONFLICT (product_id, size) DO NOTHING
-      RETURNING id
-    `, [p.id, size]);
-    if (!added) throw fail(409, `${size} is already a size of this product.`);
+    if (await tx.one('SELECT 1 FROM variants WHERE product_id = $1 AND size = $2', [p.id, size])) {
+      throw fail(409, `${size} is already a size of this product.`);
+    }
+    // In every colour, each counted on its own, starting at 0.
+    for (const colour of await colourNames(tx, p.id)) {
+      await tx.query('INSERT INTO variants (product_id, colour, size, stock) VALUES ($1, $2, $3, 0)', [p.id, colour, size]);
+    }
   });
   res.status(201).json(await current(req.params.id));
 });
 
 /**
- * Remove a size. Only once its count is zero — so a slip cannot delete stock
- * the owner has counted — and only if no unfinished order is holding it.
+ * Remove a size, in every colour. Only once its counts are zero — so a slip
+ * cannot delete stock the owner has counted — and only if no unfinished order
+ * is holding it. Any one of the size's stock rows names it.
  */
 adminProductsRouter.delete('/admin/products/:id/sizes/:variantId', async (req, res) => {
   const variantId = Number(req.params.variantId);
@@ -221,23 +265,126 @@ adminProductsRouter.delete('/admin/products/:id/sizes/:variantId', async (req, r
 
   await transaction(async (tx) => {
     const p = await productOr404(req.params.id, tx);
-    const v = await tx.one('SELECT id, size, stock FROM variants WHERE id = $1 AND product_id = $2 FOR UPDATE',
-      [variantId, p.id]);
+    const v = await tx.one('SELECT id, size FROM variants WHERE id = $1 AND product_id = $2', [variantId, p.id]);
     if (!v) throw fail(404, 'That size does not exist.');
-    if (v.stock > 0) throw fail(409, `Set the ${v.size} count to 0 first.`);
+    const rows = await tx.query('SELECT id, colour, stock FROM variants WHERE product_id = $1 AND size = $2 FOR UPDATE',
+      [p.id, v.size]);
+    const counted = rows.find(r => r.stock > 0);
+    if (counted) {
+      throw fail(409, `Set the ${counted.colour ? `${counted.colour} ` : ''}${v.size} count to 0 first.`);
+    }
 
-    const held = await tx.one(`
-      SELECT 1 FROM order_items oi JOIN orders o ON o.id = oi.order_id
-       WHERE oi.variant_id = $1 AND o.status = 'pending' LIMIT 1
-    `, [v.id]);
-    if (held) throw fail(409, `Someone is paying for a ${v.size} right now. Try again in half an hour.`);
+    if (await heldByPayment(tx, rows.map(r => r.id))) {
+      throw fail(409, `Someone is paying for a ${v.size} right now. Try again in half an hour.`);
+    }
 
-    const { n } = await tx.one('SELECT COUNT(*) AS n FROM variants WHERE product_id = $1', [p.id]);
+    const { n } = await tx.one('SELECT COUNT(DISTINCT size) AS n FROM variants WHERE product_id = $1', [p.id]);
     if (n <= 1 && !p.hidden) throw fail(409, 'A product on sale needs at least one size. Take it off sale first.');
 
-    await tx.query('DELETE FROM variants WHERE id = $1', [v.id]);
+    await tx.query('DELETE FROM variants WHERE product_id = $1 AND size = $2', [p.id, v.size]);
   });
 
+  res.json(await current(req.params.id));
+});
+
+/* -------------------------------------------------------------- colours */
+
+/**
+ * Add a colour. The first one takes over the stock already counted, so naming
+ * the colour of a product already on sale loses nothing. Each colour after it
+ * gets every size, counted from 0.
+ */
+adminProductsRouter.post('/admin/products/:id/colours', async (req, res) => {
+  const name = cleanColourName(req.body?.name);
+  const hex = cleanHex(req.body?.hex);
+  await transaction(async (tx) => {
+    const p = await productOr404(req.params.id, tx);
+    await tx.one('SELECT id FROM products WHERE id = $1 FOR UPDATE', [p.id]);
+    const existing = await tx.query('SELECT name FROM product_colours WHERE product_id = $1', [p.id]);
+    if (existing.length >= MAX_COLOURS) throw fail(400, `A product can have ${MAX_COLOURS} colours.`);
+    if (existing.some(c => c.name === name)) throw fail(409, `${name} is already a colour of this product.`);
+
+    const { next } = await tx.one(
+      'SELECT COALESCE(MAX(position), -1) + 1 AS next FROM product_colours WHERE product_id = $1', [p.id]);
+    await tx.query('INSERT INTO product_colours (product_id, name, hex, position) VALUES ($1, $2, $3, $4)',
+      [p.id, name, hex, next]);
+
+    if (!existing.length) {
+      await tx.query("UPDATE variants SET colour = $1 WHERE product_id = $2 AND colour = ''", [name, p.id]);
+      await tx.query("UPDATE stock_alerts SET colour = $1 WHERE product_id = $2 AND colour = ''", [name, p.id]);
+    } else {
+      const sizes = await tx.query(`
+        SELECT size FROM variants WHERE product_id = $1 GROUP BY size ORDER BY MIN(id)`, [p.id]);
+      for (const { size } of sizes) {
+        await tx.query('INSERT INTO variants (product_id, colour, size, stock) VALUES ($1, $2, $3, 0)', [p.id, name, size]);
+      }
+    }
+  });
+  res.status(201).json(await current(req.params.id));
+});
+
+/** Rename a colour or change its swatch. Past orders keep the name they were sold under. */
+adminProductsRouter.patch('/admin/products/:id/colours/:colourId', async (req, res) => {
+  const b = req.body ?? {};
+  if (!('name' in b) && !('hex' in b)) throw fail(400, 'Nothing to change.');
+  await transaction(async (tx) => {
+    const p = await productOr404(req.params.id, tx);
+    const c = await colourOr404(tx, p.id, req.params.colourId);
+    if ('hex' in b) await tx.query('UPDATE product_colours SET hex = $1 WHERE id = $2', [cleanHex(b.hex), c.id]);
+    if ('name' in b) {
+      const name = cleanColourName(b.name);
+      if (name === c.name) return;
+      if (await tx.one('SELECT 1 FROM product_colours WHERE product_id = $1 AND name = $2', [p.id, name])) {
+        throw fail(409, `${name} is already a colour of this product.`);
+      }
+      await tx.query('UPDATE product_colours SET name = $1 WHERE id = $2', [name, c.id]);
+      await tx.query('UPDATE variants SET colour = $1 WHERE product_id = $2 AND colour = $3', [name, p.id, c.name]);
+      await tx.query('UPDATE stock_alerts SET colour = $1 WHERE product_id = $2 AND colour = $3', [name, p.id, c.name]);
+    }
+  });
+  res.json(await current(req.params.id));
+});
+
+/**
+ * Remove a colour. Like a size: only once its counts are zero and nobody is
+ * paying for it. Removing the last colour leaves the product sold by size
+ * alone, keeping that colour's counts.
+ */
+adminProductsRouter.delete('/admin/products/:id/colours/:colourId', async (req, res) => {
+  await transaction(async (tx) => {
+    const p = await productOr404(req.params.id, tx);
+    const c = await colourOr404(tx, p.id, req.params.colourId);
+    const { n } = await tx.one('SELECT COUNT(*) AS n FROM product_colours WHERE product_id = $1', [p.id]);
+    const rows = await tx.query('SELECT id, size, stock FROM variants WHERE product_id = $1 AND colour = $2 FOR UPDATE',
+      [p.id, c.name]);
+
+    if (n > 1) {
+      const counted = rows.find(r => r.stock > 0);
+      if (counted) throw fail(409, `Set the ${c.name} counts to 0 first (${counted.size} has ${counted.stock}).`);
+      if (await heldByPayment(tx, rows.map(r => r.id))) {
+        throw fail(409, `Someone is paying for a ${c.name} one right now. Try again in half an hour.`);
+      }
+      await tx.query('DELETE FROM variants WHERE product_id = $1 AND colour = $2', [p.id, c.name]);
+      await tx.query('DELETE FROM stock_alerts WHERE product_id = $1 AND colour = $2', [p.id, c.name]);
+    } else {
+      await tx.query("UPDATE variants SET colour = '' WHERE product_id = $1 AND colour = $2", [p.id, c.name]);
+      await tx.query("UPDATE stock_alerts SET colour = '' WHERE product_id = $1 AND colour = $2", [p.id, c.name]);
+    }
+    await tx.query('DELETE FROM product_colours WHERE id = $1', [c.id]);
+    if (c.image_id) await tx.query('DELETE FROM images WHERE id = $1', [c.image_id]);
+  });
+  res.json(await current(req.params.id));
+});
+
+/** Take a colour's own photo away; the product's main photo shows for it again. */
+adminProductsRouter.delete('/admin/products/:id/colours/:colourId/image', async (req, res) => {
+  await transaction(async (tx) => {
+    const p = await productOr404(req.params.id, tx);
+    const c = await colourOr404(tx, p.id, req.params.colourId);
+    if (!c.image_id) return;
+    await tx.query('UPDATE product_colours SET image_id = NULL WHERE id = $1', [c.id]);
+    await tx.query('DELETE FROM images WHERE id = $1', [c.image_id]);
+  });
   res.json(await current(req.params.id));
 });
 
@@ -324,6 +471,21 @@ adminUploadRouter.post('/admin/products/:id/photos', requireAdmin, uploadBody, a
       [p.id, id, next]);
   });
   res.status(201).json(await current(req.params.id));
+});
+
+/** A colour's own photo: shown first on the product page when it is picked. */
+adminUploadRouter.post('/admin/products/:id/colours/:colourId/image', requireAdmin, uploadBody, async (req, res) => {
+  const { small, large } = bothSizes(req.body);
+  await transaction(async (tx) => {
+    const p = await productOr404(req.params.id, tx);
+    const c = await colourOr404(tx, p.id, req.params.colourId);
+    const { id } = await tx.one(
+      'INSERT INTO images (mime, data, data_2x) VALUES ($1, $2, $3) RETURNING id',
+      [small.mime, small.bytes, large.bytes]);
+    await tx.query('UPDATE product_colours SET image_id = $1 WHERE id = $2', [id, c.id]);
+    if (c.image_id) await tx.query('DELETE FROM images WHERE id = $1', [c.image_id]);
+  });
+  res.json(await current(req.params.id));
 });
 
 /* ------------------------------------------------------- home page photos */

@@ -26,7 +26,7 @@ function Waiting({ onSummaryChange }) {
   const act = async (fn) => {
     try { await fn(); setConfirming(null); reload(); onSummaryChange?.(); } catch (err) { setError(err.message); }
   };
-  const key = (g) => `${g.productId}|${g.size}`;
+  const key = (g) => `${g.productId}|${g.colour ?? ''}|${g.size}`;
 
   const copy = async (g) => {
     const text = g.people.map(p => p.email).join(', ');
@@ -57,7 +57,7 @@ function Waiting({ onSummaryChange }) {
           {groups.map(g => (
             <div className="admin-card admin-waiting__group" key={key(g)}>
               <div className="admin-waiting__head">
-                <h3 className="admin-card__title">{g.name} · {g.size}</h3>
+                <h3 className="admin-card__title">{g.name} · {g.colour ? `${g.colour} · ` : ''}{g.size}</h3>
                 <span className={`admin-status ${g.stock > 0 ? 'admin-status--paid' : 'admin-status--abandoned'}`}>
                   {g.stock > 0 ? `back in stock — ${g.stock}` : 'still sold out'}
                 </span>
@@ -67,7 +67,7 @@ function Waiting({ onSummaryChange }) {
                 <button className="admin-action" onClick={() => copy(g)}>{copied === key(g) ? 'COPIED' : 'COPY EMAILS'}</button>
                 {confirming === key(g) ? (
                   <>
-                    <button className="admin-action admin-action--danger" onClick={() => act(() => adminClearAlerts(g.productId, g.size))}>CLEAR {g.people.length}</button>
+                    <button className="admin-action admin-action--danger" onClick={() => act(() => adminClearAlerts(g.productId, g.size, g.colour))}>CLEAR {g.people.length}</button>
                     <button className="admin-link" onClick={() => setConfirming(null)}>keep</button>
                   </>
                 ) : <button className="admin-link" onClick={() => setConfirming(key(g))}>told them — clear</button>}

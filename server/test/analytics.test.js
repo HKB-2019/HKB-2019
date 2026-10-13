@@ -111,7 +111,7 @@ test('visits, bounces, time spent, the funnel and sales by source add up', async
   await send({ n: 'add_to_cart', s: a, p: '/product/tee', pid: 'tee', sz: 'M', v: 2_800_000 }, { ua: PHONE });
   await send({ n: 'begin_checkout', s: a, p: '/product/tee', v: 2_800_000 }, { ua: PHONE });
   await send({ n: 'leave', s: a, p: '/product/tee', ms: 90_000 }, { ua: PHONE });
-  const order = await shop.checkout({ email: 'a@example.com', analyticsSession: a, items: [{ productId: 'tee', size: 'M', qty: 1 }] });
+  const order = await shop.checkout({ email: 'a@example.com', analyticsSession: a, items: [{ productId: 'tee', colour: 'Indigo', size: 'M', qty: 1 }] });
   assert.equal(order.status, 200, order.raw);
   await send({ n: 'checkout', s: a, p: '/product/tee', v: 3_050_000 }, { ua: PHONE });
   const raw = JSON.stringify({ event: 'charge.success', data: { id: 501, reference: order.body.reference } });

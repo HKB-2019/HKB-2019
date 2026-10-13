@@ -5,6 +5,7 @@ import { srcSet, SLIDE_SIZES } from '../lib/media.js';
 import { expandDropGrid, SizeButtons } from './DropGrid.jsx';
 import { Arrow, CaretLeft, CaretRight } from './Icons.jsx';
 import { useGlideToProduct } from '../lib/pageMorph.js';
+import { hasColours, onlyChoice } from '../lib/colours.js';
 
 const DRAG_THRESHOLD = 5;
 
@@ -154,9 +155,9 @@ export default function Essentials() {
           onKeyDown={onKeyDown}
         >
           {essentials.map(p => {
-            // One size: add it. Several: ask which — the old carousel added
-            // the hoodie in "ONE SIZE", which it does not come in.
-            const only = p.sizes.length === 1 ? p.sizes[0] : null;
+            // One size: add it. Several, or colours: ask which — the old
+            // carousel added the hoodie in "ONE SIZE", which it does not come in.
+            const only = onlyChoice(p);
             const onPick = () => {
               if (p.soldOut) { toast('SOLD OUT — JOIN THE LIST FOR RESTOCKS'); return; }
               if (only) addToCart(p, only.size);
@@ -172,7 +173,7 @@ export default function Essentials() {
                 )}
                 <div className="slide__meta">
                   <button className="slide__name" onClick={onPick}
-                          aria-label={p.soldOut ? `${p.name}, sold out` : only ? `Add ${p.name} to bag` : `Choose a size of ${p.name}`}>
+                          aria-label={p.soldOut ? `${p.name}, sold out` : only ? `Add ${p.name} to bag` : hasColours(p) ? `Choose a colour and size of ${p.name}` : `Choose a size of ${p.name}`}>
                     {p.name}
                   </button>
                   <span className={`slide__price${p.soldOut ? ' card__sold' : ''}`}>
@@ -180,7 +181,7 @@ export default function Essentials() {
                   </span>
                 </div>
                 {!only && (
-                  <div className="card__sizes slide__sizes" aria-hidden={picking !== p.id}>
+                  <div className={`card__sizes slide__sizes${hasColours(p) ? ' card__sizes--colours' : ''}`} aria-hidden={picking !== p.id}>
                     <SizeButtons product={p} onPicked={() => setPicking(null)} />
                   </div>
                 )}

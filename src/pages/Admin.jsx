@@ -184,7 +184,7 @@ function Summary({ data, goTo }) {
       {data.lowStock.length > 0 && (
         <p className="admin-lowstock">
           <strong>Running low:</strong>{' '}
-          {data.lowStock.map(s => `${s.name} (${s.size}) — ${s.stock}`).join(' · ')}
+          {data.lowStock.map(s => `${s.name} (${s.colour ? `${s.colour}, ` : ''}${s.size}) — ${s.stock}`).join(' · ')}
         </p>
       )}
     </>
@@ -315,7 +315,7 @@ function Orders({ orders, onChanged, filter, setFilter }) {
                   </td>
                   <td className="admin-items">
                     {o.items.map((i, n) => (
-                      <span key={n}>{i.qty}× {i.name} <em>{i.size}</em></span>
+                      <span key={n}>{i.qty}× {i.name} <em>{i.colour ? `${i.colour}, ${i.size}` : i.size}</em></span>
                     ))}
                   </td>
                   <td className="num">
@@ -367,7 +367,7 @@ function StockRow({ row, onSave }) {
   return (
     <tr>
       <td>{row.name}</td>
-      <td className="mono">{row.size}</td>
+      <td className="mono">{row.colour ? `${row.colour}, ${row.size}` : row.size}</td>
       <td className="num">{naira(row.priceKobo)}</td>
       <td>
         <input
@@ -504,7 +504,7 @@ export default function Admin() {
                 <div className="admin-table-wrap">
                   <table className="admin-table">
                     <thead>
-                      <tr><th>Piece</th><th>Size</th><th className="num">Price</th><th>In stock</th><th></th></tr>
+                      <tr><th>Piece</th><th>Colour, size</th><th className="num">Price</th><th>In stock</th><th></th></tr>
                     </thead>
                     <tbody>
                       {stock.map(row => (

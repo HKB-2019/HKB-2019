@@ -130,7 +130,7 @@ adminRouter.get('/admin/orders', requireAdmin, async (req, res) => {
 
   const items = orders.length
     ? await query(`
-        SELECT order_id, name, size, qty, unit_price_kobo
+        SELECT order_id, name, colour, size, qty, unit_price_kobo
           FROM order_items
          WHERE order_id = ANY($1::int[])
          ORDER BY id
@@ -159,7 +159,7 @@ adminRouter.get('/admin/orders', requireAdmin, async (req, res) => {
     refundedAt: o.refunded_at,
     createdAt: o.created_at,
     items: items.filter(i => i.order_id === o.id).map(i => ({
-      name: i.name, size: i.size, qty: i.qty, unitPriceKobo: i.unit_price_kobo
+      name: i.name, colour: i.colour || null, size: i.size, qty: i.qty, unitPriceKobo: i.unit_price_kobo
     }))
   })));
 });
@@ -178,7 +178,7 @@ adminRouter.get('/admin/summary', requireAdmin, async (_req, res) => {
   // Only what customers can buy: a product still being set up, or taken off
   // sale, is at zero on purpose and would bury the warnings that matter.
   const lowStock = await query(`
-    SELECT p.name, v.size, v.stock
+    SELECT p.name, NULLIF(v.colour, '') AS colour, v.size, v.stock
       FROM variants v JOIN products p ON p.id = v.product_id
      WHERE v.stock <= 3 AND p.hidden = FALSE
      ORDER BY v.stock ASC, p.name, v.id
@@ -200,7 +200,7 @@ adminRouter.get('/admin/summary', requireAdmin, async (_req, res) => {
     // telling them before it sells out again.
     alertsReady: (await one(`
       SELECT COUNT(*) AS n FROM stock_alerts a
-        JOIN variants v ON v.product_id = a.product_id AND v.size = a.size
+        JOIN variants v ON v.product_id = a.product_id AND v.colour = a.colour AND v.size = a.size
         JOIN products p ON p.id = a.product_id
        WHERE v.stock > 0 AND ${onSale()}
     `)).n
@@ -268,15 +268,17 @@ adminRouter.post('/admin/orders/:reference/refunded', requireAdmin, async (req, 
 
 adminRouter.get('/admin/stock', requireAdmin, async (_req, res) => {
   const rows = await query(`
-    SELECT v.id, v.size, v.stock, p.id AS product_id, p.name, p.price_kobo
+    SELECT v.id, v.colour, v.size, v.stock, p.id AS product_id, p.name, p.price_kobo
       FROM variants v JOIN products p ON p.id = v.product_id
-     ORDER BY p.position, p.id, v.id
+      LEFT JOIN product_colours c ON c.product_id = v.product_id AND c.name = v.colour
+     ORDER BY p.position, p.id, c.position NULLS FIRST, c.id, v.id
   `);
 
   res.json(rows.map(r => ({
     variantId: r.id,
     productId: r.product_id,
     name: r.name,
+    colour: r.colour || null,
     size: r.size,
     stock: r.stock,
     priceKobo: r.price_kobo
@@ -318,7 +320,7 @@ adminRouter.get('/admin/orders.csv', requireAdmin, async (req, res) => {
     SELECT o.id, o.reference, o.status, o.created_at, o.paid_at, o.fulfilled_at,
            o.customer_name, o.email, o.phone, o.address, o.delivery_zone,
            o.subtotal_kobo, o.shipping_kobo, o.discount_code, o.discount_kobo, o.courier, o.tracking,
-           COALESCE(string_agg(i.qty || '× ' || i.name || ' (' || i.size || ')', '; ' ORDER BY i.id), '') AS items
+           COALESCE(string_agg(i.qty || '× ' || i.name || ' (' || CASE WHEN i.colour <> '' THEN i.colour || ', ' ELSE '' END || i.size || ')', '; ' ORDER BY i.id), '') AS items
       FROM orders o LEFT JOIN order_items i ON i.order_id = o.id
      WHERE ($1::text IS NULL OR o.status = $1)
      GROUP BY o.id

@@ -234,6 +234,17 @@ export default function SalesTab() {
                 </table>
               )}
             </div>
+            {sales.colours?.length > 0 && (
+              <div className="admin-card">
+                <h3 className="admin-card__title">Colours sold</h3>
+                <table className="admin-mini-table">
+                  <thead><tr><th>Piece</th><th>Colour</th><th className="num">Sold</th></tr></thead>
+                  <tbody>{sales.colours.map(x => (
+                    <tr key={x.name + x.colour}><td>{x.name}</td><td>{x.colour}</td><td className="num">{x.qty}</td></tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            )}
           </div>
         </>
       )}

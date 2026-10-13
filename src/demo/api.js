@@ -12,7 +12,7 @@ import { PAGES, PAGES_DEFAULT } from '../data/pages.js';
 import { GUIDE_CURRENCIES, DEFAULT_RATES } from '../data/currencies.js';
 import { sampleReport } from './sampleAnalytics.js';
 
-const KEY = 'masq:preview-store-2';   // a new number whenever the sample's shape changes
+const KEY = 'masq:preview-store-3';   // a new number whenever the sample's shape changes
 const ZONES = ['lagos', 'abuja', 'nigeria', 'international'];
 const ZONE_LABELS = { lagos: 'Lagos', abuja: 'Abuja (FCT)', nigeria: 'Rest of Nigeria', international: 'Outside Nigeria' };
 const STATES = [
@@ -29,11 +29,16 @@ const ago = (hours) => new Date(Date.now() - hours * 3_600_000).toISOString();
 
 function sampleStore() {
   let variantId = 0;
+  let colourId = 0;
+  // `sizes` is one row per colour and size, as on the server: colour '' for a
+  // piece without colours.
   const products = CATALOGUE.map((p, position) => ({
     id: p.id, name: p.name, priceKobo: p.naira * 100, img: p.img, uploaded: null,
     badge: p.badge ?? null, inDrop: !!p.drop, featured: !!p.featured, inEssentials: !!p.essential,
     hidden: false, position, description: '', details: '', extras: [], availableAt: null,
-    sizes: Object.entries(p.sizes).map(([size, stock]) => ({ variantId: ++variantId, size, stock }))
+    colours: (p.colours ?? []).map(c => ({ id: ++colourId, name: c.name, hex: c.hex, photo: null })),
+    sizes: (p.colours ?? [{ name: '', sizes: p.sizes }]).flatMap(c =>
+      Object.entries(c.sizes).map(([size, stock]) => ({ variantId: ++variantId, colour: c.name, size, stock })))
   }));
   // The hoodie waits for a drop, so the home page shows its countdown.
   products.find(p => p.id === 'hoodie').availableAt = new Date(Date.now() + 3 * 86_400_000 + 5 * 3_600_000).toISOString();
@@ -41,9 +46,9 @@ function sampleStore() {
   tee.description = 'Heavyweight cotton, cut a little boxy.\n\nThe face on the front is MASQ.’s first mark: a mask drawn from the shapes of the old carvings, in the colours of the city at night.';
   tee.details = 'Sample text — the owner writes this in the admin.\nWash cold, inside out.';
 
-  const line = (id, size, qty) => {
+  const line = (id, size, qty, colour = '') => {
     const p = products.find(x => x.id === id);
-    return { name: p.name, size, qty, unitPriceKobo: p.priceKobo };
+    return { name: p.name, colour, size, qty, unitPriceKobo: p.priceKobo };
   };
   const addr = (line1, city, state) => ({ line1, line2: '', city, state, country: 'Nigeria' });
   const orders = [
@@ -54,13 +59,13 @@ function sampleStore() {
     { reference: 'masq-8c2e4f6a0b1d3e5f7a9c0b12', email: 'chidi@example.com', name: 'Chidi Eze', phone: '+234 806 000 0002',
       address: addr('4 Aminu Kano Crescent', 'Wuse 2', 'FCT'), zone: 'abuja', status: 'paid', fulfilledAt: ago(20),
       courier: 'GIG Logistics', tracking: 'GIG-48213',
-      items: [line('hoodie', 'M', 2)], shippingKobo: 350000, createdAt: ago(200), paidAt: ago(200) },
+      items: [line('hoodie', 'M', 2, 'Black')], shippingKobo: 350000, createdAt: ago(200), paidAt: ago(200) },
     { reference: 'masq-1b3d5f7a9c0e2f4a6b8d0c34', email: 'zainab@example.com', name: 'Zainab Bello', phone: '+234 809 000 0003',
       address: addr('7 Ahmadu Bello Way', 'Kaduna North', 'Kaduna'), zone: 'nigeria', status: 'pending', fulfilledAt: null,
-      items: [line('cap', 'ONE SIZE', 1), line('tee', 'M', 1)], shippingKobo: 500000, createdAt: ago(0.2), paidAt: null },
+      items: [line('cap', 'ONE SIZE', 1), line('tee', 'M', 1, 'White')], shippingKobo: 500000, createdAt: ago(0.2), paidAt: null },
     { reference: 'masq-6e8f0a2b4c6d8e0f1a3b5c56', email: 'tunde@example.com', name: 'Tunde Ade', phone: '+234 802 000 0004',
       address: addr('22 Bodija Road', 'Ibadan', 'Oyo'), zone: 'nigeria', status: 'abandoned', fulfilledAt: null,
-      items: [line('tee', 'S', 2)], shippingKobo: 500000, createdAt: ago(30), paidAt: null }
+      items: [line('tee', 'S', 2, 'Indigo')], shippingKobo: 500000, createdAt: ago(30), paidAt: null }
   ];
 
   return {
@@ -69,7 +74,7 @@ function sampleStore() {
       { code: 'LAUNCH10', kind: 'percent', amount: 10, minSpendKobo: 0, maxUses: 50, uses: 1, endsAt: null, active: true },
       { code: 'VIP5K', kind: 'fixed', amount: 500000, minSpendKobo: 4000000, maxUses: null, uses: 0, endsAt: null, active: true }
     ],
-    alerts: [{ id: 1, productId: 'phone', size: 'ONE SIZE', email: 'kemi@example.com', askedAt: ago(9) }],
+    alerts: [{ id: 1, productId: 'phone', colour: '', size: 'ONE SIZE', email: 'kemi@example.com', askedAt: ago(9) }],
     subscribers: [
       { id: 2, email: 'nneka@example.com', joinedAt: ago(5) },
       { id: 1, email: 'femi@example.com', joinedAt: ago(50) }
@@ -128,6 +133,16 @@ function photosOf(p) {
   return { main, all: [...(main ? [main] : []), ...p.extras] };
 }
 
+/** Each size once, in the order first added, whatever the colour. */
+const sizeNames = (p) => [...new Set(p.sizes.map(s => s.size))];
+function shopSizes(p, rows) {
+  return sizeNames(p).map(size => {
+    const stock = rows.filter(r => r.size === size).reduce((n, r) => n + Math.max(0, r.stock), 0);
+    return { size, available: stock > 0, left: stock > 0 && stock < 10 ? stock : null };
+  });
+}
+const colourPhoto = (c) => (c.photo ? { img: c.photo.img, img2x: c.photo.img2x } : { img: null, img2x: null });
+
 function shape(p, forAdmin) {
   const { main, all } = photosOf(p);
   const base = {
@@ -140,11 +155,19 @@ function shape(p, forAdmin) {
   if (forAdmin) {
     return { ...base, hidden: p.hidden, hasUpload: !!p.uploaded, hasBuiltInPhoto: !!p.img,
              availableAt: waiting(p) ? p.availableAt : null,
-             sizes: p.sizes.map(s => ({ ...s })) };
+             colours: p.colours.map(c => ({ id: c.id, name: c.name, hex: c.hex, ...colourPhoto(c), hasPhoto: !!c.photo })),
+             sizes: p.sizes.map(s => ({ ...s, colour: s.colour || null })) };
   }
-  return { ...base, sizes: p.sizes.map(s => ({
-    size: s.size, available: s.stock > 0, left: s.stock > 0 && s.stock < 10 ? s.stock : null })) };
+  const colours = p.colours.map(c => {
+    const own = shopSizes(p, p.sizes.filter(s => s.colour === c.name));
+    return { name: c.name, hex: c.hex, ...colourPhoto(c), soldOut: own.every(s => !s.available), sizes: own };
+  });
+  return { ...base, colours, sizes: shopSizes(p, p.sizes) };
 }
+
+/** The stock row for a colour and size of an on-sale piece, or nothing. */
+const variantOf = (p, colour, size) => p && onSale(p) && p.sizes.find(s => s.colour === (colour ?? '') && s.size === size);
+const optionText = (colour, size) => (colour ? `${colour}, ${size}` : size);
 
 const ordered = () => [...store.products].sort((a, b) => a.position - b.position);
 const waiting = (p) => p.availableAt && new Date(p.availableAt) > new Date();
@@ -216,14 +239,14 @@ export function checkDiscount(code, items) {
   catch (err) { return fail(err.message); }
 }
 
-export function askForRestock(productId, size, email) {
+export function askForRestock(productId, size, email, colour = '') {
   const p = product(productId);
-  const v = p && onSale(p) && p.sizes.find(s => s.size === size);
+  const v = variantOf(p, colour, size);
   if (!v) return fail('That piece is not available.', 404);
-  if (v.stock > 0) return fail(`${size} is in stock — you can buy it now.`, 409);
+  if (v.stock > 0) return fail(`${optionText(colour, size)} is in stock — you can buy it now.`, 409);
   const e = email.trim().toLowerCase();
-  if (!store.alerts.some(a => a.productId === productId && a.size === size && a.email === e)) {
-    store.alerts.push({ id: store.nextId++, productId, size, email: e, askedAt: new Date().toISOString() });
+  if (!store.alerts.some(a => a.productId === productId && (a.colour ?? '') === colour && a.size === size && a.email === e)) {
+    store.alerts.push({ id: store.nextId++, productId, colour, size, email: e, askedAt: new Date().toISOString() });
     save();
   }
   return settle({ ok: true });
@@ -239,10 +262,13 @@ export async function startCheckout({ email, name, phone, address }, items, disc
   const lines = [];
   for (const i of items) {
     const p = product(i.id);
-    const v = p && onSale(p) && p.sizes.find(s => s.size === i.size);
+    const colour = i.colour ?? '';
+    if (p?.colours.length && !colour) return fail(`Please choose a colour of ${p.name}.`);
+    const v = variantOf(p, colour, i.size);
     if (!v) return fail('Something in your bag is no longer available.', 404);
-    if (v.stock < i.qty) return fail(v.stock ? `${p.name} (${i.size}) — only ${v.stock} left.` : `${p.name} (${i.size}) has sold out.`, 409);
-    lines.push([v, { name: p.name, size: i.size, qty: i.qty, unitPriceKobo: p.priceKobo }]);
+    const what = `${p.name} (${optionText(colour, i.size)})`;
+    if (v.stock < i.qty) return fail(v.stock ? `${what} — only ${v.stock} left.` : `${what} has sold out.`, 409);
+    lines.push([v, { name: p.name, colour, size: i.size, qty: i.qty, unitPriceKobo: p.priceKobo }]);
   }
   lines.forEach(([v, l]) => { v.stock -= l.qty; });       // held while paying, as the real shop does
   if (discount) discount.c.uses += 1;
@@ -264,7 +290,7 @@ export function finishPayment(reference, paid) {
   else {
     o.status = 'abandoned';
     for (const l of o.items) {
-      const v = store.products.find(p => p.name === l.name)?.sizes.find(s => s.size === l.size);
+      const v = store.products.find(p => p.name === l.name)?.sizes.find(s => s.colour === (l.colour ?? '') && s.size === l.size);
       if (v) v.stock += l.qty;
     }
     const c = store.codes.find(x => x.code === o.discountCode);
@@ -337,12 +363,12 @@ export function adminSummary() {
     pendingPayment: store.orders.filter(o => o.status === 'pending').length,
     refundDue: 0,
     lowStock: ordered().filter(p => !p.hidden).flatMap(p => p.sizes.filter(s => s.stock <= 3)
-      .map(s => ({ name: p.name, size: s.size, stock: s.stock }))).sort((a, b) => a.stock - b.stock),
+      .map(s => ({ name: p.name, colour: s.colour || null, size: s.size, stock: s.stock }))).sort((a, b) => a.stock - b.stock),
     checkoutOpen: openZones().length > 0,
     subscribers: store.subscribers.length,
     alertsReady: store.alerts.filter(a => {
       const p = product(a.productId);
-      return p && onSale(p) && (p.sizes.find(s => s.size === a.size)?.stock ?? 0) > 0;
+      return p && onSale(p) && (p.sizes.find(s => s.colour === (a.colour ?? '') && s.size === a.size)?.stock ?? 0) > 0;
     }).length
   });
 }
@@ -363,7 +389,7 @@ export function adminRefunded(reference, restock) {
   if (!o || !['paid', 'refund_due'].includes(o.status)) return fail('Only a paid order can be refunded.', 409);
   if (restock && o.status === 'paid') {
     for (const l of o.items) {
-      const v = store.products.find(p => p.name === l.name)?.sizes.find(s => s.size === l.size);
+      const v = store.products.find(p => p.name === l.name)?.sizes.find(s => s.colour === (l.colour ?? '') && s.size === l.size);
       if (v) v.stock += l.qty;
     }
   }
@@ -374,7 +400,7 @@ export function adminRefunded(reference, restock) {
 }
 
 export const adminStock = () => settle(ordered().flatMap(p => p.sizes.map(s => ({
-  variantId: s.variantId, productId: p.id, name: p.name, size: s.size, stock: s.stock, priceKobo: p.priceKobo }))));
+  variantId: s.variantId, productId: p.id, name: p.name, colour: s.colour || null, size: s.size, stock: s.stock, priceKobo: p.priceKobo }))));
 
 export function adminSetStock(variantId, stock) {
   const v = store.products.flatMap(p => p.sizes).find(s => s.variantId === variantId);
@@ -420,8 +446,8 @@ export const adminCreateProduct = (b) => attempt(() => {
   const sizes = (b.sizes?.length ? b.sizes : ['ONE SIZE']).map(s => String(s).trim().toUpperCase());
   store.products.push({
     id, name, priceKobo, img: '', uploaded: null, badge: null, inDrop: true, featured: true, inEssentials: false,
-    hidden: true, position: store.products.length, description: '', details: '', extras: [],
-    sizes: sizes.map(size => ({ variantId: store.nextId++, size, stock: 0 }))
+    hidden: true, position: store.products.length, description: '', details: '', extras: [], colours: [],
+    sizes: sizes.map(size => ({ variantId: store.nextId++, colour: '', size, stock: 0 }))
   });
   return current(id);
 });
@@ -451,22 +477,93 @@ export const adminMoveProduct = (id, direction) => attempt(() => {
   return adminList();
 });
 
+const colourNames = (p) => (p.colours.length ? p.colours.map(c => c.name) : ['']);
+
 export const adminAddSize = (id, size) => attempt(() => {
   const p = product(id);
   const s = String(size).trim().toUpperCase();
   if (p.sizes.some(x => x.size === s)) throw new Error(`${s} is already a size of this product.`);
-  p.sizes.push({ variantId: store.nextId++, size: s, stock: 0 });
+  for (const colour of colourNames(p)) p.sizes.push({ variantId: store.nextId++, colour, size: s, stock: 0 });
   return current(id);
 });
 
 export const adminRemoveSize = (id, variantId) => attempt(() => {
   const p = product(id);
   const v = p.sizes.find(s => s.variantId === variantId);
-  if (v.stock > 0) throw new Error(`Set the ${v.size} count to 0 first.`);
-  if (p.sizes.length <= 1 && !p.hidden) throw new Error('A product on sale needs at least one size. Take it off sale first.');
-  p.sizes = p.sizes.filter(s => s !== v);
+  const rows = p.sizes.filter(s => s.size === v.size);
+  const counted = rows.find(r => r.stock > 0);
+  if (counted) throw new Error(`Set the ${counted.colour ? `${counted.colour} ` : ''}${v.size} count to 0 first.`);
+  if (sizeNames(p).length <= 1 && !p.hidden) throw new Error('A product on sale needs at least one size. Take it off sale first.');
+  p.sizes = p.sizes.filter(s => s.size !== v.size);
   return current(id);
 });
+
+/* colours, as on the server (server/routes/admin-products.js) */
+const titleCase = (v) => String(v ?? '').replace(/\s+/g, ' ').trim().toLowerCase().replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase());
+const cleanHex = (v) => {
+  const h = String(v ?? '').trim().toLowerCase();
+  if (!/^#[0-9a-f]{6}$/.test(h)) throw new Error('Pick the colour of its swatch.');
+  return h;
+};
+const colourOf = (p, colourId) => {
+  const c = p.colours.find(x => x.id === Number(colourId));
+  if (!c) throw new Error('That colour does not exist.');
+  return c;
+};
+
+export const adminAddColour = (id, name, hex) => attempt(() => {
+  const p = product(id);
+  const n = titleCase(name);
+  if (!n || n.length > 24) throw new Error('Name the colour, in under 24 characters.');
+  const h = cleanHex(hex);
+  if (p.colours.some(c => c.name === n)) throw new Error(`${n} is already a colour of this product.`);
+  if (p.colours.length >= 12) throw new Error('A product can have 12 colours.');
+  if (!p.colours.length) {
+    p.sizes.forEach(s => { s.colour = n; });
+    store.alerts.forEach(a => { if (a.productId === id && !a.colour) a.colour = n; });
+  } else {
+    for (const size of sizeNames(p)) p.sizes.push({ variantId: store.nextId++, colour: n, size, stock: 0 });
+  }
+  p.colours.push({ id: store.nextId++, name: n, hex: h, photo: null });
+  return current(id);
+});
+
+export const adminUpdateColour = (id, colourId, change) => attempt(() => {
+  const p = product(id);
+  const c = colourOf(p, colourId);
+  if ('hex' in change) c.hex = cleanHex(change.hex);
+  if ('name' in change) {
+    const n = titleCase(change.name);
+    if (!n || n.length > 24) throw new Error('Name the colour, in under 24 characters.');
+    if (n !== c.name && p.colours.some(x => x.name === n)) throw new Error(`${n} is already a colour of this product.`);
+    p.sizes.forEach(s => { if (s.colour === c.name) s.colour = n; });
+    store.alerts.forEach(a => { if (a.productId === id && a.colour === c.name) a.colour = n; });
+    c.name = n;
+  }
+  return current(id);
+});
+
+export const adminRemoveColour = (id, colourId) => attempt(() => {
+  const p = product(id);
+  const c = colourOf(p, colourId);
+  if (p.colours.length > 1) {
+    const counted = p.sizes.find(s => s.colour === c.name && s.stock > 0);
+    if (counted) throw new Error(`Set the ${c.name} counts to 0 first (${counted.size} has ${counted.stock}).`);
+    p.sizes = p.sizes.filter(s => s.colour !== c.name);
+    store.alerts = store.alerts.filter(a => !(a.productId === id && a.colour === c.name));
+  } else {
+    p.sizes.forEach(s => { s.colour = ''; });
+    store.alerts.forEach(a => { if (a.productId === id) a.colour = ''; });
+  }
+  p.colours = p.colours.filter(x => x !== c);
+  return current(id);
+});
+
+export const adminUploadColourPhoto = (id, colourId, image, image2x) =>
+  attempt(() => { colourOf(product(id), colourId).photo = { img: image, img2x: image2x }; return current(id); }, 600);
+
+export const adminRemoveColourPhoto = (id, colourId) =>
+  attempt(() => { colourOf(product(id), colourId).photo = null; return current(id); });
 
 export const adminUploadPhoto = (id, image, image2x) =>
   attempt(() => { product(id).uploaded = { img: image, img2x: image2x }; return current(id); }, 600);
@@ -583,6 +680,8 @@ export function adminSales() {
               averageKobo: paid.length ? Math.round(revenue / paid.length) : 0 },
     pieces: tally(i => i.name).slice(0, 8).map(([name, t]) => ({ productId: name, name, ...t })),
     sizes: tally(i => i.size).slice(0, 8).map(([size, t]) => ({ size, qty: t.qty })),
+    colours: tally(i => (i.colour ? `${i.name}|${i.colour}` : '')).filter(([k]) => k).slice(0, 8)
+      .map(([k, t]) => ({ name: k.split('|')[0], colour: k.split('|')[1], qty: t.qty })),
     codes: [...codes.values()]
   });
 }
@@ -620,16 +719,16 @@ export const adminDeleteDiscount = (code) =>
 export function adminStockAlerts() {
   const groups = [];
   for (const p of ordered()) for (const s of p.sizes) {
-    const people = store.alerts.filter(a => a.productId === p.id && a.size === s.size)
+    const people = store.alerts.filter(a => a.productId === p.id && (a.colour ?? '') === s.colour && a.size === s.size)
       .map(a => ({ id: a.id, email: a.email, askedAt: a.askedAt }));
-    if (people.length) groups.push({ productId: p.id, name: p.name, size: s.size, stock: s.stock, people });
+    if (people.length) groups.push({ productId: p.id, name: p.name, colour: s.colour || null, size: s.size, stock: s.stock, people });
   }
   return settle(groups);
 }
 
-export const adminClearAlerts = (productId, size) => attempt(() => {
+export const adminClearAlerts = (productId, size, colour = '') => attempt(() => {
   const before = store.alerts.length;
-  store.alerts = store.alerts.filter(a => !(a.productId === productId && a.size === size));
+  store.alerts = store.alerts.filter(a => !(a.productId === productId && (a.colour ?? '') === (colour ?? '') && a.size === size));
   return { ok: true, cleared: before - store.alerts.length };
 });
 
