@@ -178,7 +178,8 @@ test('the order page shows enough to recognise the order, and no more', async ()
   assert.equal(page.shippingKobo, 250_000);
   assert.equal(page.totalKobo, 3_050_000);
 
-  const text = JSON.stringify(page);
+  // The reference is random hex, so it can contain "803" by chance; leave it out.
+  const text = JSON.stringify({ ...page, reference: undefined });
   assert.ok(!text.includes('803'), 'no phone number');
   assert.ok(!text.includes('Admiralty'), 'no street address');
   assert.ok(!text.includes('adaobi@'), 'no full email');
