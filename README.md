@@ -29,6 +29,9 @@ src/
   styles.css            all styling; design tokens at the top under :root
   data/currencies.js    display currencies and their rough rates
   data/home.js          the home page's words as designed (shared with the server)
+  data/catalogue.js     the pieces as designed: seeds the database and the preview
+  data/pages.js         the footer pages as first written
+  demo/                 the preview build's stand-in server and payment page
   store/ShopContext.jsx catalogue from the server, bag, saved, overlays
   lib/                  API client, delivery rules, storage, srcset, scroll
   components/           one file per section, plus overlays and toasts
@@ -118,6 +121,16 @@ reload and proxies `/api` to `npm run server` on :3001. `npm start` is the one
 that matches production: one process, one port, `dist/` served by the API with
 any non-`/api` path falling back to `index.html`, so a refresh on `/admin`
 works.
+
+### The preview pages
+
+`npm run build:preview` builds the shop and admin as one page that runs on
+its own, with sample data kept in the visitor's browser and a pretend payment
+page in place of Paystack (`src/demo/`). It is the real front end — only
+`src/lib/api.js` is swapped for `src/demo/api.js` — so a change to the shop
+shows up in the preview the next time it is built. Output goes to
+`dist-preview/shop` and `dist-preview/admin` (the same thing, opened at the
+admin).
 
 ### Tests
 

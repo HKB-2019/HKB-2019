@@ -27,6 +27,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      # The preview pages share the shop's code; make sure they still build.
+      - run: npm run build:preview
       - name: API tests, built-in database
         run: npm test
       - name: API tests, real Postgres

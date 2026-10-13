@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   adminSettings, adminSaveSetting, adminUploadHomeImage, adminRemoveHomeImage, getSite
 } from '../../lib/api.js';
-import { asset } from '../../lib/media.js';
+import { asset, pageHref, NEW_TAB } from '../../lib/media.js';
 import { NAV } from '../../data/home.js';
 import { preparePhoto, HOME } from './photo.js';
 
@@ -199,7 +199,7 @@ export default function HomeTab() {
     <section className="admin-section admin-settings">
       <div className="admin-section__head">
         <h2 className="admin-h2">Home page</h2>
-        <a className="admin-link" href="/" target="_blank" rel="noopener">see the shop ↗</a>
+        <a className="admin-link" href={pageHref('/')} {...NEW_TAB}>see the shop ↗</a>
       </div>
       {error && <p className="admin-note admin-note--bad" role="alert">{error}</p>}
 

@@ -14,9 +14,14 @@ export default function ShopLayout({ children }) {
 
   return (
     <>
-      <a className="skip-link" href="#main">Skip to content</a>
+      {/* Moves focus itself rather than following "#main", which the
+          preview build would read as a page address. */}
+      <a className="skip-link" href="#main" onClick={(e) => {
+        e.preventDefault();
+        document.getElementById('main')?.focus();
+      }}>Skip to content</a>
       <Header />
-      <main id="main">{children}</main>
+      <main id="main" tabIndex={-1}>{children}</main>
       <Footer />
       <Overlays />
       <Toasts />

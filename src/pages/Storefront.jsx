@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import ShopLayout from '../components/ShopLayout.jsx';
 import Hero from '../components/Hero.jsx';
 import CraftBand from '../components/CraftBand.jsx';
@@ -16,14 +16,13 @@ export default function Storefront() {
   const { hash } = useLocation();
 
   // "Back to your bag" from an unfinished payment lands with the bag open.
+  const [params, setParams] = useSearchParams();
   useEffect(() => {
-    const url = new URL(window.location.href);
-    if (url.searchParams.get('bag') === 'open') {
-      openOverlay('cart');
-      url.searchParams.delete('bag');
-      window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
-    }
-  }, [openOverlay]);
+    if (params.get('bag') !== 'open') return;
+    openOverlay('cart');
+    params.delete('bag');
+    setParams(params, { replace: true });
+  }, [params, setParams, openOverlay]);
 
   // Arriving from a product page's menu ("/#drop"): wait until the products
   // are in, so the sections are their full height, then go to the one asked for.

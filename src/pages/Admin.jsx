@@ -5,6 +5,7 @@ import {
   adminSummary, adminStock, adminSetStock, adminFulfil, adminDownload
 } from '../lib/api.js';
 import ProductsTab from './admin/ProductsTab.jsx';
+import { pageHref } from '../lib/media.js';
 import SettingsTab from './admin/SettingsTab.jsx';
 import ListTab from './admin/ListTab.jsx';
 import HomeTab from './admin/HomeTab.jsx';
@@ -379,7 +380,7 @@ export default function Admin() {
     <div className="admin">
       <header className="admin-header">
         <div className="admin-header__inner">
-          <a href="/" className="logo" aria-label="MASQ. — back to the shop">MASQ<span>.</span></a>
+          <a href={pageHref('/')} className="logo" aria-label="MASQ. — back to the shop">MASQ<span>.</span></a>
           <span className="admin-badge">ADMIN</span>
           <button className="admin-signout"
                   onClick={() => adminLogout().then(() => setSignedIn(false))}>SIGN OUT</button>

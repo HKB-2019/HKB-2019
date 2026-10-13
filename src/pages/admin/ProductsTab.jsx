@@ -5,6 +5,7 @@ import {
   adminAddGalleryPhoto, adminRemoveGalleryPhoto
 } from '../../lib/api.js';
 import { preparePhoto } from './photo.js';
+import { pageHref, NEW_TAB } from '../../lib/media.js';
 
 /* Everything about a product the owner can change, one card per product.
  * Text fields save with a button (so a half-typed price is never live);
@@ -163,7 +164,7 @@ function ProductCard({ product: p, first, last, onChanged, onReordered }) {
           </span>
           {p.soldOut && !p.hidden && <span className="admin-status admin-status--failed">sold out</span>}
           {!p.hidden && (
-            <a className="admin-link" href={`/product/${p.id}`} target="_blank" rel="noopener">view on shop ↗</a>
+            <a className="admin-link" href={pageHref(`/product/${p.id}`)} {...NEW_TAB}>view on shop ↗</a>
           )}
           <span className="admin-product__order">
             <button className="admin-icon" disabled={first} aria-label={`Move ${p.name} earlier`}

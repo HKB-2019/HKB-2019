@@ -15,7 +15,8 @@
     "test": "node --test --test-concurrency=1 server/test/*.test.js",
     "admin:password": "node --env-file-if-exists=.env server/tools/hash-password.js",
     "test:e2e": "playwright test",
-    "test:all": "npm test && npm run test:e2e"
+    "test:all": "npm test && npm run test:e2e",
+    "build:preview": "node tools/build-preview.mjs"
   },
   "engines": {
     "node": ">=22"
