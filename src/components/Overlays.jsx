@@ -5,6 +5,7 @@ import { useShop, useHome } from '../store/ShopContext.jsx';
 import { startCheckout, checkDiscount } from '../lib/api.js';
 import { useSectionLink } from '../lib/useSectionLink.js';
 import { asset } from '../lib/media.js';
+import { track, visitId } from '../lib/analytics.js';
 import { zoneFor, naira, isEmail, isPhone } from '../lib/delivery.js';
 import { Close, Heart } from './Icons.jsx';
 import { SizeButtons } from './DropGrid.jsx';
@@ -187,6 +188,7 @@ function DiscountBox({ applied, onApplied }) {
     try {
       const r = await checkDiscount(code, cart);
       setDiscountCode(r.code); onApplied(r); setState(null);
+      track('discount_applied');
     } catch (e) { setState(e.message); }
   };
 
@@ -274,7 +276,8 @@ function DeliveryForm({ onBack }) {
 
     setBusy(true); setServerError(null);
     try {
-      const { authorizationUrl } = await startCheckout(d, cart, applied ? discountCode : undefined);
+      const { authorizationUrl } = await startCheckout(d, cart, applied ? discountCode : undefined, visitId());
+      track('checkout', { valueKobo: total });
       window.location.href = authorizationUrl;   // hand off to Paystack
     } catch (err) {
       setBusy(false);
@@ -397,7 +400,7 @@ function CartDrawer() {
         </p>
         <button className="btn btn--solid btn--block"
                 disabled={!cart.length || !checkoutOpen}
-                onClick={() => setStep('delivery')}>
+                onClick={() => { setStep('delivery'); track('begin_checkout', { valueKobo: Math.round(cartSubtotal * 100) }); }}>
           CHECKOUT
         </button>
       </>}
@@ -520,6 +523,7 @@ function TrackOrderModal() {
 function FilmModal() {
   const { site } = useShop();
   const film = site?.film;
+  useEffect(() => { if (film) track('film_play'); }, [film]);
 
   return (
     <Modal label="MASQ. film" wide>
@@ -562,6 +566,7 @@ const PAGE_TITLES = { FAQ: 'FAQ', SHIPPING: 'Shipping', RETURNS: 'Returns', CONT
 function InfoModal({ title }) {
   const { site } = useShop();
   const text = site?.pages?.[title];
+  useEffect(() => { if (title === 'SIZE_GUIDE') track('size_guide'); }, [title]);
   return (
     <Modal labelledBy="infoTitle">
       <h2 className="modal__title" id="infoTitle">{(PAGE_TITLES[title] ?? title).toUpperCase()}</h2>

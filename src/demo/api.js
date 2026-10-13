@@ -10,6 +10,7 @@ import { CATALOGUE } from '../data/catalogue.js';
 import { HOME_DEFAULT, NAV } from '../data/home.js';
 import { PAGES, PAGES_DEFAULT } from '../data/pages.js';
 import { GUIDE_CURRENCIES, DEFAULT_RATES } from '../data/currencies.js';
+import { sampleReport } from './sampleAnalytics.js';
 
 const KEY = 'masq:preview-store-2';   // a new number whenever the sample's shape changes
 const ZONES = ['lagos', 'abuja', 'nigeria', 'international'];
@@ -637,3 +638,10 @@ export const adminRemoveAlert = (id) =>
 
 /** Downloads cannot leave a preview page, so this says so instead. */
 export const adminDownload = () => fail('Downloads are switched off in this preview. On the live shop this saves a spreadsheet.');
+
+/* ------------------------------------------------------------- visits */
+
+/** The preview counts nothing: its VISITORS tab shows made-up sample figures. */
+export function sendEvent() {}
+
+export const adminAnalytics = (range) => settle(sampleReport(range), 300);

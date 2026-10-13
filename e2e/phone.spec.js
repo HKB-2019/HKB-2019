@@ -33,7 +33,7 @@ test('checkout works on a phone', async ({ page }) => {
 
 test('every admin tab fits a phone', async ({ page }) => {
   await signIn(page);
-  for (const [tab, label = tab.toUpperCase()] of [['orders'], ['sales'], ['products'], ['home', 'HOME PAGE'], ['stock'], ['list'], ['settings']]) {
+  for (const [tab, label = tab.toUpperCase()] of [['orders'], ['visitors'], ['sales'], ['products'], ['home', 'HOME PAGE'], ['stock'], ['list'], ['settings']]) {
     await page.goto(`/admin#${tab}`);
     await expect(page.locator(`.admin-tab[aria-current="page"]`)).toHaveText(label);
     await noSidewaysScroll(page);

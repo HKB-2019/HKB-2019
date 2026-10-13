@@ -31,6 +31,9 @@ src/
   data/home.js          the home page's words as designed (shared with the server)
   data/catalogue.js     the pieces as designed: seeds the database and the preview
   data/pages.js         the footer pages as first written
+  data/maps.js          country and Nigerian-state outlines (Natural Earth)
+  lib/analytics.js      counts visits: pages, time spent, shopping steps
+  pages/admin/visitors/ the VISITORS tab: charts, maps, tables (loaded on demand)
   demo/                 the preview build's stand-in server and payment page
   store/ShopContext.jsx catalogue from the server, bag, saved, overlays
   lib/                  API client, delivery rules, storage, srcset, scroll
@@ -45,6 +48,9 @@ server/
   lib/orders.js         every change of order status, and the sweeper
   lib/settings.js       delivery fees, footer pages, links, home page — validated
   lib/catalogue.js      product rows → what the shop and admin show
+  lib/analytics.js      visit counting: daily-changing visitor code, device,
+                        source, country from time zone, 90-day detail
+  lib/report.js         everything the VISITORS tab shows
   lib/                  also auth, Paystack client, photo checks, CSV,
                         rate limits, money helpers
   tools/setup.js        first run: .env, admin password, catalogue
@@ -55,6 +61,7 @@ e2e/                    browser tests, with a stand-in Paystack
 .github/dependabot.yml  weekly update alerts, as pull requests the tests run on
 public/assets/          images and self-hosted fonts
 tools/build-assets.py   regenerates public/assets/img from the design mockup
+tools/build-maps.py     regenerates src/data/maps.js from Natural Earth
 render.yaml             how Render builds and runs the shop
 DEPLOY.md               putting it online for free, step by step
 ```
@@ -124,6 +131,29 @@ that matches production: one process, one port, `dist/` served by the API with
 any non-`/api` path falling back to `index.html`, so a refresh on `/admin`
 works.
 
+### Counting visits
+
+The shop counts its own visits (`src/lib/analytics.js` in the browser,
+`server/lib/analytics.js` on the server) instead of using Google Analytics, so
+there is no cookie banner and nothing leaves the shop:
+
+- **No cookies, nothing personal.** A visit is a random id kept for that tab
+  only (sessionStorage), ending after 30 idle minutes. A visitor is a code
+  made from their internet address and browser with a secret that is replaced
+  every day and then overwritten — today's code cannot be linked to
+  yesterday's, and the address itself is never stored. "Been here before" is
+  a yes/no kept on the device.
+- **Left out:** bots, the signed-in owner, admin pages, and browsers sending
+  Global Privacy Control.
+- **Kept:** detail for 90 days; after that only daily totals
+  (`analytics_daily`). Orders keep the source and campaign of the visit that
+  placed them, so sales by source last as long as the orders do.
+- **Country** comes from the device's time zone (`server/lib/timezones.js`,
+  from the tz database) — no lookup of anyone's address. The Nigeria map uses
+  the delivery state on paid orders, which is exact.
+- The same method as Plausible and Fathom; it counts someone on two devices,
+  or on two days, twice.
+
 ### The preview pages
 
 `npm run build:preview` builds the shop and admin as one page that runs on
@@ -136,7 +166,7 @@ admin).
 
 ### Tests
 
-`npm test` runs the API tests (124) against an in-memory Postgres. To run the
+`npm test` runs the API tests (133) against an in-memory Postgres. To run the
 same tests against a real server:
 
 ```bash
@@ -148,7 +178,7 @@ ways are worth running before a change to checkout or stock: the in-memory
 one queues transactions, so only a real server shows whether two buyers
 racing for the last jacket are handled.
 
-`npm run test:e2e` runs the browser tests (35) with Playwright: a robot
+`npm run test:e2e` runs the browser tests (36) with Playwright: a robot
 customer and a robot owner clicking through the built site, on desktop and a
 phone-sized screen. They run against a stand-in Paystack (`e2e/fake-paystack.js`)
 with a real payment page, so a whole purchase — bag, delivery, pay, webhook,
@@ -209,11 +239,12 @@ the one outcome that must never happen silently.
 
 ### The admin
 
-Seven tabs, all usable on a phone:
+Eight tabs, all usable on a phone:
 
 | Tab | What it does |
 | --- | --- |
 | **Orders** | Every order with the customer's name, phone (tap to call), address, items, any discount code, and total including delivery. `MARK SENT` asks for the courier and tracking number, which the customer then sees on their order page (and can be corrected later). `refunded?` records a refund made in Paystack, and can put the pieces back in stock. Filters by status. `DOWNLOAD CSV` for packing and dispatch |
+| **Visitors** | Today, 7, 30, 90 days or 12 months, each compared with the period before. Visitors, visits, conversion rate, money in and per visitor, bounce rate, time per visit, returning visitors; visitors over time; the shopping funnel (visited → viewed a piece → added to bag → checkout → payment → paid) with the drop at each step; sources and campaigns with the sales each brought; a tracked-link maker; pieces (views, adds, add rate, sold); pages; devices, systems and browsers (including in-app browsers like Instagram's); a world map of visitors by country; a Nigeria map of buyers by state; visits and orders by day and hour; goals; unfinished checkouts; repeat customers; who is on the site now. Every chart can be shown as a table |
 | **Sales** | Money in by week (Monday to Sunday, Lagos time) for the last 12 weeks, average order, discounts given, best-selling pieces and sizes. Paid orders only. Discount codes: per cent or naira off the pieces (never the delivery), optional minimum spend, number of uses and end date; switch off or delete |
 | **Products** | One card per product: name, price, badge (save with a button), and switches for on sale, in the drop grid, before `VIEW ALL`, in the carousel (save at once). Reorder with ↑ ↓. Sizes with their counts; add a size; remove one once its count is 0 and nobody is paying for it. `+ NEW PRODUCT` starts off sale — add a photo and counts, then switch it on. Each card also has the product page's description and "details and care", up to six more photos, and a link to see it on the shop. A **drop time** keeps a piece hidden and unbuyable until then |
 | **Home page** | The three wide photos (top of the page, craft band, film strip) — change or put back the original. Every line of words on the home page. The menu: rename an item, or switch it off |

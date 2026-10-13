@@ -12,7 +12,7 @@ export async function seed({ reset = false } = {}) {
       await tx.query("DELETE FROM settings WHERE key = 'home_images'");
       await tx.query(`TRUNCATE order_items, orders, customers, webhook_events, variants,
                                product_photos, products, images, subscribers,
-                               discount_codes, stock_alerts
+                               discount_codes, stock_alerts, events, analytics_daily
                       RESTART IDENTITY CASCADE`);
     }
 

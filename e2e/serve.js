@@ -36,6 +36,7 @@ const { seed } = await import('../server/seed.js');
 const { setSetting } = await import('../server/lib/settings.js');
 const { checkoutLimit, discountLimit } = await import('../server/routes/checkout.js');
 const { subscribeLimit } = await import('../server/routes/subscribe.js');
+const { eventLimit } = await import('../server/routes/analytics.js');
 const { createApp } = await import('../server/index.js');
 
 export const DELIVERY = {
@@ -53,6 +54,7 @@ async function reset({ delivery = true } = {}) {
   checkoutLimit.reset();
   discountLimit.reset();
   subscribeLimit.reset();
+  eventLimit.reset();
 }
 
 await reset();

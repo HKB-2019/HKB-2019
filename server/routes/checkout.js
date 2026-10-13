@@ -7,6 +7,7 @@ import { openZones, zoneFor, NIGERIAN_STATES, ZONE_LABELS } from '../lib/setting
 import { rateLimit } from '../lib/limits.js';
 import { onSale } from '../lib/catalogue.js';
 import { applyCode } from '../lib/discounts.js';
+import { attribution } from '../lib/analytics.js';
 
 export const checkoutRouter = Router();
 
@@ -115,6 +116,9 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
     });
   }
 
+  // Which visit this came from, if the page counted one: sales by source.
+  const from = await attribution(body.analyticsSession).catch(() => null);
+
   let order;
   try {
     order = await transaction(async (tx) => {
@@ -204,12 +208,13 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
       const { id } = await tx.one(`
         INSERT INTO orders (reference, customer_id, email, status, subtotal_kobo, shipping_kobo,
                             currency, customer_name, phone, address, delivery_zone,
-                            discount_code, discount_kobo)
-        VALUES ($1, $2, $3, 'pending', $4, $5, 'NGN', $6, $7, $8, $9, $10, $11)
+                            discount_code, discount_kobo, session_id, channel, campaign)
+        VALUES ($1, $2, $3, 'pending', $4, $5, 'NGN', $6, $7, $8, $9, $10, $11, $12, $13, $14)
         RETURNING id
       `, [reference, customer.id, normalisedEmail, subtotal, shipping,
           who.name, who.phone, JSON.stringify(who.address), who.zone,
-          discount?.code ?? null, discountKobo]);
+          discount?.code ?? null, discountKobo,
+          from?.session ?? null, from?.channel ?? null, from?.campaign ?? null]);
 
       for (const l of lines) {
         await tx.query(`

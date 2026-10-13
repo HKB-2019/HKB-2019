@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   adminLogin, adminLogout, adminMe, adminStatus, adminSetup, adminOrders,
@@ -11,8 +11,12 @@ import ListTab from './admin/ListTab.jsx';
 import HomeTab from './admin/HomeTab.jsx';
 import SalesTab from './admin/SalesTab.jsx';
 
+// Charts and maps load only when the tab is opened — never for shoppers.
+const VisitorsTab = lazy(() => import('./admin/visitors/VisitorsTab.jsx'));
+
 const TABS = [
   ['orders', 'ORDERS'],
+  ['visitors', 'VISITORS'],
   ['sales', 'SALES'],
   ['products', 'PRODUCTS'],
   ['home', 'HOME PAGE'],
@@ -502,6 +506,9 @@ export default function Admin() {
             )}
             {tab === 'home' && <HomeTab />}
             {tab === 'sales' && <SalesTab />}
+            {tab === 'visitors' && (
+              <Suspense fallback={<p className="admin-empty">Loading…</p>}><VisitorsTab /></Suspense>
+            )}
             {tab === 'list' && <ListTab onSummaryChange={refreshSummary} />}
             {tab === 'settings' && <SettingsTab onSummaryChange={refreshSummary} />}
           </motion.div>

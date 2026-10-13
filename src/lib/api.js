@@ -27,12 +27,13 @@ export const getSite     = () => request('/site');
  * Send WHAT is being bought and WHERE it goes. The server decides what it
  * costs — the item prices and the delivery fee both come from its database.
  */
-export const startCheckout = ({ email, name, phone, address }, items, discountCode) =>
+export const startCheckout = ({ email, name, phone, address }, items, discountCode, analyticsSession) =>
   request('/checkout', {
     method: 'POST',
     body: JSON.stringify({
       email, name, phone, address,
       ...(discountCode ? { discountCode } : {}),
+      ...(analyticsSession ? { analyticsSession } : {}),
       items: items.map(i => ({ productId: i.id, size: i.size, qty: i.qty }))
     })
   });
@@ -107,6 +108,8 @@ export const adminClearAlerts    = (productId, size) =>
   adminRequest('/admin/stock-alerts/clear', { method:'POST', body: JSON.stringify({ productId, size }) });
 export const adminRemoveAlert    = (id)           => adminRequest(`/admin/stock-alerts/${id}`, { method:'DELETE' });
 
+export const adminAnalytics = (range) => adminRequest(`/admin/analytics?range=${encodeURIComponent(range)}`);
+
 /* ------------------------------------------------------- admin: home page */
 
 export const adminUploadHomeImage = (slot, image, image2x) =>
@@ -129,4 +132,20 @@ export async function adminDownload(path) {
   const a = Object.assign(document.createElement('a'), { href: url, download: name });
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* ------------------------------------------------------------- visits */
+
+/**
+ * Report one thing that happened (src/lib/analytics.js decides what). Sent so
+ * that it survives the page closing, and never in the customer's way: a
+ * failure here is silently dropped.
+ */
+export function sendEvent(payload) {
+  const body = JSON.stringify(payload);
+  try {
+    if (navigator.sendBeacon?.(BASE + '/api/e', new Blob([body], { type: 'application/json' }))) return;
+  } catch { /* fall through */ }
+  fetch(BASE + '/api/e', { method: 'POST', body, keepalive: true, headers: { 'Content-Type': 'application/json' } })
+    .catch(() => {});
 }

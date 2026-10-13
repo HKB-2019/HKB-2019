@@ -1,4 +1,6 @@
-import { BrowserRouter, HashRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, HashRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { trackPageview } from './lib/analytics.js';
 import Storefront from './pages/Storefront.jsx';
 import OrderStatus from './pages/OrderStatus.jsx';
 import Admin from './pages/Admin.jsx';
@@ -8,6 +10,13 @@ import { previewRoutes, PreviewBanner } from './lib/preview.jsx';
 // The preview is one page on someone else's site, so its pages live after
 // the # in the address. The real shop has real addresses.
 const Router = import.meta.env.VITE_DEMO ? HashRouter : BrowserRouter;
+
+/** Counts each page shown (see src/lib/analytics.js). */
+function PageTracker() {
+  const { pathname } = useLocation();
+  useEffect(() => { trackPageview(); }, [pathname]);
+  return null;
+}
 
 export default function App() {
   return (
@@ -22,6 +31,7 @@ export default function App() {
         <Route path="*" element={<Storefront />} />
       </Routes>
       <PreviewBanner />
+      <PageTracker />
     </Router>
   );
 }

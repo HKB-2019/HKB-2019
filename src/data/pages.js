@@ -15,6 +15,7 @@ export const PAGES_DEFAULT = {
   PRIVACY:
     'When you order, we collect your name, email, phone number and delivery address, and use them only to deliver your order and contact you about it.\n\n' +
     'Payments are handled by Paystack. We never see or store your card details.\n\n' +
+    'We count visits to understand what people look at: the pages viewed, which site or app you came from, your type of device, and your country as told by your device’s time zone. This uses no cookies and nothing that identifies you, cannot follow you from one day to the next, and the detail is deleted after 90 days.\n\n' +
     'If you join the list, we keep your email address to tell you about new drops. If you ask to hear when a sold-out size is back, we keep your email address for that and remove it once we have told you. We do not sell or share your details.\n\n' +
     'To see or delete what we hold about you, contact us using the details on the Contact page.',
   // Linked from every product page. Says only what the design already

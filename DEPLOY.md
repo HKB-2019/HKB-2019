@@ -106,6 +106,9 @@ Everything below is in the admin — no code.
    Check it matches how you run things.
 9. **Set the price-guide rates.** *Settings → Price guide.* How many naira
    make one dollar, pound and euro, for customers who view prices in those.
+10. **Use tracked links.** *Visitors → Make a tracked link.* Put these in
+   your Instagram bio, stories and WhatsApp broadcasts, so the Visitors tab
+   can tell you which post brought which sales.
 
 ---
 

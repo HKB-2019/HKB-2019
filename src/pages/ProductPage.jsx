@@ -7,6 +7,7 @@ import { srcSet, CARD_SIZES, GALLERY_SIZES } from '../lib/media.js';
 import { useSectionLink } from '../lib/useSectionLink.js';
 import { Heart } from '../components/Icons.jsx';
 import { askForRestock } from '../lib/api.js';
+import { track } from '../lib/analytics.js';
 import { isEmail } from '../lib/delivery.js';
 
 const ease = [0.33, 0.02, 0.18, 1];
@@ -106,7 +107,7 @@ function RestockAsk({ product }) {
     e.preventDefault();
     if (!isEmail(email)) { setState('Enter a valid email address.'); return; }
     setState('sending');
-    try { await askForRestock(product.id, size, email.trim()); setState('done'); }
+    try { await askForRestock(product.id, size, email.trim()); setState('done'); track('restock_request', { productId: product.id, size }); }
     catch (err) { setState(err.message); }
   };
 
@@ -257,6 +258,11 @@ export default function ProductPage() {
   const product = productById(id);
 
   useEffect(() => { window.scrollTo(0, 0); }, [id]);
+  // Counted once per piece per page visit, when it has actually loaded.
+  const viewed = product?.id;
+  useEffect(() => {
+    if (viewed) track('view_item', { productId: viewed, valueKobo: product.priceKobo });
+  }, [viewed]);   // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (product) document.title = `${product.name} — MASQ.`;
     return () => { document.title = TITLE; };

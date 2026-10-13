@@ -4,6 +4,7 @@ import Reveal from './Reveal.jsx';
 import { useShop, useHome } from '../store/ShopContext.jsx';
 import Lines from './Lines.jsx';
 import { subscribe } from '../lib/api.js';
+import { track } from '../lib/analytics.js';
 
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
 
@@ -25,6 +26,7 @@ export default function Newsletter() {
     setBusy(true);
     try {
       await subscribe(email.trim());
+      track('subscribe');
       setEmail('');
       setMsg({ text: 'YOU’RE IN. WATCH YOUR INBOX FOR DROP 02.', error: false });
       toast('WELCOME TO THE WORLD OF MASQ.', 'violet');

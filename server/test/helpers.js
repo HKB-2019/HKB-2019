@@ -43,6 +43,7 @@ export async function startShop() {
   const { setSetting } = await import('../lib/settings.js');
   const { checkoutLimit, discountLimit } = await import('../routes/checkout.js');
   const { subscribeLimit } = await import('../routes/subscribe.js');
+  const { eventLimit } = await import('../routes/analytics.js');
   const { createApp } = await import('../index.js');
   const { createServer } = await import('node:http');
 
@@ -71,6 +72,7 @@ export async function startShop() {
     checkoutLimit.reset();
     discountLimit.reset();
     subscribeLimit.reset();
+    eventLimit.reset();
   };
 
   /** Signed in as the admin; returns the Cookie header to send. */

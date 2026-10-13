@@ -3,6 +3,7 @@ import { CURRENCIES, currencies } from '../data/currencies.js';
 import { readStore, writeStore } from '../lib/storage.js';
 import { getProducts, getSite } from '../lib/api.js';
 import { HOME_DEFAULT } from '../data/home.js';
+import { track } from '../lib/analytics.js';
 
 /* One place for everything the shop needs to remember: the catalogue and site
  * settings from the server, the bag, the saved list, the chosen currency,
@@ -160,6 +161,7 @@ export function ShopProvider({ children }) {
       ? items.map(i => i.key === key ? { ...i, qty: i.qty + 1 } : i)
       : [...items, { key, id: p.id, name: p.name, price: p.price, img: p.img, size, qty: 1 }]);
     toast(`${p.name} ADDED TO BAG`, 'violet');
+    track('add_to_cart', { productId: p.id, size, valueKobo: p.priceKobo });
   }, [products, cart, toast]);
 
   const changeQty = useCallback((key, delta) => {

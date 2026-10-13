@@ -11,6 +11,7 @@ import { subscribeRouter } from './routes/subscribe.js';
 import { adminRouter } from './routes/admin.js';
 import { adminProductsRouter, adminUploadRouter } from './routes/admin-products.js';
 import { adminSalesRouter } from './routes/admin-sales.js';
+import { analyticsRouter } from './routes/analytics.js';
 import { one } from './db.js';
 import { photoUrls, onSale } from './lib/catalogue.js';
 import { getHomeImages } from './lib/settings.js';
@@ -147,6 +148,7 @@ export function createApp() {
   app.use('/api', adminRouter);
   app.use('/api', adminProductsRouter);
   app.use('/api', adminSalesRouter);
+  app.use('/api', analyticsRouter);
 
   // An address under /api that matched nothing is a mistake, and says so in
   // JSON — not a copy of the home page.
