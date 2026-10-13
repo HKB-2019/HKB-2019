@@ -11,18 +11,26 @@ import { fileURLToPath } from 'node:url';
  * and pages after the # (HashRouter, in App.jsx). */
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 
+const SWAPS = {
+  [here('./src/lib/api.js')]: here('./src/demo/api.js'),
+  [here('./src/lib/preview.jsx')]: here('./src/demo/preview.jsx')
+};
+
 export default defineConfig(({ mode }) => ({
   base: './',
-  plugins: [react()],
   define: {
     'import.meta.env.VITE_DEMO': JSON.stringify('1'),
     'import.meta.env.VITE_DEMO_START': JSON.stringify(mode === 'admin' ? '/admin' : '')
   },
-  resolve: {
-    alias: [
-      { find: /^(\.\.?\/)+lib\/api\.js$/, replacement: here('./src/demo/api.js') },
-      { find: /^(\.\.?\/)+lib\/preview\.jsx$/, replacement: here('./src/demo/preview.jsx') }
-    ]
-  },
+  // Swapped by what a file IS, not how an import spells it: "./api.js" from
+  // inside src/lib is the same file as "../lib/api.js" from a component.
+  plugins: [react(), {
+    name: 'preview-swaps',
+    enforce: 'pre',
+    async resolveId(source, importer, options) {
+      const found = await this.resolve(source, importer, { ...options, skipSelf: true });
+      return found && SWAPS[found.id] ? SWAPS[found.id] : null;
+    }
+  }],
   build: { outDir: `dist-preview/${mode === 'admin' ? 'admin' : 'shop'}`, emptyOutDir: true }
 }));

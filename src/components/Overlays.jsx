@@ -224,7 +224,7 @@ function DiscountBox({ applied, onApplied }) {
 }
 
 function DeliveryForm({ onBack }) {
-  const { cart, cartSubtotal, delivery, setDelivery, site, toast, discountCode } = useShop();
+  const { cart, cartSubtotal, delivery, setDelivery, site, toast, discountCode, closeOverlay } = useShop();
   const [applied, setApplied] = useState(null);
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
@@ -278,6 +278,9 @@ function DeliveryForm({ onBack }) {
     try {
       const { authorizationUrl } = await startCheckout(d, cart, applied ? discountCode : undefined, visitId());
       track('checkout', { valueKobo: total });
+      // Leaving for the payment page: the bag closes behind us, so coming
+      // back (the preview's payment page is in the same page) finds the shop.
+      closeOverlay();
       window.location.href = authorizationUrl;   // hand off to Paystack
     } catch (err) {
       setBusy(false);
