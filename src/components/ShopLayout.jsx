@@ -1,0 +1,25 @@
+import { useEffect } from 'react';
+import Header from './Header.jsx';
+import Footer from './Footer.jsx';
+import Overlays from './Overlays.jsx';
+import Toasts from './Toasts.jsx';
+import { useShop } from '../store/ShopContext.jsx';
+
+/* What every customer-facing page shares: the header with the bag, the
+ * footer, the drawers and the toasts. The catalogue is fetched on arrival at
+ * each page, so a change made in the admin shows the next time anyone looks. */
+export default function ShopLayout({ children }) {
+  const { loadCatalogue } = useShop();
+  useEffect(() => { loadCatalogue(); }, [loadCatalogue]);
+
+  return (
+    <>
+      <a className="skip-link" href="#main">Skip to content</a>
+      <Header />
+      <main id="main">{children}</main>
+      <Footer />
+      <Overlays />
+      <Toasts />
+    </>
+  );
+}

@@ -7,10 +7,12 @@ import {
 import ProductsTab from './admin/ProductsTab.jsx';
 import SettingsTab from './admin/SettingsTab.jsx';
 import ListTab from './admin/ListTab.jsx';
+import HomeTab from './admin/HomeTab.jsx';
 
 const TABS = [
   ['orders', 'ORDERS'],
   ['products', 'PRODUCTS'],
+  ['home', 'HOME PAGE'],
   ['stock', 'STOCK'],
   ['list', 'LIST'],
   ['settings', 'SETTINGS']
@@ -429,6 +431,7 @@ export default function Admin() {
                 </div>
               </section>
             )}
+            {tab === 'home' && <HomeTab />}
             {tab === 'list' && <ListTab onSummaryChange={refreshSummary} />}
             {tab === 'settings' && <SettingsTab onSummaryChange={refreshSummary} />}
           </motion.div>

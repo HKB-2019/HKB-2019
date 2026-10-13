@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   adminProducts, adminCreateProduct, adminUpdateProduct, adminMoveProduct,
-  adminAddSize, adminRemoveSize, adminUploadPhoto, adminRemovePhoto, adminSetStock
+  adminAddSize, adminRemoveSize, adminUploadPhoto, adminRemovePhoto, adminSetStock,
+  adminAddGalleryPhoto, adminRemoveGalleryPhoto
 } from '../../lib/api.js';
 import { preparePhoto } from './photo.js';
 
@@ -10,6 +11,7 @@ import { preparePhoto } from './photo.js';
  * switches and sizes save the moment they change. */
 
 const naira = (kobo) => '₦' + (kobo / 100).toLocaleString('en-NG');
+const MAX_EXTRA_PHOTOS = 6;     // the server's limit too
 
 /** "28,000" or "₦28000" → 28000. Anything else → NaN. */
 const parseNaira = (v) => {
@@ -63,11 +65,14 @@ function ProductCard({ product: p, first, last, onChanged, onReordered }) {
   const [name, setName] = useState(p.name);
   const [price, setPrice] = useState(String(p.price));
   const [badge, setBadge] = useState(p.badge ?? '');
+  const [description, setDescription] = useState(p.description ?? '');
+  const [details, setDetails] = useState(p.details ?? '');
   const [size, setSize] = useState('');
   const [photoNote, setPhotoNote] = useState(null);
 
   // A save elsewhere (or a reload) brings new values; take them unless mid-edit.
   useEffect(() => { setName(p.name); setPrice(String(p.price)); setBadge(p.badge ?? ''); }, [p.name, p.price, p.badge]);
+  useEffect(() => { setDescription(p.description ?? ''); setDetails(p.details ?? ''); }, [p.description, p.details]);
 
   const [detailState, runDetail] = useAction(onChanged);
   const [switchState, runSwitch] = useAction(onChanged);
@@ -75,13 +80,18 @@ function ProductCard({ product: p, first, last, onChanged, onReordered }) {
   const [photoState, runPhoto, setPhotoState] = useAction(onChanged);
 
   const priceNaira = parseNaira(price);
-  const dirty = name !== p.name || priceNaira !== p.price || badge.trim().toUpperCase() !== (p.badge ?? '');
+  // Compared trimmed, as the server stores them, so a stray space is not a change.
+  const tidy = (t) => t.replace(/\r\n?/g, '\n').trim();
+  const dirty = name !== p.name || priceNaira !== p.price || badge.trim().toUpperCase() !== (p.badge ?? '')
+    || tidy(description) !== (p.description ?? '') || tidy(details) !== (p.details ?? '');
   const fileRef = useRef(null);
+  const galleryRef = useRef(null);
+  const extras = (p.photos ?? []).filter(x => x.id);
 
   const saveDetails = (e) => {
     e.preventDefault();
     if (Number.isNaN(priceNaira)) return runDetail(async () => { throw new Error('Type the price in whole naira, e.g. 28000.'); });
-    runDetail(() => adminUpdateProduct(p.id, { name, priceNaira, badge: badge.trim() || null }));
+    runDetail(() => adminUpdateProduct(p.id, { name, priceNaira, badge: badge.trim() || null, description, details }));
   };
 
   const flip = (change) => runSwitch(() => adminUpdateProduct(p.id, change));
@@ -99,6 +109,19 @@ function ProductCard({ product: p, first, last, onChanged, onReordered }) {
     runPhoto(() => adminUploadPhoto(p.id, prepared.image, prepared.image2x));
   };
 
+  const onGalleryPhoto = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setPhotoNote(null);
+    setPhotoState('saving');
+    let prepared;
+    try { prepared = await preparePhoto(file); }
+    catch (err) { setPhotoState(err.message); return; }
+    if (prepared.small) setPhotoNote(`This photo is only ${prepared.width} px wide after cropping, so it may look soft.`);
+    runPhoto(() => adminAddGalleryPhoto(p.id, prepared.image, prepared.image2x));
+  };
+
   return (
     <article className={`admin-product${p.hidden ? ' is-off' : ''}`} aria-label={p.name}>
       <div className="admin-product__photo">
@@ -113,6 +136,22 @@ function ProductCard({ product: p, first, last, onChanged, onReordered }) {
           <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp,image/heic"
                  aria-label={`Photo for ${p.name}`} onChange={onPhoto} />
         </div>
+        <span className="admin-product__label">More photos <em>for the product page</em></span>
+        <div className="admin-gallery">
+          {extras.map((x, i) => (
+            <div className="admin-gallery__item" key={x.id}>
+              <img src={x.img} alt="" />
+              <button className="admin-gallery__remove" aria-label={`Remove extra photo ${i + 1} of ${p.name}`}
+                      onClick={() => runPhoto(() => adminRemoveGalleryPhoto(p.id, x.id))}>×</button>
+            </div>
+          ))}
+          {extras.length < MAX_EXTRA_PHOTOS && (
+            <button className="admin-gallery__add" aria-label={`Add another photo of ${p.name}`}
+                    onClick={() => galleryRef.current?.click()}>+</button>
+          )}
+          <input ref={galleryRef} type="file" hidden accept="image/jpeg,image/png,image/webp,image/heic"
+                 aria-label={`Extra photo file for ${p.name}`} onChange={onGalleryPhoto} />
+        </div>
         <Note state={photoState} />
         {photoNote && <p className="admin-product__warn">{photoNote}</p>}
       </div>
@@ -123,6 +162,9 @@ function ProductCard({ product: p, first, last, onChanged, onReordered }) {
             {p.hidden ? 'off sale' : 'on sale'}
           </span>
           {p.soldOut && !p.hidden && <span className="admin-status admin-status--failed">sold out</span>}
+          {!p.hidden && (
+            <a className="admin-link" href={`/product/${p.id}`} target="_blank" rel="noopener">view on shop ↗</a>
+          )}
           <span className="admin-product__order">
             <button className="admin-icon" disabled={first} aria-label={`Move ${p.name} earlier`}
                     onClick={() => onReordered(adminMoveProduct(p.id, 'up'))}>↑</button>
@@ -144,6 +186,18 @@ function ProductCard({ product: p, first, last, onChanged, onReordered }) {
           <label className="admin-field">
             <span>Badge <em>optional</em></span>
             <input value={badge} maxLength={16} placeholder="e.g. LIMITED" onChange={(e) => setBadge(e.target.value)} />
+          </label>
+          <label className="admin-field admin-field--wide admin-field--full">
+            <span>Description <em>shown on the product page</em></span>
+            <textarea rows={3} maxLength={2000} value={description}
+                      placeholder="What it is, how it fits, the story behind it."
+                      onChange={(e) => setDescription(e.target.value)} />
+          </label>
+          <label className="admin-field admin-field--wide admin-field--full">
+            <span>Details and care <em>optional</em></span>
+            <textarea rows={2} maxLength={1000} value={details}
+                      placeholder={'e.g. 100% cotton\nWash cold, inside out'}
+                      onChange={(e) => setDetails(e.target.value)} />
           </label>
           <div className="admin-product__save">
             <button className="admin-action" disabled={!dirty}>SAVE</button>

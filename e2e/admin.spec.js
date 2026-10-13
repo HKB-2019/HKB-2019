@@ -13,11 +13,11 @@ test('a new photo is cropped, resized, uploaded and shown on the shop', async ({
   await signIn(page);
   await page.goto('/admin#products');
   const scarf = productCard(page, 'THE PATTERN SCARF');
-  await scarf.locator('input[type=file]').setInputFiles(PHOTO);
-  await expect(scarf.locator('.admin-product__photo img')).toHaveAttribute('src', /^\/api\/images\/\d+$/);
+  await scarf.getByLabel(/^Photo for /).setInputFiles(PHOTO);
+  await expect(scarf.locator('.admin-product__photo > img')).toHaveAttribute('src', /^\/api\/images\/\d+$/);
 
   // What was stored: a 5:6 portrait, 700 and 1,400 px wide, from a landscape photo.
-  const src = await scarf.locator('.admin-product__photo img').getAttribute('src');
+  const src = await scarf.locator('.admin-product__photo > img').getAttribute('src');
   const size = async (url) => page.evaluate(async (u) => {
     const img = new Image(); img.src = u; await img.decode();
     return [img.naturalWidth, img.naturalHeight];
@@ -35,9 +35,9 @@ test('a file that is not a photo is refused before it is uploaded', async ({ pag
   await signIn(page);
   await page.goto('/admin#products');
   const scarf = productCard(page, 'THE PATTERN SCARF');
-  await scarf.locator('input[type=file]').setInputFiles(NOT_A_PHOTO);
+  await scarf.getByLabel(/^Photo for /).setInputFiles(NOT_A_PHOTO);
   await expect(scarf.locator('.admin-note--bad')).toContainText('JPEG, PNG or WebP');
-  await expect(scarf.locator('.admin-product__photo img')).toHaveAttribute('src', 'assets/img/prod-scarf.webp');
+  await expect(scarf.locator('.admin-product__photo > img')).toHaveAttribute('src', '/assets/img/prod-scarf.webp');
 });
 
 test('a new product is made, photographed, stocked and put on sale — and a customer can buy it', async ({ page }) => {
@@ -56,8 +56,8 @@ test('a new product is made, photographed, stocked and put on sale — and a cus
   await night.locator('.admin-toggle', { hasText: 'On sale' }).click();
   await expect(night.locator('.admin-note--bad')).toContainText('Add a photo');
 
-  await night.locator('input[type=file]').setInputFiles(PHOTO);
-  await expect(night.locator('.admin-product__photo img')).toBeVisible();
+  await night.getByLabel(/^Photo for /).setInputFiles(PHOTO);
+  await expect(night.locator('.admin-product__photo > img')).toBeVisible();
   const m = night.getByLabel('The Night Tee, size M, in stock');
   await m.fill('5');
   await m.press('Enter');

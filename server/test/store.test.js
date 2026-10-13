@@ -219,7 +219,7 @@ test('the list cannot be flooded from one address', async () => {
 
 test('/api/site shows the pages, links and open delivery zones — and nothing private', async () => {
   const { body } = await shop.request('/api/site');
-  assert.deepEqual(Object.keys(body).sort(), ['delivery', 'film', 'pages', 'social', 'states']);
+  assert.deepEqual(Object.keys(body).sort(), ['delivery', 'film', 'home', 'pages', 'social', 'states']);
   assert.deepEqual(body.delivery.map(z => z.zone), ['lagos', 'abuja', 'nigeria'], 'only zones that are on');
   assert.equal(body.delivery[0].feeKobo, 250_000);
   assert.ok(body.pages.PRIVACY.includes('Paystack'));

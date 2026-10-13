@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useShop } from '../store/ShopContext.jsx';
+import { useShop, useHome } from '../store/ShopContext.jsx';
 import { startCheckout } from '../lib/api.js';
-import { scrollToId } from '../lib/scroll.js';
+import { useSectionLink } from '../lib/useSectionLink.js';
+import { asset } from '../lib/media.js';
 import { zoneFor, naira, isEmail, isPhone } from '../lib/delivery.js';
 import { Close, Heart } from './Icons.jsx';
 import { SizeButtons } from './DropGrid.jsx';
@@ -72,14 +73,29 @@ function Drawer({ label, title, count, children, foot }) {
 
 /* ------------------------------------------------------------------ the bag */
 
+/** The empty-state button: back to the drop grid, from whichever page. */
+function ShopButton() {
+  const { closeOverlay } = useShop();
+  const { home } = useHome();
+  const goTo = useSectionLink();
+  return (
+    <button className="btn btn--ghost" onClick={() => { closeOverlay(); goTo('#drop'); }}>{home.heroButton}</button>
+  );
+}
+
+/** A product's name in a drawer, opening its page. */
+function NameLink({ id, name }) {
+  const { closeOverlay } = useShop();
+  return <Link to={`/product/${id}`} onClick={closeOverlay}>{name}</Link>;
+}
+
 function BagLines() {
-  const { cart, changeQty, removeItem, format, closeOverlay } = useShop();
+  const { cart, changeQty, removeItem, format } = useShop();
   if (cart.length === 0) {
     return (
       <div className="empty">
         <p>YOUR BAG IS EMPTY</p>
-        <button className="btn btn--ghost"
-                onClick={() => { closeOverlay(); scrollToId('#drop'); }}>SHOP DROP 01</button>
+        <ShopButton />
       </div>
     );
   }
@@ -97,7 +113,7 @@ function BagLines() {
         >
           <img className="line-item__img" src={item.img} alt={item.name} />
           <div>
-            <h3 className="line-item__name">{item.name}</h3>
+            <h3 className="line-item__name"><NameLink id={item.id} name={item.name} /></h3>
             <p className="line-item__variant">SIZE {item.size}</p>
             <p className="line-item__price">{format(item.price * item.qty)}</p>
             <div className="qty">
@@ -326,7 +342,7 @@ function CartDrawer() {
 /* -------------------------------------------------------------- saved list */
 
 function SavedDrawer() {
-  const { wishlist, toggleWish, productById, format, closeOverlay, catalogueStatus } = useShop();
+  const { wishlist, toggleWish, productById, format, catalogueStatus } = useShop();
   // Only pieces still on sale; anything since taken off quietly drops out.
   const items = wishlist.map(productById).filter(Boolean);
 
@@ -335,14 +351,13 @@ function SavedDrawer() {
       {catalogueStatus === 'ready' && items.length === 0 ? (
         <div className="empty">
           <p>NOTHING SAVED YET</p>
-          <button className="btn btn--ghost"
-                  onClick={() => { closeOverlay(); scrollToId('#drop'); }}>SHOP DROP 01</button>
+          <ShopButton />
         </div>
       ) : items.map(p => (
         <article className="line-item saved-item" key={p.id}>
           {p.img ? <img className="line-item__img" src={p.img} alt={p.name} /> : <span className="line-item__img" />}
           <div>
-            <h3 className="line-item__name">{p.name}</h3>
+            <h3 className="line-item__name"><NameLink id={p.id} name={p.name} /></h3>
             <p className="line-item__price">{p.soldOut ? 'SOLD OUT' : format(p.price)}</p>
             {!p.soldOut && (
               <div className="saved-item__sizes card__sizes" role="group" aria-label={`Add ${p.name} in a size`}>
@@ -456,7 +471,7 @@ function FilmModal() {
             <video src={film.url} controls autoPlay playsInline />
           </div>
         ) : (
-          <img src="assets/img/film-still.webp" alt="" aria-hidden="true" />
+          <img src={site?.home?.images?.film?.img ?? asset('assets/img/film-still.webp')} alt="" aria-hidden="true" />
         )}
         <div className="film-frame__body">
           <p className="eyebrow">URBAN RITUALS — THE FILM</p>
@@ -474,7 +489,7 @@ function FilmModal() {
 
 /* --------------------------------------------------------------- info modal */
 
-const PAGE_TITLES = { FAQ: 'FAQ', SHIPPING: 'Shipping', RETURNS: 'Returns', CONTACT: 'Contact', PRIVACY: 'Privacy' };
+const PAGE_TITLES = { FAQ: 'FAQ', SHIPPING: 'Shipping', RETURNS: 'Returns', CONTACT: 'Contact', PRIVACY: 'Privacy', SIZE_GUIDE: 'Size guide' };
 
 function InfoModal({ title }) {
   const { site } = useShop();

@@ -502,8 +502,8 @@ test('the catalogue reports real stock and computes soldOut', async () => {
   assert.ok(tee.sizes.every(s => s.available));
   assert.equal(tee.sizes.find(s => s.size === 'XL').left, 6, 'a low count is shown');
   assert.equal(tee.sizes.find(s => s.size === 'M').left, null, 'a healthy count is nobody\'s business');
-  assert.equal(tee.img, 'assets/img/prod-tee.webp');
-  assert.equal(tee.img2x, 'assets/img/prod-tee@2x.webp');
+  assert.equal(tee.img, '/assets/img/prod-tee.webp');
+  assert.equal(tee.img2x, '/assets/img/prod-tee@2x.webp');
 
   assert.ok(!res.body.find(p => p.id === 'airpods').inDrop, 'the pod shell is carousel-only');
   assert.ok(res.body.find(p => p.id === 'airpods').inEssentials);

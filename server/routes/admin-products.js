@@ -4,6 +4,7 @@ import { one, query, transaction } from '../db.js';
 import { requireAdmin } from '../lib/auth.js';
 import { loadProducts } from '../lib/catalogue.js';
 import { decodePhoto, MAX_IMAGE_BYTES } from '../lib/images.js';
+import { cleanText, HOME_SLOTS, setHomeImage } from '../lib/settings.js';
 
 /* Everything the owner can change about a product: its name, price, badge,
  * where it appears, whether it is on sale, its order, its sizes and its photo.
@@ -15,6 +16,8 @@ export const adminProductsRouter = Router();
 adminProductsRouter.use('/admin/products', requireAdmin);
 
 const MAX_PRICE_NAIRA = 1_000_000;
+/** Photos beyond the main one, per product. Enough for front, back, detail, worn. */
+export const MAX_EXTRA_PHOTOS = 6;
 
 function fail(status, message) {
   return Object.assign(new Error(message), { status });
@@ -53,6 +56,10 @@ function cleanSize(v) {
   if (size.length > 12) throw fail(400, 'Keep a size under 12 characters.');
   return size;
 }
+
+// Shown on the product page as plain text; line breaks kept, blank allowed.
+const cleanDescription = (v) => cleanText(v, { label: 'Description', max: 2000, allowEmpty: true });
+const cleanDetails = (v) => cleanText(v, { label: 'Details and care', max: 1000, allowEmpty: true });
 
 const bool = (v, label) => {
   if (typeof v !== 'boolean') throw fail(400, `${label} must be on or off.`);
@@ -96,6 +103,8 @@ adminProductsRouter.post('/admin/products', async (req, res) => {
   const name = cleanName(b.name);
   const priceKobo = cleanPrice(b.priceNaira);
   const badge = cleanBadge(b.badge);
+  const description = 'description' in b ? cleanDescription(b.description) : '';
+  const details = 'details' in b ? cleanDetails(b.details) : '';
   const sizes = Array.isArray(b.sizes) && b.sizes.length ? b.sizes.map(cleanSize) : ['ONE SIZE'];
   if (new Set(sizes).size !== sizes.length) throw fail(400, 'Each size can only be listed once.');
   if (sizes.length > 12) throw fail(400, 'That is more sizes than a product needs.');
@@ -104,9 +113,10 @@ adminProductsRouter.post('/admin/products', async (req, res) => {
     const id = await newId(tx, name);
     const { next } = await tx.one('SELECT COALESCE(MAX(position), -1) + 1 AS next FROM products');
     await tx.query(`
-      INSERT INTO products (id, name, price_kobo, img, badge, in_drop, featured, in_essentials, hidden, position)
-      VALUES ($1, $2, $3, '', $4, TRUE, TRUE, FALSE, TRUE, $5)
-    `, [id, name, priceKobo, badge, next]);
+      INSERT INTO products (id, name, price_kobo, img, badge, in_drop, featured, in_essentials, hidden, position,
+                            description, details)
+      VALUES ($1, $2, $3, '', $4, TRUE, TRUE, FALSE, TRUE, $5, $6, $7)
+    `, [id, name, priceKobo, badge, next, description, details]);
     for (const size of sizes) {
       await tx.query('INSERT INTO variants (product_id, size, stock) VALUES ($1, $2, 0)', [id, size]);
     }
@@ -129,6 +139,8 @@ adminProductsRouter.patch('/admin/products/:id', async (req, res) => {
   if ('featured' in b)     set('featured', bool(b.featured, 'Front of the grid'));
   if ('inEssentials' in b) set('in_essentials', bool(b.inEssentials, 'Essentials'));
   if ('hidden' in b)       set('hidden', bool(b.hidden, 'On sale'));
+  if ('description' in b)  set('description', cleanDescription(b.description));
+  if ('details' in b)      set('details', cleanDetails(b.details));
   if (!sets.length) throw fail(400, 'Nothing to change.');
 
   await transaction(async (tx) => {
@@ -231,6 +243,20 @@ adminProductsRouter.delete('/admin/products/:id/image', async (req, res) => {
   res.json(await current(req.params.id));
 });
 
+/** Remove one of the extra gallery photos. */
+adminProductsRouter.delete('/admin/products/:id/photos/:photoId', async (req, res) => {
+  const photoId = Number(req.params.photoId);
+  if (!Number.isInteger(photoId) || photoId < 1 || photoId > 2_147_483_647) throw fail(400, 'Bad photo.');
+  await transaction(async (tx) => {
+    const p = await productOr404(req.params.id, tx);
+    const row = await tx.one('DELETE FROM product_photos WHERE id = $1 AND product_id = $2 RETURNING image_id',
+      [photoId, p.id]);
+    if (!row) throw fail(404, 'That photo is already gone.');
+    await tx.query('DELETE FROM images WHERE id = $1', [row.image_id]);
+  });
+  res.json(await current(req.params.id));
+});
+
 /* ---------------------------------------------------------- photo upload */
 
 /*
@@ -240,15 +266,22 @@ adminProductsRouter.delete('/admin/products/:id/image', async (req, res) => {
  */
 export const adminUploadRouter = Router();
 
+/** The ordinary and the double-width copy of one photo, checked. */
+function bothSizes(body) {
+  const small = decodePhoto(body?.image, 'standard');
+  const large = decodePhoto(body?.image2x, 'sharp-screen');
+  if (small.mime !== large.mime) throw fail(400, 'The two sizes of the photo do not match.');
+  return { small, large };
+}
+
+const uploadBody = express.json({ limit: Math.ceil(MAX_IMAGE_BYTES * 2 * 1.4) });   // two photos, base64
+
 adminUploadRouter.post(
   '/admin/products/:id/image',
   requireAdmin,
-  express.json({ limit: Math.ceil(MAX_IMAGE_BYTES * 2 * 1.4) }),   // two photos, base64
+  uploadBody,
   async (req, res) => {
-    const small = decodePhoto(req.body?.image, 'standard');
-    const large = decodePhoto(req.body?.image2x, 'sharp-screen');
-    if (small.mime !== large.mime) throw fail(400, 'The two sizes of the photo do not match.');
-
+    const { small, large } = bothSizes(req.body);
     await transaction(async (tx) => {
       const p = await tx.one('SELECT id, image_id FROM products WHERE id = $1 FOR UPDATE', [req.params.id]);
       if (!p) throw fail(404, 'That product does not exist.');
@@ -263,3 +296,53 @@ adminUploadRouter.post(
     res.json(await current(req.params.id));
   }
 );
+
+/** Add a photo to the product page's gallery, after the main one. */
+adminUploadRouter.post('/admin/products/:id/photos', requireAdmin, uploadBody, async (req, res) => {
+  const { small, large } = bothSizes(req.body);
+  await transaction(async (tx) => {
+    const p = await tx.one('SELECT id FROM products WHERE id = $1 FOR UPDATE', [req.params.id]);
+    if (!p) throw fail(404, 'That product does not exist.');
+    const { n } = await tx.one('SELECT COUNT(*) AS n FROM product_photos WHERE product_id = $1', [p.id]);
+    if (n >= MAX_EXTRA_PHOTOS) throw fail(409, `A product can have ${MAX_EXTRA_PHOTOS} extra photos. Remove one first.`);
+    const { id } = await tx.one(
+      'INSERT INTO images (mime, data, data_2x) VALUES ($1, $2, $3) RETURNING id',
+      [small.mime, small.bytes, large.bytes]);
+    const { next } = await tx.one(
+      'SELECT COALESCE(MAX(position), -1) + 1 AS next FROM product_photos WHERE product_id = $1', [p.id]);
+    await tx.query('INSERT INTO product_photos (product_id, image_id, position) VALUES ($1, $2, $3)',
+      [p.id, id, next]);
+  });
+  res.status(201).json(await current(req.params.id));
+});
+
+/* ------------------------------------------------------- home page photos */
+
+function slotOr404(slot) {
+  if (!HOME_SLOTS.includes(slot)) throw fail(404, 'There is no photo there.');
+  return slot;
+}
+
+/** Replace one of the three wide home-page photos. The one it replaces is deleted. */
+adminUploadRouter.post('/admin/home/image/:slot', requireAdmin, uploadBody, async (req, res) => {
+  const slot = slotOr404(req.params.slot);
+  const { small, large } = bothSizes(req.body);
+  await transaction(async (tx) => {
+    const { id } = await tx.one(
+      'INSERT INTO images (mime, data, data_2x) VALUES ($1, $2, $3) RETURNING id',
+      [small.mime, small.bytes, large.bytes]);
+    const previous = await setHomeImage(tx, slot, id);
+    if (previous) await tx.query('DELETE FROM images WHERE id = $1', [previous]);
+  });
+  res.json({ ok: true });
+});
+
+/** Go back to the photo the site shipped with. */
+adminProductsRouter.delete('/admin/home/image/:slot', requireAdmin, async (req, res) => {
+  const slot = slotOr404(req.params.slot);
+  await transaction(async (tx) => {
+    const previous = await setHomeImage(tx, slot, null);
+    if (previous) await tx.query('DELETE FROM images WHERE id = $1', [previous]);
+  });
+  res.json({ ok: true });
+});

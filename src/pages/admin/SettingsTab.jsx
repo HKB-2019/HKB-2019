@@ -16,7 +16,8 @@ const PAGES = [
   ['SHIPPING', 'Shipping'],
   ['RETURNS', 'Returns'],
   ['CONTACT', 'Contact'],
-  ['PRIVACY', 'Privacy']
+  ['PRIVACY', 'Privacy'],
+  ['SIZE_GUIDE', 'Size guide — linked from every product page']
 ];
 
 function useSave(key, onSaved) {
@@ -129,7 +130,7 @@ function Pages({ value, onSaved }) {
       {PAGES.map(([key, label]) => (
         <label className="admin-field admin-field--wide" key={key}>
           <span>{label}</span>
-          <textarea rows={key === 'PRIVACY' ? 7 : 3} maxLength={4000} value={pages[key]}
+          <textarea rows={key === 'PRIVACY' ? 7 : key === 'SIZE_GUIDE' ? 5 : 3} maxLength={4000} value={pages[key]}
                     onChange={(e) => setPages(p => ({ ...p, [key]: e.target.value }))} />
         </label>
       ))}

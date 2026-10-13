@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { CURRENCIES } from '../data/currencies.js';
 import { readStore, writeStore } from '../lib/storage.js';
 import { getProducts, getSite } from '../lib/api.js';
+import { HOME_DEFAULT } from '../data/home.js';
 
 /* One place for everything the shop needs to remember: the catalogue and site
  * settings from the server, the bag, the saved list, the chosen currency,
@@ -19,6 +20,21 @@ export function useShop() {
   const ctx = useContext(ShopContext);
   if (!ctx) throw new Error('useShop must be used inside <ShopProvider>');
   return ctx;
+}
+
+/**
+ * The home page's words and photos, as the owner set them in the admin.
+ * `ready` stays false until they have arrived, so the design's own words do
+ * not flash up first and then change. If the server cannot be reached, the
+ * design's words are used.
+ */
+export function useHome() {
+  const { site, catalogueStatus } = useShop();
+  return {
+    home: site?.home ?? HOME_DEFAULT,
+    images: site?.home?.images ?? {},
+    ready: Boolean(site) || catalogueStatus === 'error'
+  };
 }
 
 /** How many of one size may go in the bag: the per-line cap, or fewer if stock is low. */
@@ -72,15 +88,18 @@ export function ShopProvider({ children }) {
 
   /* --------------------------------------------------------- catalogue */
 
+  // Loaded on every page visit, so an admin change shows at once. Once there
+  // is a catalogue, a refresh happens quietly behind it rather than blanking
+  // the page back to placeholders.
   const loadCatalogue = useCallback(async () => {
-    setStatus('loading');
+    setStatus(s => (s === 'ready' ? s : 'loading'));
     try {
       const [p, s] = await Promise.all([getProducts(), getSite()]);
       setProducts(p);
       setSite(s);
       setStatus('ready');
     } catch {
-      setStatus('error');
+      setStatus(s => (s === 'ready' ? s : 'error'));
     }
   }, []);
 

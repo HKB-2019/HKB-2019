@@ -1,19 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useShop } from '../store/ShopContext.jsx';
-import { scrollToId } from '../lib/scroll.js';
+import { Link, useLocation } from 'react-router-dom';
+import { useShop, useHome } from '../store/ShopContext.jsx';
+import { useSectionLink } from '../lib/useSectionLink.js';
+import { NAV, NAV_TARGETS } from '../data/home.js';
 import { CURRENCIES } from '../data/currencies.js';
 import { ChevronDown, AccountIcon, BagIcon, Heart } from './Icons.jsx';
 
-const LINKS = [
-  { href: '#drop',       label: 'SHOP' },
-  { href: '#essentials', label: 'COLLECTIONS' },
-  { href: '#craft',      label: 'ABOUT' },
-  { href: '#film',       label: 'JOURNAL' }
-];
-
 export default function Header() {
   const { cartQty, currency, setCurrency, openOverlay, wishlist } = useShop();
+  const { home, ready } = useHome();
+  const { pathname } = useLocation();
+  const goTo = useSectionLink();
+  // The menu as the owner named it in the admin; hidden items left out.
+  const LINKS = ready
+    ? NAV.filter(k => home.nav[k]?.show !== false).map(k => ({ href: NAV_TARGETS[k], label: home.nav[k].label }))
+    : [];
   const [stuck, setStuck]       = useState(false);
   const [active, setActive]     = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -24,16 +26,16 @@ export default function Header() {
     const onScroll = () => {
       setStuck(window.pageYOffset > 24);
       let current = '';
-      for (const { href } of LINKS) {
+      for (const href of Object.values(NAV_TARGETS)) {
         const el = document.querySelector(href);
-        if (el && el.getBoundingClientRect().top <= 140) current = href;
+        if (el && el.getBoundingClientRect().top <= 140 && el.getBoundingClientRect().bottom > 140) current = href;
       }
       setActive(current);
     };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     if (!curOpen) return;
@@ -49,7 +51,7 @@ export default function Header() {
 
   const go = (e, href) => {
     e.preventDefault();
-    scrollToId(href);
+    goTo(href);
     setMenuOpen(false);
   };
 
@@ -65,13 +67,15 @@ export default function Header() {
           <span /><span />
         </button>
 
-        <a href="#top" className="logo" onClick={(e) => go(e, '#top')}>MASQ<span>.</span></a>
+        {pathname === '/'
+          ? <a href="#top" className="logo" onClick={(e) => go(e, '#top')}>MASQ<span>.</span></a>
+          : <Link to="/" className="logo" aria-label="MASQ. home" onClick={() => window.scrollTo(0, 0)}>MASQ<span>.</span></Link>}
 
         <nav className="nav" aria-label="Primary">
           {LINKS.map(({ href, label }) => (
             <a
               key={href}
-              href={href}
+              href={'/' + href}
               className={`nav__link${active === href ? ' is-active' : ''}`}
               onClick={(e) => go(e, href)}
             >{label}</a>
@@ -139,7 +143,7 @@ export default function Header() {
             transition={{ duration: 0.42, ease: [0.33, 0.02, 0.18, 1] }}
           >
             {LINKS.map(({ href, label }) => (
-              <a key={href} href={href} onClick={(e) => go(e, href)}>{label}</a>
+              <a key={href} href={'/' + href} onClick={(e) => go(e, href)}>{label}</a>
             ))}
           </motion.nav>
         )}

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { one } from '../db.js';
 import { loadProducts } from '../lib/catalogue.js';
-import { getSettings, openZones, NIGERIAN_STATES } from '../lib/settings.js';
+import { getSettings, getHomeImages, openZones, NIGERIAN_STATES } from '../lib/settings.js';
 
 export const productsRouter = Router();
 
@@ -14,11 +14,19 @@ productsRouter.get('/products', async (_req, res) => {
 });
 
 /* GET /api/site — everything else the public pages need from the admin:
- * footer pages, social links, the film, and where delivery is open. */
+ * the home page's words and photos, footer pages, social links, the film,
+ * and where delivery is open. */
 productsRouter.get('/site', async (_req, res) => {
-  const { pages, social, film } = await getSettings(['pages', 'social', 'film']);
+  const { pages, social, film, home } = await getSettings(['pages', 'social', 'film', 'home']);
+  const ids = await getHomeImages();
   res.set('Cache-Control', 'no-store');
   res.json({
+    // A photo the owner has not replaced is null: the page keeps its own.
+    home: {
+      ...home,
+      images: Object.fromEntries(Object.entries(ids).map(([slot, id]) =>
+        [slot, id ? { img: `/api/images/${id}`, img2x: `/api/images/${id}/2x` } : null]))
+    },
     pages,
     social,
     film: film.kind ? { kind: film.kind, url: film.url, youtubeId: film.youtubeId } : null,

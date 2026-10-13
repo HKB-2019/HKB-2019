@@ -206,7 +206,7 @@ test('replacing a photo deletes the old one; removing it goes back to the built-
   assert.equal((await shop.one('SELECT COUNT(*) AS n FROM images')).n, 1);
 
   const reverted = await api('/products/tee/image', 'DELETE');
-  assert.equal(reverted.body.img, 'assets/img/prod-tee.webp');
+  assert.equal(reverted.body.img, '/assets/img/prod-tee.webp');
   assert.equal((await shop.one('SELECT COUNT(*) AS n FROM images')).n, 0);
 });
 

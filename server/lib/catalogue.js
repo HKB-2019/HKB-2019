@@ -14,8 +14,10 @@ export function photoUrls(p) {
     return { img: `/api/images/${p.image_id}`, img2x: `/api/images/${p.image_id}/2x` };
   }
   if (p.img) {
-    // Built-in photos ship with an @2x twin beside them.
-    return { img: p.img, img2x: p.img.replace(/\.(webp|jpe?g|png)$/i, '@2x.$1') };
+    // Built-in photos ship with an @2x twin beside them. Addressed from the
+    // site's root, so they load from a product page's address too.
+    const img = '/' + p.img.replace(/^\/+/, '');
+    return { img, img2x: img.replace(/\.(webp|jpe?g|png)$/i, '@2x.$1') };
   }
   return { img: '', img2x: '' };
 }
@@ -31,19 +33,29 @@ export function photoUrls(p) {
 export async function loadProducts({ forAdmin = false } = {}) {
   const products = await query(`
     SELECT id, name, price_kobo, img, image_id, badge, in_drop, featured, in_essentials,
-           hidden, position
+           hidden, position, description, details
       FROM products
      ${forAdmin ? '' : 'WHERE hidden = FALSE'}
      ORDER BY position, id
   `);
   const variants = await query('SELECT id, product_id, size, stock FROM variants ORDER BY id');
+  const extras = await query('SELECT id, product_id, image_id FROM product_photos ORDER BY position, id');
 
   return products.map(p => {
     const sizes = variants.filter(v => v.product_id === p.id);
     const { img, img2x } = photoUrls(p);
+    const more = extras.filter(x => x.product_id === p.id);
+    // The gallery: the main photo first, then the extra ones in order.
+    const photos = [
+      ...(img ? [{ img, img2x }] : []),
+      ...more.map(x => ({ id: x.id, img: `/api/images/${x.image_id}`, img2x: `/api/images/${x.image_id}/2x` }))
+    ];
     const base = {
       id: p.id,
       name: p.name,
+      description: p.description,
+      details: p.details,
+      photos,
       price: p.price_kobo / 100,          // naira, for display only
       priceKobo: p.price_kobo,
       img, img2x,

@@ -1,8 +1,8 @@
 import { useShop } from '../store/ShopContext.jsx';
-import { scrollToId } from '../lib/scroll.js';
+import { useSectionLink } from '../lib/useSectionLink.js';
 import { Instagram, TikTok, XIcon } from './Icons.jsx';
 
-const INFO_LINKS = ['FAQ', 'SHIPPING', 'RETURNS', 'CONTACT', 'PRIVACY'];
+const INFO_LINKS = [['SIZE_GUIDE', 'SIZE GUIDE'], ['FAQ'], ['SHIPPING'], ['RETURNS'], ['CONTACT'], ['PRIVACY']];
 
 const SOCIAL = [
   ['instagram', 'Instagram', Instagram],
@@ -12,6 +12,7 @@ const SOCIAL = [
 
 export default function Footer() {
   const { openOverlay, site } = useShop();
+  const goTo = useSectionLink();
   // Only links the owner has set in the admin. An icon that goes nowhere is
   // worse than no icon.
   const social = SOCIAL.filter(([key]) => site?.social?.[key]);
@@ -20,10 +21,10 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer__inner">
         <nav className="footer__links" aria-label="Footer">
-          <a href="#craft" onClick={(e) => { e.preventDefault(); scrollToId('#craft'); }}>ABOUT</a>
-          {INFO_LINKS.map(title => (
-            <button key={title} type="button" className="footer__link"
-                    onClick={() => openOverlay({ info: title })}>{title}</button>
+          <a href="/#craft" onClick={(e) => { e.preventDefault(); goTo('#craft'); }}>ABOUT</a>
+          {INFO_LINKS.map(([page, label = page]) => (
+            <button key={page} type="button" className="footer__link"
+                    onClick={() => openOverlay({ info: page })}>{label}</button>
           ))}
         </nav>
 

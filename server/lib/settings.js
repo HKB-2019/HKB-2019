@@ -1,4 +1,5 @@
 import { one, query } from '../db.js';
+import { HOME_DEFAULT, NAV } from '../../src/data/home.js';
 
 /* Everything the owner can change about the shop that is not a product:
  * delivery fees, the footer pages, social links and the film link.
@@ -49,7 +50,7 @@ function validDelivery(value) {
 
 /* ---------------------------------------------------------- page copy */
 
-export const PAGES = ['FAQ', 'SHIPPING', 'RETURNS', 'CONTACT', 'PRIVACY'];
+export const PAGES = ['FAQ', 'SHIPPING', 'RETURNS', 'CONTACT', 'PRIVACY', 'SIZE_GUIDE'];
 
 /* The first four are the copy from the original design. CONTACT holds
  * placeholder details and must be replaced before launch. PRIVACY describes
@@ -64,14 +65,21 @@ const PAGES_DEFAULT = {
     'When you order, we collect your name, email, phone number and delivery address, and use them only to deliver your order and contact you about it.\n\n' +
     'Payments are handled by Paystack. We never see or store your card details.\n\n' +
     'If you join the list, we keep your email address to tell you about new drops. We do not sell or share your details.\n\n' +
-    'To see or delete what we hold about you, contact us using the details on the Contact page.'
+    'To see or delete what we hold about you, contact us using the details on the Contact page.',
+  // Linked from every product page. Says only what the design already
+  // promised ("true to size"); measurements are the owner's to add.
+  SIZE_GUIDE:
+    'Our pieces run true to size. If you are between two sizes, choose the larger for a relaxed fit.\n\n' +
+    'Questions about fit? Use the details on the Contact page and we will help.'
 };
 
 function validPages(value) {
   if (!value || typeof value !== 'object') throw bad('Page text is missing.');
   const out = {};
   for (const page of PAGES) {
-    const text = value[page];
+    // A page added after the owner last saved falls back to its default
+    // rather than making the whole saved set invalid.
+    const text = value[page] ?? PAGES_DEFAULT[page];
     if (typeof text !== 'string') throw bad(`${page}: text is missing.`);
     // Plain text only. It is rendered as text, never as HTML, but control
     // characters have no business in it either.
@@ -138,13 +146,57 @@ function validFilm(value) {
   return parseFilm(value?.url);
 }
 
+/* ---------------------------------------------------------- home page */
+
+/* Every line of words on the home page, and the menu. The defaults
+ * (src/data/home.js, shared with the shop) are the design's own words, so a
+ * shop that never touches this looks exactly as built. Plain text; line
+ * breaks are kept where a line can wrap in two. */
+
+export { NAV };
+
+/** [max length, may it span lines?] for each piece of text. */
+export const HOME_FIELDS = {
+  heroEyebrow: [40, false], heroSub: [120, true], heroButton: [24, false], heroImageAlt: [140, false],
+  craftTitle: [60, false], craftText: [240, true], dropTitle: [60, false],
+  manifestoLine1: [60, false], manifestoLine2: [60, false], manifestoTag: [80, false],
+  essentialsTitle: [40, false], newsletterTitle: [60, false], newsletterNote: [200, true]
+};
+
+export function cleanText(v, { label, max, multiline = true, allowEmpty = false }) {
+  if (typeof v !== 'string') throw bad(`${label}: text is missing.`);
+  let t = v.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
+  t = multiline ? t.replace(/\n{3,}/g, '\n\n').trim() : t.replace(/\s+/g, ' ').trim();
+  if (!t && !allowEmpty) throw bad(`${label}: write something, or it will be blank on the page.`);
+  if (t.length > max) throw bad(`${label}: keep it under ${max} characters.`);
+  return t;
+}
+
+function validHome(value) {
+  if (!value || typeof value !== 'object') throw bad('Home page text is missing.');
+  const out = {};
+  for (const [key, [max, multiline]] of Object.entries(HOME_FIELDS)) {
+    out[key] = cleanText(value[key] ?? HOME_DEFAULT[key], { label: key, max, multiline });
+  }
+  out.nav = {};
+  for (const item of NAV) {
+    const n = value.nav?.[item] ?? HOME_DEFAULT.nav[item];
+    out.nav[item] = {
+      label: cleanText(n.label ?? '', { label: `Menu: ${item}`, max: 20, multiline: false }).toUpperCase(),
+      show: n.show !== false
+    };
+  }
+  return out;
+}
+
 /* -------------------------------------------------------------- store */
 
 const SPEC = {
   delivery: { fallback: DELIVERY_DEFAULT, validate: validDelivery },
   pages:    { fallback: PAGES_DEFAULT,    validate: validPages },
   social:   { fallback: SOCIAL_DEFAULT,   validate: validSocial },
-  film:     { fallback: { url: '', kind: null, youtubeId: null }, validate: validFilm }
+  film:     { fallback: { url: '', kind: null, youtubeId: null }, validate: validFilm },
+  home:     { fallback: HOME_DEFAULT,      validate: validHome }
 };
 
 export const SETTING_KEYS = Object.keys(SPEC);
@@ -210,3 +262,36 @@ export const NIGERIAN_STATES = [
   'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba',
   'Yobe', 'Zamfara'
 ];
+
+/* ------------------------------------------------- home page photos */
+
+/* The three wide photos on the home page. Kept apart from the `home` text so
+ * that they can only be set by uploading — a settings save cannot point them
+ * at some other image, such as a product's, which replacing would delete. */
+
+export const HOME_SLOTS = ['hero', 'band', 'film'];
+
+export async function getHomeImages() {
+  const row = await one("SELECT value FROM settings WHERE key = 'home_images'");
+  let ids = {};
+  try { ids = JSON.parse(row?.value ?? '{}'); } catch { /* fall back to none */ }
+  // Only ids whose image still exists.
+  const wanted = HOME_SLOTS.map(s => ids[s]).filter(Number.isInteger);
+  const present = wanted.length
+    ? new Set((await query('SELECT id FROM images WHERE id = ANY($1::int[])', [wanted])).map(r => r.id))
+    : new Set();
+  return Object.fromEntries(HOME_SLOTS.map(s => [s, present.has(ids[s]) ? ids[s] : null]));
+}
+
+export async function setHomeImage(tx, slot, imageId) {
+  const row = await tx.one("SELECT value FROM settings WHERE key = 'home_images' FOR UPDATE");
+  let ids = {};
+  try { ids = JSON.parse(row?.value ?? '{}'); } catch { /* start again */ }
+  const previous = Number.isInteger(ids[slot]) ? ids[slot] : null;
+  ids[slot] = imageId;
+  await tx.query(`
+    INSERT INTO settings (key, value, updated_at) VALUES ('home_images', $1, now())
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()
+  `, [JSON.stringify(ids)]);
+  return previous;
+}

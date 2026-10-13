@@ -76,6 +76,17 @@ export const adminUploadPhoto   = (id, image, image2x) =>
 export const adminRemovePhoto   = (id)          =>
   adminRequest(`/admin/products/${encodeURIComponent(id)}/image`, { method:'DELETE' });
 
+export const adminAddGalleryPhoto = (id, image, image2x) =>
+  adminRequest(`/admin/products/${encodeURIComponent(id)}/photos`, { method:'POST', body: JSON.stringify({ image, image2x }) });
+export const adminRemoveGalleryPhoto = (id, photoId) =>
+  adminRequest(`/admin/products/${encodeURIComponent(id)}/photos/${photoId}`, { method:'DELETE' });
+
+/* ------------------------------------------------------- admin: home page */
+
+export const adminUploadHomeImage = (slot, image, image2x) =>
+  adminRequest(`/admin/home/image/${slot}`, { method:'POST', body: JSON.stringify({ image, image2x }) });
+export const adminRemoveHomeImage = (slot) => adminRequest(`/admin/home/image/${slot}`, { method:'DELETE' });
+
 /* ------------------------------------------------ admin: settings and list */
 
 export const adminSettings      = ()            => adminRequest('/admin/settings');

@@ -10,6 +10,9 @@ import { ordersRouter } from './routes/orders.js';
 import { subscribeRouter } from './routes/subscribe.js';
 import { adminRouter } from './routes/admin.js';
 import { adminProductsRouter, adminUploadRouter } from './routes/admin-products.js';
+import { one } from './db.js';
+import { photoUrls } from './lib/catalogue.js';
+import { getHomeImages } from './lib/settings.js';
 
 /* What the browser may load on the shop's pages. Scripts only from the shop
  * itself, so an injected <script> has nowhere to come from; no framing by
@@ -55,6 +58,58 @@ function errorHandler(err, _req, res, _next) {
   const status = Number.isInteger(err.status) && err.status >= 400 && err.status < 600 ? err.status : 500;
   if (status >= 500) console.error('[server]', err);
   res.status(status).json({ error: status >= 500 ? 'Something went wrong.' : err.message });
+}
+
+/* ------------------------------------------------------- link previews */
+
+const escapeHtml = (v) => String(v).replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+/**
+ * What WhatsApp, Instagram and X show when someone shares a link. They read
+ * the page's HTML and never run its script, so a product's name, words and
+ * photo have to be written into the page here, by the server.
+ */
+async function pageMeta(path) {
+  const product = path.match(/^\/product\/([a-z0-9-]{1,60})\/?$/);
+  if (product) {
+    const p = await one(`SELECT id, name, price_kobo, img, image_id, description
+                           FROM products WHERE id = $1 AND hidden = FALSE`, [product[1]]);
+    if (!p) return { missing: true };
+    const naira = `₦${(p.price_kobo / 100).toLocaleString('en-NG')}`;
+    const words = p.description.replace(/\s+/g, ' ').trim();
+    return {
+      title: `${p.name} — MASQ.`,
+      description: words ? `${naira} · ${words.length > 150 ? words.slice(0, 149).trimEnd() + '…' : words}` : `${naira} · MASQ. Modern identity wear rooted in culture.`,
+      image: photoUrls(p).img2x || null,
+      imageAlt: p.name,
+      type: 'product'
+    };
+  }
+
+  if (path === '/') {
+    // A hero photo uploaded in the admin replaces the built-in preview too.
+    const { hero } = await getHomeImages();
+    if (hero) return { image: `/api/images/${hero}`, imageAlt: 'MASQ.' };
+  }
+  return null;
+}
+
+function fillMeta(html, meta, origin) {
+  if (!meta || meta.missing) return html;
+  const swap = (re, value) => { if (value != null) html = html.replace(re, `$1${escapeHtml(value)}$2`); };
+  swap(/(<title>)[^<]*(<\/title>)/, meta.title);
+  swap(/(<meta property="og:title" content=")[^"]*(")/, meta.title);
+  swap(/(<meta name="description" content=")[^"]*(")/, meta.description);
+  swap(/(<meta property="og:description" content=")[^"]*(")/, meta.description);
+  swap(/(<meta property="og:type" content=")[^"]*(")/, meta.type);
+  swap(/(<meta property="og:image:alt" content=")[^"]*(")/, meta.imageAlt);
+  if (meta.image) {
+    swap(/(<meta property="og:image" content=")[^"]*(")/, origin + meta.image);
+    // The built-in preview's measurements do not describe another photo.
+    html = html.replace(/<meta property="og:image:(width|height)" content="\d+">\s*/g, '');
+  }
+  return html;
 }
 
 export function createApp() {
@@ -116,7 +171,7 @@ export function createApp() {
       }
     }));
 
-    app.get(/.*/, (req, res) => {
+    app.get(/.*/, async (req, res) => {
       // A missing file (anything with an extension) is a 404, not the home
       // page served as a picture.
       if (/\.[a-z0-9]{1,6}$/i.test(req.path)) return res.status(404).type('text/plain').send('Not found');
@@ -130,7 +185,9 @@ export function createApp() {
         (/^[a-z0-9.-]+(:\d{1,5})?$/i.test(host) ? `${req.protocol}://${host}` : '')).replace(/\/$/, '');
       res.set({ 'Content-Security-Policy': CSP, 'Cache-Control': 'no-cache' });
       if (req.path.startsWith('/admin')) res.set('X-Robots-Tag', 'noindex, nofollow');
-      res.type('html').send(html.replaceAll('__ORIGIN__', origin));
+      const meta = await pageMeta(req.path);
+      if (meta?.missing) res.status(404);
+      res.type('html').send(fillMeta(html, meta, origin).replaceAll('__ORIGIN__', origin));
     });
   }
 
@@ -144,7 +201,7 @@ if (process.argv[1] && process.argv[1].endsWith('server/index.js')) {
 
   // A shop with no catalogue is a blank page, and on a fresh host there is no
   // chance to run the seed by hand before the first visitor arrives.
-  const { one, driver } = await import('./db.js');
+  const { driver } = await import('./db.js');
   if (!(await one('SELECT COUNT(*) AS n FROM products')).n) {
     const { seed } = await import('./seed.js');
     console.log(`Empty database — loaded ${await seed()} pieces.`);

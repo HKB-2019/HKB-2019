@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal from './Reveal.jsx';
-import { useShop } from '../store/ShopContext.jsx';
+import { useShop, useHome } from '../store/ShopContext.jsx';
+import Lines from './Lines.jsx';
 import { subscribe } from '../lib/api.js';
 
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
 
 export default function Newsletter() {
   const { toast } = useShop();
+  const { home } = useHome();
   const [email, setEmail]   = useState('');
   const [msg, setMsg]       = useState(null);   // { text, error }
   const [busy, setBusy]     = useState(false);
@@ -37,10 +39,8 @@ export default function Newsletter() {
     <section className="newsletter">
       <Reveal className="newsletter__inner">
         <p className="eyebrow">The List</p>
-        <h2 className="newsletter__title">Enter the world of MASQ.</h2>
-        <p className="newsletter__note">
-          First access to every drop, and the story behind each mask. Nothing else.
-        </p>
+        <h2 className="newsletter__title">{home.newsletterTitle}</h2>
+        <p className="newsletter__note"><Lines text={home.newsletterNote} /></p>
 
         <form className="newsletter__form" onSubmit={onSubmit} noValidate>
           <label className="sr-only" htmlFor="email">Email address</label>

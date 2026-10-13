@@ -1,4 +1,6 @@
-import Header from '../components/Header.jsx';
+import { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
+import ShopLayout from '../components/ShopLayout.jsx';
 import Hero from '../components/Hero.jsx';
 import CraftBand from '../components/CraftBand.jsx';
 import DropGrid from '../components/DropGrid.jsx';
@@ -6,17 +8,12 @@ import Manifesto from '../components/Manifesto.jsx';
 import FilmStrip from '../components/FilmStrip.jsx';
 import Essentials from '../components/Essentials.jsx';
 import Newsletter from '../components/Newsletter.jsx';
-import Footer from '../components/Footer.jsx';
-import Overlays from '../components/Overlays.jsx';
-import Toasts from '../components/Toasts.jsx';
-import { useEffect } from 'react';
 import { useShop } from '../store/ShopContext.jsx';
+import { scrollToId } from '../lib/scroll.js';
 
 export default function Storefront() {
-  const { loadCatalogue, openOverlay } = useShop();
-  // Prices, photos and stock come from the server every visit, so a change
-  // made in the admin shows the next time anyone opens the shop.
-  useEffect(() => { loadCatalogue(); }, [loadCatalogue]);
+  const { openOverlay, catalogueStatus } = useShop();
+  const { hash } = useLocation();
 
   // "Back to your bag" from an unfinished payment lands with the bag open.
   useEffect(() => {
@@ -24,27 +21,29 @@ export default function Storefront() {
     if (url.searchParams.get('bag') === 'open') {
       openOverlay('cart');
       url.searchParams.delete('bag');
-      window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+      window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
     }
   }, [openOverlay]);
 
+  // Arriving from a product page's menu ("/#drop"): wait until the products
+  // are in, so the sections are their full height, then go to the one asked for.
+  const landed = useRef(null);
+  useEffect(() => {
+    if (!hash || catalogueStatus === 'loading' || catalogueStatus === 'idle' || landed.current === hash) return;
+    landed.current = hash;
+    requestAnimationFrame(() => scrollToId(hash));
+  }, [hash, catalogueStatus]);
+
   return (
-    <>
-      <a className="skip-link" href="#main">Skip to content</a>
-      <Header />
-      <main id="main">
-        <span id="top" />
-        <Hero />
-        <CraftBand />
-        <DropGrid />
-        <Manifesto />
-        <FilmStrip />
-        <Essentials />
-        <Newsletter />
-      </main>
-      <Footer />
-      <Overlays />
-      <Toasts />
-    </>
+    <ShopLayout>
+      <span id="top" />
+      <Hero />
+      <CraftBand />
+      <DropGrid />
+      <Manifesto />
+      <FilmStrip />
+      <Essentials />
+      <Newsletter />
+    </ShopLayout>
   );
 }

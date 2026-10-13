@@ -92,6 +92,15 @@ Everything below is in the admin — no code.
 5. **Check your products.** *Products.* Prices, names, photos, sizes, counts.
    To use your own photos, choose **Change photo** — any phone photo works;
    it is cropped and shrunk before it uploads.
+   Write a description for each — it shows on the product's own page, and
+   in the preview when someone shares the link on WhatsApp.
+6. **Make the home page yours.** *Home page.* Your own photos for the top of
+   the page and the two bands, and every line of words. The menu names
+   COLLECTIONS and JOURNAL came with the design: rename them, or switch them
+   off.
+7. **Read the size guide.** *Settings → Footer pages → Size guide.* It is
+   linked from every product page and only says the pieces run true to size.
+   Add your measurements.
 
 ---
 
@@ -168,6 +177,11 @@ photos are converted automatically when you choose them.
 
 **The build failed.** Open **Events** in Render, then the failed deploy, and
 send the last twenty lines of its log.
+
+**Pull requests from Dependabot.** Once a week GitHub checks whether any of
+the shop's building blocks has an update, and opens a pull request for it.
+The tests run on it automatically. A green tick means it is safe to merge;
+until someone merges it, nothing on the live shop changes.
 
 **A red cross next to a commit on GitHub.** The automatic tests found
 something broken in that change. Send me the link.

@@ -20,13 +20,15 @@ To put it online for free, see [DEPLOY.md](DEPLOY.md).
 index.html              Vite entry
 src/
   main.jsx              boots React
-  App.jsx               the three routes
-  pages/Storefront.jsx  the shop itself
+  App.jsx               the routes: home, product pages, order, admin
+  pages/Storefront.jsx  the home page
+  pages/ProductPage.jsx /product/:id — gallery, sizes, words, more pieces
   pages/OrderStatus.jsx /order — where Paystack returns the customer
   pages/Admin.jsx       /admin — the shell, orders and stock
-  pages/admin/          products (with photo upload), settings, the list
+  pages/admin/          products (with photos), home page, settings, the list
   styles.css            all styling; design tokens at the top under :root
   data/currencies.js    display currencies and their rough rates
+  data/home.js          the home page's words as designed (shared with the server)
   store/ShopContext.jsx catalogue from the server, bag, saved, overlays
   lib/                  API client, delivery rules, storage, srcset, scroll
   components/           one file per section, plus overlays and toasts
@@ -38,7 +40,7 @@ server/
   routes/               products, checkout, webhook, orders, subscribe,
                         admin, admin-products (incl. photo upload)
   lib/orders.js         every change of order status, and the sweeper
-  lib/settings.js       delivery fees, footer pages, links — validated
+  lib/settings.js       delivery fees, footer pages, links, home page — validated
   lib/catalogue.js      product rows → what the shop and admin show
   lib/                  also auth, Paystack client, photo checks, CSV,
                         rate limits, money helpers
@@ -47,13 +49,15 @@ server/
   test/                 API tests: money, admin door, products, delivery
 e2e/                    browser tests, with a stand-in Paystack
 .github/workflows/      runs every test on every push
+.github/dependabot.yml  weekly update alerts, as pull requests the tests run on
 public/assets/          images and self-hosted fonts
 tools/build-assets.py   regenerates public/assets/img from the design mockup
 render.yaml             how Render builds and runs the shop
 DEPLOY.md               putting it online for free, step by step
 ```
 
-Products, prices, photos, delivery fees and footer copy are all in the
+Products (with their descriptions and extra photos), prices, the home page's
+words and photos, the menu, delivery fees and footer copy are all in the
 database and changed in the admin. Display currency rates are in
 `src/data/currencies.js`. Colour, spacing and type scale are CSS custom
 properties under `:root` in `styles.css`.
@@ -62,7 +66,8 @@ properties under `:root` in `styles.css`.
 
 | Control | Behaviour |
 | --- | --- |
-| `SHOP DROP 01` / `EXPLORE` / nav | Smooth-scroll to the section; nav underlines whatever is in view |
+| `SHOP DROP 01` / `EXPLORE` / nav | Smooth-scroll to the section; nav underlines whatever is in view. From a product page, the menu goes back to that section. Its names, and which items show, are set in the admin |
+| Product photo or name | Opens the product page: photos (swipe on a phone), sizes with "only 2 left", `ADD TO BAG` (asks for a size rather than guessing), save, size guide, description, details and care, delivery and returns, four more pieces |
 | Product card | `QUICK ADD` opens the sizes (sold-out sizes struck out); a one-size piece adds straight away. On phones the button stays visible — there is no hover |
 | Heart on a card | Saves it; the heart in the header opens the saved list, from which it can be bought |
 | `VIEW ALL` | Shows the pieces the owner has placed behind it; existing cards glide to their new positions |
@@ -73,7 +78,7 @@ properties under `:root` in `styles.css`.
 | `PLAY FILM` | Plays the film linked in the admin, or says it is coming |
 | Essentials carousel | Arrows, dots, drag-to-scroll, arrow keys; a slide's name adds it, or asks for a size |
 | Newsletter `JOIN` | Adds the address to the list the owner sees in the admin |
-| Footer links | FAQ / shipping / returns / contact / privacy, as written in the admin |
+| Footer links | Size guide / FAQ / shipping / returns / contact / privacy, as written in the admin |
 
 Bag, saved list and currency persist in `localStorage`. The bag is checked
 against the catalogue on every visit: pieces no longer on sale leave it, new
@@ -116,7 +121,7 @@ works.
 
 ### Tests
 
-`npm test` runs the API tests (96) against an in-memory Postgres. To run the
+`npm test` runs the API tests (110) against an in-memory Postgres. To run the
 same tests against a real server:
 
 ```bash
@@ -128,7 +133,7 @@ ways are worth running before a change to checkout or stock: the in-memory
 one queues transactions, so only a real server shows whether two buyers
 racing for the last jacket are handled.
 
-`npm run test:e2e` runs the browser tests (22) with Playwright: a robot
+`npm run test:e2e` runs the browser tests (29) with Playwright: a robot
 customer and a robot owner clicking through the built site, on desktop and a
 phone-sized screen. They run against a stand-in Paystack (`e2e/fake-paystack.js`)
 with a real payment page, so a whole purchase — bag, delivery, pay, webhook,
@@ -189,15 +194,16 @@ the one outcome that must never happen silently.
 
 ### The admin
 
-Five tabs, all usable on a phone:
+Six tabs, all usable on a phone:
 
 | Tab | What it does |
 | --- | --- |
 | **Orders** | Every order with the customer's name, phone (tap to call), address, items and total including delivery. `MARK SENT` on paid orders. Filters by status. `DOWNLOAD CSV` for packing and dispatch |
-| **Products** | One card per product: name, price, badge (save with a button), and switches for on sale, in the drop grid, before `VIEW ALL`, in the carousel (save at once). Reorder with ↑ ↓. Sizes with their counts; add a size; remove one once its count is 0 and nobody is paying for it. `+ NEW PRODUCT` starts off sale — add a photo and counts, then switch it on |
+| **Products** | One card per product: name, price, badge (save with a button), and switches for on sale, in the drop grid, before `VIEW ALL`, in the carousel (save at once). Reorder with ↑ ↓. Sizes with their counts; add a size; remove one once its count is 0 and nobody is paying for it. `+ NEW PRODUCT` starts off sale — add a photo and counts, then switch it on. Each card also has the product page's description and "details and care", up to six more photos, and a link to see it on the shop |
+| **Home page** | The three wide photos (top of the page, craft band, film strip) — change or put back the original. Every line of words on the home page. The menu: rename an item, or switch it off |
 | **Stock** | Every size of everything in one list, for counting the shelf |
 | **List** | Everyone who joined from the footer. Download as CSV into your email tool; remove someone who asks |
-| **Settings** | Delivery fee per area (Lagos, Abuja, rest of Nigeria, abroad); footer pages; Instagram / TikTok / X links; the film link |
+| **Settings** | Delivery fee per area (Lagos, Abuja, rest of Nigeria, abroad); footer pages, including the size guide; Instagram / TikTok / X links; the film link |
 
 Banners at the top say when checkout is closed (no delivery prices yet),
 when a customer is owed a refund, and what is running low.
@@ -208,6 +214,14 @@ at 700 and 1,400 px wide as WebP (JPEG in Safari, which cannot write WebP). A
 phone photo of several MB arrives as a few hundred KB. They are stored in
 Postgres rather than on disk, because a free host wipes its disk at every
 restart, and served with a year's cache — a new upload is a new address.
+The home page's photos keep their own shape (the top one) or are cut to a
+wide 3 : 1 strip (the two bands), at sizes to suit a large screen.
+
+**Link previews.** A product link shared on WhatsApp, Instagram or X shows
+that product's name, price, description and photo: the server writes them
+into the page, because those apps read the page without running it. The
+owner's words are escaped on the way in, so they can only ever be text. A
+new photo at the top of the home page becomes the home page's preview too.
 
 The server does not trust the browser about any of this: the file type is
 read from the file's first bytes (JPEG, PNG and WebP only — SVG can carry

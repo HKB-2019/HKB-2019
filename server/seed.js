@@ -21,9 +21,11 @@ export async function seed({ reset = false } = {}) {
   await transaction(async (tx) => {
     if (reset) {
       // RESTART IDENTITY so ids start from 1 again, which keeps tests stable.
-      // Settings (the admin password among them) survive a reset on purpose.
-      await tx.query(`TRUNCATE order_items, orders, customers, webhook_events, variants, products,
-                               images, subscribers
+      // Settings (the admin password among them) survive a reset on purpose —
+      // except the home page's photos, which live in the images being emptied.
+      await tx.query("DELETE FROM settings WHERE key = 'home_images'");
+      await tx.query(`TRUNCATE order_items, orders, customers, webhook_events, variants,
+                               product_photos, products, images, subscribers
                       RESTART IDENTITY CASCADE`);
     }
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useShop } from '../store/ShopContext.jsx';
+import { Link } from 'react-router-dom';
+import { useShop, useHome } from '../store/ShopContext.jsx';
 import { srcSet, SLIDE_SIZES } from '../lib/media.js';
 import { expandDropGrid, SizeButtons } from './DropGrid.jsx';
 import { Arrow, CaretLeft, CaretRight } from './Icons.jsx';
@@ -8,6 +9,7 @@ const DRAG_THRESHOLD = 5;
 
 export default function Essentials() {
   const { addToCart, format, toast, products, catalogueStatus } = useShop();
+  const { home } = useHome();
   const essentials = products.filter(p => p.inEssentials);
   const [picking, setPicking] = useState(null);
   const trackRef = useRef(null);
@@ -123,7 +125,7 @@ export default function Essentials() {
   return (
     <section className="section essentials" id="essentials">
       <div className="section__head">
-        <h2 className="section__title">The Essentials</h2>
+        <h2 className="section__title">{home.essentialsTitle}</h2>
         <span className="section__rule" aria-hidden="true" />
         <button className="link-arrow" onClick={() => {
           expandDropGrid();
@@ -160,7 +162,12 @@ export default function Essentials() {
             };
             return (
               <article className={`slide${picking === p.id ? ' is-picking' : ''}`} key={p.id}>
-                {p.img && <img src={p.img} srcSet={srcSet(p)} sizes={SLIDE_SIZES} alt={p.name} loading="lazy" />}
+                {p.img && (
+                  <Link to={`/product/${p.id}`} className="slide__link" draggable="false"
+                        aria-label={`${p.name} — see the details`}>
+                    <img src={p.img} srcSet={srcSet(p)} sizes={SLIDE_SIZES} alt="" loading="lazy" draggable="false" />
+                  </Link>
+                )}
                 <div className="slide__meta">
                   <button className="slide__name" onClick={onPick}
                           aria-label={p.soldOut ? `${p.name}, sold out` : only ? `Add ${p.name} to bag` : `Choose a size of ${p.name}`}>
