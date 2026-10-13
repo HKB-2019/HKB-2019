@@ -83,6 +83,35 @@ test('a description and extra photos written in the admin appear on the product 
   await expect(page.locator('.admin-gallery__item')).toHaveCount(0);
 });
 
+test('a product photo opens full screen, where it can be looked at closely', async ({ page }) => {
+  await page.goto('/product/tee');
+  await page.getByRole('button', { name: 'Enlarge photo 1 of THE FACE TEE' }).click();
+  const viewer = page.getByRole('dialog', { name: 'THE FACE TEE: photos' });
+  await expect(viewer).toBeVisible();
+  // The sharper copy is the one shown.
+  await expect(viewer.locator('.zoom__img')).toHaveAttribute('src', /@2x/);
+
+  await viewer.locator('.zoom__img').click();
+  await expect(viewer.locator('.zoom__img')).toHaveClass(/is-zoomed/);
+  await expect(viewer.getByRole('button', { name: 'Zoom out' })).toHaveAttribute('aria-pressed', 'true');
+  await viewer.getByRole('button', { name: 'Zoom out' }).click();
+  await expect(viewer.locator('.zoom__img')).not.toHaveClass(/is-zoomed/);
+
+  await page.keyboard.press('Escape');
+  await expect(viewer).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Enlarge photo 1 of THE FACE TEE' })).toBeFocused();
+});
+
+test('a device set to reduce motion gets the shop without the extra movement', async ({ browser }) => {
+  const calm = await browser.newPage({ reducedMotion: 'reduce' });
+  await calm.goto('/');
+  await expect(calm.locator('.hero__title')).toHaveText('MASQ.');
+  await expect(calm.locator('.hero__title')).toBeVisible();
+  // No smooth scrolling and no drifting photos.
+  await expect(calm.locator('html')).not.toHaveClass(/lenis|has-drift/);
+  await calm.close();
+});
+
 test('the home page words, menu and photos are changed from the admin', async ({ page }) => {
   await signIn(page);
   await page.goto('/admin#home');

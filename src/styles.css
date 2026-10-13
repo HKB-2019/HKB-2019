@@ -52,6 +52,9 @@
 [hidden]{ display:none !important; }
 
 html{ scroll-behavior:smooth; scroll-padding-top:var(--header-h-sm); }
+/* With smooth scrolling on (src/lib/smoothScroll.js) it does the gliding;
+   the browser's own smooth scroll on top would make it stutter. */
+html.lenis{ scroll-behavior:auto; }
 
 body{
   margin:0;
@@ -73,6 +76,12 @@ a{ color:inherit; text-decoration:none; }
 svg{ width:100%; height:100%; display:block; }
 
 :focus-visible{ outline:1px solid var(--violet-soft); outline-offset:4px; }
+
+/* The parts the browser draws itself, in the shop's colours rather than the
+   browser's: selected text, the typing cursor, the page scrollbar. */
+::selection{ background:var(--violet-hi); color:var(--ink); }
+input, textarea{ caret-color:var(--violet-soft); }
+html{ scrollbar-color:var(--line) var(--bg); }
 
 .sr-only{
   position:absolute; width:1px; height:1px; padding:0; margin:-1px;
@@ -964,7 +973,7 @@ svg{ width:100%; height:100%; display:block; }
 }
 .admin-lowstock{
   margin:0 0 34px; padding:11px 14px; font-size:12px; color:var(--ink-dim);
-  background:rgba(35,21,78,.3); border-left:2px solid var(--violet-soft);
+  background:rgba(35,21,78,.3); border:1px solid rgba(169,162,205,.28);
 }
 .admin-lowstock strong{ font-weight:500; color:var(--ink); }
 
@@ -1028,7 +1037,7 @@ svg{ width:100%; height:100%; display:block; }
 /* Someone has been charged for nothing. Louder than running-low on purpose. */
 .admin-alert{
   margin:0 0 14px; padding:12px 14px; font-size:12.5px; color:var(--ink-dim);
-  background:rgba(212,105,126,.12); border-left:2px solid #d4697e;
+  background:rgba(212,105,126,.12); border:1px solid rgba(212,105,126,.4);
 }
 .admin-alert strong{ font-weight:500; color:var(--ink); }
 
@@ -1342,6 +1351,49 @@ svg{ width:100%; height:100%; display:block; }
   background:var(--bg-3); box-shadow:inset 0 0 0 1px var(--line-soft); overflow:hidden;
 }
 .pdp__frame img{ width:100%; height:100%; object-fit:cover; display:block; }
+/* The whole photo is a button: it opens the full-screen view. */
+.pdp__enlarge{ position:relative; display:block; width:100%; height:100%; padding:0; overflow:hidden; cursor:zoom-in; }
+.pdp__enlarge:focus-visible{ outline-offset:-3px; }
+/* With a mouse: the sharper copy, doubled, centred on the pointer. */
+.pdp__lens{
+  position:absolute; inset:0; pointer-events:none;
+  opacity:0; transform:scale(2); transition:opacity .35s var(--ease-soft);
+}
+.pdp__lens.is-on{ opacity:1; }
+@media (hover:none){ .pdp__lens{ display:none; } }
+
+/* ---- full-screen photos (src/components/ZoomViewer.jsx) ---- */
+.zoom{
+  position:fixed; inset:0; z-index:120; display:grid; grid-template-rows:auto minmax(0,1fr);
+  background:rgba(5,4,7,.97); color:var(--ink);
+}
+.zoom__bar{
+  display:flex; align-items:center; gap:18px; padding:14px var(--pad);
+  font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-dim);
+}
+.zoom__count{ margin:0; margin-right:auto; font-variant-numeric:tabular-nums; }
+.zoom__toggle{ padding:10px 0; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-dim); transition:color .25s; }
+.zoom__toggle:hover{ color:var(--ink); }
+.zoom__stage{
+  position:relative; overflow:hidden; display:grid; place-items:center;
+  padding:0 clamp(16px,6vw,96px) clamp(16px,3vw,40px);
+}
+.zoom__frame{ display:grid; place-items:center; max-width:100%; max-height:100%; min-height:0; }
+.zoom__img{
+  display:block; max-width:100%; max-height:calc(100dvh - 120px); width:auto; height:auto;
+  cursor:zoom-in; touch-action:none; user-select:none; -webkit-user-drag:none;
+  transition:transform .55s cubic-bezier(.16,1,.3,1), transform-origin .25s ease-out;
+}
+.zoom__img.is-zoomed{ transform:scale(2); cursor:zoom-out; }  /* SCALE in ZoomViewer.jsx */
+.zoom__img.is-panning{ transition:transform .55s cubic-bezier(.16,1,.3,1); cursor:grabbing; }
+.zoom__arrow{
+  position:absolute; top:50%; width:48px; height:48px; margin-top:-24px; padding:15px;
+  display:grid; place-items:center; color:var(--ink-dim); background:rgba(5,4,7,.6);
+  transition:color .25s, background .25s;
+}
+.zoom__arrow:hover{ color:var(--ink); background:rgba(5,4,7,.85); }
+.zoom__arrow--prev{ left:clamp(4px,1.5vw,24px); }
+.zoom__arrow--next{ right:clamp(4px,1.5vw,24px); }
 .pdp__thumbs{ display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
 .pdp__thumbs button{
   width:64px; aspect-ratio:5/6; padding:0; overflow:hidden; background:var(--bg-3);
@@ -1775,3 +1827,19 @@ svg{ width:100%; height:100%; display:block; }
   }
   .admin-tabs__inner{ padding-right:48px; scroll-padding-inline:var(--pad); }
 }
+
+/* ============ PAGE TRANSITIONS (src/lib/pageMorph.js) ============ */
+/* The tapped photo glides to its place on the product page; everything else
+   cross-fades a little faster so the photo leads. */
+::view-transition-group(pdp-photo){
+  animation-duration:.6s; animation-timing-function:cubic-bezier(.16,1,.3,1);
+}
+::view-transition-old(pdp-photo), ::view-transition-new(pdp-photo){ height:100%; object-fit:cover; }
+::view-transition-old(root), ::view-transition-new(root){ animation-duration:.35s; }
+
+/* ============ HEADLINE AND DRIFT (src/lib/drift.js) ============ */
+.hero__title.is-waiting{ visibility:hidden; }
+/* While the photos drift they are a little taller than their band, so no
+   edge ever shows. */
+.has-drift .craft__bg{ top:-6%; bottom:-6%; }
+.has-drift .film__bg{ top:-6%; height:112%; }

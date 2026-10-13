@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ShopLayout from '../components/ShopLayout.jsx';
@@ -9,6 +9,8 @@ import { Heart } from '../components/Icons.jsx';
 import { askForRestock } from '../lib/api.js';
 import { track } from '../lib/analytics.js';
 import { isEmail } from '../lib/delivery.js';
+import { jumpToTop } from '../lib/smoothScroll.js';
+import { useGlideToProduct, arrivedByPhoto } from '../lib/pageMorph.js';
 
 const ease = [0.33, 0.02, 0.18, 1];
 const TITLE = document.title;
@@ -21,8 +23,21 @@ const TITLE = document.title;
  */
 function Gallery({ product }) {
   const photos = product.photos?.length ? product.photos : (product.img ? [{ img: product.img, img2x: product.img2x }] : []);
+  const { openOverlay } = useShop();
   const [index, setIndex] = useState(0);
+  const [lens, setLens] = useState(null);   // where the mouse is over the photo, in %, and whether it is there
+  const lensReady = useRef(false);           // the sharp copy is fetched on the first hover only
   const strip = useRef(null);
+  const enlarge = (i) => openOverlay({ zoom: { photos, index: i, name: product.name } });
+
+  // With a mouse, the photo under the pointer shows close up, from the
+  // sharper copy. Touch screens tap through to the full-screen view instead.
+  const onLens = (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const r = e.currentTarget.getBoundingClientRect();
+    lensReady.current = true;
+    setLens({ x: (e.clientX - r.left) / r.width * 100, y: (e.clientY - r.top) / r.height * 100, on: true });
+  };
 
   useEffect(() => { setIndex(0); strip.current?.scrollTo({ left: 0 }); }, [product.id]);
 
@@ -48,9 +63,20 @@ function Gallery({ product }) {
            role="group" aria-roledescription="gallery" aria-label={`Photos of ${product.name}`}>
         {photos.map((p, i) => (
           <div className="pdp__frame" key={p.img} aria-hidden={i !== index}>
-            <img src={p.img} srcSet={srcSet(p)} sizes={GALLERY_SIZES}
-                 alt={i === 0 ? product.name : `${product.name}, photo ${i + 1}`}
-                 loading={i === 0 ? 'eager' : 'lazy'} fetchPriority={i === 0 ? 'high' : undefined} />
+            <button type="button" className="pdp__enlarge" tabIndex={i === index ? 0 : -1}
+                    aria-label={`Enlarge photo ${i + 1} of ${product.name}`}
+                    onClick={() => enlarge(i)}
+                    onPointerMove={i === index ? onLens : undefined}
+                    onPointerLeave={() => setLens(l => l && { ...l, on: false })}>
+              <img src={p.img} srcSet={srcSet(p)} sizes={GALLERY_SIZES}
+                   style={i === 0 ? { viewTransitionName: 'pdp-photo' } : undefined}
+                   alt={i === 0 ? product.name : `${product.name}, photo ${i + 1}`}
+                   loading={i === 0 ? 'eager' : 'lazy'} fetchPriority={i === 0 ? 'high' : undefined} />
+              {i === index && lensReady.current && (
+                <img className={`pdp__lens${lens?.on ? ' is-on' : ''}`} src={p.img2x || p.img} alt="" aria-hidden="true"
+                     style={lens ? { transformOrigin: `${lens.x}% ${lens.y}%` } : undefined} />
+              )}
+            </button>
           </div>
         ))}
       </div>
@@ -220,6 +246,7 @@ function BuyBox({ product }) {
 
 function MoreLike({ product }) {
   const { products, format } = useShop();
+  const glide = useGlideToProduct();
   // Others from the drop first, in the shop's own order; then the rest.
   const others = products.filter(p => p.id !== product.id);
   const picks = [...others.filter(p => p.inDrop && !p.soldOut), ...others.filter(p => !p.inDrop || p.soldOut)].slice(0, 4);
@@ -235,12 +262,12 @@ function MoreLike({ product }) {
         {picks.map(p => (
           <article className="card" key={p.id}>
             <div className="card__media">
-              <Link to={`/product/${p.id}`} className="card__link" tabIndex={-1} aria-hidden="true">
+              <Link to={`/product/${p.id}`} onClick={(e) => glide(e, `/product/${p.id}`)} className="card__link" tabIndex={-1} aria-hidden="true">
                 {p.img && <img src={p.img} srcSet={srcSet(p)} sizes={CARD_SIZES} alt="" loading="lazy" />}
               </Link>
               {p.badge && <span className="card__badge">{p.badge}</span>}
             </div>
-            <h3 className="card__name"><Link to={`/product/${p.id}`}>{p.name}</Link></h3>
+            <h3 className="card__name"><Link to={`/product/${p.id}`} onClick={(e) => glide(e, `/product/${p.id}`)}>{p.name}</Link></h3>
             <p className={`card__price${p.soldOut ? ' card__sold' : ''}`}>{p.soldOut ? 'SOLD OUT' : format(p.price)}</p>
           </article>
         ))}
@@ -257,7 +284,9 @@ export default function ProductPage() {
   const goTo = useSectionLink();
   const product = productById(id);
 
-  useEffect(() => { window.scrollTo(0, 0); }, [id]);
+  // Before the browser draws the new page (and before a gliding photo's
+  // "after" picture is taken), so it opens at the top.
+  useLayoutEffect(() => { jumpToTop(); }, [id]);
   // Counted once per piece per page visit, when it has actually loaded.
   const viewed = product?.id;
   useEffect(() => {
@@ -273,7 +302,7 @@ export default function ProductPage() {
     body = (
       <>
         <motion.div className="pdp" key={product.id}
-                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}>
+                    initial={arrivedByPhoto() ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}>
           <nav className="pdp__crumbs" aria-label="Breadcrumb">
             <a href="/#drop" onClick={(e) => { e.preventDefault(); goTo('#drop'); }}>SHOP</a>
             <span aria-hidden="true">/</span>

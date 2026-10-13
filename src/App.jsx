@@ -23,7 +23,9 @@ function PageTracker() {
 
 export default function App() {
   return (
-    <Router>
+    // Page changes apply at once rather than in the background, so the
+    // browser's page transition can picture the new page (src/lib/pageMorph.js).
+    <Router useTransitions={false}>
       <Routes>
         <Route path="/" element={<Storefront />} />
         <Route path="/product/:id" element={<ProductPage />} />

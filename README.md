@@ -77,7 +77,7 @@ properties under `:root` in `styles.css`.
 | Control | Behaviour |
 | --- | --- |
 | `SHOP DROP 01` / `EXPLORE` / nav | Smooth-scroll to the section; nav underlines whatever is in view. From a product page, the menu goes back to that section. Its names, and which items show, are set in the admin |
-| Product photo or name | Opens the product page: photos (swipe on a phone), sizes with "only 2 left", `ADD TO BAG` (asks for a size rather than guessing), save, size guide, description, details and care, delivery and returns, four more pieces |
+| Product photo or name | The photo glides into the product page (in browsers that support it). There: photos (swipe on a phone; hover for a close-up with a mouse; tap for full screen, tap again to zoom, drag to look around), sizes with "only 2 left", `ADD TO BAG` (asks for a size rather than guessing), save, size guide, description, details and care, delivery and returns, four more pieces |
 | Product card | `QUICK ADD` opens the sizes (sold-out sizes struck out); a one-size piece adds straight away. On phones the button stays visible — there is no hover |
 | Heart on a card | Saves it; the heart in the header opens the saved list, from which it can be bought |
 | `VIEW ALL` | Shows the pieces the owner has placed behind it; existing cards glide to their new positions |
@@ -408,6 +408,19 @@ halfway:
   four more, and what closes the gap when a bag line is removed.
 - The drawer runs on a spring rather than a fixed duration, so opening and
   closing can interrupt each other cleanly.
+
+Four more pieces of motion, each switched off for anyone whose device is set
+to reduce motion:
+
+| What | How | Where |
+| --- | --- | --- |
+| Smooth scrolling with a mouse wheel or trackpad | [Lenis](https://github.com/darkroomengineering/lenis) (about 5 KB). Phones keep their own scrolling. It pauses while a panel is open; panels scroll on their own (`data-lenis-prevent`) | `src/lib/smoothScroll.js` |
+| A product photo glides from its card to the product page | The browser's own View Transitions — nothing to download. The router applies page changes at once (`useTransitions={false}`) so the browser can picture the new page | `src/lib/pageMorph.js` |
+| Close-up and full-screen photos | Written here, no library. Uses the `@2x` copy; zoom stops at 2×, about as far as those files go before they blur | `src/components/ZoomViewer.jsx`, `Gallery` in `ProductPage.jsx` |
+| The MASQ. letters rise in; the big photos drift as the page scrolls | [GSAP](https://gsap.com) with SplitText and ScrollTrigger, in its own file fetched only by the home page after it shows | `src/lib/drift.js` |
+
+The title is hidden only until that file arrives, and shown after 1.5 s
+whatever happens, so a slow connection never loses it.
 
 CSS keeps every static style. Where Framer drives a property it also owns the
 timing — a CSS `transition` on the same property fights it. Watch for that if

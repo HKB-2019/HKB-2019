@@ -5,6 +5,7 @@ import { useShop, useHome } from '../store/ShopContext.jsx';
 import { useSectionLink } from '../lib/useSectionLink.js';
 import { NAV, NAV_TARGETS } from '../data/home.js';
 import { CURRENCIES } from '../data/currencies.js';
+import { jumpToTop } from '../lib/smoothScroll.js';
 import { ChevronDown, AccountIcon, BagIcon, Heart } from './Icons.jsx';
 
 export default function Header() {
@@ -69,7 +70,7 @@ export default function Header() {
 
         {pathname === '/'
           ? <a href="#top" className="logo" onClick={(e) => go(e, '#top')}>MASQ<span>.</span></a>
-          : <Link to="/" className="logo" aria-label="MASQ. home" onClick={() => window.scrollTo(0, 0)}>MASQ<span>.</span></Link>}
+          : <Link to="/" className="logo" aria-label="MASQ. home" onClick={jumpToTop}>MASQ<span>.</span></Link>}
 
         <nav className="nav" aria-label="Primary">
           {LINKS.map(({ href, label }) => (

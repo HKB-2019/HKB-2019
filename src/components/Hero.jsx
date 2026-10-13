@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { scrollToId } from '../lib/scroll.js';
 import { asset } from '../lib/media.js';
@@ -11,6 +12,23 @@ export default function Hero() {
   const go = (e, href) => { e.preventDefault(); scrollToId(href); };
   // The owner's photo once it is known to be there; the design's otherwise.
   const photo = images.hero;
+
+  // The letters of the title rise into place (src/lib/drift.js). Hidden until
+  // that code arrives, so they do not show and then jump; shown anyway if it
+  // is slow or fails.
+  const title = useRef(null);
+  useLayoutEffect(() => {
+    const el = title.current;
+    if (!ready || !el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    el.classList.add('is-waiting');
+    const show = () => el.classList.remove('is-waiting');
+    const slow = setTimeout(show, 1500);
+    let undo, gone = false;
+    import('../lib/drift.js')
+      .then(m => { if (!gone && el.classList.contains('is-waiting')) { clearTimeout(slow); undo = m.revealTitle(el); } })
+      .catch(show);
+    return () => { gone = true; clearTimeout(slow); undo?.(); show(); };
+  }, [ready]);
 
   return (
     <section className="hero">
@@ -33,7 +51,9 @@ export default function Hero() {
       <div className="hero__copy" aria-busy={!ready}>
         {ready && [
           <p className="eyebrow" key="e">{home.heroEyebrow}</p>,
-          <h1 className="hero__title" key="t">MASQ<span>.</span></h1>,
+          // Fixed words set as HTML so React leaves the letters alone while
+          // the title animation splits them up and puts them back.
+          <h1 className="hero__title" key="t" ref={title} dangerouslySetInnerHTML={{ __html: 'MASQ<span>.</span>' }} />,
           <p className="hero__sub" key="s"><Lines text={home.heroSub} /></p>,
           <div className="hero__actions" key="a">
             <a href="#drop" className="btn btn--solid" onClick={(e) => go(e, '#drop')}>{home.heroButton}</a>

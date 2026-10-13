@@ -4,6 +4,7 @@ import { readStore, writeStore } from '../lib/storage.js';
 import { getProducts, getSite } from '../lib/api.js';
 import { HOME_DEFAULT } from '../data/home.js';
 import { track } from '../lib/analytics.js';
+import { holdSmoothScroll } from '../lib/smoothScroll.js';
 
 /* One place for everything the shop needs to remember: the catalogue and site
  * settings from the server, the bag, the saved list, the chosen currency,
@@ -205,7 +206,8 @@ export function ShopProvider({ children }) {
   // Lock the page behind an open overlay so the background cannot scroll.
   useEffect(() => {
     document.body.classList.toggle('is-locked', overlay !== null);
-    return () => document.body.classList.remove('is-locked');
+    holdSmoothScroll(overlay !== null);
+    return () => { document.body.classList.remove('is-locked'); holdSmoothScroll(false); };
   }, [overlay]);
 
   useEffect(() => {

@@ -4,11 +4,13 @@ import { useShop, useHome } from '../store/ShopContext.jsx';
 import { srcSet, SLIDE_SIZES } from '../lib/media.js';
 import { expandDropGrid, SizeButtons } from './DropGrid.jsx';
 import { Arrow, CaretLeft, CaretRight } from './Icons.jsx';
+import { useGlideToProduct } from '../lib/pageMorph.js';
 
 const DRAG_THRESHOLD = 5;
 
 export default function Essentials() {
   const { addToCart, format, toast, products, catalogueStatus } = useShop();
+  const glide = useGlideToProduct();
   const { home } = useHome();
   const essentials = products.filter(p => p.inEssentials);
   const [picking, setPicking] = useState(null);
@@ -163,7 +165,7 @@ export default function Essentials() {
             return (
               <article className={`slide${picking === p.id ? ' is-picking' : ''}`} key={p.id}>
                 {p.img && (
-                  <Link to={`/product/${p.id}`} className="slide__link" draggable="false"
+                  <Link to={`/product/${p.id}`} onClick={(e) => glide(e, `/product/${p.id}`)} className="slide__link" draggable="false"
                         aria-label={`${p.name} — see the details`}>
                     <img src={p.img} srcSet={srcSet(p)} sizes={SLIDE_SIZES} alt="" loading="lazy" draggable="false" />
                   </Link>

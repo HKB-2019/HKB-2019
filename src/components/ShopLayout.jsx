@@ -4,6 +4,7 @@ import Footer from './Footer.jsx';
 import Overlays from './Overlays.jsx';
 import Toasts from './Toasts.jsx';
 import { useShop } from '../store/ShopContext.jsx';
+import { startSmoothScroll } from '../lib/smoothScroll.js';
 
 /* What every customer-facing page shares: the header with the bag, the
  * footer, the drawers and the toasts. The catalogue is fetched on arrival at
@@ -11,6 +12,7 @@ import { useShop } from '../store/ShopContext.jsx';
 export default function ShopLayout({ children }) {
   const { loadCatalogue } = useShop();
   useEffect(() => { loadCatalogue(); }, [loadCatalogue]);
+  useEffect(() => startSmoothScroll(), []);
 
   return (
     <>
