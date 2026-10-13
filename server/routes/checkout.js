@@ -1,10 +1,12 @@
 import { Router } from 'express';
-import { transaction } from '../db.js';
+import { transaction, one as oneRow } from '../db.js';
 import { assertKobo } from '../lib/money.js';
 import { initializeTransaction, newReference } from '../lib/paystack.js';
 import { releaseStock } from '../lib/orders.js';
 import { openZones, zoneFor, NIGERIAN_STATES, ZONE_LABELS } from '../lib/settings.js';
 import { rateLimit } from '../lib/limits.js';
+import { onSale } from '../lib/catalogue.js';
+import { applyCode } from '../lib/discounts.js';
 
 export const checkoutRouter = Router();
 
@@ -136,11 +138,11 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
           SELECT p.id, p.name, p.price_kobo, v.id AS variant_id
             FROM products p
             JOIN variants v ON v.product_id = p.id
-           WHERE p.id = $1 AND v.size = $2 AND p.hidden = FALSE
+           WHERE p.id = $1 AND v.size = $2 AND ${onSale()}
         `, [productId, size]);
 
         if (!row) {
-          const p = await tx.one('SELECT name FROM products WHERE id = $1 AND hidden = FALSE', [productId]);
+          const p = await tx.one(`SELECT name FROM products p WHERE id = $1 AND ${onSale()}`, [productId]);
           throw fail(404, p
             ? `${p.name} is no longer available in size ${size}.`
             : 'Something in your bag is no longer available.');
@@ -175,8 +177,15 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
         });
       }
 
+      // A code is checked against these prices, and one use of it held for
+      // this order, in the same transaction as the stock.
+      const discount = body.discountCode
+        ? await applyCode(tx, body.discountCode, subtotal, { hold: true })
+        : null;
+      const discountKobo = discount?.discountKobo ?? 0;
+
       const shipping = zone.feeKobo;
-      try { assertKobo(subtotal + shipping, 'order total'); }
+      try { assertKobo(subtotal - discountKobo + shipping, 'order total'); }
       catch {
         throw fail(400, 'That is over ₦1,000,000 for one checkout. Please split it into two orders.');
       }
@@ -194,11 +203,13 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
 
       const { id } = await tx.one(`
         INSERT INTO orders (reference, customer_id, email, status, subtotal_kobo, shipping_kobo,
-                            currency, customer_name, phone, address, delivery_zone)
-        VALUES ($1, $2, $3, 'pending', $4, $5, 'NGN', $6, $7, $8, $9)
+                            currency, customer_name, phone, address, delivery_zone,
+                            discount_code, discount_kobo)
+        VALUES ($1, $2, $3, 'pending', $4, $5, 'NGN', $6, $7, $8, $9, $10, $11)
         RETURNING id
       `, [reference, customer.id, normalisedEmail, subtotal, shipping,
-          who.name, who.phone, JSON.stringify(who.address), who.zone]);
+          who.name, who.phone, JSON.stringify(who.address), who.zone,
+          discount?.code ?? null, discountKobo]);
 
       for (const l of lines) {
         await tx.query(`
@@ -208,7 +219,7 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
         `, [id, l.productId, l.variantId, l.name, l.size, l.unitPriceKobo, l.qty]);
       }
 
-      return { id, reference, subtotal, shipping, email: normalisedEmail, lines };
+      return { id, reference, subtotal, shipping, discount, discountKobo, email: normalisedEmail, lines };
     });
   } catch (err) {
     if (!err.status) console.error('[checkout] failed:', err);
@@ -217,7 +228,7 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
     });
   }
 
-  const total = order.subtotal + order.shipping;
+  const total = order.subtotal - order.discountKobo + order.shipping;
 
   // Paystack is called AFTER the order exists, so a failure here leaves a
   // pending order we can reconcile rather than a charge with nothing behind it.
@@ -230,6 +241,7 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
       metadata: {
         order_id: order.id,
         items: order.lines.length,
+        ...(order.discount ? { discount_code: order.discount.code } : {}),
         // Shown on the transaction in the Paystack dashboard.
         custom_fields: [
           { display_name: 'Name',     variable_name: 'name',     value: who.name },
@@ -243,6 +255,7 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
       reference: order.reference,
       authorizationUrl: data.authorization_url,
       subtotalKobo: order.subtotal,
+      discountKobo: order.discountKobo,
       shippingKobo: order.shipping,
       totalKobo: total
     });
@@ -251,6 +264,32 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
     res.status(502).json({ error: 'Could not reach the payment provider. Nothing has been charged.' });
     console.error('[checkout] paystack initialize failed:', err.message);
   }
+});
+
+const priceOf = (id) => oneRow(`SELECT price_kobo FROM products p WHERE id = $1 AND ${onSale()}`, [id]);
+
+/* Codes can be guessed one by one, so trying them is limited. */
+export const discountLimit = rateLimit({
+  windowMs: 10 * 60_000,
+  max: 30,
+  message: 'Too many codes tried. Please wait a few minutes and try again.'
+});
+
+/**
+ * POST /api/discount  { code, items: [{ productId, size, qty }] }
+ * What a code would take off this bag, for the bag to show before paying.
+ * Nothing is held: checkout checks the code again, and holds a use then.
+ */
+checkoutRouter.post('/discount', discountLimit, async (req, res) => {
+  const items = Array.isArray(req.body?.items) ? req.body.items.slice(0, 50) : [];
+  let subtotal = 0;
+  for (const raw of items) {
+    const qty = Number.isInteger(raw?.qty) && raw.qty > 0 && raw.qty <= 10 ? raw.qty : 0;
+    const row = await priceOf(String(raw?.productId ?? ''));
+    if (row) subtotal += row.price_kobo * qty;
+  }
+  if (!subtotal) return res.status(400).json({ error: 'Your bag is empty.' });
+  res.json(await applyCode({ one: oneRow }, req.body?.code, subtotal));
 });
 
 /* Where Paystack sends the customer back to. Render sets RENDER_EXTERNAL_URL

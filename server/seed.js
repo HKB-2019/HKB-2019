@@ -11,7 +11,8 @@ export async function seed({ reset = false } = {}) {
       // except the home page's photos, which live in the images being emptied.
       await tx.query("DELETE FROM settings WHERE key = 'home_images'");
       await tx.query(`TRUNCATE order_items, orders, customers, webhook_events, variants,
-                               product_photos, products, images, subscribers
+                               product_photos, products, images, subscribers,
+                               discount_codes, stock_alerts
                       RESTART IDENTITY CASCADE`);
     }
 

@@ -17,7 +17,8 @@ const PAGES = [
   ['RETURNS', 'Returns'],
   ['CONTACT', 'Contact'],
   ['PRIVACY', 'Privacy'],
-  ['SIZE_GUIDE', 'Size guide — linked from every product page']
+  ['SIZE_GUIDE', 'Size guide — linked from every product page'],
+  ['TERMS', 'Terms of sale']
 ];
 
 function useSave(key, onSaved) {
@@ -190,6 +191,56 @@ function Links({ social, film, onSaved }) {
 
 /* ------------------------------------------------------------------ tab */
 
+/* --------------------------------------------------------- price guide */
+
+const GUIDE = [['USD', 'US dollar'], ['GBP', 'British pound'], ['EUR', 'Euro']];
+
+function Rates({ value }) {
+  const [rows, setRows] = useState(() => Object.fromEntries(GUIDE.map(([c]) => [c, String(value[c])])));
+  const [state, save] = useSave('rates');
+  const [rowError, setRowError] = useState(null);
+
+  const submit = (e) => {
+    e.preventDefault();
+    const out = {};
+    for (const [c, name] of GUIDE) {
+      const raw = rows[c].replace(/[₦,\s]/g, '');
+      if (!/^\d+$/.test(raw) || Number(raw) < 1) { setRowError(`${name}: type how many naira make one, e.g. 1550.`); return; }
+      out[c] = Number(raw);
+    }
+    setRowError(null);
+    save(out);
+  };
+
+  return (
+    <form className="admin-card" onSubmit={submit}>
+      <h3 className="admin-card__title">Price guide</h3>
+      <p className="admin-help">
+        Customers can see prices in dollars, pounds or euros as a guide. They always pay in naira.
+        Type how many naira make one of each, and update it when the rate moves.
+      </p>
+      <table className="admin-mini-table">
+        <thead><tr><th>Currency</th><th>₦ for one</th></tr></thead>
+        <tbody>
+          {GUIDE.map(([c, name]) => (
+            <tr key={c}>
+              <td>{name} ({c})</td>
+              <td>
+                <input className="admin-stock-input admin-fee-input" inputMode="numeric" aria-label={`Naira for one ${name}`}
+                       value={rows[c]} onChange={(e) => setRows(r => ({ ...r, [c]: e.target.value }))} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="admin-card__foot">
+        <button className="admin-action admin-action--primary">SAVE RATES</button>
+        <Note state={rowError ?? state} />
+      </div>
+    </form>
+  );
+}
+
 export default function SettingsTab({ onSummaryChange }) {
   const [settings, setSettings] = useState(null);
   const [error, setError] = useState(null);
@@ -207,6 +258,7 @@ export default function SettingsTab({ onSummaryChange }) {
       <Delivery value={settings.delivery} onSaved={onSummaryChange} />
       <Pages value={settings.pages} />
       <Links social={settings.social} film={settings.film} />
+      <Rates value={settings.rates} />
     </section>
   );
 }

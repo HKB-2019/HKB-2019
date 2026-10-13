@@ -27,7 +27,7 @@ src/
   pages/Admin.jsx       /admin — the shell, orders and stock
   pages/admin/          products (with photos), home page, settings, the list
   styles.css            all styling; design tokens at the top under :root
-  data/currencies.js    display currencies and their rough rates
+  data/currencies.js    the price-guide currencies and their starting rates
   data/home.js          the home page's words as designed (shared with the server)
   data/catalogue.js     the pieces as designed: seeds the database and the preview
   data/pages.js         the footer pages as first written
@@ -61,8 +61,8 @@ DEPLOY.md               putting it online for free, step by step
 
 Products (with their descriptions and extra photos), prices, the home page's
 words and photos, the menu, delivery fees and footer copy are all in the
-database and changed in the admin. Display currency rates are in
-`src/data/currencies.js`. Colour, spacing and type scale are CSS custom
+database and changed in the admin. Display currency rates are set in
+the admin too (*Settings → Price guide*). Colour, spacing and type scale are CSS custom
 properties under `:root` in `styles.css`.
 
 ## Interactions
@@ -75,13 +75,15 @@ properties under `:root` in `styles.css`.
 | Heart on a card | Saves it; the heart in the header opens the saved list, from which it can be bought |
 | `VIEW ALL` | Shows the pieces the owner has placed behind it; existing cards glide to their new positions |
 | `SHOP ACCESSORIES` | Expands the grid and scrolls to it |
-| Bag icon | Quantity (up to 10, or what is left), remove, subtotal → **Delivery** step: name, phone, state, city, address, the fee for that address and the total → Paystack |
+| Bag icon | Quantity (up to 10, or what is left), remove, subtotal → **Delivery** step: name, phone, state, city, address, `HAVE A CODE?` for a discount code, the fee for that address and the total → Paystack |
+| Sold-out size | `TELL ME WHEN IT’S BACK` on the product page takes an email; the owner sees who is waiting for what |
+| Countdown | When a piece has a drop time, the home page counts down to it, and the piece appears by itself at that moment |
 | Person icon | Track an order by its reference |
 | Currency `NGN` | Shows prices in USD/GBP/EUR as a guide; the bag says payment is in naira |
 | `PLAY FILM` | Plays the film linked in the admin, or says it is coming |
 | Essentials carousel | Arrows, dots, drag-to-scroll, arrow keys; a slide's name adds it, or asks for a size |
 | Newsletter `JOIN` | Adds the address to the list the owner sees in the admin |
-| Footer links | Size guide / FAQ / shipping / returns / contact / privacy, as written in the admin |
+| Footer links | Size guide / FAQ / shipping / returns / contact / privacy / terms, as written in the admin |
 
 Bag, saved list and currency persist in `localStorage`. The bag is checked
 against the catalogue on every visit: pieces no longer on sale leave it, new
@@ -134,7 +136,7 @@ admin).
 
 ### Tests
 
-`npm test` runs the API tests (110) against an in-memory Postgres. To run the
+`npm test` runs the API tests (124) against an in-memory Postgres. To run the
 same tests against a real server:
 
 ```bash
@@ -146,7 +148,7 @@ ways are worth running before a change to checkout or stock: the in-memory
 one queues transactions, so only a real server shows whether two buyers
 racing for the last jacket are handled.
 
-`npm run test:e2e` runs the browser tests (29) with Playwright: a robot
+`npm run test:e2e` runs the browser tests (35) with Playwright: a robot
 customer and a robot owner clicking through the built site, on desktop and a
 phone-sized screen. They run against a stand-in Paystack (`e2e/fake-paystack.js`)
 with a real payment page, so a whole purchase — bag, delivery, pay, webhook,
@@ -207,16 +209,17 @@ the one outcome that must never happen silently.
 
 ### The admin
 
-Six tabs, all usable on a phone:
+Seven tabs, all usable on a phone:
 
 | Tab | What it does |
 | --- | --- |
-| **Orders** | Every order with the customer's name, phone (tap to call), address, items and total including delivery. `MARK SENT` on paid orders. Filters by status. `DOWNLOAD CSV` for packing and dispatch |
-| **Products** | One card per product: name, price, badge (save with a button), and switches for on sale, in the drop grid, before `VIEW ALL`, in the carousel (save at once). Reorder with ↑ ↓. Sizes with their counts; add a size; remove one once its count is 0 and nobody is paying for it. `+ NEW PRODUCT` starts off sale — add a photo and counts, then switch it on. Each card also has the product page's description and "details and care", up to six more photos, and a link to see it on the shop |
+| **Orders** | Every order with the customer's name, phone (tap to call), address, items, any discount code, and total including delivery. `MARK SENT` asks for the courier and tracking number, which the customer then sees on their order page (and can be corrected later). `refunded?` records a refund made in Paystack, and can put the pieces back in stock. Filters by status. `DOWNLOAD CSV` for packing and dispatch |
+| **Sales** | Money in by week (Monday to Sunday, Lagos time) for the last 12 weeks, average order, discounts given, best-selling pieces and sizes. Paid orders only. Discount codes: per cent or naira off the pieces (never the delivery), optional minimum spend, number of uses and end date; switch off or delete |
+| **Products** | One card per product: name, price, badge (save with a button), and switches for on sale, in the drop grid, before `VIEW ALL`, in the carousel (save at once). Reorder with ↑ ↓. Sizes with their counts; add a size; remove one once its count is 0 and nobody is paying for it. `+ NEW PRODUCT` starts off sale — add a photo and counts, then switch it on. Each card also has the product page's description and "details and care", up to six more photos, and a link to see it on the shop. A **drop time** keeps a piece hidden and unbuyable until then |
 | **Home page** | The three wide photos (top of the page, craft band, film strip) — change or put back the original. Every line of words on the home page. The menu: rename an item, or switch it off |
 | **Stock** | Every size of everything in one list, for counting the shelf |
-| **List** | Everyone who joined from the footer. Download as CSV into your email tool; remove someone who asks |
-| **Settings** | Delivery fee per area (Lagos, Abuja, rest of Nigeria, abroad); footer pages, including the size guide; Instagram / TikTok / X links; the film link |
+| **List** | Everyone who joined from the footer. Download as CSV into your email tool; remove someone who asks. Below it, everyone waiting for a sold-out size, grouped by piece and size, marked when that size is back — copy their emails, then clear it |
+| **Settings** | Delivery fee per area (Lagos, Abuja, rest of Nigeria, abroad); footer pages, including the size guide; Instagram / TikTok / X links; the film link; the price-guide rates (naira for one dollar, pound, euro) |
 
 Banners at the top say when checkout is closed (no delivery prices yet),
 when a customer is owed a refund, and what is running low.
@@ -328,8 +331,9 @@ A pass over the whole codebase before this round found, and fixed:
   parcel is booked with a courier by hand, using the orders spreadsheet.
 - **International duties.** Abroad can be switched on with a flat fee; duties
   are not calculated.
-- **Currency rates** for the price guide are set by hand in
-  `src/data/currencies.js`.
+- **Automatic emails** for the waiting list and the list: the owner copies
+  the addresses out for now. Needs the same domain as our own emails.
+- **Live currency rates.** The price-guide rates are typed in the admin.
 
 ### On the database
 

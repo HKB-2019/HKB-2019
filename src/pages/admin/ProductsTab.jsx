@@ -60,6 +60,50 @@ function Toggle({ label, checked, onChange, disabled, hint }) {
   );
 }
 
+/* ------------------------------------------------------------- drop time */
+
+/** An ISO time as the value a datetime-local box wants, in this computer's time. */
+const toLocalInput = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+const dropLabel = (iso) => new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+/**
+ * A drop time: the piece stays invisible and unbuyable until then, the home
+ * page counts down to it, and at that moment it appears by itself.
+ */
+function DropTime({ product: p, onChanged }) {
+  const [value, setValue] = useState(toLocalInput(p.availableAt));
+  const [state, run] = useAction(onChanged);
+  useEffect(() => { setValue(toLocalInput(p.availableAt)); }, [p.availableAt]);
+  const dirty = value !== toLocalInput(p.availableAt);
+
+  const save = (e) => {
+    e.preventDefault();
+    if (value && new Date(value) <= new Date()) {
+      return run(async () => { throw new Error('Choose a time in the future, or clear it.'); });
+    }
+    run(() => adminUpdateProduct(p.id, { availableAt: value ? new Date(value).toISOString() : null }));
+  };
+
+  return (
+    <form className="admin-product__drop" onSubmit={save}>
+      <label className="admin-field">
+        <span>Drop time <em>optional — hidden from the shop until then</em></span>
+        <input type="datetime-local" value={value} onChange={(e) => setValue(e.target.value)} />
+      </label>
+      <button className="admin-action" disabled={!dirty}>SAVE</button>
+      {p.availableAt && (
+        <button type="button" className="admin-link" onClick={() => run(() => adminUpdateProduct(p.id, { availableAt: null }))}>clear</button>
+      )}
+      <Note state={state} />
+    </form>
+  );
+}
+
 /* ------------------------------------------------------------------ card */
 
 function ProductCard({ product: p, first, last, onChanged, onReordered }) {
@@ -162,8 +206,9 @@ function ProductCard({ product: p, first, last, onChanged, onReordered }) {
           <span className={`admin-status ${p.hidden ? 'admin-status--abandoned' : 'admin-status--paid'}`}>
             {p.hidden ? 'off sale' : 'on sale'}
           </span>
+          {p.availableAt && !p.hidden && <span className="admin-status admin-status--pending">drops {dropLabel(p.availableAt)}</span>}
           {p.soldOut && !p.hidden && <span className="admin-status admin-status--failed">sold out</span>}
-          {!p.hidden && (
+          {!p.hidden && !p.availableAt && (
             <a className="admin-link" href={pageHref(`/product/${p.id}`)} {...NEW_TAB}>view on shop ↗</a>
           )}
           <span className="admin-product__order">
@@ -215,6 +260,8 @@ function ProductCard({ product: p, first, last, onChanged, onReordered }) {
                   onChange={(v) => flip({ inEssentials: v })} />
           <Note state={switchState} />
         </div>
+
+        <DropTime product={p} onChanged={onChanged} />
 
         <div className="admin-product__sizes">
           <span className="admin-product__label">Sizes and stock</span>

@@ -1,5 +1,6 @@
 import { one, query, transaction } from '../db.js';
 import { verifyTransaction, paystackConfigured } from './paystack.js';
+import { releaseCode, retakeCode } from './discounts.js';
 
 /* Everything that moves an order out of `pending` goes through this file.
  *
@@ -17,11 +18,11 @@ const ABANDON_AFTER_MIN = Number(process.env.ABANDON_AFTER_MINUTES || 30);
 /** Hours of failed lookups before an order is given up on anyway. */
 const GIVE_UP_AFTER_HOURS = 24;
 
-/** Put held stock back and close the order. Safe to call twice. */
+/** Put held stock (and a held discount use) back and close the order. Safe to call twice. */
 export async function releaseStock(reference, status) {
   await transaction(async (tx) => {
     const order = await tx.one(
-      'SELECT id, status FROM orders WHERE reference = $1 FOR UPDATE', [reference]);
+      'SELECT id, status, discount_code FROM orders WHERE reference = $1 FOR UPDATE', [reference]);
     if (!order || order.status !== 'pending') return;   // already settled
 
     const items = await tx.query(
@@ -29,6 +30,7 @@ export async function releaseStock(reference, status) {
     for (const i of items) {
       await tx.query('UPDATE variants SET stock = stock + $1 WHERE id = $2', [i.qty, i.variant_id]);
     }
+    await releaseCode(tx, order.discount_code);
     await tx.query('UPDATE orders SET status = $1 WHERE id = $2', [status, order.id]);
   });
 }
@@ -47,9 +49,9 @@ export async function releaseStock(reference, status) {
 async function confirmPayment(orderId, paystackId) {
   return transaction(async (tx) => {
     // Locked, so the webhook and the sweeper cannot both do this at once.
-    const order = await tx.one('SELECT id, status FROM orders WHERE id = $1 FOR UPDATE', [orderId]);
+    const order = await tx.one('SELECT id, status, discount_code FROM orders WHERE id = $1 FOR UPDATE', [orderId]);
 
-    if (order.status === 'paid' || order.status === 'refund_due') return order.status;
+    if (['paid', 'refund_due', 'refunded'].includes(order.status)) return order.status;
 
     if (order.status !== 'pending') {
       const items = await tx.query(
@@ -72,6 +74,8 @@ async function confirmPayment(orderId, paystackId) {
         console.error(`[orders] order ${orderId} PAID AFTER ITS STOCK WAS SOLD — refund due`);
         return 'refund_due';
       }
+      // The code's use went back with the stock; it counts again now.
+      await retakeCode(tx, order.discount_code);
     }
 
     await tx.query(
@@ -96,9 +100,9 @@ async function confirmPayment(orderId, paystackId) {
  */
 export async function reconcile(reference, { release = false, giveUp = false, onVerify } = {}) {
   const order = await one(
-    'SELECT id, status, subtotal_kobo, shipping_kobo FROM orders WHERE reference = $1', [reference]);
+    'SELECT id, status, subtotal_kobo, shipping_kobo, discount_kobo FROM orders WHERE reference = $1', [reference]);
   if (!order) return null;
-  if (order.status === 'paid' || order.status === 'refund_due') return order.status;
+  if (['paid', 'refund_due', 'refunded'].includes(order.status)) return order.status;
 
   let data;
   try {
@@ -114,8 +118,8 @@ export async function reconcile(reference, { release = false, giveUp = false, on
   }
 
   if (data.status === 'success') {
-    // What Paystack was asked for: the items plus delivery.
-    const due = order.subtotal_kobo + order.shipping_kobo;
+    // What Paystack was asked for: the items, less any discount, plus delivery.
+    const due = order.subtotal_kobo - order.discount_kobo + order.shipping_kobo;
     if (data.amount !== due || (data.currency && data.currency !== 'NGN')) {
       console.error(
         `[orders] ${reference} AMOUNT MISMATCH: paid ${data.amount} ${data.currency ?? ''} kobo, ` +

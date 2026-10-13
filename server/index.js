@@ -10,8 +10,9 @@ import { ordersRouter } from './routes/orders.js';
 import { subscribeRouter } from './routes/subscribe.js';
 import { adminRouter } from './routes/admin.js';
 import { adminProductsRouter, adminUploadRouter } from './routes/admin-products.js';
+import { adminSalesRouter } from './routes/admin-sales.js';
 import { one } from './db.js';
-import { photoUrls } from './lib/catalogue.js';
+import { photoUrls, onSale } from './lib/catalogue.js';
 import { getHomeImages } from './lib/settings.js';
 
 /* What the browser may load on the shop's pages. Scripts only from the shop
@@ -74,7 +75,7 @@ async function pageMeta(path) {
   const product = path.match(/^\/product\/([a-z0-9-]{1,60})\/?$/);
   if (product) {
     const p = await one(`SELECT id, name, price_kobo, img, image_id, description
-                           FROM products WHERE id = $1 AND hidden = FALSE`, [product[1]]);
+                           FROM products p WHERE id = $1 AND ${onSale()}`, [product[1]]);
     if (!p) return { missing: true };
     const naira = `₦${(p.price_kobo / 100).toLocaleString('en-NG')}`;
     const words = p.description.replace(/\s+/g, ' ').trim();
@@ -145,6 +146,7 @@ export function createApp() {
   app.use('/api', subscribeRouter);
   app.use('/api', adminRouter);
   app.use('/api', adminProductsRouter);
+  app.use('/api', adminSalesRouter);
 
   // An address under /api that matched nothing is a mistake, and says so in
   // JSON — not a copy of the home page.

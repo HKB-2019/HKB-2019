@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { CURRENCIES } from '../data/currencies.js';
+import { CURRENCIES, currencies } from '../data/currencies.js';
 import { readStore, writeStore } from '../lib/storage.js';
 import { getProducts, getSite } from '../lib/api.js';
 import { HOME_DEFAULT } from '../data/home.js';
@@ -64,19 +64,26 @@ export function ShopProvider({ children }) {
     address: { line1: '', line2: '', city: '', state: '', country: 'Nigeria' }
   });
 
+  // A discount code typed in the bag: kept for this visit only, and checked
+  // with the server again whenever the bag changes.
+  const [discountCode, setDiscountCode] = useState('');
+
   useEffect(() => writeStore('masq:cart', cart), [cart]);
   useEffect(() => writeStore('masq:wishlist', wishlist), [wishlist]);
   useEffect(() => writeStore('masq:currency', CURRENCIES[currency] ? currency : 'NGN'), [currency]);
 
   /* ------------------------------------------------------------- money */
 
+  // The owner's rates once the site settings arrive; the starting ones before.
+  const rates = site?.rates;
   const format = useCallback((naira) => {
-    const c = CURRENCIES[currency] || CURRENCIES.NGN;
+    const table = currencies(rates);
+    const c = table[currency] || table.NGN;
     return c.symbol + (naira * c.rate).toLocaleString('en-US', {
       minimumFractionDigits: c.decimals,
       maximumFractionDigits: c.decimals
     });
-  }, [currency]);
+  }, [currency, rates]);
 
   /* ------------------------------------------------------------ toasts */
 
@@ -209,7 +216,7 @@ export function ShopProvider({ children }) {
   const value = {
     products, site, catalogueStatus: status, loadCatalogue, productById,
     cart, cartQty, cartSubtotal, addToCart, changeQty, removeItem, clearCart, maxFor,
-    delivery, setDelivery,
+    delivery, setDelivery, discountCode, setDiscountCode,
     wishlist, toggleWish,
     currency, setCurrency, format,
     overlay, openOverlay, closeOverlay,

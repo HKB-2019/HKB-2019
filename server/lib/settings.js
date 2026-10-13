@@ -1,6 +1,7 @@
 import { one, query } from '../db.js';
 import { HOME_DEFAULT, NAV } from '../../src/data/home.js';
 import { PAGES, PAGES_DEFAULT } from '../../src/data/pages.js';
+import { GUIDE_CURRENCIES, DEFAULT_RATES } from '../../src/data/currencies.js';
 
 /* Everything the owner can change about the shop that is not a product:
  * delivery fees, the footer pages, social links and the film link.
@@ -140,7 +141,8 @@ export const HOME_FIELDS = {
   heroEyebrow: [40, false], heroSub: [120, true], heroButton: [24, false], heroImageAlt: [140, false],
   craftTitle: [60, false], craftText: [240, true], dropTitle: [60, false],
   manifestoLine1: [60, false], manifestoLine2: [60, false], manifestoTag: [80, false],
-  essentialsTitle: [40, false], newsletterTitle: [60, false], newsletterNote: [200, true]
+  essentialsTitle: [40, false], newsletterTitle: [60, false], newsletterNote: [200, true],
+  countdownTitle: [40, false]
 };
 
 export function cleanText(v, { label, max, multiline = true, allowEmpty = false }) {
@@ -169,6 +171,21 @@ function validHome(value) {
   return out;
 }
 
+/* ---------------------------------------------------------- price guide */
+
+/* Naira for one dollar, pound and euro: only for showing prices as a guide.
+ * Nobody is ever charged in these. */
+function validRates(value) {
+  if (!value || typeof value !== 'object') throw bad('Rates are missing.');
+  const out = {};
+  for (const c of GUIDE_CURRENCIES) {
+    const v = value[c];
+    if (!Number.isInteger(v) || v < 1 || v > 100_000) throw bad(`${c}: type how many naira make one ${c}, as a whole number.`);
+    out[c] = v;
+  }
+  return out;
+}
+
 /* -------------------------------------------------------------- store */
 
 const SPEC = {
@@ -176,7 +193,8 @@ const SPEC = {
   pages:    { fallback: PAGES_DEFAULT,    validate: validPages },
   social:   { fallback: SOCIAL_DEFAULT,   validate: validSocial },
   film:     { fallback: { url: '', kind: null, youtubeId: null }, validate: validFilm },
-  home:     { fallback: HOME_DEFAULT,      validate: validHome }
+  home:     { fallback: HOME_DEFAULT,      validate: validHome },
+  rates:    { fallback: DEFAULT_RATES,     validate: validRates }
 };
 
 export const SETTING_KEYS = Object.keys(SPEC);

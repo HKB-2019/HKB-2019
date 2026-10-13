@@ -5,6 +5,12 @@ import { query } from '../db.js';
  * One function for both, so the admin's preview of a product is exactly what
  * a customer will be shown — the same photo address, the same sold-out rule. */
 
+/**
+ * The SQL test for "a customer can see and buy this": not taken off sale,
+ * and its drop time, if it has one, has come. `p` is the products alias.
+ */
+export const onSale = (p = 'p') => `${p}.hidden = FALSE AND (${p}.available_at IS NULL OR ${p}.available_at <= now())`;
+
 /** Above this, the exact count is nobody's business but the owner's. */
 const SHOW_COUNT_BELOW = 10;
 
@@ -33,9 +39,9 @@ export function photoUrls(p) {
 export async function loadProducts({ forAdmin = false } = {}) {
   const products = await query(`
     SELECT id, name, price_kobo, img, image_id, badge, in_drop, featured, in_essentials,
-           hidden, position, description, details
-      FROM products
-     ${forAdmin ? '' : 'WHERE hidden = FALSE'}
+           hidden, position, description, details, available_at
+      FROM products p
+     ${forAdmin ? '' : `WHERE ${onSale()}`}
      ORDER BY position, id
   `);
   const variants = await query('SELECT id, product_id, size, stock FROM variants ORDER BY id');
@@ -70,6 +76,8 @@ export async function loadProducts({ forAdmin = false } = {}) {
       return {
         ...base,
         hidden: p.hidden,
+        // A drop time still to come; null once it has passed or if there is none.
+        availableAt: p.available_at && new Date(p.available_at) > new Date() ? new Date(p.available_at).toISOString() : null,
         hasUpload: Boolean(p.image_id),
         hasBuiltInPhoto: Boolean(p.img),
         sizes: sizes.map(s => ({ variantId: s.id, size: s.size, stock: s.stock }))

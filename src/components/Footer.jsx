@@ -2,7 +2,7 @@ import { useShop } from '../store/ShopContext.jsx';
 import { useSectionLink } from '../lib/useSectionLink.js';
 import { Instagram, TikTok, XIcon } from './Icons.jsx';
 
-const INFO_LINKS = [['SIZE_GUIDE', 'SIZE GUIDE'], ['FAQ'], ['SHIPPING'], ['RETURNS'], ['CONTACT'], ['PRIVACY']];
+const INFO_LINKS = [['SIZE_GUIDE', 'SIZE GUIDE'], ['FAQ'], ['SHIPPING'], ['RETURNS'], ['CONTACT'], ['PRIVACY'], ['TERMS']];
 
 const SOCIAL = [
   ['instagram', 'Instagram', Instagram],

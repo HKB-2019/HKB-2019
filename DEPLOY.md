@@ -101,6 +101,11 @@ Everything below is in the admin — no code.
 7. **Read the size guide.** *Settings → Footer pages → Size guide.* It is
    linked from every product page and only says the pieces run true to size.
    Add your measurements.
+8. **Read the Terms of sale.** *Settings → Footer pages → Terms of sale.*
+   It describes how the shop works (naira prices, Paystack, codes, refunds).
+   Check it matches how you run things.
+9. **Set the price-guide rates.** *Settings → Price guide.* How many naira
+   make one dollar, pound and euro, for customers who view prices in those.
 
 ---
 
@@ -166,8 +171,18 @@ is missing or wrong. Check `PAYSTACK_SECRET_KEY` in Render's Environment tab
 
 **A customer is marked "refund due".** They paid after their order had timed
 out, and the last one had already sold to someone else. The admin shows a red
-line at the top when this happens. Refund them from the Paystack dashboard.
-It should be rare.
+line at the top when this happens. Refund them from the Paystack dashboard,
+then press **refunded?** on the order so the shop's figures match. It should
+be rare.
+
+**Giving someone their money back.** The shop cannot move money itself.
+Refund in the Paystack dashboard, then press **refunded?** on the order in
+*Orders*. If the piece never left, keep "put the pieces back in stock" ticked.
+
+**A discount code is not working for a customer.** *Sales → Discount codes*
+says whether it is live, ended, switched off or used up. Codes take money
+off the pieces only, so an order below its minimum spend before delivery is
+refused, and the bag says why.
 
 **Customers say checkout is closed.** No delivery area is switched on.
 *Settings → Delivery*.

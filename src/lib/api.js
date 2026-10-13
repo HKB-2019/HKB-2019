@@ -27,14 +27,26 @@ export const getSite     = () => request('/site');
  * Send WHAT is being bought and WHERE it goes. The server decides what it
  * costs — the item prices and the delivery fee both come from its database.
  */
-export const startCheckout = ({ email, name, phone, address }, items) =>
+export const startCheckout = ({ email, name, phone, address }, items, discountCode) =>
   request('/checkout', {
     method: 'POST',
     body: JSON.stringify({
       email, name, phone, address,
+      ...(discountCode ? { discountCode } : {}),
       items: items.map(i => ({ productId: i.id, size: i.size, qty: i.qty }))
     })
   });
+
+/** What a discount code takes off this bag — the server works it out. */
+export const checkDiscount = (code, items) =>
+  request('/discount', {
+    method: 'POST',
+    body: JSON.stringify({ code, items: items.map(i => ({ productId: i.id, size: i.size, qty: i.qty })) })
+  });
+
+/** "Tell me when it's back" for a sold-out size. */
+export const askForRestock = (productId, size, email) =>
+  request('/stock-alerts', { method: 'POST', body: JSON.stringify({ productId, size, email }) });
 
 export const subscribe = (email) =>
   request('/subscribe', { method: 'POST', body: JSON.stringify({ email }) });
@@ -57,8 +69,10 @@ export const adminSummary  = ()         => adminRequest('/admin/summary');
 export const adminStock    = ()         => adminRequest('/admin/stock');
 export const adminSetStock = (variantId, stock) =>
   adminRequest(`/admin/stock/${variantId}`, { method:'POST', body: JSON.stringify({ stock }) });
-export const adminFulfil   = (reference) =>
-  adminRequest(`/admin/orders/${encodeURIComponent(reference)}/fulfil`, { method:'POST' });
+export const adminFulfil   = (reference, { courier = '', tracking = '' } = {}) =>
+  adminRequest(`/admin/orders/${encodeURIComponent(reference)}/fulfil`, { method:'POST', body: JSON.stringify({ courier, tracking }) });
+export const adminRefunded = (reference, restock) =>
+  adminRequest(`/admin/orders/${encodeURIComponent(reference)}/refunded`, { method:'POST', body: JSON.stringify({ restock }) });
 
 /* --------------------------------------------------------- admin: products */
 
@@ -80,6 +94,18 @@ export const adminAddGalleryPhoto = (id, image, image2x) =>
   adminRequest(`/admin/products/${encodeURIComponent(id)}/photos`, { method:'POST', body: JSON.stringify({ image, image2x }) });
 export const adminRemoveGalleryPhoto = (id, photoId) =>
   adminRequest(`/admin/products/${encodeURIComponent(id)}/photos/${photoId}`, { method:'DELETE' });
+
+/* --------------------------------------------- admin: sales and waiting */
+
+export const adminSales          = ()             => adminRequest('/admin/sales');
+export const adminDiscounts      = ()             => adminRequest('/admin/discounts');
+export const adminCreateDiscount = (d)            => adminRequest('/admin/discounts', { method:'POST', body: JSON.stringify(d) });
+export const adminUpdateDiscount = (code, change) => adminRequest(`/admin/discounts/${encodeURIComponent(code)}`, { method:'PATCH', body: JSON.stringify(change) });
+export const adminDeleteDiscount = (code)         => adminRequest(`/admin/discounts/${encodeURIComponent(code)}`, { method:'DELETE' });
+export const adminStockAlerts    = ()             => adminRequest('/admin/stock-alerts');
+export const adminClearAlerts    = (productId, size) =>
+  adminRequest('/admin/stock-alerts/clear', { method:'POST', body: JSON.stringify({ productId, size }) });
+export const adminRemoveAlert    = (id)           => adminRequest(`/admin/stock-alerts/${id}`, { method:'DELETE' });
 
 /* ------------------------------------------------------- admin: home page */
 

@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { one, query } from '../db.js';
+import { one, query, transaction } from '../db.js';
+import { onSale } from '../lib/catalogue.js';
 import { openZones, getSettings, setSetting, SETTING_KEYS, ZONE_LABELS } from '../lib/settings.js';
 import { toCsv } from '../lib/csv.js';
 import {
@@ -109,7 +110,7 @@ adminRouter.get('/admin/me', requireAdmin, (req, res) => {
 
 /* ------------------------------------------------------------- orders */
 
-const STATUSES = ['pending', 'paid', 'failed', 'abandoned', 'refund_due'];
+const STATUSES = ['pending', 'paid', 'failed', 'abandoned', 'refund_due', 'refunded'];
 
 adminRouter.get('/admin/orders', requireAdmin, async (req, res) => {
   const status = STATUSES.includes(req.query.status) ? req.query.status : null;
@@ -119,8 +120,8 @@ adminRouter.get('/admin/orders', requireAdmin, async (req, res) => {
   // value, not a different statement.
   const orders = await query(`
     SELECT id, reference, email, status, subtotal_kobo, shipping_kobo, currency,
-           customer_name, phone, address, delivery_zone,
-           paid_at, fulfilled_at, created_at
+           customer_name, phone, address, delivery_zone, discount_code, discount_kobo,
+           courier, tracking, paid_at, fulfilled_at, refunded_at, created_at
       FROM orders
      WHERE ($1::text IS NULL OR status = $1)
      ORDER BY id DESC
@@ -146,11 +147,16 @@ adminRouter.get('/admin/orders', requireAdmin, async (req, res) => {
     zone: o.delivery_zone,
     status: o.status,
     subtotalKobo: o.subtotal_kobo,
+    discountCode: o.discount_code,
+    discountKobo: o.discount_kobo,
     shippingKobo: o.shipping_kobo,
-    totalKobo: o.subtotal_kobo + o.shipping_kobo,
+    totalKobo: o.subtotal_kobo - o.discount_kobo + o.shipping_kobo,
     currency: o.currency,
     paidAt: o.paid_at,
     fulfilledAt: o.fulfilled_at,
+    courier: o.courier,
+    tracking: o.tracking,
+    refundedAt: o.refunded_at,
     createdAt: o.created_at,
     items: items.filter(i => i.order_id === o.id).map(i => ({
       name: i.name, size: i.size, qty: i.qty, unitPriceKobo: i.unit_price_kobo
@@ -162,7 +168,7 @@ adminRouter.get('/admin/orders', requireAdmin, async (req, res) => {
 adminRouter.get('/admin/summary', requireAdmin, async (_req, res) => {
   const counts = await one(`
     SELECT COUNT(*) FILTER (WHERE status = 'paid')                         AS paid,
-           COALESCE(SUM(subtotal_kobo + shipping_kobo) FILTER (WHERE status = 'paid'), 0) AS revenue_kobo,
+           COALESCE(SUM(subtotal_kobo - discount_kobo + shipping_kobo) FILTER (WHERE status = 'paid'), 0) AS revenue_kobo,
            COUNT(*) FILTER (WHERE status = 'paid' AND fulfilled_at IS NULL) AS awaiting,
            COUNT(*) FILTER (WHERE status = 'pending')                      AS pending,
            COUNT(*) FILTER (WHERE status = 'refund_due')                   AS refund_due
@@ -189,12 +195,34 @@ adminRouter.get('/admin/summary', requireAdmin, async (_req, res) => {
     lowStock,
     // Checkout takes nothing until the owner has priced delivery somewhere.
     checkoutOpen: (await openZones()).length > 0,
-    subscribers: (await one('SELECT COUNT(*) AS n FROM subscribers')).n
+    subscribers: (await one('SELECT COUNT(*) AS n FROM subscribers')).n,
+    // People asked to hear when a size came back, and it is back: worth
+    // telling them before it sells out again.
+    alertsReady: (await one(`
+      SELECT COUNT(*) AS n FROM stock_alerts a
+        JOIN variants v ON v.product_id = a.product_id AND v.size = a.size
+        JOIN products p ON p.id = a.product_id
+       WHERE v.stock > 0 AND ${onSale()}
+    `)).n
   });
 });
 
-/** Mark an order packed and sent. Only a paid order can be fulfilled. */
+/** Short free text for the courier and tracking boxes. Empty is fine. */
+function shortText(v, label, max) {
+  const t = String(v ?? '').replace(/[\u0000-\u001F\u007F]/g, '').replace(/\s+/g, ' ').trim();
+  if (t.length > max) throw Object.assign(new Error(`Keep the ${label} under ${max} characters.`), { status: 400 });
+  return t || null;
+}
+
+/**
+ * Mark an order packed and sent, with the courier and tracking number if
+ * there is one — the customer sees both on their order page. Sending it again
+ * for a sent order corrects those two and nothing else. Only a paid order can
+ * be sent.
+ */
 adminRouter.post('/admin/orders/:reference/fulfil', requireAdmin, async (req, res) => {
+  const courier = shortText(req.body?.courier, 'courier', 40);
+  const tracking = shortText(req.body?.tracking, 'tracking number', 60);
   const order = await one('SELECT id, status, fulfilled_at FROM orders WHERE reference = $1',
     [req.params.reference]);
 
@@ -202,9 +230,37 @@ adminRouter.post('/admin/orders/:reference/fulfil', requireAdmin, async (req, re
   if (order.status !== 'paid') {
     return res.status(409).json({ error: `Cannot fulfil an order that is "${order.status}".` });
   }
-  if (order.fulfilled_at) return res.json({ ok: true, alreadyFulfilled: true });
 
-  await query('UPDATE orders SET fulfilled_at = now() WHERE id = $1 AND fulfilled_at IS NULL', [order.id]);
+  await query(`UPDATE orders SET fulfilled_at = COALESCE(fulfilled_at, now()), courier = $2, tracking = $3
+                WHERE id = $1`, [order.id, courier, tracking]);
+  res.json({ ok: true, alreadyFulfilled: Boolean(order.fulfilled_at) });
+});
+
+/**
+ * Record a refund the owner has made from Paystack's dashboard. The shop
+ * cannot move money back itself; this keeps its books matching Paystack's.
+ * `restock` puts the pieces back on the shelf — right for an order that was
+ * never sent, wrong for one that left (or, for refund_due, never had stock).
+ */
+adminRouter.post('/admin/orders/:reference/refunded', requireAdmin, async (req, res) => {
+  const restock = req.body?.restock === true;
+  const result = await transaction(async (tx) => {
+    const order = await tx.one('SELECT id, status, fulfilled_at FROM orders WHERE reference = $1 FOR UPDATE',
+      [req.params.reference]);
+    if (!order) return { status: 404, error: 'Order not found.' };
+    if (!['paid', 'refund_due'].includes(order.status)) {
+      return { status: 409, error: `Only a paid order can be refunded; this one is "${order.status}".` };
+    }
+    if (restock && order.status === 'paid') {
+      const items = await tx.query('SELECT variant_id, qty FROM order_items WHERE order_id = $1', [order.id]);
+      for (const i of items) {
+        await tx.query('UPDATE variants SET stock = stock + $1 WHERE id = $2', [i.qty, i.variant_id]);
+      }
+    }
+    await tx.query(`UPDATE orders SET status = 'refunded', refunded_at = now() WHERE id = $1`, [order.id]);
+    return null;
+  });
+  if (result) return res.status(result.status).json({ error: result.error });
   res.json({ ok: true });
 });
 
@@ -261,7 +317,7 @@ adminRouter.get('/admin/orders.csv', requireAdmin, async (req, res) => {
   const orders = await query(`
     SELECT o.id, o.reference, o.status, o.created_at, o.paid_at, o.fulfilled_at,
            o.customer_name, o.email, o.phone, o.address, o.delivery_zone,
-           o.subtotal_kobo, o.shipping_kobo,
+           o.subtotal_kobo, o.shipping_kobo, o.discount_code, o.discount_kobo, o.courier, o.tracking,
            COALESCE(string_agg(i.qty || '× ' || i.name || ' (' || i.size || ')', '; ' ORDER BY i.id), '') AS items
       FROM orders o LEFT JOIN order_items i ON i.order_id = o.id
      WHERE ($1::text IS NULL OR o.status = $1)
@@ -272,7 +328,8 @@ adminRouter.get('/admin/orders.csv', requireAdmin, async (req, res) => {
   const naira = (k) => (k / 100).toFixed(2);
   const csv = toCsv(
     ['Reference', 'Status', 'Placed', 'Paid', 'Sent', 'Name', 'Email', 'Phone',
-     'Address', 'City', 'State', 'Country', 'Delivery', 'Items', 'Items ₦', 'Delivery ₦', 'Total ₦'],
+     'Address', 'City', 'State', 'Country', 'Delivery', 'Items', 'Items ₦', 'Discount code', 'Discount ₦',
+     'Delivery ₦', 'Total ₦', 'Courier', 'Tracking'],
     orders.map(o => {
       const a = o.address ?? {};
       return [
@@ -281,7 +338,8 @@ adminRouter.get('/admin/orders.csv', requireAdmin, async (req, res) => {
         o.customer_name ?? '', o.email, o.phone ?? '',
         [a.line1, a.line2].filter(Boolean).join(', '), a.city ?? '', a.state ?? '', a.country ?? '',
         ZONE_LABELS[o.delivery_zone] ?? '', o.items,
-        naira(o.subtotal_kobo), naira(o.shipping_kobo), naira(o.subtotal_kobo + o.shipping_kobo)
+        naira(o.subtotal_kobo), o.discount_code ?? '', naira(o.discount_kobo), naira(o.shipping_kobo),
+        naira(o.subtotal_kobo - o.discount_kobo + o.shipping_kobo), o.courier ?? '', o.tracking ?? ''
       ];
     })
   );

@@ -2,16 +2,18 @@ import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   adminLogin, adminLogout, adminMe, adminStatus, adminSetup, adminOrders,
-  adminSummary, adminStock, adminSetStock, adminFulfil, adminDownload
+  adminSummary, adminStock, adminSetStock, adminFulfil, adminRefunded, adminDownload
 } from '../lib/api.js';
 import ProductsTab from './admin/ProductsTab.jsx';
 import { pageHref } from '../lib/media.js';
 import SettingsTab from './admin/SettingsTab.jsx';
 import ListTab from './admin/ListTab.jsx';
 import HomeTab from './admin/HomeTab.jsx';
+import SalesTab from './admin/SalesTab.jsx';
 
 const TABS = [
   ['orders', 'ORDERS'],
+  ['sales', 'SALES'],
   ['products', 'PRODUCTS'],
   ['home', 'HOME PAGE'],
   ['stock', 'STOCK'],
@@ -169,6 +171,12 @@ function Summary({ data, goTo }) {
           “refund due” below to see who.
         </p>
       )}
+      {data.alertsReady > 0 && (
+        <p className="admin-alert admin-alert--info">
+          <strong>{data.alertsReady === 1 ? '1 person is' : `${data.alertsReady} people are`} waiting for a size that is back in stock.</strong>{' '}
+          <button className="admin-link admin-link--strong" onClick={() => goTo('list')}>See who →</button>
+        </p>
+      )}
       {data.lowStock.length > 0 && (
         <p className="admin-lowstock">
           <strong>Running low:</strong>{' '}
@@ -181,9 +189,78 @@ function Summary({ data, goTo }) {
 
 /* ---------------------------------------------------------------- orders */
 
-const STATUSES = ['', 'paid', 'pending', 'refund_due', 'failed', 'abandoned'];
+const STATUSES = ['', 'paid', 'pending', 'refund_due', 'refunded', 'failed', 'abandoned'];
 
-function Orders({ orders, onFulfil, filter, setFilter, busyRef }) {
+/**
+ * What can be done with one order: send it (with the courier and tracking
+ * number, which the customer sees), correct those later, or record a refund
+ * made in Paystack. Each asks before it acts, in the row itself.
+ */
+function OrderActions({ order: o, onChanged }) {
+  const [mode, setMode] = useState(null);           // null | 'send' | 'refund'
+  const [courier, setCourier] = useState(o.courier ?? '');
+  const [tracking, setTracking] = useState(o.tracking ?? '');
+  const [restock, setRestock] = useState(!o.fulfilledAt && o.status === 'paid');
+  const [state, setState] = useState(null);
+
+  const run = async (fn) => {
+    setState('saving');
+    try { await fn(); setMode(null); setState(null); await onChanged(); }
+    catch (err) { setState(err.message); }
+  };
+
+  if (mode === 'send') {
+    return (
+      <form className="admin-row-form" onSubmit={(e) => { e.preventDefault(); run(() => adminFulfil(o.reference, { courier, tracking })); }}>
+        <input aria-label="Courier" placeholder="Courier, e.g. GIG" maxLength={40} value={courier} onChange={(e) => setCourier(e.target.value)} />
+        <input aria-label="Tracking number" placeholder="Tracking no. (optional)" maxLength={60} value={tracking} onChange={(e) => setTracking(e.target.value)} />
+        <div className="admin-row-form__actions">
+          <button className="admin-action admin-action--primary" disabled={state === 'saving'}>
+            {o.fulfilledAt ? 'SAVE' : 'MARK SENT'}
+          </button>
+          <button type="button" className="admin-link" onClick={() => { setMode(null); setState(null); }}>cancel</button>
+        </div>
+        {state && state !== 'saving' && <span className="admin-note admin-note--bad" role="alert">{state}</span>}
+      </form>
+    );
+  }
+
+  if (mode === 'refund') {
+    return (
+      <div className="admin-row-form">
+        <p className="admin-row-form__note">Refund the customer in your Paystack dashboard first. This only records it here.</p>
+        {o.status === 'paid' && (
+          <label className="admin-check">
+            <input type="checkbox" checked={restock} onChange={(e) => setRestock(e.target.checked)} />
+            Put the pieces back in stock
+          </label>
+        )}
+        <div className="admin-row-form__actions">
+          <button className="admin-action admin-action--danger" disabled={state === 'saving'}
+                  onClick={() => run(() => adminRefunded(o.reference, o.status === 'paid' && restock))}>MARK REFUNDED</button>
+          <button className="admin-link" onClick={() => { setMode(null); setState(null); }}>cancel</button>
+        </div>
+        {state && state !== 'saving' && <span className="admin-note admin-note--bad" role="alert">{state}</span>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="admin-row-actions admin-row-actions--stack">
+      {o.status === 'paid' && !o.fulfilledAt && (
+        <button className="admin-action" onClick={() => setMode('send')}>MARK SENT</button>
+      )}
+      {o.status === 'paid' && o.fulfilledAt && (
+        <button className="admin-link" onClick={() => setMode('send')}>{o.tracking ? 'edit tracking' : 'add tracking'}</button>
+      )}
+      {['paid', 'refund_due'].includes(o.status) && (
+        <button className="admin-link" onClick={() => setMode('refund')}>refunded?</button>
+      )}
+    </div>
+  );
+}
+
+function Orders({ orders, onChanged, filter, setFilter }) {
   const [exportError, setExportError] = useState(null);
   const exportCsv = () => {
     setExportError(null);
@@ -239,24 +316,22 @@ function Orders({ orders, onFulfil, filter, setFilter, busyRef }) {
                   </td>
                   <td className="num">
                     {naira(o.totalKobo ?? o.subtotalKobo)}
+                    {o.discountKobo > 0 && (
+                      <em className="admin-sub admin-sub--discount">{o.discountCode} −{naira(o.discountKobo)}</em>
+                    )}
                     {o.shippingKobo > 0 && (
                       <em className="admin-sub">incl. {naira(o.shippingKobo)} delivery{o.zone ? ` · ${ZONE_LABELS[o.zone] ?? o.zone}` : ''}</em>
                     )}
                   </td>
                   <td>
                     <span className={`admin-status admin-status--${o.status}`}>{label(o.status)}</span>
-                    {o.fulfilledAt && <span className="admin-status admin-status--sent">sent</span>}
-                  </td>
-                  <td className="admin-when">{when(o.createdAt)}</td>
-                  <td>
-                    {o.status === 'paid' && !o.fulfilledAt && (
-                      <button
-                        className="admin-action"
-                        disabled={busyRef === o.reference}
-                        onClick={() => onFulfil(o.reference)}
-                      >{busyRef === o.reference ? '…' : 'MARK SENT'}</button>
+                    {o.fulfilledAt && o.status === 'paid' && <span className="admin-status admin-status--sent">sent</span>}
+                    {o.fulfilledAt && (o.courier || o.tracking) && (
+                      <em className="admin-sub">{[o.courier, o.tracking].filter(Boolean).join(' · ')}</em>
                     )}
                   </td>
+                  <td className="admin-when">{when(o.createdAt)}</td>
+                  <td><OrderActions order={o} onChanged={onChanged} /></td>
                 </tr>
               ))}
             </tbody>
@@ -318,7 +393,6 @@ export default function Admin() {
   const [orders, setOrders]     = useState([]);
   const [stock, setStock]       = useState([]);
   const [filter, setFilter]     = useState('');
-  const [busyRef, setBusyRef]   = useState(null);
   const [tab, setTab]           = useState('orders');
 
   useEffect(() => {
@@ -339,12 +413,6 @@ export default function Admin() {
   }, [filter]);
 
   useEffect(() => { if (signedIn) load().catch(() => setSignedIn(false)); }, [signedIn, load]);
-
-  const onFulfil = async (reference) => {
-    setBusyRef(reference);
-    try { await adminFulfil(reference); await load(); }
-    finally { setBusyRef(null); }
-  };
 
   const onSaveStock = async (variantId, value) => {
     await adminSetStock(variantId, value);
@@ -409,8 +477,8 @@ export default function Admin() {
           >
             {tab === 'orders' && (
               <Orders
-                orders={orders} onFulfil={onFulfil}
-                filter={filter} setFilter={setFilter} busyRef={busyRef}
+                orders={orders} onChanged={load}
+                filter={filter} setFilter={setFilter}
               />
             )}
             {tab === 'products' && <ProductsTab onSummaryChange={refreshSummary} />}
@@ -433,6 +501,7 @@ export default function Admin() {
               </section>
             )}
             {tab === 'home' && <HomeTab />}
+            {tab === 'sales' && <SalesTab />}
             {tab === 'list' && <ListTab onSummaryChange={refreshSummary} />}
             {tab === 'settings' && <SettingsTab onSummaryChange={refreshSummary} />}
           </motion.div>

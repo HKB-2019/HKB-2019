@@ -34,7 +34,7 @@ process.env.ADMIN_PASSWORD_HASH = hashPassword(ADMIN_PASSWORD);
 const { query } = await import('../server/db.js');
 const { seed } = await import('../server/seed.js');
 const { setSetting } = await import('../server/lib/settings.js');
-const { checkoutLimit } = await import('../server/routes/checkout.js');
+const { checkoutLimit, discountLimit } = await import('../server/routes/checkout.js');
 const { subscribeLimit } = await import('../server/routes/subscribe.js');
 const { createApp } = await import('../server/index.js');
 
@@ -51,6 +51,7 @@ async function reset({ delivery = true } = {}) {
   if (delivery) await setSetting('delivery', DELIVERY);
   for (const ip of ['::ffff:127.0.0.1', '127.0.0.1', '::1']) clearFailures(ip);
   checkoutLimit.reset();
+  discountLimit.reset();
   subscribeLimit.reset();
 }
 

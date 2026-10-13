@@ -1473,3 +1473,136 @@ svg{ width:100%; height:100%; display:block; }
 }
 .preview-bar__actions button:hover{ color:var(--ink); border-color:var(--violet-soft); }
 #main:focus{ outline:none; }
+
+/* discount code, in the bag */
+.discount{ margin-bottom:14px; }
+.discount__row{ display:flex; gap:8px; }
+.discount__row input{
+  flex:1; min-width:0; height:44px; padding:0 14px; background:transparent; color:var(--ink);
+  border:1px solid rgba(244,241,235,.22); font:inherit; font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+}
+.discount__row input:focus{ outline:none; border-color:var(--violet-soft); }
+.discount__row input[aria-invalid="true"]{ border-color:#d4697e; }
+.discount__row .btn{ flex:none; padding-inline:18px; }
+.discount__open, .discount__remove{
+  margin-bottom:14px; font-size:10px; letter-spacing:.16em; color:var(--ink-dim);
+  text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--line);
+}
+.discount__remove{ margin:0; }
+.discount__open:hover, .discount__remove:hover{ color:var(--ink); }
+.discount--on{
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  padding:10px 12px; border:1px dashed var(--violet-soft); font-size:11px; letter-spacing:.08em; color:var(--ink-dim);
+}
+.discount--on strong{ color:var(--ink); font-weight:400; letter-spacing:.14em; }
+.drawer__row--discount span{ color:var(--violet-soft); }
+.status__tracking{ margin:4px 0 22px; padding:14px 16px; border:1px solid var(--line); display:grid; gap:8px; }
+.status__tracking p{ margin:0; display:flex; justify-content:space-between; gap:14px; font-size:12px; color:var(--ink-dim); }
+.status__tracking p span:first-child{ font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); }
+.status__track-no{ font-family:ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--ink); user-select:all; }
+.status__line--discount span:last-child{ color:var(--violet-soft); }
+
+/* back in stock, on a product page */
+.restock__open{
+  margin-top:16px; font-size:10px; letter-spacing:.16em; color:var(--violet-soft);
+  text-decoration:underline; text-underline-offset:4px; text-decoration-color:rgba(169,162,205,.4);
+}
+.restock__open:hover{ color:var(--ink); }
+.restock{ margin-top:18px; }
+.restock--done{ font-size:10px; letter-spacing:.16em; color:var(--violet-soft); }
+.restock__lead{ margin:0 0 10px; font-size:12px; color:var(--ink-dim); }
+.restock__row{ display:flex; gap:8px; flex-wrap:wrap; }
+.restock__row input, .restock__row select{
+  height:44px; padding:0 12px; background:transparent; color:var(--ink); font:inherit; font-size:13px;
+  border:1px solid rgba(244,241,235,.22);
+}
+.restock__row input{ flex:1 1 180px; min-width:0; }
+.restock__row select{ flex:0 0 auto; background:var(--bg); }
+.restock__row input:focus, .restock__row select:focus{ outline:none; border-color:var(--violet-soft); }
+.restock__row .btn{ flex:none; }
+
+/* drop countdown, on the home page */
+.countdown{ border-block:1px solid var(--line-soft); background:var(--indigo-band); }
+.countdown__inner{
+  max-width:var(--maxw); margin:0 auto; padding:clamp(40px,5vw,64px) var(--pad);
+  display:grid; justify-items:center; gap:18px; text-align:center;
+}
+.countdown__inner .eyebrow{ margin:0; }
+.countdown__clock{ margin:0; display:flex; gap:clamp(14px,3vw,34px); }
+.countdown__clock span{ display:grid; gap:6px; justify-items:center; }
+.countdown__clock b{
+  font-family:var(--serif); font-weight:400; font-size:clamp(38px,6vw,68px); line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.countdown__clock small{ font-size:9px; letter-spacing:.24em; color:var(--ink-faint); }
+.countdown__when{ margin:0; font-size:11px; letter-spacing:.14em; color:var(--ink-dim); text-transform:uppercase; }
+
+/* admin: order row actions */
+.admin-row-actions--stack{ flex-direction:column; align-items:flex-start; gap:8px; }
+.admin-row-form{ display:grid; gap:8px; min-width:200px; }
+.admin-row-form input{
+  height:34px; padding:0 10px; background:var(--bg-2); border:1px solid var(--line-soft);
+  color:var(--ink); font:inherit; font-size:12px;
+}
+.admin-row-form input:focus{ outline:none; border-color:var(--violet-soft); }
+.admin-row-form__actions{ display:flex; gap:10px; align-items:center; }
+.admin-row-form__note{ margin:0; font-size:11px; line-height:1.5; color:var(--ink-dim); max-width:240px; white-space:normal; }
+.admin-check{ display:flex; gap:8px; align-items:center; font-size:11.5px; color:var(--ink-dim); }
+.admin-sub--discount{ color:var(--violet-soft); }
+.admin-status--refunded{ color:var(--ink-faint); }
+.admin-alert--info{ border-left-color:var(--violet-soft); }
+.admin-alert--info{ background:rgba(35,21,78,.35); }
+.admin-product__drop{ display:flex; flex-wrap:wrap; gap:10px; align-items:end; }
+.admin-product__drop .admin-field{ flex:0 1 300px; }
+.admin-product__drop input[type="datetime-local"]{ color-scheme:dark; }
+
+/* admin: sales */
+.admin-section__head--sub{ margin-top:22px; }
+.admin-chart{ margin:0; display:grid; gap:12px; }
+.admin-chart__head{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px 18px; align-items:baseline; }
+.admin-chart__title{ font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink); }
+.admin-chart__readout{ font-size:12px; color:var(--ink-dim); font-variant-numeric:tabular-nums; }
+.admin-chart__readout strong{ color:var(--ink); font-weight:500; }
+.admin-chart__plot{ position:relative; height:180px; margin-left:44px; }
+.admin-chart__grid span{ position:absolute; left:0; right:0; border-top:1px solid var(--line-soft); }
+.admin-chart__grid em{
+  position:absolute; right:calc(100% + 8px); top:-7px; font-style:normal; font-size:10px;
+  color:var(--ink-faint); font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.admin-chart__bars{ position:absolute; inset:0; display:flex; align-items:stretch; }
+.admin-chart__col{ flex:1; display:flex; align-items:flex-end; padding:0 1px; min-width:0; }
+.admin-chart__col:focus-visible{ outline:1px solid var(--violet-soft); outline-offset:2px; }
+.admin-chart__bar{
+  display:block; width:100%; max-width:46px; margin:0 auto; min-height:1px;
+  background:#8e83c9; border-radius:4px 4px 0 0; opacity:.7; transition:opacity .2s;
+}
+.admin-chart__col.is-on .admin-chart__bar{ opacity:1; }
+.admin-chart__axis{ display:flex; margin-left:44px; }
+.admin-chart__axis span{ flex:1; min-width:0; font-size:10px; color:var(--ink-faint); white-space:nowrap; }
+.admin-sales-lists{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:14px; }
+@media (max-width:760px){ .admin-sales-lists{ grid-template-columns:1fr; } }
+
+.admin-code-form{ grid-template-columns:repeat(3, minmax(0,1fr)); align-items:end; }
+.admin-code-form__help, .admin-code-form .admin-new__actions{ grid-column:1 / -1; }
+@media (max-width:760px){ .admin-code-form{ grid-template-columns:1fr; } }
+.admin-segment{ display:flex; }
+.admin-segment button{
+  flex:1; height:38px; font-size:10px; letter-spacing:.16em; color:var(--ink-faint);
+  border:1px solid var(--line-soft);
+}
+.admin-segment button + button{ border-left:0; }
+.admin-segment button.is-on{ color:var(--ink); border-color:var(--violet-soft); background:rgba(35,21,78,.45); }
+.admin-table tr.is-off td{ opacity:.55; }
+.admin-field input[type="datetime-local"]{ color-scheme:dark; }
+
+/* admin: waiting for a size */
+.admin-waiting{ display:grid; gap:12px; }
+.admin-waiting__head{ display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; justify-content:space-between; }
+.admin-waiting__emails{ margin:0; font-size:12.5px; color:var(--ink-dim); word-break:break-word; user-select:all; }
+.admin-waiting__people summary{ cursor:pointer; font-size:11px; color:var(--ink-faint); }
+.admin-waiting__people ul{ list-style:none; margin:10px 0 0; padding:0; display:grid; gap:6px; }
+.admin-waiting__people li{ display:flex; gap:14px; align-items:center; font-size:12.5px; color:var(--ink-dim); }
+.admin-sales-lists .admin-mini-table{ width:100%; }
+.admin-sales-lists .admin-mini-table .num{ text-align:right; font-variant-numeric:tabular-nums; }
+.admin-sales-lists .admin-card{ align-content:start; }
+.restock__row .btn, .discount__row .btn{ height:44px; padding-block:0; display:inline-flex; align-items:center; }

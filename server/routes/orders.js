@@ -17,8 +17,8 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
   const { reference } = req.params;
 
   const load = () => one(`
-    SELECT id, reference, email, status, subtotal_kobo, shipping_kobo, currency,
-           address, paid_at, created_at
+    SELECT id, reference, email, status, subtotal_kobo, shipping_kobo, discount_code, discount_kobo,
+           currency, address, paid_at, fulfilled_at, courier, tracking, refunded_at, created_at
       FROM orders WHERE reference = $1
   `, [reference]);
 
@@ -51,8 +51,15 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
     status: order.status,
     email: maskEmail(order.email),
     subtotalKobo: order.subtotal_kobo,
+    discountCode: order.discount_code,
+    discountKobo: order.discount_kobo,
     shippingKobo: order.shipping_kobo,
-    totalKobo: order.subtotal_kobo + order.shipping_kobo,
+    totalKobo: order.subtotal_kobo - order.discount_kobo + order.shipping_kobo,
+    // Sent: when, and how to follow it. Only for a paid order.
+    sentAt: order.status === 'paid' ? order.fulfilled_at : null,
+    courier: order.status === 'paid' && order.fulfilled_at ? order.courier : null,
+    tracking: order.status === 'paid' && order.fulfilled_at ? order.tracking : null,
+    refundedAt: order.refunded_at,
     deliveryTo: addr ? [addr.city, addr.state].filter(Boolean).join(', ') : null,
     // 'not_completed': still pending here, but Paystack says the customer
     // left or the charge failed. Stock stays held; the sweeper returns it.

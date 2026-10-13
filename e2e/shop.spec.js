@@ -44,7 +44,16 @@ test('a customer buys a tee, pays, and the owner sees who to send it to', async 
   await expect(row).toContainText('12 Admiralty Way');
   await expect(row).toContainText('₦30,500');
   await row.getByRole('button', { name: 'MARK SENT' }).click();
+  await row.getByLabel('Courier').fill('GIG Logistics');
+  await row.getByLabel('Tracking number').fill('GIG-48213');
+  await row.getByRole('button', { name: 'MARK SENT' }).click();
   await expect(row.locator('.admin-status--sent')).toBeVisible();
+  await expect(row).toContainText('GIG Logistics · GIG-48213');
+
+  // The customer's order page now says it is on its way, and how to follow it.
+  await page.goto(`/order?reference=${reference}`);
+  await expect(page.locator('.status__title')).toHaveText('On its way');
+  await expect(page.locator('.status__tracking')).toContainText('GIG-48213');
 });
 
 test('a customer who cancels on Paystack is told nothing was taken, and keeps their bag', async ({ page }) => {

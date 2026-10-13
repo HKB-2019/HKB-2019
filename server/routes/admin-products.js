@@ -61,6 +61,15 @@ function cleanSize(v) {
 const cleanDescription = (v) => cleanText(v, { label: 'Description', max: 2000, allowEmpty: true });
 const cleanDetails = (v) => cleanText(v, { label: 'Details and care', max: 1000, allowEmpty: true });
 
+/** When a drop goes on sale: an ISO time, or null for "as soon as it is on sale". */
+function cleanAvailableAt(v) {
+  if (v === null || v === '') return null;
+  const d = new Date(v);
+  if (typeof v !== 'string' || Number.isNaN(d.getTime())) throw fail(400, 'That drop time is not a date.');
+  if (d.getTime() > Date.now() + 366 * 86_400_000) throw fail(400, 'Choose a drop time within a year.');
+  return d.toISOString();
+}
+
 const bool = (v, label) => {
   if (typeof v !== 'boolean') throw fail(400, `${label} must be on or off.`);
   return v;
@@ -141,6 +150,7 @@ adminProductsRouter.patch('/admin/products/:id', async (req, res) => {
   if ('hidden' in b)       set('hidden', bool(b.hidden, 'On sale'));
   if ('description' in b)  set('description', cleanDescription(b.description));
   if ('details' in b)      set('details', cleanDetails(b.details));
+  if ('availableAt' in b)  set('available_at', cleanAvailableAt(b.availableAt));
   if (!sets.length) throw fail(400, 'Nothing to change.');
 
   await transaction(async (tx) => {

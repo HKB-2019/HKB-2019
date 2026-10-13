@@ -6,6 +6,8 @@ import { useShop } from '../store/ShopContext.jsx';
 import { srcSet, CARD_SIZES, GALLERY_SIZES } from '../lib/media.js';
 import { useSectionLink } from '../lib/useSectionLink.js';
 import { Heart } from '../components/Icons.jsx';
+import { askForRestock } from '../lib/api.js';
+import { isEmail } from '../lib/delivery.js';
 
 const ease = [0.33, 0.02, 0.18, 1];
 const TITLE = document.title;
@@ -72,6 +74,64 @@ function Gallery({ product }) {
   );
 }
 
+/* ------------------------------------------------- back-in-stock form */
+
+/**
+ * For the sizes that have sold out: leave an email and the owner can tell
+ * you when it is back. Nothing is sent automatically yet — the owner sees the
+ * list in the admin — so the words promise no more than that.
+ */
+function RestockAsk({ product }) {
+  const gone = product.sizes.filter(s => !s.available);
+  const [open, setOpen] = useState(false);
+  const [size, setSize] = useState(gone[0]?.size ?? '');
+  const [email, setEmail] = useState('');
+  const [state, setState] = useState(null);   // null | 'sending' | 'done' | error message
+
+  useEffect(() => { setOpen(false); setState(null); setSize(gone[0]?.size ?? ''); }, [product.id]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!gone.length) return null;
+  if (state === 'done') {
+    return <p className="restock restock--done" role="status">WE’LL LET YOU KNOW WHEN {size} IS BACK.</p>;
+  }
+  if (!open) {
+    return (
+      <button type="button" className="restock__open" onClick={() => setOpen(true)}>
+        {product.soldOut ? 'TELL ME WHEN IT’S BACK' : 'SOLD OUT IN YOUR SIZE? TELL ME WHEN IT’S BACK'}
+      </button>
+    );
+  }
+
+  const send = async (e) => {
+    e.preventDefault();
+    if (!isEmail(email)) { setState('Enter a valid email address.'); return; }
+    setState('sending');
+    try { await askForRestock(product.id, size, email.trim()); setState('done'); }
+    catch (err) { setState(err.message); }
+  };
+
+  return (
+    <form className="restock" onSubmit={send} noValidate>
+      <p className="restock__lead">Leave your email and we’ll tell you when it’s back.</p>
+      <div className="restock__row">
+        {gone.length > 1 && (
+          <>
+            <label className="sr-only" htmlFor="restock-size">Size</label>
+            <select id="restock-size" value={size} onChange={(e) => setSize(e.target.value)}>
+              {gone.map(s => <option key={s.size} value={s.size}>{s.size}</option>)}
+            </select>
+          </>
+        )}
+        <label className="sr-only" htmlFor="restock-email">Email</label>
+        <input id="restock-email" type="email" autoComplete="email" placeholder="Your email"
+               value={email} onChange={(e) => { setEmail(e.target.value); if (state !== 'sending') setState(null); }} />
+        <button className="btn btn--ghost" disabled={state === 'sending'}>{state === 'sending' ? '…' : 'NOTIFY ME'}</button>
+      </div>
+      {state && state !== 'sending' && <p className="field__error" role="alert">{state}</p>}
+    </form>
+  );
+}
+
 /* ------------------------------------------------------- buying box */
 
 function BuyBox({ product }) {
@@ -130,6 +190,8 @@ function BuyBox({ product }) {
                 aria-label={saved ? `Remove ${product.name} from saved` : `Save ${product.name}`}
                 onClick={() => toggleWish(product.id)}><Heart /></button>
       </div>
+
+      <RestockAsk product={product} />
 
       {product.description && <p className="pdp__text">{product.description}</p>}
 

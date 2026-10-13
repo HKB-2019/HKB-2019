@@ -8,6 +8,7 @@ import Manifesto from '../components/Manifesto.jsx';
 import FilmStrip from '../components/FilmStrip.jsx';
 import Essentials from '../components/Essentials.jsx';
 import Newsletter from '../components/Newsletter.jsx';
+import DropCountdown from '../components/DropCountdown.jsx';
 import { useShop } from '../store/ShopContext.jsx';
 import { scrollToId } from '../lib/scroll.js';
 
@@ -38,6 +39,7 @@ export default function Storefront() {
       <span id="top" />
       <Hero />
       <CraftBand />
+      <DropCountdown />
       <DropGrid />
       <Manifesto />
       <FilmStrip />

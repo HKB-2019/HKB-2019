@@ -64,7 +64,7 @@ test('a description and extra photos written in the admin appear on the product 
   const tee = page.locator('.admin-product', { has: page.locator('input[value="THE FACE TEE"]') });
   await tee.getByLabel(/^Description/).fill('Heavyweight cotton.\n\nPrinted by hand in Lagos.');
   await tee.getByLabel(/^Details and care/).fill('100% cotton\nWash cold');
-  await tee.getByRole('button', { name: 'SAVE', exact: true }).click();
+  await tee.locator('.admin-product__details').getByRole('button', { name: 'SAVE', exact: true }).click();
   await expect(tee.locator('.admin-note--ok').first()).toBeVisible();
 
   await tee.getByLabel('Extra photo file for THE FACE TEE').setInputFiles(PHOTO);

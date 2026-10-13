@@ -23,6 +23,8 @@ const COPY = {
   // they have been charged, and they need to know they will get it back.
   unpaid:    { title: 'Payment not completed',
                note: 'Nothing was taken. Your bag is still here if you want to try again.' },
+  sent:      { title: 'On its way',        note: 'Your order has left the studio.' },
+  refunded:  { title: 'Refunded',          note: 'Your payment has been returned to the card or account you paid with. Banks can take a few working days to show it.' },
   refund_due:{ title: 'This piece sold out',
                note: 'Your payment came through after your order had timed out, and the last one had gone to someone else. You will be refunded in full to the card you paid with.' }
 };
@@ -67,6 +69,7 @@ export default function OrderStatus() {
 
   const status = order?.status === 'pending' && order.payment === 'not_completed'
     ? 'unpaid'
+    : order?.status === 'paid' && order.sentAt ? 'sent'
     : (order?.status ?? 'pending');
   const copy = COPY[status] ?? COPY.pending;
 
@@ -95,6 +98,13 @@ export default function OrderStatus() {
             <p className="status__note">{copy.note}</p>
             <p className="status__ref">{reference}</p>
 
+            {status === 'sent' && (order.courier || order.tracking) && (
+              <div className="status__tracking">
+                {order.courier && <p><span>Courier</span><span>{order.courier}</span></p>}
+                {order.tracking && <p><span>Tracking number</span><span className="status__track-no">{order.tracking}</span></p>}
+              </div>
+            )}
+
             {status === 'pending' && !error && <div className="status__wait" aria-hidden="true" />}
             {status === 'unpaid' && (
               <Link className="btn btn--ghost btn--block status__retry" to="/?bag=open">BACK TO YOUR BAG</Link>
@@ -110,6 +120,12 @@ export default function OrderStatus() {
                     </li>
                   ))}
                 </ul>
+                {order.discountKobo > 0 && (
+                  <p className="status__line status__line--discount">
+                    <span>Discount{order.discountCode ? ` (${order.discountCode})` : ''}</span>
+                    <span className="num">−{naira(order.discountKobo)}</span>
+                  </p>
+                )}
                 {order.shippingKobo > 0 && (
                   <p className="status__line">
                     <span>Delivery{order.deliveryTo ? ` to ${order.deliveryTo}` : ''}</span>
@@ -120,7 +136,7 @@ export default function OrderStatus() {
                   <span>Total</span><span className="num">{naira(order.totalKobo ?? order.subtotalKobo)}</span>
                 </p>
                 <p className="status__email">
-                  {order.status === 'paid' ? 'Receipt to' : 'Order for'} {order.email}
+                  {['paid', 'refunded'].includes(order.status) ? 'Receipt to' : 'Order for'} {order.email}
                 </p>
               </>
             )}

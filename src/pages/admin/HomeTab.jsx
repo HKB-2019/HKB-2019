@@ -99,6 +99,9 @@ const GROUPS = [
     ['manifestoLine2', 'Second line', 60, 1],
     ['manifestoTag', 'Small line under it', 80, 1]
   ]],
+  ['Drop countdown', [
+    ['countdownTitle', 'Small line over the countdown (shown while a piece has a drop time to come)', 40, 1]
+  ]],
   ['Mailing list', [
     ['newsletterTitle', 'Heading', 60, 1],
     ['newsletterNote', 'Text', 200, 2]

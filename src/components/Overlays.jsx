@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShop, useHome } from '../store/ShopContext.jsx';
-import { startCheckout } from '../lib/api.js';
+import { startCheckout, checkDiscount } from '../lib/api.js';
 import { useSectionLink } from '../lib/useSectionLink.js';
 import { asset } from '../lib/media.js';
 import { zoneFor, naira, isEmail, isPhone } from '../lib/delivery.js';
@@ -159,8 +159,71 @@ function Field({ label, id, error, hint, children }) {
  * here is worked out from the same rules the server uses — but the server
  * decides the real one, and never reads this page's answer.
  */
+/**
+ * "Have a code?" in the bag. The server says what a code takes off — the bag
+ * only shows it — and checks again at checkout, holding a use then.
+ */
+function DiscountBox({ applied, onApplied }) {
+  const { cart, discountCode, setDiscountCode } = useShop();
+  const [open, setOpen] = useState(Boolean(discountCode));
+  const [typed, setTyped] = useState(discountCode);
+  const [state, setState] = useState(null);     // null | 'checking' | error message
+
+  // The bag changed (or the drawer reopened): ask again what the code is worth.
+  const lines = cart.map(i => `${i.id}|${i.size}|${i.qty}`).join(',');
+  useEffect(() => {
+    if (!discountCode) { onApplied(null); return; }
+    let live = true;
+    checkDiscount(discountCode, cart)
+      .then(r => { if (live) { onApplied(r); setState(null); } })
+      .catch(e => { if (live) { onApplied(null); setState(e.message); } });
+    return () => { live = false; };
+  }, [discountCode, lines]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  const apply = async () => {
+    const code = typed.trim();
+    if (!code) return;
+    setState('checking');
+    try {
+      const r = await checkDiscount(code, cart);
+      setDiscountCode(r.code); onApplied(r); setState(null);
+    } catch (e) { setState(e.message); }
+  };
+
+  if (applied) {
+    return (
+      <div className="discount discount--on">
+        <span><strong>{applied.code}</strong> · {applied.label}</span>
+        <button type="button" className="discount__remove"
+                onClick={() => { setDiscountCode(''); setTyped(''); onApplied(null); setState(null); }}>REMOVE</button>
+      </div>
+    );
+  }
+  if (!open) {
+    return <button type="button" className="discount__open" onClick={() => setOpen(true)}>HAVE A CODE?</button>;
+  }
+  return (
+    <div className="discount">
+      <label className="sr-only" htmlFor="d-code">Discount code</label>
+      <div className="discount__row">
+        <input id="d-code" autoComplete="off" autoCapitalize="characters" spellCheck="false" placeholder="DISCOUNT CODE"
+               value={typed} maxLength={24}
+               onChange={(e) => { setTyped(e.target.value); if (state && state !== 'checking') setState(null); }}
+               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); apply(); } }}
+               aria-invalid={Boolean(state && state !== 'checking')}
+               aria-describedby={state && state !== 'checking' ? 'd-code-error' : undefined} />
+        <button type="button" className="btn btn--ghost" onClick={apply} disabled={state === 'checking' || !typed.trim()}>
+          {state === 'checking' ? '…' : 'APPLY'}
+        </button>
+      </div>
+      {state && state !== 'checking' && <p className="field__error" id="d-code-error" role="alert">{state}</p>}
+    </div>
+  );
+}
+
 function DeliveryForm({ onBack }) {
-  const { cart, cartSubtotal, delivery, setDelivery, site, toast } = useShop();
+  const { cart, cartSubtotal, delivery, setDelivery, site, toast, discountCode } = useShop();
+  const [applied, setApplied] = useState(null);
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState(null);
@@ -173,7 +236,8 @@ function DeliveryForm({ onBack }) {
   const zone = zoneFor(d.address);
   const open = zones.find(z => z.zone === zone);
   const fee = open ? open.feeKobo : null;
-  const total = cartSubtotal * 100 + (fee ?? 0);
+  const discountKobo = applied?.discountKobo ?? 0;
+  const total = cartSubtotal * 100 - discountKobo + (fee ?? 0);
 
   const set = (key) => (e) => {
     setDelivery(v => ({ ...v, [key]: e.target.value }));
@@ -210,7 +274,7 @@ function DeliveryForm({ onBack }) {
 
     setBusy(true); setServerError(null);
     try {
-      const { authorizationUrl } = await startCheckout(d, cart);
+      const { authorizationUrl } = await startCheckout(d, cart, applied ? discountCode : undefined);
       window.location.href = authorizationUrl;   // hand off to Paystack
     } catch (err) {
       setBusy(false);
@@ -279,7 +343,11 @@ function DeliveryForm({ onBack }) {
       </Field>
 
       <div className="delivery__sum">
+        <DiscountBox applied={applied} onApplied={setApplied} />
         <div className="drawer__row"><span>ITEMS</span><span>{naira(cartSubtotal * 100)}</span></div>
+        {discountKobo > 0 && (
+          <div className="drawer__row drawer__row--discount"><span>DISCOUNT</span><span>−{naira(discountKobo)}</span></div>
+        )}
         <div className="drawer__row">
           <span>DELIVERY</span>
           <span>{d.address.state || !inNigeria
@@ -489,7 +557,7 @@ function FilmModal() {
 
 /* --------------------------------------------------------------- info modal */
 
-const PAGE_TITLES = { FAQ: 'FAQ', SHIPPING: 'Shipping', RETURNS: 'Returns', CONTACT: 'Contact', PRIVACY: 'Privacy', SIZE_GUIDE: 'Size guide' };
+const PAGE_TITLES = { FAQ: 'FAQ', SHIPPING: 'Shipping', RETURNS: 'Returns', CONTACT: 'Contact', PRIVACY: 'Privacy', SIZE_GUIDE: 'Size guide', TERMS: 'Terms of sale' };
 
 function InfoModal({ title }) {
   const { site } = useShop();

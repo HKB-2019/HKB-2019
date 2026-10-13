@@ -20,6 +20,8 @@ export const HOME_DEFAULT = {
   essentialsTitle: 'The Essentials',
   newsletterTitle: 'Enter the world of MASQ.',
   newsletterNote:  'First access to every drop, and the story behind each mask. Nothing else.',
+  // Over the countdown, while pieces are waiting for their drop time.
+  countdownTitle:  'The next drop',
   nav: {
     shop:        { label: 'SHOP',        show: true },
     collections: { label: 'COLLECTIONS', show: true },

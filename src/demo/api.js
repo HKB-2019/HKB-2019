@@ -9,8 +9,9 @@
 import { CATALOGUE } from '../data/catalogue.js';
 import { HOME_DEFAULT, NAV } from '../data/home.js';
 import { PAGES, PAGES_DEFAULT } from '../data/pages.js';
+import { GUIDE_CURRENCIES, DEFAULT_RATES } from '../data/currencies.js';
 
-const KEY = 'masq:preview-store';
+const KEY = 'masq:preview-store-2';   // a new number whenever the sample's shape changes
 const ZONES = ['lagos', 'abuja', 'nigeria', 'international'];
 const ZONE_LABELS = { lagos: 'Lagos', abuja: 'Abuja (FCT)', nigeria: 'Rest of Nigeria', international: 'Outside Nigeria' };
 const STATES = [
@@ -30,9 +31,11 @@ function sampleStore() {
   const products = CATALOGUE.map((p, position) => ({
     id: p.id, name: p.name, priceKobo: p.naira * 100, img: p.img, uploaded: null,
     badge: p.badge ?? null, inDrop: !!p.drop, featured: !!p.featured, inEssentials: !!p.essential,
-    hidden: false, position, description: '', details: '', extras: [],
+    hidden: false, position, description: '', details: '', extras: [], availableAt: null,
     sizes: Object.entries(p.sizes).map(([size, stock]) => ({ variantId: ++variantId, size, stock }))
   }));
+  // The hoodie waits for a drop, so the home page shows its countdown.
+  products.find(p => p.id === 'hoodie').availableAt = new Date(Date.now() + 3 * 86_400_000 + 5 * 3_600_000).toISOString();
   const tee = products.find(p => p.id === 'tee');
   tee.description = 'Heavyweight cotton, cut a little boxy.\n\nThe face on the front is MASQ.’s first mark: a mask drawn from the shapes of the old carvings, in the colours of the city at night.';
   tee.details = 'Sample text — the owner writes this in the admin.\nWash cold, inside out.';
@@ -45,10 +48,12 @@ function sampleStore() {
   const orders = [
     { reference: 'masq-3f9a1c0e7b2d4a6f8c1e5d20', email: 'ada@example.com', name: 'Ada Obi', phone: '+234 803 000 0001',
       address: addr('12 Admiralty Way', 'Lekki', 'Lagos'), zone: 'lagos', status: 'paid', fulfilledAt: null,
-      items: [line('jacket', 'L', 1)], shippingKobo: 250000, createdAt: ago(2), paidAt: ago(2) },
+      items: [line('jacket', 'L', 1)], shippingKobo: 250000, createdAt: ago(2), paidAt: ago(2),
+      discountCode: 'LAUNCH10', discountKobo: 980000 },
     { reference: 'masq-8c2e4f6a0b1d3e5f7a9c0b12', email: 'chidi@example.com', name: 'Chidi Eze', phone: '+234 806 000 0002',
       address: addr('4 Aminu Kano Crescent', 'Wuse 2', 'FCT'), zone: 'abuja', status: 'paid', fulfilledAt: ago(20),
-      items: [line('hoodie', 'M', 2)], shippingKobo: 350000, createdAt: ago(26), paidAt: ago(26) },
+      courier: 'GIG Logistics', tracking: 'GIG-48213',
+      items: [line('hoodie', 'M', 2)], shippingKobo: 350000, createdAt: ago(200), paidAt: ago(200) },
     { reference: 'masq-1b3d5f7a9c0e2f4a6b8d0c34', email: 'zainab@example.com', name: 'Zainab Bello', phone: '+234 809 000 0003',
       address: addr('7 Ahmadu Bello Way', 'Kaduna North', 'Kaduna'), zone: 'nigeria', status: 'pending', fulfilledAt: null,
       items: [line('cap', 'ONE SIZE', 1), line('tee', 'M', 1)], shippingKobo: 500000, createdAt: ago(0.2), paidAt: null },
@@ -59,6 +64,11 @@ function sampleStore() {
 
   return {
     products, orders,
+    codes: [
+      { code: 'LAUNCH10', kind: 'percent', amount: 10, minSpendKobo: 0, maxUses: 50, uses: 1, endsAt: null, active: true },
+      { code: 'VIP5K', kind: 'fixed', amount: 500000, minSpendKobo: 4000000, maxUses: null, uses: 0, endsAt: null, active: true }
+    ],
+    alerts: [{ id: 1, productId: 'phone', size: 'ONE SIZE', email: 'kemi@example.com', askedAt: ago(9) }],
     subscribers: [
       { id: 2, email: 'nneka@example.com', joinedAt: ago(5) },
       { id: 1, email: 'femi@example.com', joinedAt: ago(50) }
@@ -71,7 +81,8 @@ function sampleStore() {
       pages: { ...PAGES_DEFAULT },
       social: { instagram: '', tiktok: '', x: '' },
       film: { url: '', kind: null, youtubeId: null },
-      home: structuredClone(HOME_DEFAULT)
+      home: structuredClone(HOME_DEFAULT),
+      rates: { ...DEFAULT_RATES }
     },
     homeImages: { hero: null, band: null, film: null },
     nextId: 100
@@ -127,6 +138,7 @@ function shape(p, forAdmin) {
   };
   if (forAdmin) {
     return { ...base, hidden: p.hidden, hasUpload: !!p.uploaded, hasBuiltInPhoto: !!p.img,
+             availableAt: waiting(p) ? p.availableAt : null,
              sizes: p.sizes.map(s => ({ ...s })) };
   }
   return { ...base, sizes: p.sizes.map(s => ({
@@ -134,9 +146,11 @@ function shape(p, forAdmin) {
 }
 
 const ordered = () => [...store.products].sort((a, b) => a.position - b.position);
+const waiting = (p) => p.availableAt && new Date(p.availableAt) > new Date();
+const onSale = (p) => !p.hidden && !waiting(p);
 const product = (id) => store.products.find(p => p.id === id);
 
-export const getProducts = () => settle(ordered().filter(p => !p.hidden).map(p => shape(p, false)), 120);
+export const getProducts = () => settle(ordered().filter(onSale).map(p => shape(p, false)), 120);
 
 export const getSite = () => settle({
   home: {
@@ -147,7 +161,12 @@ export const getSite = () => settle({
   social: store.settings.social,
   film: store.settings.film.kind ? store.settings.film : null,
   delivery: openZones(),
-  states: STATES
+  states: STATES,
+  rates: store.settings.rates,
+  nextDrop: (() => {
+    const next = store.products.filter(p => !p.hidden && waiting(p)).map(p => p.availableAt).sort()[0];
+    return next ? { at: next, pieces: store.products.filter(p => !p.hidden && p.availableAt === next).length } : null;
+  })()
 }, 120);
 
 function openZones() {
@@ -166,22 +185,71 @@ function zoneFor({ country, state }) {
 
 const hex = (n) => Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join('');
 
-export async function startCheckout({ email, name, phone, address }, items) {
+/* ---------------------------------------------------------- discounts */
+
+const nairaText = (kobo) => `₦${(kobo / 100).toLocaleString('en-NG')}`;
+const codeLabel = (c) => (c.kind === 'percent' ? `${c.amount}% off` : `${nairaText(c.amount)} off`);
+
+/** The same rules as server/lib/discounts.js. Throws the reason a customer reads. */
+function priceCode(raw, subtotalKobo) {
+  const code = String(raw ?? '').trim().toUpperCase();
+  if (!/^[A-Z0-9_-]{3,24}$/.test(code)) throw new Error('That code is not valid.');
+  const c = store.codes.find(x => x.code === code);
+  if (!c || !c.active) throw new Error(`${code} is not a code we recognise.`);
+  if (c.endsAt && new Date(c.endsAt) <= new Date()) throw new Error(`${code} has ended.`);
+  if (subtotalKobo < c.minSpendKobo) throw new Error(`${code} is for orders of ${nairaText(c.minSpendKobo)} or more, before delivery.`);
+  if (c.maxUses !== null && c.uses >= c.maxUses) throw new Error(`${code} has been used up.`);
+  const raw2 = c.kind === 'percent' ? Math.floor((subtotalKobo * c.amount) / 100 / 100) * 100 : c.amount;
+  const discountKobo = Math.max(0, Math.min(raw2, subtotalKobo - 10000));
+  if (!discountKobo) throw new Error(`${code} does not take anything off this bag.`);
+  return { c, result: { code, discountKobo, label: codeLabel(c) } };
+}
+
+const bagSubtotal = (items) => items.reduce((n, i) => {
+  const p = product(i.id);
+  return n + (p && onSale(p) ? p.priceKobo * i.qty : 0);
+}, 0);
+
+export function checkDiscount(code, items) {
+  try { return settle(priceCode(code, bagSubtotal(items)).result); }
+  catch (err) { return fail(err.message); }
+}
+
+export function askForRestock(productId, size, email) {
+  const p = product(productId);
+  const v = p && onSale(p) && p.sizes.find(s => s.size === size);
+  if (!v) return fail('That piece is not available.', 404);
+  if (v.stock > 0) return fail(`${size} is in stock — you can buy it now.`, 409);
+  const e = email.trim().toLowerCase();
+  if (!store.alerts.some(a => a.productId === productId && a.size === size && a.email === e)) {
+    store.alerts.push({ id: store.nextId++, productId, size, email: e, askedAt: new Date().toISOString() });
+    save();
+  }
+  return settle({ ok: true });
+}
+
+export async function startCheckout({ email, name, phone, address }, items, discountCode) {
   const zone = openZones().find(z => z.zone === zoneFor(address));
   if (!zone) return fail('Sorry — we don’t deliver there yet.');
+  let discount = null;
+  if (discountCode) {
+    try { discount = priceCode(discountCode, bagSubtotal(items)); } catch (err) { return fail(err.message); }
+  }
   const lines = [];
   for (const i of items) {
     const p = product(i.id);
-    const v = p && !p.hidden && p.sizes.find(s => s.size === i.size);
+    const v = p && onSale(p) && p.sizes.find(s => s.size === i.size);
     if (!v) return fail('Something in your bag is no longer available.', 404);
     if (v.stock < i.qty) return fail(v.stock ? `${p.name} (${i.size}) — only ${v.stock} left.` : `${p.name} (${i.size}) has sold out.`, 409);
     lines.push([v, { name: p.name, size: i.size, qty: i.qty, unitPriceKobo: p.priceKobo }]);
   }
   lines.forEach(([v, l]) => { v.stock -= l.qty; });       // held while paying, as the real shop does
+  if (discount) discount.c.uses += 1;
   const reference = 'masq-' + hex(24);
   store.orders.unshift({
     reference, email: email.trim().toLowerCase(), name, phone, address, zone: zone.zone, status: 'pending',
-    fulfilledAt: null, items: lines.map(([, l]) => l), shippingKobo: zone.feeKobo, createdAt: new Date().toISOString(), paidAt: null
+    fulfilledAt: null, items: lines.map(([, l]) => l), shippingKobo: zone.feeKobo, createdAt: new Date().toISOString(), paidAt: null,
+    discountCode: discount?.result.code ?? null, discountKobo: discount?.result.discountKobo ?? 0
   });
   save();
   return settle({ reference, authorizationUrl: `#/pay?reference=${reference}` }, 500);
@@ -198,6 +266,8 @@ export function finishPayment(reference, paid) {
       const v = store.products.find(p => p.name === l.name)?.sizes.find(s => s.size === l.size);
       if (v) v.stock += l.qty;
     }
+    const c = store.codes.find(x => x.code === o.discountCode);
+    if (c) c.uses = Math.max(0, c.uses - 1);
   }
   save();
 }
@@ -209,14 +279,20 @@ export function previewOrder(reference) {
 
 const mask = (email) => email.replace(/^(.)[^@]*(@.*)$/, '$1•••$2');
 const subtotal = (o) => o.items.reduce((n, i) => n + i.unitPriceKobo * i.qty, 0);
+const totalOf = (o) => subtotal(o) - (o.discountKobo ?? 0) + o.shippingKobo;
 
 export function getOrder(reference) {
   const o = store.orders.find(x => x.reference === reference);
   if (!o) return fail('Order not found.', 404);
   return settle({
     reference: o.reference, status: o.status, email: mask(o.email),
-    subtotalKobo: subtotal(o), shippingKobo: o.shippingKobo, totalKobo: subtotal(o) + o.shippingKobo,
+    subtotalKobo: subtotal(o), shippingKobo: o.shippingKobo, totalKobo: totalOf(o),
+    discountCode: o.discountCode ?? null, discountKobo: o.discountKobo ?? 0,
     deliveryTo: `${o.address.city}, ${o.address.state}`, payment: null, currency: 'NGN',
+    sentAt: o.status === 'paid' ? o.fulfilledAt : null,
+    courier: o.status === 'paid' && o.fulfilledAt ? o.courier ?? null : null,
+    tracking: o.status === 'paid' && o.fulfilledAt ? o.tracking ?? null : null,
+    refundedAt: o.refundedAt ?? null,
     paidAt: o.paidAt, createdAt: o.createdAt, items: o.items
   });
 }
@@ -244,7 +320,9 @@ export function adminOrders(status) {
   return settle(store.orders.filter(o => !status || o.status === status).map((o, i) => ({
     id: store.orders.length - i, reference: o.reference, email: o.email, name: o.name, phone: o.phone,
     address: o.address, zone: o.zone, status: o.status, subtotalKobo: subtotal(o), shippingKobo: o.shippingKobo,
-    totalKobo: subtotal(o) + o.shippingKobo, currency: 'NGN', paidAt: o.paidAt, fulfilledAt: o.fulfilledAt,
+    totalKobo: totalOf(o), discountCode: o.discountCode ?? null, discountKobo: o.discountKobo ?? 0,
+    courier: o.courier ?? null, tracking: o.tracking ?? null, refundedAt: o.refundedAt ?? null,
+    currency: 'NGN', paidAt: o.paidAt, fulfilledAt: o.fulfilledAt,
     createdAt: o.createdAt, items: o.items
   })));
 }
@@ -253,21 +331,43 @@ export function adminSummary() {
   const paid = store.orders.filter(o => o.status === 'paid');
   return settle({
     paidOrders: paid.length,
-    revenueKobo: paid.reduce((n, o) => n + subtotal(o) + o.shippingKobo, 0),
+    revenueKobo: paid.reduce((n, o) => n + totalOf(o), 0),
     awaitingFulfilment: paid.filter(o => !o.fulfilledAt).length,
     pendingPayment: store.orders.filter(o => o.status === 'pending').length,
     refundDue: 0,
     lowStock: ordered().filter(p => !p.hidden).flatMap(p => p.sizes.filter(s => s.stock <= 3)
       .map(s => ({ name: p.name, size: s.size, stock: s.stock }))).sort((a, b) => a.stock - b.stock),
     checkoutOpen: openZones().length > 0,
-    subscribers: store.subscribers.length
+    subscribers: store.subscribers.length,
+    alertsReady: store.alerts.filter(a => {
+      const p = product(a.productId);
+      return p && onSale(p) && (p.sizes.find(s => s.size === a.size)?.stock ?? 0) > 0;
+    }).length
   });
 }
 
-export function adminFulfil(reference) {
+export function adminFulfil(reference, { courier = '', tracking = '' } = {}) {
   const o = store.orders.find(x => x.reference === reference);
   if (!o || o.status !== 'paid') return fail('Only a paid order can be marked sent.', 409);
-  o.fulfilledAt = new Date().toISOString();
+  const clean = (v, max) => String(v).replace(/\s+/g, ' ').trim().slice(0, max) || null;
+  o.fulfilledAt ??= new Date().toISOString();
+  o.courier = clean(courier, 40);
+  o.tracking = clean(tracking, 60);
+  save();
+  return settle({ ok: true });
+}
+
+export function adminRefunded(reference, restock) {
+  const o = store.orders.find(x => x.reference === reference);
+  if (!o || !['paid', 'refund_due'].includes(o.status)) return fail('Only a paid order can be refunded.', 409);
+  if (restock && o.status === 'paid') {
+    for (const l of o.items) {
+      const v = store.products.find(p => p.name === l.name)?.sizes.find(s => s.size === l.size);
+      if (v) v.stock += l.qty;
+    }
+  }
+  o.status = 'refunded';
+  o.refundedAt = new Date().toISOString();
   save();
   return settle({ ok: true });
 }
@@ -337,6 +437,7 @@ export const adminUpdateProduct = (id, b) => attempt(() => {
   for (const k of ['inDrop', 'featured', 'inEssentials', 'hidden']) if (k in b) p[k] = b[k];
   if ('description' in b) p.description = tidy(b.description).slice(0, 2000);
   if ('details' in b) p.details = tidy(b.details).slice(0, 1000);
+  if ('availableAt' in b) p.availableAt = b.availableAt || null;
   return current(id);
 });
 
@@ -419,6 +520,10 @@ export const adminSaveSetting = (key, value) => attempt(() => {
     const yt = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);
     if (url && !yt && !/^https:\/\/.+\.mp4$/i.test(url)) throw new Error('Film: use a YouTube link, or a link that ends in .mp4');
     clean = { url, kind: !url ? null : yt ? 'youtube' : 'mp4', youtubeId: yt?.[1] ?? null };
+  } else if (key === 'rates') {
+    for (const c of GUIDE_CURRENCIES) {
+      if (!Number.isInteger(value[c]) || value[c] < 1 || value[c] > 100_000) throw new Error(`${c}: type how many naira make one ${c}, as a whole number.`);
+    }
   } else if (key === 'home') {
     clean = structuredClone(value);
     for (const k of Object.keys(HOME_DEFAULT)) {
@@ -438,6 +543,97 @@ export const adminSaveSetting = (key, value) => attempt(() => {
 export const adminSubscribers = () => settle(store.subscribers);
 export const adminRemoveSubscriber = (id) =>
   attempt(() => { store.subscribers = store.subscribers.filter(s => s.id !== id); return { ok: true }; });
+
+/* ------------------------------------------- admin: sales and waiting */
+
+const WEEK = 7 * 86_400_000;
+function mondayLagos(t) {
+  const local = new Date(new Date(t).getTime() + 3_600_000);
+  local.setUTCHours(0, 0, 0, 0);
+  local.setUTCDate(local.getUTCDate() - ((local.getUTCDay() + 6) % 7));
+  return local.getTime() - 3_600_000;
+}
+
+export function adminSales() {
+  const paid = store.orders.filter(o => o.status === 'paid');
+  const from = mondayLagos(Date.now()) - 11 * WEEK;
+  const weeks = Array.from({ length: 12 }, (_, i) => ({ start: new Date(from + i * WEEK).toISOString(), revenueKobo: 0, orders: 0 }));
+  for (const o of paid) {
+    const w = weeks[Math.round((mondayLagos(o.paidAt) - from) / WEEK)];
+    if (w) { w.revenueKobo += totalOf(o); w.orders += 1; }
+  }
+  const tally = (key) => {
+    const m = new Map();
+    for (const o of paid) for (const i of o.items) {
+      const k = key(i); const t = m.get(k) ?? { qty: 0, revenueKobo: 0 };
+      t.qty += i.qty; t.revenueKobo += i.qty * i.unitPriceKobo; m.set(k, t);
+    }
+    return [...m.entries()].sort((a, b) => b[1].qty - a[1].qty);
+  };
+  const revenue = paid.reduce((n, o) => n + totalOf(o), 0);
+  const codes = new Map();
+  for (const o of paid) if (o.discountCode) {
+    const c = codes.get(o.discountCode) ?? { code: o.discountCode, orders: 0, discountKobo: 0 };
+    c.orders += 1; c.discountKobo += o.discountKobo; codes.set(o.discountCode, c);
+  }
+  return settle({
+    weeks,
+    totals: { orders: paid.length, revenueKobo: revenue, discountKobo: paid.reduce((n, o) => n + (o.discountKobo ?? 0), 0),
+              averageKobo: paid.length ? Math.round(revenue / paid.length) : 0 },
+    pieces: tally(i => i.name).slice(0, 8).map(([name, t]) => ({ productId: name, name, ...t })),
+    sizes: tally(i => i.size).slice(0, 8).map(([size, t]) => ({ size, qty: t.qty })),
+    codes: [...codes.values()]
+  });
+}
+
+const shapeCode = (c) => ({
+  ...c, label: codeLabel(c),
+  ended: Boolean(c.endsAt && new Date(c.endsAt) <= new Date()),
+  usedUp: c.maxUses !== null && c.uses >= c.maxUses
+});
+
+export const adminDiscounts = () => settle(store.codes.map(shapeCode));
+
+export const adminCreateDiscount = (b) => attempt(() => {
+  const code = String(b.code ?? '').trim().toUpperCase();
+  if (!/^[A-Z0-9_-]{3,24}$/.test(code)) throw new Error('That code is not valid.');
+  if (store.codes.some(c => c.code === code)) throw new Error(`${code} already exists.`);
+  if (b.kind === 'percent' && !(Number.isInteger(b.amount) && b.amount >= 1 && b.amount <= 90)) throw new Error('Per cent off must be a whole number from 1 to 90.');
+  if (b.kind === 'fixed' && !(Number.isInteger(b.amount) && b.amount >= 100)) throw new Error('Naira off must be a whole number of naira, ₦100 or more.');
+  const c = { code, kind: b.kind, amount: b.kind === 'fixed' ? b.amount * 100 : b.amount,
+              minSpendKobo: (b.minSpendNaira || 0) * 100, maxUses: b.maxUses ?? null, uses: 0,
+              endsAt: b.endsAt ?? null, active: true };
+  store.codes.unshift(c);
+  return shapeCode(c);
+});
+
+export const adminUpdateDiscount = (code, change) => attempt(() => {
+  const c = store.codes.find(x => x.code === code);
+  Object.assign(c, change);
+  return shapeCode(c);
+});
+
+export const adminDeleteDiscount = (code) =>
+  attempt(() => { store.codes = store.codes.filter(c => c.code !== code); return { ok: true }; });
+
+export function adminStockAlerts() {
+  const groups = [];
+  for (const p of ordered()) for (const s of p.sizes) {
+    const people = store.alerts.filter(a => a.productId === p.id && a.size === s.size)
+      .map(a => ({ id: a.id, email: a.email, askedAt: a.askedAt }));
+    if (people.length) groups.push({ productId: p.id, name: p.name, size: s.size, stock: s.stock, people });
+  }
+  return settle(groups);
+}
+
+export const adminClearAlerts = (productId, size) => attempt(() => {
+  const before = store.alerts.length;
+  store.alerts = store.alerts.filter(a => !(a.productId === productId && a.size === size));
+  return { ok: true, cleared: before - store.alerts.length };
+});
+
+export const adminRemoveAlert = (id) =>
+  attempt(() => { store.alerts = store.alerts.filter(a => a.id !== id); return { ok: true }; });
 
 /** Downloads cannot leave a preview page, so this says so instead. */
 export const adminDownload = () => fail('Downloads are switched off in this preview. On the live shop this saves a spreadsheet.');

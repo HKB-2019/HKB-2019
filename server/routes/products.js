@@ -17,7 +17,13 @@ productsRouter.get('/products', async (_req, res) => {
  * the home page's words and photos, footer pages, social links, the film,
  * and where delivery is open. */
 productsRouter.get('/site', async (_req, res) => {
-  const { pages, social, film, home } = await getSettings(['pages', 'social', 'film', 'home']);
+  const { pages, social, film, home, rates } = await getSettings(['pages', 'social', 'film', 'home', 'rates']);
+  // The next drop: the soonest time a piece set to go on sale has not reached.
+  const next = await one(`
+    SELECT MIN(available_at) AS at, COUNT(*) AS pieces FROM products
+     WHERE hidden = FALSE AND available_at > now()
+       AND available_at = (SELECT MIN(available_at) FROM products WHERE hidden = FALSE AND available_at > now())
+  `);
   const ids = await getHomeImages();
   res.set('Cache-Control', 'no-store');
   res.json({
@@ -31,6 +37,8 @@ productsRouter.get('/site', async (_req, res) => {
     social,
     film: film.kind ? { kind: film.kind, url: film.url, youtubeId: film.youtubeId } : null,
     delivery: await openZones(),
+    rates,
+    nextDrop: next?.at ? { at: new Date(next.at).toISOString(), pieces: next.pieces } : null,
     states: NIGERIAN_STATES
   });
 });

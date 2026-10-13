@@ -41,7 +41,7 @@ export async function startShop() {
   const db = await import('../db.js');
   const { seed } = await import('../seed.js');
   const { setSetting } = await import('../lib/settings.js');
-  const { checkoutLimit } = await import('../routes/checkout.js');
+  const { checkoutLimit, discountLimit } = await import('../routes/checkout.js');
   const { subscribeLimit } = await import('../routes/subscribe.js');
   const { createApp } = await import('../index.js');
   const { createServer } = await import('node:http');
@@ -69,6 +69,7 @@ export async function startShop() {
   const resetLimits = () => {
     for (const ip of ['::ffff:127.0.0.1', '127.0.0.1', '::1']) clearFailures(ip);
     checkoutLimit.reset();
+    discountLimit.reset();
     subscribeLimit.reset();
   };
 
@@ -125,7 +126,7 @@ export function stubPaystack(one) {
     }
     if (u.includes('/transaction/verify/')) {
       const ref = decodeURIComponent(u.split('/verify/')[1]);
-      const order = await one('SELECT subtotal_kobo + shipping_kobo AS due FROM orders WHERE reference = $1', [ref]);
+      const order = await one('SELECT subtotal_kobo - discount_kobo + shipping_kobo AS due FROM orders WHERE reference = $1', [ref]);
       return Response.json({ status: true, data: {
         id: 99887766, reference: ref, currency: 'NGN',
         status: paystack.verify.status, amount: paystack.verify.amount ?? order?.due ?? 0 } });
