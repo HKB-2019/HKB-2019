@@ -422,15 +422,17 @@ function SavedDrawer() {
 
 /* --------------------------------------------------------------- modal shell */
 
-function Modal({ label, labelledBy, wide, className = '', children }) {
+function Modal({ label, labelledBy, wide, className = '', closeOutside = true, children }) {
   const { closeOverlay } = useShop();
   const ref = useFocusTrap(true);
   return (
     // The dark space around the panel belongs to the dialog, so a tap there
-    // closes it — the same as the scrim it sits over.
+    // closes it — the same as the scrim it sits over. Not for a panel that
+    // arrives unasked (the welcome pop-up): a tap meant for the page would
+    // close it before it was seen, so only its own buttons and Escape do.
     <div className="modal" role="dialog" aria-modal="true" data-lenis-prevent
          aria-label={label} aria-labelledby={labelledBy}
-         onClick={(e) => { if (e.target === e.currentTarget) closeOverlay(); }}>
+         onClick={(e) => { if (closeOutside && e.target === e.currentTarget) closeOverlay(); }}>
       <motion.div
         ref={ref}
         className={`modal__panel ${className || (wide ? 'modal__panel--film' : 'modal__panel--sm')}`}
@@ -439,7 +441,7 @@ function Modal({ label, labelledBy, wide, className = '', children }) {
         exit={{ opacity: 0, y: 8, scale: 0.98, transition: { duration: UI_OUT, ease: EASE_OUT } }}
         transition={{ duration: UI_IN, ease: EASE_OUT }}
       >
-        <button className="close-btn modal__close" data-close aria-label="Close" onClick={closeOverlay}>
+        <button className="close-btn modal__close" data-close aria-label={closeOutside ? 'Close' : 'Close, no thanks'} onClick={closeOverlay}>
           <Close />
         </button>
         {children}
@@ -467,7 +469,7 @@ function WelcomeModal() {
   const photo = images.hero?.img ?? asset('assets/img/hero-model.webp');
 
   return (
-    <Modal labelledBy="welcomeTitle" className="modal__panel--welcome">
+    <Modal labelledBy="welcomeTitle" className="modal__panel--welcome" closeOutside={false}>
       <div className="welcome">
         <div className="welcome__photo" aria-hidden="true"><img src={photo} alt="" /></div>
         <div className="welcome__body">
@@ -598,7 +600,7 @@ export default function Overlays() {
         <motion.div key="overlay-root">
           <motion.div
             className="scrim"
-            onClick={closeOverlay}
+            onClick={overlay === 'welcome' ? undefined : closeOverlay}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: UI_OUT } }}

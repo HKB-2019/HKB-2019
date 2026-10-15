@@ -41,6 +41,16 @@ test('closing it is remembered, it waits its turn, and the owner can switch it o
   await expect(page.getByRole('dialog')).toHaveCount(0);                 // not straight away
   const dialog = page.getByRole('dialog', { name: 'Join the ritual.' });
   await expect(dialog).toBeVisible({ timeout: 6000 });
+
+  // Only the visitor closes it: a tap on the page around it does nothing.
+  await page.mouse.click(6, 6);
+  await page.mouse.click(6, page.viewportSize().height - 6);
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Close, no thanks' }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await expect(dialog).toBeVisible({ timeout: 6000 });
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
   await page.reload();
