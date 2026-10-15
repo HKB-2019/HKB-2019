@@ -404,16 +404,69 @@ export function adminRefunded(reference, restock) {
   return settle({ ok: true });
 }
 
-export const adminStock = () => settle(ordered().flatMap(p => p.sizes.map(s => ({
-  variantId: s.variantId, productId: p.id, name: p.name, colour: s.colour || null, size: s.size, stock: s.stock, priceKobo: p.priceKobo }))));
+/* Stock as the server reports it (server/routes/admin.js): what is left to
+ * sell, plus pieces sold but not sent and pieces being paid for, which are
+ * still on the shelf. */
+const LOW_STOCK = 3;
+function committed(p, s) {
+  let toSend = 0, held = 0;
+  for (const o of store.orders) for (const i of o.items) {
+    if (i.name !== p.name || (i.colour ?? '') !== s.colour || i.size !== s.size) continue;
+    if (o.status === 'paid' && !o.fulfilledAt) toSend += i.qty;
+    if (o.status === 'pending') held += i.qty;
+  }
+  return { toSend, held };
+}
+const stockRows = () => ordered().flatMap(p => p.sizes.map(s => {
+  const { toSend, held } = committed(p, s);
+  return {
+    variantId: s.variantId, productId: p.id, name: p.name, colour: s.colour || null, size: s.size,
+    stock: s.stock, toSend, held, shelf: s.stock + toSend + held, priceKobo: p.priceKobo, offSale: p.hidden,
+    state: s.stock === 0 ? 'out' : s.stock <= LOW_STOCK ? 'low' : 'ok'
+  };
+}));
+const findLine = (variantId) => {
+  for (const p of store.products) for (const s of p.sizes) if (s.variantId === variantId) return { p, s };
+  return null;
+};
+const logStock = (p, s, before, after, shelf) => {
+  store.stockLog = store.stockLog ?? [];
+  store.stockLog.unshift({ id: Date.now() + Math.random(), name: p.name, colour: s.colour || null, size: s.size,
+    before, after, shelf, at: new Date().toISOString() });
+  store.stockLog.length = Math.min(store.stockLog.length, 100);
+};
+
+export const adminStock = () => settle(stockRows());
 
 export function adminSetStock(variantId, stock) {
-  const v = store.products.flatMap(p => p.sizes).find(s => s.variantId === variantId);
-  if (!v) return fail('Variant not found.', 404);
-  v.stock = stock;
+  const found = findLine(variantId);
+  if (!found) return fail('Variant not found.', 404);
+  if (found.s.stock !== stock) logStock(found.p, found.s, found.s.stock, stock, null);
+  found.s.stock = stock;
   save();
   return settle({ ok: true, variantId, stock });
 }
+
+export function adminSaveStockCounts(counts) {
+  const lines = counts.map(c => ({ ...findLine(c.variantId), shelf: c.shelf }));
+  if (lines.some(l => !l.s)) return fail('One of those lines no longer exists. Reload the page.', 404);
+  const short = lines.map(({ p, s, shelf }) => {
+    const { toSend, held } = committed(p, s);
+    const spoken = toSend + held;
+    return shelf < spoken ? `${p.name}, ${s.colour ? `${s.colour}, ` : ''}${s.size}: you counted ${shelf}, but ${spoken} ${spoken === 1 ? 'is' : 'are'} sold or being paid for and not yet sent` : null;
+  }).filter(Boolean);
+  if (short.length) return fail(`Nothing was saved. ${short.join('; ')}. Count again, or mark those orders sent first.`, 409);
+  let changed = 0;
+  for (const { p, s, shelf } of lines) {
+    const { toSend, held } = committed(p, s);
+    const after = shelf - toSend - held;
+    if (after !== s.stock) { logStock(p, s, s.stock, after, shelf); s.stock = after; changed++; }
+  }
+  save();
+  return settle({ changed, stock: stockRows() });
+}
+
+export const adminStockHistory = () => settle(store.stockLog ?? []);
 
 /* --------------------------------------------------- admin: products */
 

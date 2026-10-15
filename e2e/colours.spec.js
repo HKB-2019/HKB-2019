@@ -54,7 +54,11 @@ test('the owner adds colours, and a customer buys the one they pick', async ({ p
   await page.goto('/admin#list');
   await expect(page.getByText('THE PATTERN SCARF · Indigo · ONE SIZE')).toBeVisible();
   await page.goto('/admin#stock');
-  await expect(page.locator('tr', { hasText: 'Indigo, ONE SIZE' }).locator('input')).toHaveValue('3');
+  // Sold, not yet sent: still on the shelf (4), but only 3 left to sell.
+  const indigo = page.locator('tr', { hasText: 'Indigo, ONE SIZE' });
+  await expect(indigo.locator('input')).toHaveValue('4');
+  await expect(indigo.locator('td').nth(4)).toHaveText('1');
+  await expect(indigo.locator('td').nth(6)).toHaveText('3');
 });
 
 test('a colour with no photo of its own says which colour the photo shows', async ({ page }) => {

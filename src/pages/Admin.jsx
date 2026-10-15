@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   adminLogin, adminLogout, adminMe, adminStatus, adminSetup, adminOrders,
-  adminSummary, adminStock, adminSetStock, adminFulfil, adminRefunded, adminDownload
+  adminSummary, adminFulfil, adminRefunded, adminDownload
 } from '../lib/api.js';
 import ProductsTab from './admin/ProductsTab.jsx';
 import { pageHref } from '../lib/media.js';
@@ -12,6 +12,7 @@ import SettingsTab from './admin/SettingsTab.jsx';
 import ListTab from './admin/ListTab.jsx';
 import HomeTab from './admin/HomeTab.jsx';
 import SalesTab from './admin/SalesTab.jsx';
+import StockTab from './admin/StockTab.jsx';
 
 // Charts and maps load only when the tab is opened — never for shoppers.
 const VisitorsTab = lazy(() => import('./admin/visitors/VisitorsTab.jsx'));
@@ -348,49 +349,6 @@ function Orders({ orders, onChanged, filter, setFilter }) {
   );
 }
 
-/* ----------------------------------------------------------------- stock */
-
-function StockRow({ row, onSave }) {
-  const [value, setValue] = useState(String(row.stock));
-  const [state, setState] = useState(null);       // 'saving' | 'saved' | error text
-
-  useEffect(() => { setValue(String(row.stock)); }, [row.stock]);
-
-  const dirty = value !== String(row.stock);
-
-  const save = async () => {
-    const n = Number(value);
-    if (!Number.isInteger(n) || n < 0) { setState('Whole numbers only'); return; }
-    setState('saving');
-    try { await onSave(row.variantId, n); setState('saved'); setTimeout(() => setState(null), 1400); }
-    catch (err) { setState(err.message); }
-  };
-
-  return (
-    <tr>
-      <td>{row.name}</td>
-      <td className="mono">{row.colour ? `${row.colour}, ${row.size}` : row.size}</td>
-      <td className="num">{naira(row.priceKobo)}</td>
-      <td>
-        <input
-          className="admin-stock-input"
-          aria-label={`${row.name}, ${row.colour ? `${row.colour}, ` : ''}${row.size}, in stock`}
-          type="number" min="0" inputMode="numeric"
-          value={value}
-          onChange={(e) => { setValue(e.target.value); setState(null); }}
-          onKeyDown={(e) => { if (e.key === 'Enter' && dirty) save(); }}
-        />
-      </td>
-      <td>
-        {dirty && <button className="admin-action" onClick={save}>SAVE</button>}
-        {state === 'saving' && <span className="admin-note">saving…</span>}
-        {state === 'saved'  && <span className="admin-note admin-note--ok">saved</span>}
-        {state && !['saving','saved'].includes(state) && <span className="admin-note admin-note--bad">{state}</span>}
-      </td>
-    </tr>
-  );
-}
-
 /* ------------------------------------------------------------------ page */
 
 export default function Admin() {
@@ -399,7 +357,6 @@ export default function Admin() {
   const [needsSetup, setNeedsSetup] = useState(false);
   const [summary, setSummary]   = useState(null);
   const [orders, setOrders]     = useState([]);
-  const [stock, setStock]       = useState([]);
   const [filter, setFilter]     = useState('');
   const [tab, setTab]           = useState('orders');
 
@@ -414,18 +371,11 @@ export default function Admin() {
   }, []);
 
   const load = useCallback(async () => {
-    const [s, o, st] = await Promise.all([
-      adminSummary(), adminOrders(filter), adminStock()
-    ]);
-    setSummary(s); setOrders(o); setStock(st);
+    const [s, o] = await Promise.all([adminSummary(), adminOrders(filter)]);
+    setSummary(s); setOrders(o);
   }, [filter]);
 
   useEffect(() => { if (signedIn) load().catch(() => setSignedIn(false)); }, [signedIn, load]);
-
-  const onSaveStock = async (variantId, value) => {
-    await adminSetStock(variantId, value);
-    await load();
-  };
 
   // On a phone the tab row scrolls sideways: bring the open tab into view,
   // sideways only, so the page itself never jumps.
@@ -506,24 +456,7 @@ export default function Admin() {
               />
             )}
             {tab === 'products' && <ProductsTab onSummaryChange={refreshSummary} />}
-            {tab === 'stock' && (
-              <section className="admin-section">
-                <div className="admin-section__head"><h2 className="admin-h2">Stock</h2></div>
-                <p className="admin-help">Count the shelf and type what is there. Held stock for unfinished payments is already taken off.</p>
-                <div className="admin-table-wrap">
-                  <table className="admin-table">
-                    <thead>
-                      <tr><th>Piece</th><th>Colour, size</th><th className="num">Price</th><th>In stock</th><th><span className="sr-only">Save</span></th></tr>
-                    </thead>
-                    <tbody>
-                      {stock.map(row => (
-                        <StockRow key={row.variantId} row={row} onSave={onSaveStock} />
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            )}
+            {tab === 'stock' && <StockTab onChanged={refreshSummary} />}
             {tab === 'home' && <HomeTab />}
             {tab === 'sales' && <SalesTab />}
             {tab === 'visitors' && (

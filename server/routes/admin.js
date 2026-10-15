@@ -180,7 +180,7 @@ adminRouter.get('/admin/summary', requireAdmin, async (_req, res) => {
   const lowStock = await query(`
     SELECT p.name, NULLIF(v.colour, '') AS colour, v.size, v.stock
       FROM variants v JOIN products p ON p.id = v.product_id
-     WHERE v.stock <= 3 AND p.hidden = FALSE
+     WHERE v.stock <= ${LOW_STOCK} AND p.hidden = FALSE
      ORDER BY v.stock ASC, p.name, v.id
   `);
 
@@ -266,30 +266,116 @@ adminRouter.post('/admin/orders/:reference/refunded', requireAdmin, async (req, 
 
 /* -------------------------------------------------------------- stock */
 
-adminRouter.get('/admin/stock', requireAdmin, async (_req, res) => {
-  const rows = await query(`
-    SELECT v.id, v.colour, v.size, v.stock, p.id AS product_id, p.name, p.price_kobo
+/* Stock, as the owner counts it.
+ *
+ * A variant's `stock` is what is left to sell. The shelf holds more than
+ * that: pieces sold but not yet sent, and pieces someone is paying for right
+ * now (taken off at checkout, put back if the payment fails). So the owner
+ * types what is on the shelf, and the shop takes those off itself — typing
+ * the shelf as "left to sell" would sell pieces that are already spoken for. */
+
+/** At or below this many left (and above none), a line counts as running low. */
+export const LOW_STOCK = 3;
+
+/** Per variant: sold and waiting to be sent, and held while someone pays. */
+const COMMITTED = `
+  SELECT i.variant_id,
+         COALESCE(SUM(i.qty) FILTER (WHERE o.status = 'paid' AND o.fulfilled_at IS NULL), 0)::int AS to_send,
+         COALESCE(SUM(i.qty) FILTER (WHERE o.status = 'pending'), 0)::int AS held
+    FROM order_items i JOIN orders o ON o.id = i.order_id
+   WHERE (o.status = 'paid' AND o.fulfilled_at IS NULL) OR o.status = 'pending'
+   GROUP BY i.variant_id`;
+
+async function stockList(db = { query }) {
+  const rows = await db.query(`
+    SELECT v.id, v.colour, v.size, v.stock, p.id AS product_id, p.name, p.price_kobo, p.hidden,
+           COALESCE(c2.to_send, 0) AS to_send, COALESCE(c2.held, 0) AS held
       FROM variants v JOIN products p ON p.id = v.product_id
       LEFT JOIN product_colours c ON c.product_id = v.product_id AND c.name = v.colour
+      LEFT JOIN (${COMMITTED}) c2 ON c2.variant_id = v.id
      ORDER BY p.position, p.id, c.position NULLS FIRST, c.id, v.id
   `);
-
-  res.json(rows.map(r => ({
+  return rows.map(r => ({
     variantId: r.id,
     productId: r.product_id,
     name: r.name,
     colour: r.colour || null,
     size: r.size,
-    stock: r.stock,
-    priceKobo: r.price_kobo
-  })));
+    stock: r.stock,                          // left to sell
+    toSend: r.to_send,
+    held: r.held,
+    shelf: r.stock + r.to_send + r.held,     // what should be on the shelf
+    priceKobo: r.price_kobo,
+    offSale: r.hidden,
+    state: r.stock === 0 ? 'out' : r.stock <= LOW_STOCK ? 'low' : 'ok'
+  }));
+}
+
+adminRouter.get('/admin/stock', requireAdmin, async (_req, res) => {
+  res.json(await stockList());
+});
+
+const label = (v) => `${v.name}, ${v.colour ? `${v.colour}, ` : ''}${v.size}`;
+
+/**
+ * Save the shelf counts of any number of lines at once: { counts: [{ variantId,
+ * shelf }] }. All or nothing: if any line has fewer on the shelf than are
+ * already spoken for, nothing is saved and the answer says which.
+ */
+adminRouter.post('/admin/stock', requireAdmin, async (req, res) => {
+  const counts = req.body?.counts;
+  if (!Array.isArray(counts) || counts.length === 0 || counts.length > 1000) {
+    return res.status(400).json({ error: 'Nothing to save.' });
+  }
+  const want = new Map();
+  for (const c of counts) {
+    const id = c?.variantId, shelf = c?.shelf;
+    if (!Number.isInteger(id) || id < 1 || id > 2_147_483_647) return res.status(400).json({ error: 'Bad variant.' });
+    if (!Number.isInteger(shelf) || shelf < 0 || shelf > 100000) {
+      return res.status(400).json({ error: 'Counts must be whole numbers, zero or more.' });
+    }
+    want.set(id, shelf);
+  }
+
+  const result = await transaction(async (tx) => {
+    // In id order, so two saves at once cannot deadlock; locked, so a
+    // checkout in between waits and is counted.
+    const ids = [...want.keys()].sort((a, b) => a - b);
+    const rows = await tx.query(`
+      SELECT v.id, v.product_id, v.colour, v.size, v.stock, p.name
+        FROM variants v JOIN products p ON p.id = v.product_id
+       WHERE v.id = ANY($1::int[]) ORDER BY v.id FOR UPDATE OF v`, [ids]);
+    if (rows.length !== ids.length) return { status: 404, error: 'One of those lines no longer exists. Reload the page.' };
+    const committed = new Map((await tx.query(`SELECT * FROM (${COMMITTED}) c WHERE c.variant_id = ANY($1::int[])`, [ids]))
+      .map(r => [r.variant_id, r.to_send + r.held]));
+
+    const short = [];
+    const changes = [];
+    for (const v of rows) {
+      const shelf = want.get(v.id);
+      const spoken = committed.get(v.id) ?? 0;
+      if (shelf < spoken) { short.push(`${label(v)}: you counted ${shelf}, but ${spoken} ${spoken === 1 ? 'is' : 'are'} sold or being paid for and not yet sent`); continue; }
+      const after = shelf - spoken;
+      if (after !== v.stock) changes.push({ v, after, shelf });
+    }
+    if (short.length) {
+      return { status: 409, error: `Nothing was saved. ${short.join('; ')}. Count again, or mark those orders sent first.` };
+    }
+    for (const { v, after, shelf } of changes) {
+      await tx.query('UPDATE variants SET stock = $1 WHERE id = $2', [after, v.id]);
+      await tx.query(`INSERT INTO stock_log (variant_id, product_id, name, colour, size, stock_before, stock_after, shelf)
+                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [v.id, v.product_id, v.name, v.colour, v.size, v.stock, after, shelf]);
+    }
+    return { changed: changes.length };
+  });
+  if (result.error) return res.status(result.status).json({ error: result.error });
+  res.json({ changed: result.changed, stock: await stockList() });
 });
 
 /**
- * Set a variant's stock to an exact number.
- *
- * Set, not adjust: an operator counting a shelf knows how many are there, not
- * how many have changed. The CHECK constraint refuses a negative anyway.
+ * Set one line's "left to sell" to an exact number (the older, single-line
+ * way; the admin now saves shelf counts above). Logged like any change.
  */
 adminRouter.post('/admin/stock/:variantId', requireAdmin, async (req, res) => {
   const variantId = Number(req.params.variantId);
@@ -302,16 +388,53 @@ adminRouter.post('/admin/stock/:variantId', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: 'Stock must be a whole number, zero or more.' });
   }
 
-  const updated = await one('UPDATE variants SET stock = $1 WHERE id = $2 RETURNING id',
-    [stock, variantId]);
+  const updated = await transaction(async (tx) => {
+    const v = await tx.one(`SELECT v.id, v.product_id, v.colour, v.size, v.stock, p.name
+                              FROM variants v JOIN products p ON p.id = v.product_id
+                             WHERE v.id = $1 FOR UPDATE OF v`, [variantId]);
+    if (!v) return null;
+    if (v.stock !== stock) {
+      await tx.query('UPDATE variants SET stock = $1 WHERE id = $2', [stock, variantId]);
+      await tx.query(`INSERT INTO stock_log (variant_id, product_id, name, colour, size, stock_before, stock_after)
+                      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [v.id, v.product_id, v.name, v.colour, v.size, v.stock, stock]);
+    }
+    return v;
+  });
   if (!updated) return res.status(404).json({ error: 'Variant not found.' });
 
   res.json({ ok: true, variantId, stock });
 });
 
+/** The most recent count changes, newest first. */
+adminRouter.get('/admin/stock/history', requireAdmin, async (_req, res) => {
+  const rows = await query(`
+    SELECT id, name, colour, size, stock_before, stock_after, shelf, created_at
+      FROM stock_log ORDER BY created_at DESC, id DESC LIMIT 100`);
+  res.json(rows.map(r => ({
+    id: r.id, name: r.name, colour: r.colour || null, size: r.size,
+    before: r.stock_before, after: r.stock_after, shelf: r.shelf,
+    at: r.created_at?.toISOString?.() ?? r.created_at
+  })));
+});
+
 /* ---------------------------------------------------------- exports */
 
 const stamp = () => new Date().toISOString().slice(0, 10);
+
+/** Stock as a spreadsheet: for a stocktake, or to send a supplier. */
+adminRouter.get('/admin/stock.csv', requireAdmin, async (_req, res) => {
+  const rows = await stockList();
+  res.set({
+    'Content-Type': 'text/csv; charset=utf-8',
+    'Content-Disposition': `attachment; filename="masq-stock-${stamp()}.csv"`,
+    'Cache-Control': 'no-store'
+  });
+  res.send(toCsv(
+    ['Piece', 'Colour', 'Size', 'Price ₦', 'On the shelf', 'Waiting to be sent', 'Being paid for', 'Left to sell', 'On sale'],
+    rows.map(r => [r.name, r.colour ?? '', r.size, (r.priceKobo / 100).toFixed(2), r.shelf, r.toSend, r.held, r.stock,
+                   r.offSale ? 'no' : 'yes'])));
+});
 
 /** Orders as a spreadsheet, for packing and dispatch. */
 adminRouter.get('/admin/orders.csv', requireAdmin, async (req, res) => {

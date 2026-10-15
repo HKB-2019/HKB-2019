@@ -68,6 +68,9 @@ export const adminSetup    = (code, password) =>
 export const adminOrders   = (status)   => adminRequest('/admin/orders' + (status ? `?status=${status}` : ''));
 export const adminSummary  = ()         => adminRequest('/admin/summary');
 export const adminStock    = ()         => adminRequest('/admin/stock');
+/** Shelf counts for any number of lines, saved together: [{ variantId, shelf }]. */
+export const adminSaveStockCounts = (counts) => adminRequest('/admin/stock', { method:'POST', body: JSON.stringify({ counts }) });
+export const adminStockHistory = () => adminRequest('/admin/stock/history');
 export const adminSetStock = (variantId, stock) =>
   adminRequest(`/admin/stock/${variantId}`, { method:'POST', body: JSON.stringify({ stock }) });
 export const adminFulfil   = (reference, { courier = '', tracking = '' } = {}) =>
