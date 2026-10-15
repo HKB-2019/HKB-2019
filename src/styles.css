@@ -1664,6 +1664,15 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 }
 .admin-gallery__add:hover{ color:var(--ink); border-color:var(--ink-dim); }
 .admin-product__details .admin-field--full{ grid-column:1 / -1; }
+/* "Write it for me": a quiet link above the description; opened, a framed
+   panel for the notes. */
+.admin-writer{
+  grid-column:1 / -1; display:flex; flex-direction:column; gap:12px;
+  padding:16px; border:1px solid var(--line-soft); background:var(--bg-2);
+}
+.admin-writer .admin-help{ margin:0; }
+.admin-writer--closed{ flex-direction:row; flex-wrap:wrap; align-items:baseline; gap:6px 14px; padding:0; border:0; background:none; }
+.admin-writer__actions{ display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; }
 .admin-product__details .admin-product__save{ grid-column:1 / -1; }
 
 /* The preview build's banner (src/demo/preview.jsx). Sticks to the foot of

@@ -248,7 +248,7 @@ someone opens it, so a shopper's phone never downloads it.
 | **Orders** | Every order with the customer's name, phone (tap to call), address, items, any discount code, and total including delivery. `MARK SENT` asks for the courier and tracking number, which the customer then sees on their order page (and can be corrected later). `refunded?` records a refund made in Paystack, and can put the pieces back in stock. Filters by status. `DOWNLOAD CSV` for packing and dispatch |
 | **Visitors** | Today, 7, 30, 90 days or 12 months, each compared with the period before. Visitors, visits, conversion rate, money in and per visitor, bounce rate, time per visit, returning visitors; visitors over time; the shopping funnel (visited → viewed a piece → added to bag → checkout → payment → paid) with the drop at each step; sources and campaigns with the sales each brought; a tracked-link maker; pieces (views, adds, add rate, sold); pages; devices, systems and browsers (including in-app browsers like Instagram's); a world map of visitors by country; a Nigeria map of buyers by state; visits and orders by day and hour; goals; unfinished checkouts; repeat customers; who is on the site now. Every chart can be shown as a table |
 | **Sales** | Money in by week (Monday to Sunday, Lagos time) for the last 12 weeks, average order, discounts given, best-selling pieces and sizes. Paid orders only. Discount codes: per cent or naira off the pieces (never the delivery), optional minimum spend, number of uses and end date; switch off or delete |
-| **Products** | One card per product: name, price, badge (save with a button), and switches for on sale, in the drop grid, before `VIEW ALL`, in the carousel (save at once). Reorder with ↑ ↓. **Colours**: none for a piece in one colour; or name each (swatch, name, optional photo of its own). The first named takes over the counts already there and is the colour in the main photo; each after it starts at 0. Rename one, or remove it once its counts are 0 (the last one leaves the piece sold by size, counts kept). Sizes with their counts — per colour; add a size (it comes in every colour); remove one once its counts are 0 and nobody is paying for it. `+ NEW PRODUCT` takes its name, price, sizes and, if it comes in more than one, its colours; it starts off sale — add a photo and counts, then switch it on. Each card also has the product page's description and "details and care", up to six more photos, and a link to see it on the shop. A **drop time** keeps a piece hidden and unbuyable until then |
+| **Products** | One card per product: name, price, badge (save with a button), and switches for on sale, in the drop grid, before `VIEW ALL`, in the carousel (save at once). Reorder with ↑ ↓. **Colours**: none for a piece in one colour; or name each (swatch, name, optional photo of its own). The first named takes over the counts already there and is the colour in the main photo; each after it starts at 0. Rename one, or remove it once its counts are 0 (the last one leaves the piece sold by size, counts kept). Sizes with their counts — per colour; add a size (it comes in every colour); remove one once its counts are 0 and nobody is paying for it. `+ NEW PRODUCT` takes its name, price, sizes and, if it comes in more than one, its colours; it starts off sale — add a photo and counts, then switch it on. Each card also has the product page's description and "details and care" — with **WRITE IT FOR ME** above them when the writing helper is switched on (below) — up to six more photos, and a link to see it on the shop. A **drop time** keeps a piece hidden and unbuyable until then |
 | **Home page** | The three wide photos (top of the page, craft band, film strip) — change or put back the original. Every line of words on the home page. The menu: rename an item, or switch it off |
 | **Stock** | Every colour and size of everything in one list, for counting the shelf |
 | **List** | Everyone who joined from the footer. Download as CSV into your email tool; remove someone who asks. Below it, everyone waiting for a sold-out size, grouped by piece and size, marked when that size is back — copy their emails, then clear it |
@@ -292,6 +292,34 @@ it is one unit end to end.
 against the raw body — which is why that route is mounted before the JSON
 parser, since re-serialising the body breaks the signature. Then the amount is
 confirmed with Paystack. Then it is deduplicated, because Paystack retries.
+
+### Write it for me
+
+On each product card, **WRITE IT FOR ME** takes a few notes from the owner
+("heavy cotton, boxy fit, print from Gelede masks, wash cold") and has Claude
+(Anthropic's model `claude-opus-5-5`) draft the description and "details and
+care" in the MASQ. voice. The draft only fills the two boxes: it reaches the
+shop when the owner has read it and pressed SAVE, and `undo` puts back what
+was there.
+
+- **Honest by instruction.** The brief sent with every draft
+  (`server/lib/writer.js`) allows only facts from the notes and the card —
+  no invented materials, places of making, care, stock or prices — and bans
+  the usual sales words. The product's current words are sent along, so it
+  can improve them rather than start over.
+- **Off until there is a key.** `ANTHROPIC_API_KEY` in the server's settings
+  (DEPLOY.md, step 6). Without it the button does not appear and nothing is
+  ever sent. The key stays on the server; the browser never sees it.
+- **Bounded cost.** One request per draft, a few US cents each at current
+  prices; at most 40 drafts an hour, so a stuck page cannot run up a bill.
+  The server logs the tokens each draft used.
+- **Answers in JSON** (structured output), checked before it is used; a
+  declined request is retried once on Anthropic's recommended stand-in model
+  (`fallbacks: "default"`). Failures say what happened — a refused key, the
+  service busy, a draft that came back unfinished — and never touch the card.
+- The preview stands in with a sample made from the notes and says so; the
+  browser tests point the server at a fake Anthropic (`e2e/fake-anthropic.js`)
+  and the server tests stand in for its API, so neither costs anything.
 
 ### The admin door
 

@@ -5,6 +5,8 @@ import { requireAdmin } from '../lib/auth.js';
 import { loadProducts } from '../lib/catalogue.js';
 import { decodePhoto, MAX_IMAGE_BYTES } from '../lib/images.js';
 import { cleanText, HOME_SLOTS, setHomeImage } from '../lib/settings.js';
+import { rateLimit } from '../lib/limits.js';
+import { draftDescription, writerConfigured } from '../lib/writer.js';
 
 /* Everything the owner can change about a product: its name, price, badge,
  * where it appears, whether it is on sale, its order, its colours, its sizes
@@ -225,6 +227,38 @@ adminProductsRouter.patch('/admin/products/:id', async (req, res) => {
 });
 
 /** Move one place earlier or later in the shop's order. */
+/* ------------------------------------------------- "write it for me" */
+
+/** Whether the admin shows the button at all (src/pages/admin/ProductsTab.jsx). */
+adminProductsRouter.get('/admin/writer', requireAdmin, (_req, res) => {
+  res.json({ ready: writerConfigured() });
+});
+
+// Each draft is a paid call to Anthropic: plenty for a working session, but a
+// stuck key or a runaway script cannot run up a bill.
+export const draftLimit = rateLimit({
+  windowMs: 60 * 60_000, max: 40,
+  message: 'That is a lot of drafts for one hour. Try again a little later.'
+});
+
+/**
+ * Draft a description and "details and care" from the owner's notes. Saves
+ * nothing: the draft goes back to the admin's boxes for the owner to read,
+ * change and SAVE like anything they typed.
+ */
+adminProductsRouter.post('/admin/products/:id/draft', draftLimit, async (req, res) => {
+  const notes = typeof req.body?.notes === 'string' ? req.body.notes.replace(/\r\n?/g, '\n').trim() : '';
+  if (notes.length < 3) throw fail(400, 'Write a few words about the piece first.');
+  if (notes.length > 1500) throw fail(400, 'Keep the notes under 1,500 characters.');
+
+  const p = await one('SELECT id, name, description, details FROM products WHERE id = $1', [req.params.id]);
+  if (!p) throw fail(404, 'That product does not exist.');
+  const sizes = [...new Set((await query('SELECT size FROM variants WHERE product_id = $1 ORDER BY id', [p.id])).map(r => r.size))];
+  const colours = (await query('SELECT name FROM product_colours WHERE product_id = $1 ORDER BY position, id', [p.id])).map(r => r.name);
+
+  res.json(await draftDescription({ name: p.name, sizes, colours, description: p.description, details: p.details }, notes));
+});
+
 adminProductsRouter.post('/admin/products/:id/move', async (req, res) => {
   const dir = req.body?.direction;
   if (dir !== 'up' && dir !== 'down') throw fail(400, 'Move up or down.');

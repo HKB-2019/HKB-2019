@@ -58,8 +58,11 @@ function errorHandler(err, _req, res, _next) {
     return res.status(413).json({ error: 'That is too large.' });
   }
   const status = Number.isInteger(err.status) && err.status >= 400 && err.status < 600 ? err.status : 500;
-  if (status >= 500) console.error('[server]', err);
-  res.status(status).json({ error: status >= 500 ? 'Something went wrong.' : err.message });
+  // `expose`: a 5xx whose words were written for the person reading them
+  // (an outside service being down, say), so they are shown and not logged
+  // as a fault of ours.
+  if (status >= 500 && !err.expose) console.error('[server]', err);
+  res.status(status).json({ error: status >= 500 && !err.expose ? 'Something went wrong.' : err.message });
 }
 
 /* ------------------------------------------------------- link previews */

@@ -3,7 +3,8 @@ import {
   adminProducts, adminCreateProduct, adminUpdateProduct, adminMoveProduct,
   adminAddSize, adminRemoveSize, adminUploadPhoto, adminRemovePhoto, adminSetStock,
   adminAddGalleryPhoto, adminRemoveGalleryPhoto,
-  adminAddColour, adminUpdateColour, adminRemoveColour, adminUploadColourPhoto, adminRemoveColourPhoto
+  adminAddColour, adminUpdateColour, adminRemoveColour, adminUploadColourPhoto, adminRemoveColourPhoto,
+  adminWriterStatus, adminDraftDescription
 } from '../../lib/api.js';
 import { preparePhoto } from './photo.js';
 import { pageHref, NEW_TAB } from '../../lib/media.js';
@@ -105,9 +106,78 @@ function DropTime({ product: p, onChanged }) {
   );
 }
 
+/* ------------------------------------------------------- write it for me */
+
+/**
+ * The owner's notes in, a drafted description and "details and care" out
+ * (server/lib/writer.js). The draft only fills the boxes: it reaches the
+ * shop when the owner presses SAVE, after reading it — or not at all.
+ */
+function Writer({ product: p, current, onDraft }) {
+  const [open, setOpen] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [state, setState] = useState(null);       // 'writing' | 'done' | error text
+  const [sample, setSample] = useState(false);
+  const [before, setBefore] = useState(null);     // the words a draft replaced, for undo
+
+  const write = async () => {
+    setState('writing');
+    try {
+      const d = await adminDraftDescription(p.id, notes);
+      setBefore(current);
+      onDraft({ description: d.description, details: d.details || current.details });
+      setSample(Boolean(d.sample));
+      setState('done');
+      setOpen(false);
+    } catch (err) { setState(err.message); }
+  };
+  const undo = () => { onDraft(before); setBefore(null); setState(null); };
+
+  if (!open) {
+    return (
+      <div className="admin-writer admin-writer--closed">
+        <button type="button" className="admin-link" onClick={() => { setOpen(true); setState(null); }}>
+          WRITE IT FOR ME
+        </button>
+        {state === 'done' && (
+          <span className="admin-note admin-note--ok" role="status">
+            {sample ? 'Sample draft (in the preview; on your shop Claude writes it from your notes). ' : 'Draft written. '}
+            Read it over, change anything, then SAVE.
+            {before && <> <button type="button" className="admin-link" onClick={undo}>undo</button></>}
+          </span>
+        )}
+      </div>
+    );
+  }
+  const writing = state === 'writing';
+  return (
+    <div className="admin-writer">
+      <label className="admin-field admin-field--wide admin-field--full">
+        <span>Your notes <em>what it is made of, how it fits, the story, how to care for it</em></span>
+        <textarea rows={3} maxLength={1500} value={notes} autoFocus disabled={writing}
+                  aria-label={`Notes about ${p.name} for the draft`}
+                  placeholder="e.g. heavy 240gsm cotton, boxy fit, print from Gelede masks, wash cold inside out"
+                  onChange={(e) => setNotes(e.target.value)} />
+      </label>
+      <p className="admin-help">
+        Claude writes a description and the details in the MASQ. voice, using only what is here and on this card.
+        It fills the boxes below; nothing goes on the shop until you SAVE.
+      </p>
+      <div className="admin-writer__actions">
+        <button type="button" className="admin-action" disabled={writing || notes.trim().length < 3} onClick={write}>
+          {writing ? 'WRITING…' : 'WRITE'}
+        </button>
+        <button type="button" className="admin-link" disabled={writing} onClick={() => setOpen(false)}>cancel</button>
+        {writing && <span className="admin-note" role="status">this takes about 20 seconds</span>}
+        {state && !writing && state !== 'done' && <span className="admin-note admin-note--bad" role="alert">{state}</span>}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ card */
 
-function ProductCard({ product: p, first, last, onChanged, onReordered }) {
+function ProductCard({ product: p, first, last, writer, onChanged, onReordered }) {
   const [name, setName] = useState(p.name);
   const [price, setPrice] = useState(String(p.price));
   const [badge, setBadge] = useState(p.badge ?? '');
@@ -234,6 +304,10 @@ function ProductCard({ product: p, first, last, onChanged, onReordered }) {
             <span>Badge <em>optional</em></span>
             <input value={badge} maxLength={16} placeholder="e.g. LIMITED" onChange={(e) => setBadge(e.target.value)} />
           </label>
+          {writer && (
+            <Writer product={p} current={{ description, details }}
+                    onDraft={(d) => { setDescription(d.description); setDetails(d.details); }} />
+          )}
           <label className="admin-field admin-field--wide admin-field--full">
             <span>Description <em>shown on the product page</em></span>
             <textarea rows={3} maxLength={2000} value={description}
@@ -529,6 +603,9 @@ function NewColours({ colours, onChange }) {
 export default function ProductsTab({ onSummaryChange }) {
   const [products, setProducts] = useState(null);
   const [error, setError] = useState(null);
+  // "Write it for me" shows only where the server has a key for it.
+  const [writer, setWriter] = useState(false);
+  useEffect(() => { adminWriterStatus().then(s => setWriter(s.ready)).catch(() => {}); }, []);
 
   const reload = async () => {
     try { setProducts(await adminProducts()); setError(null); }
@@ -557,7 +634,7 @@ export default function ProductsTab({ onSummaryChange }) {
       {!products ? <p className="admin-empty">Loading…</p> : (
         <div className="admin-products">
           {products.map((p, i) => (
-            <ProductCard key={p.id} product={p} first={i === 0} last={i === products.length - 1}
+            <ProductCard key={p.id} product={p} first={i === 0} last={i === products.length - 1} writer={writer}
                          onChanged={onChanged} onReordered={onReordered} />
           ))}
         </div>

@@ -9,12 +9,15 @@
 
 import { createServer } from 'node:http';
 import { startFakePaystack } from './fake-paystack.js';
+import { startFakeAnthropic } from './fake-anthropic.js';
 
 export const PORT = Number(process.env.E2E_PORT || 4173);
 export const PAYSTACK_PORT = PORT + 1;
 export const CONTROL_PORT = PORT + 2;
+export const ANTHROPIC_PORT = PORT + 3;
 export const ADMIN_PASSWORD = 'e2e-admin-password';
 const SECRET_KEY = 'sk_test_' + 'e'.repeat(40);
+const ANTHROPIC_KEY = 'sk-ant-e2e-' + 'k'.repeat(32);
 
 const shopUrl = `http://localhost:${PORT}`;
 
@@ -23,8 +26,11 @@ Object.assign(process.env, {
   PAYSTACK_SECRET_KEY: SECRET_KEY,
   PAYSTACK_API_BASE: `http://localhost:${PAYSTACK_PORT}`,
   PAYSTACK_CALLBACK_URL: `${shopUrl}/order`,
-  SESSION_SECRET: 's'.repeat(48)
+  SESSION_SECRET: 's'.repeat(48),
+  ANTHROPIC_API_KEY: ANTHROPIC_KEY,
+  ANTHROPIC_BASE_URL: `http://localhost:${ANTHROPIC_PORT}`
 });
+delete process.env.ANTHROPIC_AUTH_TOKEN;
 delete process.env.DATABASE_URL;
 delete process.env.NODE_ENV;
 
@@ -37,6 +43,7 @@ const { setSetting } = await import('../server/lib/settings.js');
 const { checkoutLimit, discountLimit } = await import('../server/routes/checkout.js');
 const { subscribeLimit } = await import('../server/routes/subscribe.js');
 const { eventLimit } = await import('../server/routes/analytics.js');
+const { draftLimit } = await import('../server/routes/admin-products.js');
 const { createApp } = await import('../server/index.js');
 
 export const DELIVERY = {
@@ -55,10 +62,12 @@ async function reset({ delivery = true } = {}) {
   discountLimit.reset();
   subscribeLimit.reset();
   eventLimit.reset();
+  draftLimit.reset();
 }
 
 await reset();
 await startFakePaystack({ port: PAYSTACK_PORT, secretKey: SECRET_KEY, shopUrl });
+startFakeAnthropic({ port: ANTHROPIC_PORT, apiKey: ANTHROPIC_KEY });
 createApp().listen(PORT, () => console.log(`e2e shop on ${shopUrl}`));
 
 createServer(async (req, res) => {

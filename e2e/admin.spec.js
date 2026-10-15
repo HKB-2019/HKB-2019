@@ -125,3 +125,34 @@ test('the orders spreadsheet downloads', async ({ page }) => {
   expect(text).toContain('Ada Obi');
   expect(text).toContain('12 Admiralty Way');
 });
+
+test('"write it for me" drafts the words from the owner’s notes; nothing is live until SAVE', async ({ page }) => {
+  await signIn(page);
+  await page.goto('/admin#products');
+  const cap = productCard(page, 'THE MARK CAP');
+  const description = cap.getByPlaceholder('What it is, how it fits, the story behind it.');
+  await cap.getByRole('button', { name: 'WRITE IT FOR ME' }).click();
+
+  const write = cap.getByRole('button', { name: 'WRITE', exact: true });
+  await expect(write).toBeDisabled();                       // notes first
+  await cap.getByLabel('Notes about THE MARK CAP for the draft').fill('cotton twill, embossed mask, adjustable strap');
+  await write.click();
+  await expect(cap.getByRole('status')).toContainText('Draft written. Read it over, change anything, then SAVE.');
+  await expect(description).toHaveValue('THE MARK CAP: a drafted description. cotton twill, embossed mask, adjustable strap');
+  await expect(cap.getByPlaceholder(/100% cotton/)).toHaveValue('cotton twill\nembossed mask\nadjustable strap');
+
+  // Not on the shop yet; undo puts the old (empty) words back.
+  await cap.getByRole('button', { name: 'undo' }).click();
+  await expect(description).toHaveValue('');
+
+  // Drafted again, edited, saved: now it is on the product page.
+  await cap.getByRole('button', { name: 'WRITE IT FOR ME' }).click();
+  await cap.getByLabel('Notes about THE MARK CAP for the draft').fill('cotton twill');
+  await cap.getByRole('button', { name: 'WRITE', exact: true }).click();
+  await expect(description).toHaveValue(/a drafted description/);
+  await description.fill('A structured cap in cotton twill.');
+  await cap.locator('.admin-product__save').getByRole('button', { name: 'SAVE' }).click();
+  await expect(cap.locator('.admin-product__save')).toContainText('saved');
+  await page.goto('/product/cap');
+  await expect(page.locator('.pdp__text').first()).toHaveText('A structured cap in cotton twill.');
+});

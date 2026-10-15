@@ -43,6 +43,11 @@ services:
       - key: PAYSTACK_SECRET_KEY
         sync: false
 
+      # Optional: "Write it for me" in the admin. From console.anthropic.com >
+      # API Keys. Blank keeps it off.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
       # Optional. Leave it blank and choose the admin password in the browser
       # at /admin, using the one-time code printed in Render's logs.
       - key: ADMIN_PASSWORD_HASH

@@ -80,6 +80,9 @@ export const adminRefunded = (reference, restock) =>
 export const adminProducts      = ()            => adminRequest('/admin/products');
 export const adminCreateProduct = (p)           => adminRequest('/admin/products', { method:'POST', body: JSON.stringify(p) });
 export const adminUpdateProduct = (id, change)  => adminRequest(`/admin/products/${encodeURIComponent(id)}`, { method:'PATCH', body: JSON.stringify(change) });
+export const adminWriterStatus  = ()            => adminRequest('/admin/writer');
+export const adminDraftDescription = (id, notes) =>
+  adminRequest(`/admin/products/${encodeURIComponent(id)}/draft`, { method:'POST', body: JSON.stringify({ notes }) });
 export const adminMoveProduct   = (id, direction) =>
   adminRequest(`/admin/products/${encodeURIComponent(id)}/move`, { method:'POST', body: JSON.stringify({ direction }) });
 export const adminAddSize       = (id, size)    =>

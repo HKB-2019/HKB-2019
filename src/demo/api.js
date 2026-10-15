@@ -455,6 +455,23 @@ export const adminCreateProduct = (b) => attempt(() => {
   return current(id);
 });
 
+/* "Write it for me": the preview cannot call Claude, so it stands in with a
+ * draft put together from the notes, marked as a sample for the admin to say so. */
+export const adminWriterStatus = () => settle({ ready: true });
+export const adminDraftDescription = (id, notes) => {
+  const p = product(id);
+  const said = String(notes ?? '').trim();
+  if (said.length < 3) return fail('Write a few words about the piece first.');
+  const phrases = said.split(/[\n,;.]+/).map(s => s.trim()).filter(Boolean);
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const name = p.name.charAt(0) + p.name.slice(1).toLowerCase();
+  return settle({
+    sample: true,
+    description: `${name}, made as a modern artefact to be worn every day. ${phrases.slice(0, 3).map(cap).join('. ')}.`,
+    details: phrases.slice(0, 4).map(cap).join('\n')
+  }, 1600);
+};
+
 export const adminUpdateProduct = (id, b) => attempt(() => {
   const p = product(id);
   if ('hidden' in b && b.hidden === false) {

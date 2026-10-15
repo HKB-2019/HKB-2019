@@ -139,6 +139,26 @@ You do not need to set a callback URL — the shop works out its own address.
 
 ---
 
+## 6. "Write it for me" (optional)
+
+The admin can draft each product's description for you from a few notes
+(see README, *Write it for me*). It uses Claude, made by Anthropic, and is
+off until you give the shop a key.
+
+1. Go to **console.anthropic.com**, make an account, and add a little credit
+   under **Billing** (each draft costs a few US cents; $5 lasts a long time).
+2. **API Keys → Create Key.** Name it `masq`, and copy it — it starts
+   `sk-ant-` and is shown only once.
+3. In Render: service → **Environment** → `ANTHROPIC_API_KEY` → paste → save.
+   Render restarts the shop by itself.
+4. In the admin, open **Products**: each card now has **WRITE IT FOR ME**
+   above the description.
+
+Treat the key like a password: never paste it into the code, a chat or an
+email. If it ever leaks, delete it in the Anthropic console and make another.
+
+---
+
 ## What free costs you
 
 **It falls asleep.** After about fifteen minutes with no visitors, Render

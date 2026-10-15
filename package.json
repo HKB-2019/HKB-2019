@@ -22,6 +22,7 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.134.0",
     "@electric-sql/pglite": "^0.5.8",
     "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
