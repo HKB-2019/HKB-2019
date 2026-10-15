@@ -12,8 +12,7 @@ import DropCountdown from '../components/DropCountdown.jsx';
 import { useShop, useHome } from '../store/ShopContext.jsx';
 import { scrollToId } from '../lib/scroll.js';
 import { jumpTo } from '../lib/smoothScroll.js';
-import { readStore, writeStore } from '../lib/storage.js';
-import { WELCOME_KEY } from '../components/Newsletter.jsx';
+import { welcomeSeen, markWelcome } from '../lib/welcome.js';
 
 // Someone who closed the welcome pop-up is asked again after this long; someone who joined, never.
 const ASK_AGAIN_MS = 30 * 24 * 3_600_000;
@@ -58,10 +57,10 @@ export default function Storefront() {
   const welcome = home.welcome;
   useEffect(() => {
     if (!ready || !welcome?.show || overlay) return;
-    const seen = readStore(WELCOME_KEY, null);
+    const seen = welcomeSeen();
     if (seen && (seen.state === 'joined' || Date.now() - seen.at < ASK_AGAIN_MS)) return;
     const timer = setTimeout(() => {
-      writeStore(WELCOME_KEY, { state: 'shown', at: Date.now() });
+      markWelcome('shown');
       openOverlay('welcome');
     }, welcome.delay * 1000);
     return () => clearTimeout(timer);

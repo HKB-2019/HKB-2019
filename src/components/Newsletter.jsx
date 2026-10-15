@@ -5,14 +5,9 @@ import { useShop, useHome } from '../store/ShopContext.jsx';
 import Lines from './Lines.jsx';
 import { subscribe } from '../lib/api.js';
 import { track } from '../lib/analytics.js';
-import { writeStore } from '../lib/storage.js';
+import { markWelcome } from '../lib/welcome.js';
 
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
-
-/** Remembered in the browser: { state: 'shown' | 'joined', at }. Read by the
- * welcome pop-up (src/pages/Storefront.jsx), so someone already on the list
- * is never asked again. */
-export const WELCOME_KEY = 'masq:welcome';
 
 /**
  * The email box and JOIN button: on the page's mailing-list section, and in
@@ -35,7 +30,7 @@ export function JoinForm({ id, onJoined }) {
     try {
       await subscribe(email.trim());
       track('subscribe');
-      writeStore(WELCOME_KEY, { state: 'joined', at: Date.now() });
+      markWelcome('joined');   // someone on the list is never offered it again
       setEmail('');
       setMsg({ text: 'YOU’RE IN. WATCH YOUR INBOX FOR DROP 02.', error: false });
       onJoined?.();

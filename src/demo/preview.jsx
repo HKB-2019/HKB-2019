@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Route, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { finishPayment, previewOrder, resetPreview } from './api.js';
+import { useShop } from '../store/ShopContext.jsx';
+import { forgetWelcome, markWelcome } from '../lib/welcome.js';
 
 const naira = (kobo) => '₦' + (kobo / 100).toLocaleString('en-NG');
 
@@ -46,6 +48,15 @@ export function PreviewBanner() {
   const [confirm, setConfirm] = useState(false);
   const inAdmin = pathname.startsWith('/admin');
 
+  // The welcome pop-up shows once per tab; this brings it back at once.
+  const { openOverlay } = useShop();
+  const showWelcome = () => {
+    forgetWelcome();
+    if (pathname !== '/') navigate('/');
+    openOverlay('welcome');
+    markWelcome('shown');
+  };
+
   const reset = () => {
     resetPreview();
     window.location.reload();
@@ -57,6 +68,7 @@ export function PreviewBanner() {
       <span className="preview-bar__text">Sample data in your browser. Nothing is charged or sent.</span>
       <span className="preview-bar__actions">
         <button onClick={() => navigate(inAdmin ? '/' : '/admin')}>{inAdmin ? 'OPEN THE SHOP' : 'OPEN THE ADMIN'}</button>
+        {!inAdmin && <button onClick={showWelcome}>SEE THE POP-UP</button>}
         {confirm
           ? <><button onClick={reset}>YES, START AGAIN</button><button onClick={() => setConfirm(false)}>KEEP</button></>
           : <button onClick={() => setConfirm(true)}>START AGAIN</button>}
