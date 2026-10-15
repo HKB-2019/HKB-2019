@@ -71,6 +71,8 @@ export const adminStock    = ()         => adminRequest('/admin/stock');
 /** Shelf counts for any number of lines, saved together: [{ variantId, shelf }]. */
 export const adminSaveStockCounts = (counts) => adminRequest('/admin/stock', { method:'POST', body: JSON.stringify({ counts }) });
 export const adminStockHistory = () => adminRequest('/admin/stock/history');
+/** A delivery: how many arrived per line, added on top, with an optional note. */
+export const adminReceiveStock = (lines, note) => adminRequest('/admin/stock/receive', { method:'POST', body: JSON.stringify({ lines, note }) });
 export const adminSetStock = (variantId, stock) =>
   adminRequest(`/admin/stock/${variantId}`, { method:'POST', body: JSON.stringify({ stock }) });
 export const adminFulfil   = (reference, { courier = '', tracking = '' } = {}) =>

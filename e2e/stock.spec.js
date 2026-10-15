@@ -72,3 +72,31 @@ test('a shelf count below what is already sold is caught, and nothing is saved',
   await page.getByRole('button', { name: 'undo changes' }).click();
   await expect(shelf(page, bag)).toHaveValue('2');
 });
+
+test('a delivery is received: only what arrived is typed, it is added on top, and recorded', async ({ page }) => {
+  await signIn(page);
+  await page.goto('/admin#stock');
+  await page.getByRole('button', { name: 'RECEIVE A DELIVERY' }).click();
+  await expect(page.getByText('Receiving a delivery.')).toBeVisible();
+
+  const arrived = (line) => page.getByLabel(`${line}, how many arrived`);
+  await arrived('THE MARK CAP, Black, ONE SIZE').fill('20');
+  await arrived('THE SYMBOL JACKET, M').fill('4');
+  await expect(page.locator('tr', { has: arrived('THE MARK CAP, Black, ONE SIZE') })).toContainText('shelf 30 → 50');
+  await page.getByLabel(/^Note/).fill('Aba workshop, invoice 12');
+  await page.getByRole('button', { name: 'ADD TO STOCK (2)' }).click();
+  await expect(page.getByRole('status').last()).toHaveText('Delivery added: 24 pieces on 2 lines.');
+
+  // Back to counting, with the new numbers.
+  await expect(shelf(page, 'THE MARK CAP, Black, ONE SIZE')).toHaveValue('50');
+  await expect(shelf(page, 'THE SYMBOL JACKET, M')).toHaveValue('6');
+  await page.getByText(/Recent changes/).click();
+  await expect(page.locator('.admin-stock__history li').first()).toContainText('Delivery +');
+  await expect(page.locator('.admin-stock__history')).toContainText('Delivery +20 · left to sell 30 → 50 · Aba workshop, invoice 12');
+
+  // Cancel leaves everything as it was.
+  await page.getByRole('button', { name: 'RECEIVE A DELIVERY' }).click();
+  await arrived('THE MARK CAP, Black, ONE SIZE').fill('5');
+  await page.getByRole('button', { name: 'cancel' }).click();
+  await expect(shelf(page, 'THE MARK CAP, Black, ONE SIZE')).toHaveValue('50');
+});

@@ -374,6 +374,49 @@ adminRouter.post('/admin/stock', requireAdmin, async (req, res) => {
 });
 
 /**
+ * A delivery arrived: { lines: [{ variantId, qty }], note }. Each quantity is
+ * added to what is there — the owner knows how many came, not the new total.
+ * All lines together, logged as one delivery with the note.
+ */
+adminRouter.post('/admin/stock/receive', requireAdmin, async (req, res) => {
+  const lines = req.body?.lines;
+  const note = typeof req.body?.note === 'string' ? req.body.note.replace(/\s+/g, ' ').trim() : '';
+  if (!Array.isArray(lines) || lines.length === 0 || lines.length > 1000) {
+    return res.status(400).json({ error: 'Type how many arrived on at least one line.' });
+  }
+  if (note.length > 120) return res.status(400).json({ error: 'Keep the note under 120 characters.' });
+  const add = new Map();
+  for (const l of lines) {
+    const id = l?.variantId, qty = l?.qty;
+    if (!Number.isInteger(id) || id < 1 || id > 2_147_483_647) return res.status(400).json({ error: 'Bad variant.' });
+    if (!Number.isInteger(qty) || qty < 1 || qty > 10000) {
+      return res.status(400).json({ error: 'How many arrived must be a whole number, 1 or more.' });
+    }
+    add.set(id, (add.get(id) ?? 0) + qty);
+  }
+
+  const result = await transaction(async (tx) => {
+    const ids = [...add.keys()].sort((a, b) => a - b);
+    const rows = await tx.query(`
+      SELECT v.id, v.product_id, v.colour, v.size, v.stock, p.name
+        FROM variants v JOIN products p ON p.id = v.product_id
+       WHERE v.id = ANY($1::int[]) ORDER BY v.id FOR UPDATE OF v`, [ids]);
+    if (rows.length !== ids.length) return { status: 404, error: 'One of those lines no longer exists. Reload the page.' };
+    if (rows.some(v => v.stock + add.get(v.id) > 100000)) return { status: 400, error: 'That is more than a line can hold.' };
+    for (const v of rows) {
+      const after = v.stock + add.get(v.id);
+      await tx.query('UPDATE variants SET stock = $1 WHERE id = $2', [after, v.id]);
+      await tx.query(`INSERT INTO stock_log (variant_id, product_id, name, colour, size, stock_before, stock_after, kind, note)
+                      VALUES ($1, $2, $3, $4, $5, $6, $7, 'delivery', $8)`,
+        [v.id, v.product_id, v.name, v.colour, v.size, v.stock, after, note]);
+    }
+    return { received: [...add.values()].reduce((a, b) => a + b, 0), lines: rows.length };
+  });
+  if (result.error) return res.status(result.status).json({ error: result.error });
+  res.json({ ...result, stock: await stockList() });
+});
+
+/**
  * Set one line's "left to sell" to an exact number (the older, single-line
  * way; the admin now saves shelf counts above). Logged like any change.
  */
@@ -395,8 +438,8 @@ adminRouter.post('/admin/stock/:variantId', requireAdmin, async (req, res) => {
     if (!v) return null;
     if (v.stock !== stock) {
       await tx.query('UPDATE variants SET stock = $1 WHERE id = $2', [stock, variantId]);
-      await tx.query(`INSERT INTO stock_log (variant_id, product_id, name, colour, size, stock_before, stock_after)
-                      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      await tx.query(`INSERT INTO stock_log (variant_id, product_id, name, colour, size, stock_before, stock_after, kind)
+                      VALUES ($1, $2, $3, $4, $5, $6, $7, 'set')`,
         [v.id, v.product_id, v.name, v.colour, v.size, v.stock, stock]);
     }
     return v;
@@ -409,11 +452,11 @@ adminRouter.post('/admin/stock/:variantId', requireAdmin, async (req, res) => {
 /** The most recent count changes, newest first. */
 adminRouter.get('/admin/stock/history', requireAdmin, async (_req, res) => {
   const rows = await query(`
-    SELECT id, name, colour, size, stock_before, stock_after, shelf, created_at
+    SELECT id, name, colour, size, stock_before, stock_after, shelf, kind, note, created_at
       FROM stock_log ORDER BY created_at DESC, id DESC LIMIT 100`);
   res.json(rows.map(r => ({
     id: r.id, name: r.name, colour: r.colour || null, size: r.size,
-    before: r.stock_before, after: r.stock_after, shelf: r.shelf,
+    before: r.stock_before, after: r.stock_after, shelf: r.shelf, kind: r.kind, note: r.note || null,
     at: r.created_at?.toISOString?.() ?? r.created_at
   })));
 });

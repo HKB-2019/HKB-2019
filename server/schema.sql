@@ -295,6 +295,11 @@ CREATE TABLE IF NOT EXISTS stock_log (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS stock_log_recent ON stock_log (created_at DESC, id DESC);
+-- What kind of change: 'count' (a shelf count), 'set' (left to sell typed
+-- directly) or 'delivery' (pieces received, added on top), with the owner's
+-- note for a delivery — the supplier, an invoice number.
+ALTER TABLE stock_log ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'count';
+ALTER TABLE stock_log ADD COLUMN IF NOT EXISTS note TEXT NOT NULL DEFAULT '';
 
 -- Visits, counted without cookies or personal data (server/lib/analytics.js).
 -- One row per thing that happened: a page seen, a piece viewed, a bag add.

@@ -27,7 +27,7 @@ async function pay(reference) {
 }
 
 test('the new stock routes refuse a caller who is not signed in', async () => {
-  for (const [method, path] of [['POST', '/api/admin/stock'], ['GET', '/api/admin/stock/history'], ['GET', '/api/admin/stock.csv']]) {
+  for (const [method, path] of [['POST', '/api/admin/stock'], ['POST', '/api/admin/stock/receive'], ['GET', '/api/admin/stock/history'], ['GET', '/api/admin/stock.csv']]) {
     assert.equal((await shop.request(path, { method, json: method === 'GET' ? undefined : {} })).status, 401, `${method} ${path}`);
   }
 });
@@ -107,11 +107,37 @@ test('bad shelf counts are refused before anything is touched', async () => {
   assert.equal((await api('/stock', 'POST', { counts: [{ variantId: 424242, shelf: 1 }] })).status, 404);
 });
 
+test('a delivery adds what arrived on top, for several lines at once, with a note', async () => {
+  const sold = await shop.checkout(item('cap', 'ONE SIZE', 2));
+  await pay(sold.body.reference);                      // 28 left, 2 waiting to be sent
+  const cap = await line('cap', 'ONE SIZE');
+  const scarf = await line('scarf', 'ONE SIZE');
+
+  const res = await api('/stock/receive', 'POST', { note: '  Aba workshop,   invoice 12 ', lines: [
+    { variantId: cap.variantId, qty: 20 }, { variantId: scarf.variantId, qty: 5 }
+  ] });
+  assert.equal(res.status, 200, res.raw);
+  assert.deepEqual([res.body.received, res.body.lines], [25, 2]);
+  const after = res.body.stock.find(r => r.variantId === cap.variantId);
+  assert.deepEqual([after.stock, after.toSend, after.shelf], [48, 2, 50], 'the sold two are untouched');
+
+  const [h1, h2] = (await api('/stock/history')).body;
+  assert.deepEqual([h1.kind, h1.note, h1.before, h1.after], ['delivery', 'Aba workshop, invoice 12', 22, 27]);
+  assert.deepEqual([h2.kind, h2.name, h2.before, h2.after], ['delivery', 'THE MARK CAP', 28, 48]);
+
+  for (const body of [{ lines: [] }, { lines: [{ variantId: cap.variantId, qty: 0 }] },
+    { lines: [{ variantId: cap.variantId, qty: 2.5 }] }, { lines: [{ variantId: cap.variantId, qty: 1 }], note: 'x'.repeat(121) }]) {
+    assert.equal((await api('/stock/receive', 'POST', body)).status, 400, JSON.stringify(body));
+  }
+  assert.equal((await api('/stock/receive', 'POST', { lines: [{ variantId: 424242, qty: 1 }] })).status, 404);
+  assert.equal((await line('cap', 'ONE SIZE')).stock, 48, 'refused deliveries add nothing');
+});
+
 test('setting one line directly is on the record too', async () => {
   const cap = await line('cap', 'ONE SIZE');
   await api(`/stock/${cap.variantId}`, 'POST', { stock: 12 });
   const [h] = (await api('/stock/history')).body;
-  assert.deepEqual([h.name, h.before, h.after, h.shelf], ['THE MARK CAP', 30, 12, null]);
+  assert.deepEqual([h.name, h.before, h.after, h.shelf, h.kind], ['THE MARK CAP', 30, 12, null, 'set']);
 });
 
 test('stock downloads as a spreadsheet', async () => {

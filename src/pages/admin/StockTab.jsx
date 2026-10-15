@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { adminStock, adminSaveStockCounts, adminStockHistory, adminDownload } from '../../lib/api.js';
+import { adminStock, adminSaveStockCounts, adminReceiveStock, adminStockHistory, adminDownload } from '../../lib/api.js';
 
-/* STOCK: count the shelf, type it, save once.
+/* STOCK: count the shelf, type it, save once — or, when a delivery comes
+ * in, type only how many arrived on each line (RECEIVE A DELIVERY).
  *
  * Pieces sold but not yet sent, and pieces someone is paying for right now,
  * are still on the shelf but no longer for sale. The owner types what is on
@@ -30,6 +31,9 @@ export default function StockTab({ onChanged }) {
   const [needsOnly, setNeedsOnly] = useState(false);
   const [note, setNote] = useState(null);           // { text, bad }
   const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState('count');        // 'count' | 'receive'
+  const [arrived, setArrived] = useState({});       // variantId → how many came (receive mode)
+  const [deliveryNote, setDeliveryNote] = useState('');
 
   const load = async () => {
     const [st, h] = await Promise.all([adminStock(), adminStockHistory()]);
@@ -44,6 +48,25 @@ export default function StockTab({ onChanged }) {
   // Lines whose typed shelf count differs from what the shop has.
   const changes = (rows ?? []).filter(r => typed[r.variantId] !== undefined && typed[r.variantId].trim() !== String(r.shelf));
   const invalid = changes.filter(r => !whole(typed[r.variantId]));
+  // Delivery lines: anything typed in receive mode that is not empty or 0.
+  const deliveries = (rows ?? []).filter(r => (arrived[r.variantId] ?? '').trim() !== '' && arrived[r.variantId].trim() !== '0');
+  const badDelivery = deliveries.filter(r => !whole(arrived[r.variantId]));
+
+  const switchTo = (m) => { setMode(m); setTyped({}); setArrived({}); setDeliveryNote(''); setNote(null); };
+
+  const receive = async () => {
+    setBusy(true); setNote(null);
+    try {
+      const res = await adminReceiveStock(deliveries.map(r => ({ variantId: r.variantId, qty: Number(arrived[r.variantId]) })), deliveryNote);
+      setRows(res.stock);
+      setHistory(await adminStockHistory());
+      setMode('count'); setArrived({}); setDeliveryNote('');
+      setNote({ text: `Delivery added: ${res.received} ${res.received === 1 ? 'piece' : 'pieces'} on ${res.lines} ${res.lines === 1 ? 'line' : 'lines'}.` });
+      onChanged?.();
+    } catch (err) {
+      setNote({ text: err.message, bad: true });
+    } finally { setBusy(false); }
+  };
 
   const save = async () => {
     setBusy(true); setNote(null);
@@ -76,13 +99,23 @@ export default function StockTab({ onChanged }) {
             <span>Only low or sold out</span>
           </label>
           <button type="button" className="admin-action" onClick={download}>DOWNLOAD</button>
+          {mode === 'count' && (
+            <button type="button" className="admin-action admin-action--primary" onClick={() => switchTo('receive')}>RECEIVE A DELIVERY</button>
+          )}
         </div>
       </div>
-      <p className="admin-help">
-        Count what is on the shelf and type it, then SAVE ALL. Pieces already sold but not yet sent, and pieces
-        someone is paying for right now, are still on your shelf — the shop takes them off for you and shows what
-        is left to sell.
-      </p>
+      {mode === 'count' ? (
+        <p className="admin-help">
+          Count what is on the shelf and type it, then SAVE ALL. Pieces already sold but not yet sent, and pieces
+          someone is paying for right now, are still on your shelf — the shop takes them off for you and shows what
+          is left to sell. A delivery just came in? Use RECEIVE A DELIVERY and type only how many arrived.
+        </p>
+      ) : (
+        <p className="admin-help admin-stock__mode" role="status">
+          <strong>Receiving a delivery.</strong> Type how many arrived on each line — they are added to what is
+          already there. Leave the rest empty, then ADD TO STOCK.
+        </p>
+      )}
 
       {!rows ? <p className="admin-empty">Loading…</p> : (
         <>
@@ -91,16 +124,18 @@ export default function StockTab({ onChanged }) {
               <thead>
                 <tr>
                   <th>Piece</th><th>Colour, size</th><th className="num">Price</th>
-                  <th>On the shelf</th><th className="num">Waiting to be sent</th><th className="num">Being paid for</th>
+                  <th>{mode === 'count' ? 'On the shelf' : 'Arrived (+)'}</th><th className="num">Waiting to be sent</th><th className="num">Being paid for</th>
                   <th className="num">Left to sell</th><th><span className="sr-only">State</span></th>
                 </tr>
               </thead>
               <tbody>
                 {shown.map(r => {
                   const t = typed[r.variantId];
-                  const changed = t !== undefined && t.trim() !== String(r.shelf);
-                  const ok = t === undefined || whole(t);
-                  const left = changed && ok ? Number(t) - r.toSend - r.held : r.stock;
+                  const a = (arrived[r.variantId] ?? '').trim();
+                  const receiving = mode === 'receive';
+                  const changed = receiving ? a !== '' && a !== '0' : t !== undefined && t.trim() !== String(r.shelf);
+                  const ok = receiving ? a === '' || whole(a) : t === undefined || whole(t);
+                  const left = !changed || !ok ? r.stock : receiving ? r.stock + Number(a) : Number(t) - r.toSend - r.held;
                   const short = left < 0;
                   return (
                     <tr key={r.variantId} className={`${changed ? 'is-changed' : ''}${r.offSale ? ' is-off' : ''}`}>
@@ -108,10 +143,20 @@ export default function StockTab({ onChanged }) {
                       <td className="mono">{r.colour ? `${r.colour}, ${r.size}` : r.size}</td>
                       <td className="num">{naira(r.priceKobo)}</td>
                       <td>
-                        <input className={`admin-stock-input${!ok || short ? ' is-error' : ''}`}
-                               inputMode="numeric" aria-label={`${lineName(r)}, on the shelf`}
-                               value={t ?? String(r.shelf)}
-                               onChange={(e) => { setTyped(x => ({ ...x, [r.variantId]: e.target.value })); setNote(null); }} />
+                        {receiving ? (
+                          <span className="admin-stock__arrive">
+                            <input className={`admin-stock-input${!ok ? ' is-error' : ''}`}
+                                   inputMode="numeric" placeholder="0" aria-label={`${lineName(r)}, how many arrived`}
+                                   value={arrived[r.variantId] ?? ''}
+                                   onChange={(e) => { setArrived(x => ({ ...x, [r.variantId]: e.target.value })); setNote(null); }} />
+                            <small>{changed && ok ? `shelf ${r.shelf} → ${r.shelf + Number(a)}` : `shelf ${r.shelf}`}</small>
+                          </span>
+                        ) : (
+                          <input className={`admin-stock-input${!ok || short ? ' is-error' : ''}`}
+                                 inputMode="numeric" aria-label={`${lineName(r)}, on the shelf`}
+                                 value={t ?? String(r.shelf)}
+                                 onChange={(e) => { setTyped(x => ({ ...x, [r.variantId]: e.target.value })); setNote(null); }} />
+                        )}
                       </td>
                       <td className="num" data-label="To send">{r.toSend || '—'}</td>
                       <td className="num" data-label="Paying now">{r.held || '—'}</td>
@@ -128,6 +173,21 @@ export default function StockTab({ onChanged }) {
             </table>
           </div>
 
+          {mode === 'receive' ? (
+            <div className="admin-stock__foot">
+              <label className="admin-field admin-stock__note">
+                <span>Note <em>optional — the supplier, an invoice number</em></span>
+                <input maxLength={120} value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} />
+              </label>
+              <button type="button" className="admin-action admin-action--primary"
+                      disabled={busy || deliveries.length === 0 || badDelivery.length > 0} onClick={receive}>
+                {busy ? 'ADDING…' : deliveries.length ? `ADD TO STOCK (${deliveries.length})` : 'ADD TO STOCK'}
+              </button>
+              {!busy && <button type="button" className="admin-link" onClick={() => switchTo('count')}>cancel</button>}
+              {badDelivery.length > 0 && <span className="admin-note admin-note--bad">Type whole numbers only.</span>}
+              {note && <span className={`admin-note${note.bad ? ' admin-note--bad' : ' admin-note--ok'}`} role={note.bad ? 'alert' : 'status'}>{note.text}</span>}
+            </div>
+          ) : (
           <div className="admin-stock__foot">
             <button type="button" className="admin-action admin-action--primary"
                     disabled={busy || changes.length === 0 || invalid.length > 0} onClick={save}>
@@ -139,6 +199,7 @@ export default function StockTab({ onChanged }) {
             {invalid.length > 0 && <span className="admin-note admin-note--bad">Type whole numbers only.</span>}
             {note && <span className={`admin-note${note.bad ? ' admin-note--bad' : ' admin-note--ok'}`} role={note.bad ? 'alert' : 'status'}>{note.text}</span>}
           </div>
+          )}
 
           <details className="admin-stock__history">
             <summary>Recent changes {history.length ? `(${history.length})` : ''}</summary>
@@ -148,8 +209,13 @@ export default function StockTab({ onChanged }) {
                   <li key={h.id}>
                     <time dateTime={h.at}>{when(h.at)}</time>
                     <span>{h.name}{h.colour ? ` · ${h.colour}` : ''} · {h.size}</span>
-                    <span>left to sell {h.before} → <strong>{h.after}</strong>
-                      {h.shelf === null ? ' (set directly)' : ` (${h.shelf} counted on the shelf)`}</span>
+                    {h.kind === 'delivery' ? (
+                      <span><strong>Delivery +{h.after - h.before}</strong> · left to sell {h.before} → {h.after}
+                        {h.note ? ` · ${h.note}` : ''}</span>
+                    ) : (
+                      <span>left to sell {h.before} → <strong>{h.after}</strong>
+                        {h.shelf === null || h.shelf === undefined ? ' (set directly)' : ` (${h.shelf} counted on the shelf)`}</span>
+                    )}
                   </li>
                 ))}
               </ol>

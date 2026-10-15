@@ -429,10 +429,10 @@ const findLine = (variantId) => {
   for (const p of store.products) for (const s of p.sizes) if (s.variantId === variantId) return { p, s };
   return null;
 };
-const logStock = (p, s, before, after, shelf) => {
+const logStock = (p, s, before, after, shelf, kind = shelf === null ? 'set' : 'count', note = '') => {
   store.stockLog = store.stockLog ?? [];
   store.stockLog.unshift({ id: Date.now() + Math.random(), name: p.name, colour: s.colour || null, size: s.size,
-    before, after, shelf, at: new Date().toISOString() });
+    before, after, shelf, kind, note: note || null, at: new Date().toISOString() });
   store.stockLog.length = Math.min(store.stockLog.length, 100);
 };
 
@@ -464,6 +464,21 @@ export function adminSaveStockCounts(counts) {
   }
   save();
   return settle({ changed, stock: stockRows() });
+}
+
+export function adminReceiveStock(lines, note = '') {
+  const clean = String(note ?? '').replace(/\s+/g, ' ').trim();
+  if (!lines?.length) return fail('Type how many arrived on at least one line.');
+  if (clean.length > 120) return fail('Keep the note under 120 characters.');
+  const found = lines.map(l => ({ ...findLine(l.variantId), qty: l.qty }));
+  if (found.some(f => !f.s)) return fail('One of those lines no longer exists. Reload the page.', 404);
+  if (found.some(f => !Number.isInteger(f.qty) || f.qty < 1)) return fail('How many arrived must be a whole number, 1 or more.');
+  for (const { p, s, qty } of found) {
+    logStock(p, s, s.stock, s.stock + qty, null, 'delivery', clean);
+    s.stock += qty;
+  }
+  save();
+  return settle({ received: found.reduce((n, f) => n + f.qty, 0), lines: found.length, stock: stockRows() });
 }
 
 export const adminStockHistory = () => settle(store.stockLog ?? []);
