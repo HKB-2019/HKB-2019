@@ -12,6 +12,11 @@ let arriving = false;
 /** True while the product page is being opened by a gliding photo. */
 export const arrivedByPhoto = () => arriving;
 
+/* Carried by every link inside the shop that opens a product page, so the
+ * page's BACK knows there is somewhere in the shop to go back to (rather
+ * than out to Instagram, for someone who arrived from a shared link). */
+export const FROM_SHOP = { fromShop: true };
+
 const canGlide = () =>
   typeof document.startViewTransition === 'function' &&
   !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -33,7 +38,7 @@ export function useGlideToProduct() {
     photo.style.viewTransitionName = 'pdp-photo';
     arriving = true;
 
-    const glide = document.startViewTransition(() => flushSync(() => navigate(to)));
+    const glide = document.startViewTransition(() => flushSync(() => navigate(to, { state: FROM_SHOP })));
     glide.finished.finally(() => {
       arriving = false;
       photo.style.viewTransitionName = '';

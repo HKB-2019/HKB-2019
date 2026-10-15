@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useLocation, useNavigationType, useSearchParams } from 'react-router-dom';
 import ShopLayout from '../components/ShopLayout.jsx';
 import Hero from '../components/Hero.jsx';
 import CraftBand from '../components/CraftBand.jsx';
@@ -11,11 +11,40 @@ import Newsletter from '../components/Newsletter.jsx';
 import DropCountdown from '../components/DropCountdown.jsx';
 import { useShop, useHome } from '../store/ShopContext.jsx';
 import { scrollToId } from '../lib/scroll.js';
+import { jumpTo } from '../lib/smoothScroll.js';
 
 export default function Storefront() {
   const { openOverlay, catalogueStatus } = useShop();
   const { ready } = useHome();
-  const { hash } = useLocation();
+  const { hash, key } = useLocation();
+  const how = useNavigationType();
+
+  // Leaving for a piece's page: note where they were, against this visit to
+  // the page (each entry in the browser's history has its own key). Taken as
+  // the page is removed, before the product page moves to its top.
+  useLayoutEffect(() => () => {
+    try {
+      sessionStorage.setItem(`masq:spot:${key}`, JSON.stringify({
+        y: window.scrollY,
+        all: Boolean(document.querySelector('#drop .link-arrow[aria-expanded="true"]'))
+      }));
+    } catch { /* private window: back lands at the top, as before */ }
+  }, [key]);
+
+  // Coming back (BACK on a piece's page, or the browser's back): the same
+  // spot, with VIEW ALL still open if it was — once the sections below the
+  // hero are their full height.
+  const [spot] = useState(() => {
+    if (how !== 'POP') return null;
+    try { return JSON.parse(sessionStorage.getItem(`masq:spot:${key}`)); } catch { return null; }
+  });
+  const returned = useRef(false);
+  useEffect(() => {
+    if (!spot || returned.current || !ready || catalogueStatus !== 'ready') return;
+    returned.current = true;
+    if (spot.all) window.dispatchEvent(new CustomEvent('masq:expand-drop'));
+    requestAnimationFrame(() => requestAnimationFrame(() => jumpTo(spot.y)));
+  }, [spot, ready, catalogueStatus]);
 
   // The big photos drift as the page scrolls (src/lib/drift.js), fetched
   // once the page is showing, and not at all on a device set to reduce motion.
@@ -41,10 +70,10 @@ export default function Storefront() {
   // are in, so the sections are their full height, then go to the one asked for.
   const landed = useRef(null);
   useEffect(() => {
-    if (!hash || catalogueStatus === 'loading' || catalogueStatus === 'idle' || landed.current === hash) return;
+    if (!hash || spot || catalogueStatus === 'loading' || catalogueStatus === 'idle' || landed.current === hash) return;
     landed.current = hash;
     requestAnimationFrame(() => scrollToId(hash));
-  }, [hash, catalogueStatus]);
+  }, [hash, spot, catalogueStatus]);
 
   return (
     <ShopLayout>

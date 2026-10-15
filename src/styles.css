@@ -1445,6 +1445,15 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 .pdp__crumbs a{ color:var(--ink-dim); text-decoration:none; }
 .pdp__crumbs a:hover{ color:var(--ink); }
 .pdp__crumbs [aria-current]{ color:var(--ink-faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pdp__crumbs nav{ display:flex; gap:12px; align-items:center; min-width:0; }
+/* BACK leads the row, set apart from the trail by a hairline. */
+.pdp__crumbs .pdp__back{
+  display:inline-flex; align-items:center; gap:10px; flex:0 0 auto;
+  color:var(--ink); padding-right:18px; margin-right:6px; border-right:1px solid var(--line);
+}
+.pdp__back span{ display:inline-block; font-size:13px; letter-spacing:0; transition:transform .3s var(--ease); }
+.pdp__back:hover span{ transform:translateX(-4px); }
+@media (prefers-reduced-motion:reduce){ .pdp__back span{ transition:none; } }
 
 .pdp__gallery{ position:relative; min-width:0; }
 .pdp__strip{

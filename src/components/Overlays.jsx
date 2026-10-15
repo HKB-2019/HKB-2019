@@ -11,6 +11,7 @@ import { Close, Heart } from './Icons.jsx';
 import { SizeButtons } from './DropGrid.jsx';
 import { useFocusTrap } from '../lib/useFocusTrap.js';
 import ZoomViewer from './ZoomViewer.jsx';
+import { FROM_SHOP } from '../lib/pageMorph.js';
 
 const ease = [0.33, 0.02, 0.18, 1];
 
@@ -57,7 +58,7 @@ function ShopButton() {
 function NameLink({ id, name, colour }) {
   const { closeOverlay } = useShop();
   const to = `/product/${id}${colour ? `?colour=${encodeURIComponent(colour)}` : ''}`;
-  return <Link to={to} onClick={closeOverlay}>{name}</Link>;
+  return <Link to={to} state={FROM_SHOP} onClick={closeOverlay}>{name}</Link>;
 }
 
 function BagLines() {

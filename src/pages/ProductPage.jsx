@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ShopLayout from '../components/ShopLayout.jsx';
 import { useShop } from '../store/ShopContext.jsx';
@@ -11,7 +11,7 @@ import { askForRestock } from '../lib/api.js';
 import { track } from '../lib/analytics.js';
 import { isEmail } from '../lib/delivery.js';
 import { jumpToTop, glideTo } from '../lib/smoothScroll.js';
-import { useGlideToProduct, arrivedByPhoto } from '../lib/pageMorph.js';
+import { useGlideToProduct, arrivedByPhoto, FROM_SHOP } from '../lib/pageMorph.js';
 import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel } from '../lib/colours.js';
 import Swatches from '../components/Swatches.jsx';
 
@@ -336,12 +336,12 @@ function MoreLike({ product }) {
         {picks.map(p => (
           <article className="card" key={p.id}>
             <div className="card__media">
-              <Link to={`/product/${p.id}`} onClick={(e) => glide(e, `/product/${p.id}`)} className="card__link" tabIndex={-1} aria-hidden="true">
+              <Link to={`/product/${p.id}`} state={FROM_SHOP} onClick={(e) => glide(e, `/product/${p.id}`)} className="card__link" tabIndex={-1} aria-hidden="true">
                 {p.img && <img src={p.img} srcSet={srcSet(p)} sizes={CARD_SIZES} alt="" loading="lazy" />}
               </Link>
               {p.badge && <span className="card__badge">{p.badge}</span>}
             </div>
-            <h3 className="card__name"><Link to={`/product/${p.id}`} onClick={(e) => glide(e, `/product/${p.id}`)}>{p.name}</Link></h3>
+            <h3 className="card__name"><Link to={`/product/${p.id}`} state={FROM_SHOP} onClick={(e) => glide(e, `/product/${p.id}`)}>{p.name}</Link></h3>
             <p className={`card__price${p.soldOut ? ' card__sold' : ''}`}>{p.soldOut ? 'SOLD OUT' : format(p.price)}</p>
           </article>
         ))}
@@ -357,6 +357,20 @@ export default function ProductPage() {
   const { productById, catalogueStatus, loadCatalogue } = useShop();
   const goTo = useSectionLink();
   const product = productById(id);
+  const navigate = useNavigate();
+  const { state } = useLocation();
+
+  // Where on the home page this piece lives: the drop grid, else the carousel.
+  const section = product && !product.inDrop && product.inEssentials ? '#essentials' : '#drop';
+  // BACK returns to exactly where they were — the same spot on the grid, or
+  // the piece before this one. Someone who arrived from a shared link has
+  // nowhere in the shop behind them, so it opens the shop at this piece's
+  // section instead of sending them out of the site.
+  const back = (e) => {
+    e.preventDefault();
+    if (state?.fromShop) navigate(-1);
+    else goTo(section);
+  };
 
   // The colour being looked at: the one a link names (?colour=Black), else
   // the first in stock. Kept in the address, so a shared link opens on it.
@@ -390,11 +404,16 @@ export default function ProductPage() {
       <>
         <motion.div className="pdp" key={product.id}
                     initial={arrivedByPhoto() ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}>
-          <nav className="pdp__crumbs" aria-label="Breadcrumb">
-            <a href="/#drop" onClick={(e) => { e.preventDefault(); goTo('#drop'); }}>SHOP</a>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page">{product.name}</span>
-          </nav>
+          <div className="pdp__crumbs">
+            <a href={`/${section}`} className="pdp__back" onClick={back}>
+              <span aria-hidden="true">←</span> BACK
+            </a>
+            <nav aria-label="Breadcrumb">
+              <a href={`/${section}`} onClick={(e) => { e.preventDefault(); goTo(section); }}>SHOP</a>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page">{product.name}</span>
+            </nav>
+          </div>
           <Gallery product={product} colour={colour} />
           <BuyBox product={product} colour={colour} onColour={setColour} />
         </motion.div>

@@ -77,7 +77,7 @@ properties under `:root` in `styles.css`.
 | Control | Behaviour |
 | --- | --- |
 | `SHOP DROP 01` / `EXPLORE` / nav | Smooth-scroll to the section; nav underlines whatever is in view. From a product page, the menu goes back to that section. Its names, and which items show, are set in the admin |
-| Product photo or name | The photo glides into the product page (in browsers that support it). There: photos (swipe on a phone; hover for a close-up with a mouse; tap for full screen, tap again to zoom, drag to look around), colour swatches for a piece sold in colours (the photo, sizes and "only 2 left" follow the colour; the address keeps it, `?colour=Black`, so a shared link opens on it; a colour with no photo of its own says which colour is shown), sizes with "only 2 left", `ADD TO BAG` (asks for a size rather than guessing; on a phone, while it is out of view, a bar at the foot of the screen keeps the button — and the name and price, once those have scrolled away — in reach), save, size guide, description, details and care, delivery and returns, four more pieces |
+| Product photo or name | The photo glides into the product page (in browsers that support it). There: `← BACK` at the top returns to exactly where they were — the same spot on the grid, VIEW ALL still open, or the piece before (the browser's back does the same); someone who arrived from a shared link has nothing in the shop behind them, so BACK opens the shop at the piece's section (the drop, or Essentials) rather than leaving the site. Then photos (swipe on a phone; hover for a close-up with a mouse; tap for full screen, tap again to zoom, drag to look around), colour swatches for a piece sold in colours (the photo, sizes and "only 2 left" follow the colour; the address keeps it, `?colour=Black`, so a shared link opens on it; a colour with no photo of its own says which colour is shown), sizes with "only 2 left", `ADD TO BAG` (asks for a size rather than guessing; on a phone, while it is out of view, a bar at the foot of the screen keeps the button — and the name and price, once those have scrolled away — in reach), save, size guide, description, details and care, delivery and returns, four more pieces |
 | Product card | `QUICK ADD` opens the sizes (sold-out sizes struck out) — with the colour swatches above them for a piece sold in colours, and "3 colours" under its price; a one-size piece in one colour adds straight away. On phones the button stays visible — there is no hover |
 | Heart on a card | Saves it; the heart in the header opens the saved list, from which it can be bought |
 | `VIEW ALL` | Shows the pieces the owner has placed behind it; existing cards glide to their new positions |
@@ -507,7 +507,12 @@ The photography was cut from the supplied design mockup, so it is limited to
 that resolution. Several assets needed repair or reframing:
 
 - the hero had the mockup's own header row baked into it (the model's hair was
-  reconstructed by mirroring the head across its axis);
+  reconstructed by mirroring the head across its axis). It was later rebuilt
+  without the sharpening pass, which had turned the source's compression
+  blotches into rough skin on the brow: brought back to its source size,
+  enlarged with Real-ESRGAN, and toned towards the mockup's own low-key
+  lighting (a brightness curve matched to the face and shirt in the mockup)
+  so the face sits in shadow as designed;
 - the stone texture band and the film strip were rebuilt from their text-free
   regions;
 - product and essentials shots were extended into 5:6 frames by continuing

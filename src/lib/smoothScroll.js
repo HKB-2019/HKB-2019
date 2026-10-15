@@ -37,6 +37,12 @@ export function glideTo(target, offset = 0) {
   window.scrollTo({ top, behavior: 'smooth' });
 }
 
+/** To a place at once, with no glide (coming back to where someone was). */
+export function jumpTo(y) {
+  if (lenis) lenis.scrollTo(y, { immediate: true, force: true });
+  else window.scrollTo(0, y);
+}
+
 /** Back to the top at once, as on arriving at a new page. */
 export function jumpToTop() {
   if (lenis) lenis.scrollTo(0, { immediate: true, force: true });

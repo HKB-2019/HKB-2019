@@ -4,7 +4,7 @@ import { useShop, useHome } from '../store/ShopContext.jsx';
 import { srcSet, SLIDE_SIZES } from '../lib/media.js';
 import { expandDropGrid, SizeButtons } from './DropGrid.jsx';
 import { Arrow, CaretLeft, CaretRight } from './Icons.jsx';
-import { useGlideToProduct } from '../lib/pageMorph.js';
+import { useGlideToProduct, FROM_SHOP } from '../lib/pageMorph.js';
 import { hasColours, onlyChoice, firstColour, photoFor } from '../lib/colours.js';
 
 const DRAG_THRESHOLD = 5;
@@ -172,7 +172,7 @@ export default function Essentials() {
             return (
               <article className={`slide${picking === p.id ? ' is-picking' : ''}`} key={p.id}>
                 {pic.img && (
-                  <Link to={to} onClick={(e) => glide(e, to)} className="slide__link" draggable="false"
+                  <Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)} className="slide__link" draggable="false"
                         aria-label={`${p.name} — see the details`}>
                     <img key={pic.img} src={pic.img} srcSet={srcSet(pic)} sizes={SLIDE_SIZES} alt="" loading="lazy" draggable="false" />
                   </Link>

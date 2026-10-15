@@ -57,6 +57,38 @@ test('the menu on a product page goes back to that part of the home page', async
   await expect(page.locator('#essentials')).toBeInViewport();
 });
 
+test('BACK on a product page returns to the same spot, with VIEW ALL still open', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#drop').getByRole('button', { name: 'VIEW ALL' }).click();
+  const jacket = card(page, 'THE SYMBOL JACKET');
+  await jacket.scrollIntoViewIfNeeded();
+  await jacket.getByRole('link', { name: 'THE SYMBOL JACKET' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('THE SYMBOL JACKET');
+
+  await page.locator('.pdp__back').click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator('#drop .link-arrow')).toHaveAttribute('aria-expanded', 'true');
+  await expect(card(page, 'THE SYMBOL JACKET')).toBeInViewport();
+
+  // The browser's own back does the same.
+  await card(page, 'THE SYMBOL JACKET').getByRole('link', { name: 'THE SYMBOL JACKET' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('THE SYMBOL JACKET');
+  await page.goBack();
+  await expect(card(page, 'THE SYMBOL JACKET')).toBeInViewport();
+});
+
+test('someone who arrived from a shared link goes BACK into the shop, not off the site', async ({ page }) => {
+  await page.goto('/product/airpods');   // only in the Essentials carousel
+  await page.locator('.pdp__back').click();
+  await expect(page).toHaveURL(/\/#essentials$/);
+  await expect(page.locator('#essentials')).toBeInViewport();
+
+  await page.goto('/product/tee');
+  await page.locator('.pdp__back').click();
+  await expect(page).toHaveURL(/\/#drop$/);
+  await expect(page.locator('#drop')).toBeInViewport();
+});
+
 test('a product off sale, or never made, says so', async ({ page }) => {
   await page.goto('/product/no-such-thing');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('This piece is no longer available.');

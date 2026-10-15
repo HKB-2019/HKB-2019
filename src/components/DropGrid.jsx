@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useShop, useHome } from '../store/ShopContext.jsx';
 import { srcSet, CARD_SIZES } from '../lib/media.js';
 import { scrollToId } from '../lib/scroll.js';
-import { useGlideToProduct } from '../lib/pageMorph.js';
+import { useGlideToProduct, FROM_SHOP } from '../lib/pageMorph.js';
 import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel, photoFor } from '../lib/colours.js';
 import Swatches, { ColourDots } from './Swatches.jsx';
 import { Arrow, Heart } from './Icons.jsx';
@@ -76,7 +76,7 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
       <div className="card__media">
         {/* The photo opens the product page. Kept out of the tab order: the
             name below is the same link, and one stop per card is enough. */}
-        <Link to={to} onClick={(e) => glide(e, to)} className="card__link" tabIndex={-1} aria-hidden="true">
+        <Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)} className="card__link" tabIndex={-1} aria-hidden="true">
           {pic.img && (
             <img key={pic.img} className="card__img" src={pic.img} srcSet={srcSet(pic)} sizes={CARD_SIZES} alt="" loading="lazy" />
           )}
@@ -100,7 +100,7 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
         </div>
       </div>
 
-      <h3 className="card__name"><Link to={to} onClick={(e) => glide(e, to)}>{product.name}</Link></h3>
+      <h3 className="card__name"><Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)}>{product.name}</Link></h3>
       <p className={`card__price${product.soldOut ? ' card__sold' : ''}`}>
         {product.soldOut ? 'SOLD OUT' : format(product.price)}
       </p>
