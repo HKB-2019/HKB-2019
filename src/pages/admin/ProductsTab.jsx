@@ -389,7 +389,7 @@ function ColourRow({ product: p, colour: c, first, onChanged }) {
           : <em>{first ? 'main photo' : 'no photo yet'}</em>}
       </span>
       <button className="admin-link" onClick={() => fileRef.current?.click()}>{c.img ? 'change photo' : 'add photo'}</button>
-      {c.img && <button className="admin-link" onClick={() => run(() => adminRemoveColourPhoto(p.id, c.id))}>remove photo</button>}
+      {c.hasPhoto && <button className="admin-link" onClick={() => run(() => adminRemoveColourPhoto(p.id, c.id))}>remove photo</button>}
       <button className="admin-link" aria-label={`Remove colour ${c.name}`} onClick={() => run(() => adminRemoveColour(p.id, c.id))}>remove</button>
       <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp,image/heic"
              aria-label={`Photo of ${p.name} in ${c.name}`} onChange={onPhoto} />

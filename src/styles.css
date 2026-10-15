@@ -2021,18 +2021,20 @@ html{ scrollbar-color:var(--line) var(--bg); }
   box-shadow:inset 0 0 0 1px rgb(var(--ink-rgb) / .3);
 }
 
-/* ============ LIGHT THEME: what is more than a colour swap ============ */
-/* The studio photos are shot on black. On paper they sit as clean panels,
-   under the menu rather than behind it, without the fade into the page. */
-:root[data-theme="light"] .hero__fade{ display:none; }
-:root[data-theme="light"] .hero__media{ top:var(--header-h); }
-@media (max-width:900px){
-  /* there the photo is in the flow, above the words: nothing to move */
-  :root[data-theme="light"] .hero__media{ top:0; }
+/* ============ LIGHT THEME: what stays dark ============ */
+/* The top of the home page (photo and the craft band under it), the film
+   strip and the Essentials carousel are shot and designed on black, and
+   look the same in both themes: inside them the dark palette applies.
+   So does the menu while it sits over the top photo. */
+:root[data-theme="light"] :is(.hero, .craft, .film, .carousel, .header--over-dark, .pdp__pictured, .zoom){
+  color-scheme:dark;
+  --bg: #050407; --bg-2: #08080c; --bg-3: #0b0b10;
+  --ink: #f4f1eb; --ink-dim: #c2c0bc; --ink-faint: #7e7c83;
+  --line: #2e2e38; --line-soft: #1e1e25;
+  --violet: #23154e; --violet-hi: #32206e; --violet-soft: #a9a2cd;
+  --bg-rgb: 5 4 7; --ink-rgb: 244 241 235; --violet-rgb: 35 21 78; --violet-soft-rgb: 169 162 205;
+  --raised: #0e0e15; --shadow: rgba(0,0,0,.6); --band-wash: .68;
+  --tint: rgb(35 21 78 / .42);
+  color:var(--ink);
 }
-/* The film strip is a picture with words on it: it keeps the dark look in
-   both themes, so its label always reads against the photo. */
-:root[data-theme="light"] .film{
-  --bg: #050407; --bg-rgb: 5 4 7; --ink: #f4f1eb; --ink-rgb: 244 241 235;
-  --ink-dim: #c2c0bc; --line: #2e2e38; --bg-3: #0b0b10;
-}
+:root[data-theme="light"] :is(.hero, .craft){ background:var(--bg); }

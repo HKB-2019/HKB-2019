@@ -154,6 +154,6 @@ export const PHOTO = {
 export const b64 = (buf) => buf.toString('base64');
 
 /** The colour each sample piece sold in colours is photographed in (src/data/catalogue.js). */
-export const SAMPLE_COLOUR = { tee: 'Indigo', hoodie: 'Black' };
+export const SAMPLE_COLOUR = { tee: 'Indigo', hoodie: 'Black', cap: 'Black' };
 /** The colour to buy a sample piece in: its photographed one, or none. */
 export const colourOf = (productId) => SAMPLE_COLOUR[productId] ?? '';

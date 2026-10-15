@@ -12,7 +12,7 @@ import { PAGES, PAGES_DEFAULT } from '../data/pages.js';
 import { GUIDE_CURRENCIES, DEFAULT_RATES } from '../data/currencies.js';
 import { sampleReport } from './sampleAnalytics.js';
 
-const KEY = 'masq:preview-store-3';   // a new number whenever the sample's shape changes
+const KEY = 'masq:preview-store-4';   // a new number whenever the sample's shape changes
 const ZONES = ['lagos', 'abuja', 'nigeria', 'international'];
 const ZONE_LABELS = { lagos: 'Lagos', abuja: 'Abuja (FCT)', nigeria: 'Rest of Nigeria', international: 'Outside Nigeria' };
 const STATES = [
@@ -36,7 +36,7 @@ function sampleStore() {
     id: p.id, name: p.name, priceKobo: p.naira * 100, img: p.img, uploaded: null,
     badge: p.badge ?? null, inDrop: !!p.drop, featured: !!p.featured, inEssentials: !!p.essential,
     hidden: false, position, description: '', details: '', extras: [], availableAt: null,
-    colours: (p.colours ?? []).map(c => ({ id: ++colourId, name: c.name, hex: c.hex, photo: null })),
+    colours: (p.colours ?? []).map(c => ({ id: ++colourId, name: c.name, hex: c.hex, img: c.img ?? '', photo: null })),
     sizes: (p.colours ?? [{ name: '', sizes: p.sizes }]).flatMap(c =>
       Object.entries(c.sizes).map(([size, stock]) => ({ variantId: ++variantId, colour: c.name, size, stock })))
   }));
@@ -141,7 +141,8 @@ function shopSizes(p, rows) {
     return { size, available: stock > 0, left: stock > 0 && stock < 10 ? stock : null };
   });
 }
-const colourPhoto = (c) => (c.photo ? { img: c.photo.img, img2x: c.photo.img2x } : { img: null, img2x: null });
+const colourPhoto = (c) => (c.photo ? { img: c.photo.img, img2x: c.photo.img2x }
+  : c.img ? { img: c.img, img2x: twin(c.img) } : { img: null, img2x: null });
 
 function shape(p, forAdmin) {
   const { main, all } = photosOf(p);

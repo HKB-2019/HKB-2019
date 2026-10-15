@@ -5,7 +5,7 @@ import { useShop, useHome } from '../store/ShopContext.jsx';
 import { srcSet, CARD_SIZES } from '../lib/media.js';
 import { scrollToId } from '../lib/scroll.js';
 import { useGlideToProduct } from '../lib/pageMorph.js';
-import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel } from '../lib/colours.js';
+import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel, photoFor } from '../lib/colours.js';
 import Swatches, { ColourDots } from './Swatches.jsx';
 import { Arrow, Heart } from './Icons.jsx';
 
@@ -16,9 +16,11 @@ const ease = [0.33, 0.02, 0.18, 1];
  * disabled. A piece sold in colours gets its swatches first, and the sizes
  * are that colour's.
  */
-export function SizeButtons({ product, onPicked }) {
+export function SizeButtons({ product, onPicked, onColour }) {
   const { addToCart } = useShop();
-  const [colour, setColour] = useState(() => firstColour(product));
+  const [colour, setColourState] = useState(() => firstColour(product));
+  // The card's photo follows the colour picked here (onColour).
+  const setColour = (name) => { setColourState(name); onColour?.(name); };
   const sizes = sizesFor(product, colour);
   return (
     <>
@@ -44,9 +46,14 @@ export function SizeButtons({ product, onPicked }) {
 function ProductCard({ product, picking, onPick, onClosePick }) {
   const { wishlist, toggleWish, format, toast, addToCart } = useShop();
   const glide = useGlideToProduct();
-  const to = `/product/${product.id}`;
+  const base = `/product/${product.id}`;
   const saved = wishlist.includes(product.id);
   const only = onlyChoice(product);
+  // The colour being looked at in the quick-add; its photo shows on the card.
+  const [shown, setShown] = useState(() => firstColour(product));
+  const pic = hasColours(product) ? photoFor(product, shown) : product;
+  // …and the product page opens on that colour.
+  const to = hasColours(product) && shown !== firstColour(product) ? `${base}?colour=${encodeURIComponent(shown)}` : base;
 
   const onQuickAdd = () => {
     if (product.soldOut) { toast('SOLD OUT — JOIN THE LIST FOR RESTOCKS'); return; }
@@ -70,8 +77,8 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
         {/* The photo opens the product page. Kept out of the tab order: the
             name below is the same link, and one stop per card is enough. */}
         <Link to={to} onClick={(e) => glide(e, to)} className="card__link" tabIndex={-1} aria-hidden="true">
-          {product.img && (
-            <img src={product.img} srcSet={srcSet(product)} sizes={CARD_SIZES} alt="" loading="lazy" />
+          {pic.img && (
+            <img key={pic.img} className="card__img" src={pic.img} srcSet={srcSet(pic)} sizes={CARD_SIZES} alt="" loading="lazy" />
           )}
         </Link>
 
@@ -89,7 +96,7 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
         </button>
 
         <div className={`card__sizes${hasColours(product) ? ' card__sizes--colours' : ''}`}>
-          <SizeButtons product={product} onPicked={onClosePick} />
+          <SizeButtons product={product} onPicked={onClosePick} onColour={setShown} />
         </div>
       </div>
 

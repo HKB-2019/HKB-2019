@@ -445,10 +445,12 @@ because the security policy allows scripts from the site only.
 Every colour is a variable at the top of `src/styles.css`; the light theme
 redefines them under `:root[data-theme="light"]`. Text colours are at least
 4.5:1 on every ground in both. See-through colours are written as channels
-(`rgb(var(--ink-rgb) / .2)`), so they follow too. A few things are more than a
-colour swap: the studio photos are shot on black, so in light they sit as
-clean panels (the hero below the menu, without its fade), and the film strip
-keeps the dark look so its label always reads on the photo. The admin's
+(`rgb(var(--ink-rgb) / .2)`), so they follow too. Some parts look the same in
+both themes, because they are shot and designed on black: the top of the home
+page (the photo, and the menu while it sits over it), the "Craft. Culture.
+Identity." band, the film strip, the Essentials carousel, the full-screen
+photo view and the "Shown in …" label. Inside them the dark palette applies
+(`:is(.hero, .craft, …)` at the end of `src/styles.css`). The admin's
 charts have their own colours per theme, each checked with the dataviz
 validator against that theme's card background.
 

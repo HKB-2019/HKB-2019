@@ -59,7 +59,9 @@ export default function Header() {
   };
 
   return (
-    <header className={`header${stuck ? ' is-stuck' : ''}`}>
+    // At the top of the home page the menu sits over the dark photo, so it
+    // keeps the dark look there in either theme.
+    <header className={`header${stuck ? ' is-stuck' : ''}${pathname === '/' && !stuck ? ' header--over-dark' : ''}`}>
       <div className="header__inner">
         <button
           className="burger"

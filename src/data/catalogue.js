@@ -2,7 +2,9 @@
  * seed.js), and the sample stock in the preview build. Prices are naira. */
 
 /* A piece sold in colours lists them in `colours`, each with its own counts
- * per size; the first is the colour in its photo. Other pieces have `sizes`.
+ * per size and, if there is one, its own photo; the first is the colour in
+ * the main photo. Other pieces have `sizes`. prod-tee-black is the tee's
+ * photo recoloured — a stand-in until the real one is shot.
  *
  * Reproduces the storefront as designed: four featured pieces, four more
  * behind VIEW ALL, and the Essentials carousel as its own selection (the pod
@@ -10,10 +12,14 @@
 export const CATALOGUE = [
   { id:'tee',      name:'THE FACE TEE',         naira:28000, img:'assets/img/prod-tee.webp',      drop:1, featured:1, essential:0, colours:[
       { name:'Indigo', hex:'#3d2f9e', sizes:{ S:12, M:18, L:14, XL:6 } },
-      { name:'Black',  hex:'#141416', sizes:{ S:8, M:10, L:9, XL:4 } },
+      { name:'Black',  hex:'#141416', sizes:{ S:8, M:10, L:9, XL:4 }, img:'assets/img/prod-tee-black.webp' },
       { name:'White',  hex:'#efece6', sizes:{ S:5, M:7, L:6, XL:2 } }
     ] },
-  { id:'cap',      name:'THE MARK CAP',         naira:14000, img:'assets/img/prod-cap.webp',      drop:1, featured:1, essential:1, sizes:{ 'ONE SIZE':30 } },
+  { id:'cap',      name:'THE MARK CAP',         naira:14000, img:'assets/img/prod-cap.webp',      drop:1, featured:1, essential:1, colours:[
+      { name:'Black',  hex:'#141416', sizes:{ 'ONE SIZE':30 } },
+      { name:'Green',  hex:'#2f5a3c', sizes:{ 'ONE SIZE':12 } },
+      { name:'White',  hex:'#efece6', sizes:{ 'ONE SIZE':10 } }
+    ] },
   { id:'backpack', name:'THE CARRIER BACKPACK', naira:65000, img:'assets/img/prod-backpack.webp', drop:1, featured:1, essential:1, sizes:{ 'ONE SIZE':8 } },
   { id:'scarf',    name:'THE PATTERN SCARF',    naira:18000, img:'assets/img/prod-scarf.webp',    drop:1, featured:1, essential:1, sizes:{ 'ONE SIZE':22 } },
   { id:'hoodie',   name:'THE RITUAL HOODIE',    naira:52000, img:'assets/img/ess-hoodie.webp',    drop:1, featured:0, essential:1, colours:[

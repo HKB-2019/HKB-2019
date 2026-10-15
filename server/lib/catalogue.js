@@ -46,7 +46,7 @@ export async function loadProducts({ forAdmin = false } = {}) {
   `);
   const variants = await query('SELECT id, product_id, colour, size, stock FROM variants ORDER BY id');
   const extras = await query('SELECT id, product_id, image_id FROM product_photos ORDER BY position, id');
-  const colourRows = await query('SELECT id, product_id, name, hex, image_id FROM product_colours ORDER BY position, id');
+  const colourRows = await query('SELECT id, product_id, name, hex, image_id, img FROM product_colours ORDER BY position, id');
 
   return products.map(p => {
     const sizes = variants.filter(v => v.product_id === p.id);
@@ -57,9 +57,8 @@ export async function loadProducts({ forAdmin = false } = {}) {
       const stock = rows.filter(r => r.size === size).reduce((n, r) => n + Math.max(0, r.stock), 0);
       return { size, available: stock > 0, left: stock > 0 && stock < SHOW_COUNT_BELOW ? stock : null };
     });
-    const colourPhoto = (c) => c.image_id
-      ? { img: `/api/images/${c.image_id}`, img2x: `/api/images/${c.image_id}/2x` }
-      : { img: null, img2x: null };
+    // A colour's own photo: an upload, else one that shipped with the site.
+    const colourPhoto = (c) => (c.image_id || c.img ? photoUrls(c) : { img: null, img2x: null });
     const { img, img2x } = photoUrls(p);
     const more = extras.filter(x => x.product_id === p.id);
     // The gallery: the main photo first, then the extra ones in order.

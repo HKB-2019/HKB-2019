@@ -178,7 +178,7 @@ test('every range answers, compares with the one before, and the owner alone can
 
 test('repeat customers and unfinished checkouts come from real orders', async () => {
   const buy = async (email, id) => {
-    const o = await shop.checkout({ ...WHO, email, items: [{ productId: 'cap', size: 'ONE SIZE', qty: 1 }] });
+    const o = await shop.checkout({ ...WHO, email, items: [{ productId: 'cap', colour: 'Black', size: 'ONE SIZE', qty: 1 }] });
     const raw = JSON.stringify({ event: 'charge.success', data: { id, reference: o.body.reference } });
     await shop.request('/api/paystack/webhook', { method: 'POST', body: raw,
       headers: { 'Content-Type': 'application/json', 'x-paystack-signature': sign(raw) } });
@@ -186,7 +186,7 @@ test('repeat customers and unfinished checkouts come from real orders', async ()
   await buy('a@example.com', 601);
   await buy('a@example.com', 602);
   await buy('b@example.com', 603);
-  const left = await shop.checkout({ ...WHO, email: 'c@example.com', items: [{ productId: 'cap', size: 'ONE SIZE', qty: 1 }] });
+  const left = await shop.checkout({ ...WHO, email: 'c@example.com', items: [{ productId: 'cap', colour: 'Black', size: 'ONE SIZE', qty: 1 }] });
   await shop.query("UPDATE orders SET status = 'abandoned' WHERE reference = $1", [left.body.reference]);
   await new Promise(r => setTimeout(r, 150));
 

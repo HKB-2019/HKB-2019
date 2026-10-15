@@ -58,9 +58,9 @@ test('a customer buys a tee, pays, and the owner sees who to send it to', async 
 
 test('a customer who cancels on Paystack is told nothing was taken, and keeps their bag', async ({ page }) => {
   await page.goto('/');
-  const cap = card(page, 'THE MARK CAP');
-  await cap.hover();
-  await cap.getByRole('button', { name: 'ADD TO BAG' }).click();
+  const scarf = card(page, 'THE PATTERN SCARF');
+  await scarf.hover();
+  await scarf.getByRole('button', { name: 'ADD TO BAG' }).click();
 
   await page.locator('.cart-btn').click();
   await page.getByRole('button', { name: 'CHECKOUT' }).click();
@@ -71,7 +71,7 @@ test('a customer who cancels on Paystack is told nothing was taken, and keeps th
 
   await expect(page.locator('.status__title')).toHaveText('Payment not completed');
   await page.getByRole('link', { name: 'BACK TO YOUR BAG' }).click();
-  await expect(page.locator('.drawer')).toContainText('THE MARK CAP');
+  await expect(page.locator('.drawer')).toContainText('THE PATTERN SCARF');
 });
 
 test('the carousel asks for a size instead of adding one that does not exist', async ({ page }) => {
@@ -99,19 +99,19 @@ test('a sold-out piece cannot go in the bag', async ({ page }) => {
 
 test('a price change in the admin reaches the shop and the bag', async ({ page }) => {
   await page.goto('/');
-  const cap = card(page, 'THE MARK CAP');
-  await expect(cap.locator('.card__price')).toHaveText('₦14,000');
-  await cap.hover();
-  await cap.getByRole('button', { name: 'ADD TO BAG' }).click();
+  const scarf = card(page, 'THE PATTERN SCARF');
+  await expect(scarf.locator('.card__price')).toHaveText('₦18,000');
+  await scarf.hover();
+  await scarf.getByRole('button', { name: 'ADD TO BAG' }).click();
 
   await signIn(page);
-  await adminPatch(page, 'cap', { priceNaira: 15000 });
+  await adminPatch(page, 'scarf', { priceNaira: 19000 });
 
   await page.reload();
-  await expect(card(page, 'THE MARK CAP').locator('.card__price')).toHaveText('₦15,000');
-  await expect(page.locator('.toast').first()).toContainText('NOW ₦15,000');
+  await expect(card(page, 'THE PATTERN SCARF').locator('.card__price')).toHaveText('₦19,000');
+  await expect(page.locator('.toast').first()).toContainText('NOW ₦19,000');
   await page.locator('.cart-btn').click();
-  await expect(page.locator('.line-item__price')).toHaveText('₦15,000');
+  await expect(page.locator('.line-item__price')).toHaveText('₦19,000');
 });
 
 test('a size set to zero in the admin is struck out on the shop, and leaves the bag', async ({ page }) => {
@@ -154,9 +154,9 @@ test('the bag stops at what is left', async ({ page }) => {
 test('checkout stays closed until delivery is priced', async ({ page, shop }) => {
   await shop.reset({ delivery: false });
   await page.goto('/');
-  const cap = card(page, 'THE MARK CAP');
-  await cap.hover();
-  await cap.getByRole('button', { name: 'ADD TO BAG' }).click();
+  const scarf = card(page, 'THE PATTERN SCARF');
+  await scarf.hover();
+  await scarf.getByRole('button', { name: 'ADD TO BAG' }).click();
   await page.locator('.cart-btn').click();
   await expect(page.locator('.drawer')).toContainText('Checkout opens soon');
   await expect(page.getByRole('button', { name: 'CHECKOUT' })).toBeDisabled();
@@ -164,9 +164,9 @@ test('checkout stays closed until delivery is priced', async ({ page, shop }) =>
 
 test('the delivery form says what is missing, beside the box that is missing it', async ({ page }) => {
   await page.goto('/');
-  const cap = card(page, 'THE MARK CAP');
-  await cap.hover();
-  await cap.getByRole('button', { name: 'ADD TO BAG' }).click();
+  const scarf = card(page, 'THE PATTERN SCARF');
+  await scarf.hover();
+  await scarf.getByRole('button', { name: 'ADD TO BAG' }).click();
   await page.locator('.cart-btn').click();
   await page.getByRole('button', { name: 'CHECKOUT' }).click();
   await page.getByRole('button', { name: /^PAY/ }).click();

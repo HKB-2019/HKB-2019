@@ -11,24 +11,24 @@ const noSidewaysScroll = async (page) => {
 test('the shop fits a phone, and the add button is visible without a mouse', async ({ page }) => {
   await page.goto('/');
   await noSidewaysScroll(page);
-  const cap = card(page, 'THE MARK CAP');
-  await cap.scrollIntoViewIfNeeded();
-  await expect(cap.getByRole('button', { name: 'ADD TO BAG' })).toBeInViewport();
-  await cap.getByRole('button', { name: 'ADD TO BAG' }).tap();
+  const scarf = card(page, 'THE PATTERN SCARF');
+  await scarf.scrollIntoViewIfNeeded();
+  await expect(scarf.getByRole('button', { name: 'ADD TO BAG' })).toBeInViewport();
+  await scarf.getByRole('button', { name: 'ADD TO BAG' }).tap();
   await expect(page.locator('.cart-count')).toHaveText('1');
 });
 
 test('checkout works on a phone', async ({ page }) => {
   await page.goto('/');
-  const cap = card(page, 'THE MARK CAP');
-  await cap.scrollIntoViewIfNeeded();
-  await cap.getByRole('button', { name: 'ADD TO BAG' }).tap();
+  const scarf = card(page, 'THE PATTERN SCARF');
+  await scarf.scrollIntoViewIfNeeded();
+  await scarf.getByRole('button', { name: 'ADD TO BAG' }).tap();
   await page.locator('.cart-btn').tap();
   await page.getByRole('button', { name: 'CHECKOUT' }).tap();
   await fillDelivery(page);
   await noSidewaysScroll(page);
   await page.getByRole('button', { name: /^PAY/ }).tap();
-  await expect(page.locator('h1')).toContainText('Pay ₦16,500');
+  await expect(page.locator('h1')).toContainText('Pay ₦20,500');
 });
 
 test('every admin tab fits a phone', async ({ page }) => {

@@ -31,9 +31,9 @@ export async function seed({ reset = false } = {}) {
       for (const [i, c] of colours.entries()) {
         if (c.name) {
           await tx.query(`
-            INSERT INTO product_colours (product_id, name, hex, position) VALUES ($1, $2, $3, $4)
-            ON CONFLICT (product_id, name) DO UPDATE SET hex = EXCLUDED.hex, position = EXCLUDED.position
-          `, [p.id, c.name, c.hex, i]);
+            INSERT INTO product_colours (product_id, name, hex, position, img) VALUES ($1, $2, $3, $4, $5)
+            ON CONFLICT (product_id, name) DO UPDATE SET hex = EXCLUDED.hex, position = EXCLUDED.position, img = EXCLUDED.img
+          `, [p.id, c.name, c.hex, i, c.img ?? '']);
         }
         for (const [size, stock] of Object.entries(c.sizes)) {
           await tx.query(`

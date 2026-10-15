@@ -59,7 +59,7 @@ test('a piece sold in colours cannot be bought without choosing one, or in one i
   assert.match(short.body.error, /THE FACE TEE \(White, XL\) — only 1 left/);
 
   // And a piece with no colours is bought by size alone, as before.
-  assert.equal((await buy([{ productId: 'cap', size: 'ONE SIZE', qty: 1 }])).status, 200);
+  assert.equal((await buy([{ productId: 'scarf', size: 'ONE SIZE', qty: 1 }])).status, 200);
 });
 
 test('a colour sold out in one size shows so, while the others stay on sale', async () => {
@@ -86,24 +86,24 @@ test('a colour sold out in one size shows so, while the others stay on sale', as
 });
 
 test('giving a piece its first colour keeps the stock already counted', async () => {
-  const add = await api('/products/cap/colours', 'POST', { name: 'black', hex: '#111111' });
+  const add = await api('/products/scarf/colours', 'POST', { name: 'black', hex: '#111111' });
   assert.equal(add.status, 201, add.raw);
   assert.deepEqual(add.body.colours.map(c => c.name), ['Black'], 'names are tidied');
-  assert.equal(await stock('cap', 'Black', 'ONE SIZE'), 30, 'the 30 already counted are the black ones');
+  assert.equal(await stock('scarf', 'Black', 'ONE SIZE'), 22, 'the 22 already counted are the black ones');
 
-  const second = await api('/products/cap/colours', 'POST', { name: 'Indigo', hex: '#3D2F9E' });
+  const second = await api('/products/scarf/colours', 'POST', { name: 'Indigo', hex: '#3D2F9E' });
   assert.equal(second.status, 201);
-  assert.equal(await stock('cap', 'Indigo', 'ONE SIZE'), 0, 'a new colour starts at 0');
+  assert.equal(await stock('scarf', 'Indigo', 'ONE SIZE'), 0, 'a new colour starts at 0');
   assert.equal(second.body.colours[1].hex, '#3d2f9e');
 
-  assert.equal((await api('/products/cap/colours', 'POST', { name: 'BLACK', hex: '#000000' })).status, 409, 'once each');
-  assert.equal((await api('/products/cap/colours', 'POST', { name: 'Red', hex: 'red' })).status, 400, 'a swatch is a colour code');
-  assert.equal((await api('/products/cap/colours', 'POST', { name: '  ', hex: '#ff0000' })).status, 400);
+  assert.equal((await api('/products/scarf/colours', 'POST', { name: 'BLACK', hex: '#000000' })).status, 409, 'once each');
+  assert.equal((await api('/products/scarf/colours', 'POST', { name: 'Red', hex: 'red' })).status, 400, 'a swatch is a colour code');
+  assert.equal((await api('/products/scarf/colours', 'POST', { name: '  ', hex: '#ff0000' })).status, 400);
 
   // A size added later comes in every colour.
-  await api('/products/cap/sizes', 'POST', { size: 'Kids' });
-  assert.equal(await stock('cap', 'Black', 'KIDS'), 0);
-  assert.equal(await stock('cap', 'Indigo', 'KIDS'), 0);
+  await api('/products/scarf/sizes', 'POST', { size: 'Kids' });
+  assert.equal(await stock('scarf', 'Black', 'KIDS'), 0);
+  assert.equal(await stock('scarf', 'Indigo', 'KIDS'), 0);
 });
 
 test('a colour is renamed everywhere it is counted; past orders keep the old name', async () => {
@@ -155,24 +155,31 @@ test('a colour goes only once it is empty and nobody is paying for one; the last
 
 test('a colour can have its own photo, shown for it on the shop', async () => {
   const tee = await product('tee');
-  const black = tee.colours.find(c => c.name === 'Black');
-  const up = await shop.request(`/api/admin/products/tee/colours/${black.id}/image`, {
+  const white = tee.colours.find(c => c.name === 'White');
+  const up = await shop.request(`/api/admin/products/tee/colours/${white.id}/image`, {
     method: 'POST', cookie, json: { image: b64(PHOTO.webp), image2x: b64(PHOTO.webp) }
   });
   assert.equal(up.status, 200, up.raw);
-  const shown = (await shopProduct('tee')).colours.find(c => c.name === 'Black');
+  const shown = (await shopProduct('tee')).colours.find(c => c.name === 'White');
   assert.match(shown.img, /^\/api\/images\/\d+$/);
   assert.equal((await shop.request(shown.img)).status, 200);
 
-  const svg = await shop.request(`/api/admin/products/tee/colours/${black.id}/image`, {
+  const svg = await shop.request(`/api/admin/products/tee/colours/${white.id}/image`, {
     method: 'POST', cookie, json: { image: b64(PHOTO.svg), image2x: b64(PHOTO.svg) }
   });
   assert.equal(svg.status, 415, 'the same photo checks as any other: an SVG is refused');
 
-  const removed = await api(`/products/tee/colours/${black.id}/image`, 'DELETE');
-  assert.equal(removed.body.colours.find(c => c.name === 'Black').img, null);
+  const removed = await api(`/products/tee/colours/${white.id}/image`, 'DELETE');
+  assert.equal(removed.body.colours.find(c => c.name === 'White').img, null, 'back to no photo of its own');
   const { n } = await shop.one('SELECT COUNT(*) AS n FROM images');
   assert.equal(n, 0, 'the photo is deleted, not left behind');
+});
+
+test('a colour can show a photo that shipped with the site, and an upload takes over from it', async () => {
+  const black = (await shopProduct('tee')).colours.find(c => c.name === 'Black');
+  assert.equal(black.img, '/assets/img/prod-tee-black.webp');
+  assert.equal(black.img2x, '/assets/img/prod-tee-black@2x.webp');
+  assert.equal((await shop.request(black.img)).status, 200);
 });
 
 test('the sales summary names the colours that sell', async () => {

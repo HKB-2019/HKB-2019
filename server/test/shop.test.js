@@ -175,7 +175,7 @@ test('subtotal is exact across mixed quantities (integer kobo, no float drift)',
     items: [
       { productId: 'tee',   colour: 'Indigo', size: 'M',        qty: 3 },   // 3 x 28,000
       { productId: 'scarf', size: 'ONE SIZE', qty: 2 },   // 2 x 18,000
-      { productId: 'cap',   size: 'ONE SIZE', qty: 1 }    // 1 x 14,000
+      { productId: 'cap',   colour: 'Black', size: 'ONE SIZE', qty: 1 }    // 1 x 14,000
     ]
   });
   assert.equal(res.status, 200);
@@ -209,7 +209,7 @@ test('a failed line leaves nothing held from the lines before it', async () => {
   const res = await checkout({
     email: 'a@example.com',
     items: [
-      { productId: 'cap',   size: 'ONE SIZE', qty: 2 },   // fine on its own
+      { productId: 'cap',   colour: 'Black', size: 'ONE SIZE', qty: 2 },   // fine on its own
       { productId: 'phone', size: 'ONE SIZE', qty: 1 }    // sold out
     ]
   });
@@ -236,20 +236,20 @@ test('held stock is returned when the payment provider cannot be reached', async
 test('unknown product or size is rejected', async () => {
   stubPaystack();
   assert.equal((await checkout({ email: 'a@example.com', items: [{ productId: 'nope', size: 'M', qty: 1 }] })).status, 404);
-  assert.equal((await checkout({ email: 'a@example.com', items: [{ productId: 'cap', size: 'XXL', qty: 1 }] })).status, 404);
+  assert.equal((await checkout({ email: 'a@example.com', items: [{ productId: 'cap', colour: 'Black', size: 'XXL', qty: 1 }] })).status, 404);
 });
 
 test('nonsense quantities are rejected', async () => {
   stubPaystack();
   for (const qty of [0, -1, 1.5, 999, '2', null]) {
-    const res = await checkout({ email: 'a@example.com', items: [{ productId: 'cap', size: 'ONE SIZE', qty }] });
+    const res = await checkout({ email: 'a@example.com', items: [{ productId: 'cap', colour: 'Black', size: 'ONE SIZE', qty }] });
     assert.equal(res.status, 400, `qty ${JSON.stringify(qty)} should be refused`);
   }
 });
 
 test('a bad email is rejected before anything is reserved', async () => {
   stubPaystack();
-  const res = await checkout({ email: 'not-an-email', items: [{ productId: 'cap', size: 'ONE SIZE', qty: 1 }] });
+  const res = await checkout({ email: 'not-an-email', items: [{ productId: 'cap', colour: 'Black', size: 'ONE SIZE', qty: 1 }] });
   assert.equal(res.status, 400);
   assert.equal(paystackCalls.length, 0);
 });
@@ -469,7 +469,7 @@ test('paying after the last one sold to someone else is flagged for a refund, ne
 test('a late payment for a multi-piece order takes back all of it or none of it', async () => {
   stubPaystack({ verifyStatus: 'abandoned' });
   const res = await checkout({ email: 'late@example.com', items: [
-    { productId: 'cap',    size: 'ONE SIZE', qty: 1 },
+    { productId: 'cap',    colour: 'Black', size: 'ONE SIZE', qty: 1 },
     { productId: 'jacket', size: 'XL',       qty: 1 }
   ]});
   const late = res.body.reference;
@@ -508,7 +508,7 @@ test('the catalogue reports real stock and computes soldOut', async () => {
   assert.equal(indigo.sizes.find(s => s.size === 'M').left, null, 'a healthy count is nobody\'s business');
   assert.equal(tee.colours[2].sizes.find(s => s.size === 'XL').left, 2);
   assert.equal(indigo.img, null, 'no photo of its own: the main photo shows');
-  assert.deepEqual(res.body.find(p => p.id === 'cap').colours, [], 'one colour: no choice to make');
+  assert.deepEqual(res.body.find(p => p.id === 'scarf').colours, [], 'one colour: no choice to make');
   assert.equal(tee.img, '/assets/img/prod-tee.webp');
   assert.equal(tee.img2x, '/assets/img/prod-tee@2x.webp');
 

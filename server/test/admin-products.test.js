@@ -158,9 +158,9 @@ test('a size can only be removed once it is empty and nobody is paying for one',
 });
 
 test('the last size of a product on sale cannot be removed', async () => {
-  const cap = (await api('/products')).body.find(p => p.id === 'cap');
-  await api(`/stock/${cap.sizes[0].variantId}`, 'POST', { stock: 0 });
-  const res = await api(`/products/cap/sizes/${cap.sizes[0].variantId}`, 'DELETE');
+  const scarf = (await api('/products')).body.find(p => p.id === 'scarf');
+  await api(`/stock/${scarf.sizes[0].variantId}`, 'POST', { stock: 0 });
+  const res = await api(`/products/scarf/sizes/${scarf.sizes[0].variantId}`, 'DELETE');
   assert.equal(res.status, 409);
   assert.match(res.body.error, /off sale first/);
 });
@@ -308,7 +308,7 @@ test('an unknown setting is not a way to store things', async () => {
 test('the orders spreadsheet has the delivery details, and cannot run a formula', async () => {
   await shop.checkout({
     email: 'a@example.com', name: '=HYPERLINK("http://evil.test","click")',
-    items: [{ productId: 'cap', size: 'ONE SIZE', qty: 2 }]
+    items: [{ productId: 'cap', colour: 'Black', size: 'ONE SIZE', qty: 2 }]
   });
   const res = await shop.request('/api/admin/orders.csv', { cookie });
   assert.equal(res.status, 200);
@@ -319,7 +319,7 @@ test('the orders spreadsheet has the delivery details, and cannot run a formula'
   assert.deepEqual([...bytes.slice(0, 3)], [0xEF, 0xBB, 0xBF], 'marked as UTF-8 so ₦ survives Excel');
   assert.ok(res.raw.includes(`"'=HYPERLINK(""http://evil.test"",""click"")"`), 'neutralised as text');
   assert.ok(res.raw.includes('"12 Admiralty Way"'));
-  assert.ok(res.raw.includes('"2× THE MARK CAP (ONE SIZE)"'));
+  assert.ok(res.raw.includes('"2× THE MARK CAP (Black, ONE SIZE)"'));
   assert.ok(res.raw.includes('"2500.00"'), 'delivery fee');
 });
 
@@ -341,7 +341,7 @@ test('the mailing list can be read, exported and trimmed', async () => {
 });
 
 test('orders show the admin who and where', async () => {
-  await shop.checkout({ email: 'a@example.com', items: [{ productId: 'cap', size: 'ONE SIZE', qty: 1 }] });
+  await shop.checkout({ email: 'a@example.com', items: [{ productId: 'cap', colour: 'Black', size: 'ONE SIZE', qty: 1 }] });
   const [o] = (await api('/orders')).body;
   assert.equal(o.name, 'Ada Obi');
   assert.equal(o.phone, '+234 803 123 4567');

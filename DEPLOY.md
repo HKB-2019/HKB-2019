@@ -94,8 +94,11 @@ Everything below is in the admin — no code.
    it is cropped and shrunk before it uploads.
    Write a description for each — it shows on the product's own page, and
    in the preview when someone shares the link on WhatsApp.
-   **Colours:** the sample tee (Indigo, Black, White) and hoodie (Black,
-   Indigo) have made-up colours and counts. Set the real ones under
+   **Colours:** the sample tee (Indigo, Black, White), hoodie (Black,
+   Indigo) and cap (Black, Green, White) have made-up colours and counts.
+   The black tee's photo is the indigo one recoloured — replace it with a
+   real one — and the other extra colours have no photo yet (the page says
+   which colour is shown). Set the real ones under
    *Colours* on each card: the first colour is the one in the main photo,
    and each colour can have a photo of its own. A piece with no colours is
    sold by size alone.

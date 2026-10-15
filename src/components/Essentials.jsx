@@ -5,7 +5,7 @@ import { srcSet, SLIDE_SIZES } from '../lib/media.js';
 import { expandDropGrid, SizeButtons } from './DropGrid.jsx';
 import { Arrow, CaretLeft, CaretRight } from './Icons.jsx';
 import { useGlideToProduct } from '../lib/pageMorph.js';
-import { hasColours, onlyChoice } from '../lib/colours.js';
+import { hasColours, onlyChoice, firstColour, photoFor } from '../lib/colours.js';
 
 const DRAG_THRESHOLD = 5;
 
@@ -15,6 +15,7 @@ export default function Essentials() {
   const { home } = useHome();
   const essentials = products.filter(p => p.inEssentials);
   const [picking, setPicking] = useState(null);
+  const [shownColours, setShownColours] = useState({});
   const trackRef = useRef(null);
   const [pages, setPages]   = useState(1);
   const [page, setPage]     = useState(0);
@@ -158,6 +159,11 @@ export default function Essentials() {
             // One size: add it. Several, or colours: ask which — the old
             // carousel added the hoodie in "ONE SIZE", which it does not come in.
             const only = onlyChoice(p);
+            // The colour picked in the quick-add: its photo shows on the slide,
+            // and the page opens on it.
+            const shown = shownColours[p.id] ?? firstColour(p);
+            const pic = hasColours(p) ? photoFor(p, shown) : p;
+            const to = `/product/${p.id}${hasColours(p) && shown !== firstColour(p) ? `?colour=${encodeURIComponent(shown)}` : ''}`;
             const onPick = () => {
               if (p.soldOut) { toast('SOLD OUT — JOIN THE LIST FOR RESTOCKS'); return; }
               if (only) addToCart(p, only.size);
@@ -165,10 +171,10 @@ export default function Essentials() {
             };
             return (
               <article className={`slide${picking === p.id ? ' is-picking' : ''}`} key={p.id}>
-                {p.img && (
-                  <Link to={`/product/${p.id}`} onClick={(e) => glide(e, `/product/${p.id}`)} className="slide__link" draggable="false"
+                {pic.img && (
+                  <Link to={to} onClick={(e) => glide(e, to)} className="slide__link" draggable="false"
                         aria-label={`${p.name} — see the details`}>
-                    <img src={p.img} srcSet={srcSet(p)} sizes={SLIDE_SIZES} alt="" loading="lazy" draggable="false" />
+                    <img key={pic.img} src={pic.img} srcSet={srcSet(pic)} sizes={SLIDE_SIZES} alt="" loading="lazy" draggable="false" />
                   </Link>
                 )}
                 <div className="slide__meta">
@@ -182,7 +188,8 @@ export default function Essentials() {
                 </div>
                 {!only && (
                   <div className={`card__sizes slide__sizes${hasColours(p) ? ' card__sizes--colours' : ''}`} aria-hidden={picking !== p.id}>
-                    <SizeButtons product={p} onPicked={() => setPicking(null)} />
+                    <SizeButtons product={p} onPicked={() => setPicking(null)}
+                                 onColour={(c) => setShownColours(m => ({ ...m, [p.id]: c }))} />
                   </div>
                 )}
               </article>

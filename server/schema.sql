@@ -106,6 +106,9 @@ CREATE TABLE IF NOT EXISTS product_colours (
   UNIQUE (product_id, name)
 );
 
+-- A colour's photo that shipped with the site (assets/img/…); an upload
+-- (image_id) takes over from it, as for a product's main photo.
+ALTER TABLE product_colours ADD COLUMN IF NOT EXISTS img TEXT NOT NULL DEFAULT '';
 ALTER TABLE variants ADD COLUMN IF NOT EXISTS colour TEXT NOT NULL DEFAULT '';
 -- One stock count per product, colour and size (it was per product and size).
 DO $$

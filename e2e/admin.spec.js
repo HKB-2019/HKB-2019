@@ -89,9 +89,9 @@ test('delivery prices set in the admin are what the customer is charged', async 
   await expect(page.locator('.admin-card').first().locator('.admin-note--ok')).toBeVisible();
 
   await page.goto('/');
-  const cap = card(page, 'THE MARK CAP');
-  await cap.hover();
-  await cap.getByRole('button', { name: 'ADD TO BAG' }).click();
+  const scarf = card(page, 'THE PATTERN SCARF');
+  await scarf.hover();
+  await scarf.getByRole('button', { name: 'ADD TO BAG' }).click();
   await page.locator('.cart-btn').click();
   await page.getByRole('button', { name: 'CHECKOUT' }).click();
   await page.selectOption('#d-state', 'Lagos');
@@ -114,7 +114,7 @@ test('the orders spreadsheet downloads', async ({ page }) => {
   await page.request.post('/api/checkout', { data: {
     email: 'a@example.com', name: 'Ada Obi', phone: '0803 123 4567',
     address: { line1: '12 Admiralty Way', city: 'Lekki', state: 'Lagos', country: 'Nigeria' },
-    items: [{ productId: 'cap', size: 'ONE SIZE', qty: 1 }]
+    items: [{ productId: 'scarf', size: 'ONE SIZE', qty: 1 }]
   } });
   await page.goto('/admin');
   const download = page.waitForEvent('download');
