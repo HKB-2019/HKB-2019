@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, HashRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { MotionConfig } from 'framer-motion';
 import { trackPageview } from './lib/analytics.js';
 import Storefront from './pages/Storefront.jsx';
 import OrderStatus from './pages/OrderStatus.jsx';
@@ -25,6 +26,9 @@ export default function App() {
   return (
     // Page changes apply at once rather than in the background, so the
     // browser's page transition can picture the new page (src/lib/pageMorph.js).
+    // A device set to reduce motion: Framer Motion keeps fades (so nothing
+    // pops in) and drops all movement — slides, scales, springs.
+    <MotionConfig reducedMotion="user">
     <Router useTransitions={false}>
       <Routes>
         <Route path="/" element={<Storefront />} />
@@ -38,5 +42,6 @@ export default function App() {
       <PreviewBanner />
       <PageTracker />
     </Router>
+    </MotionConfig>
   );
 }

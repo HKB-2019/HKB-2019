@@ -15,7 +15,7 @@ import { useGlideToProduct, arrivedByPhoto, FROM_SHOP } from '../lib/pageMorph.j
 import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel } from '../lib/colours.js';
 import Swatches from '../components/Swatches.jsx';
 
-const ease = [0.33, 0.02, 0.18, 1];
+import { EASE_OUT } from '../lib/motion.js';
 const TITLE = document.title;
 
 /* ------------------------------------------------------------- gallery */
@@ -403,7 +403,7 @@ export default function ProductPage() {
     body = (
       <>
         <motion.div className="pdp" key={product.id}
-                    initial={arrivedByPhoto() ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}>
+                    initial={arrivedByPhoto() ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: EASE_OUT }}>
           <div className="pdp__crumbs">
             <a href={`/${section}`} className="pdp__back" onClick={back}>
               <span aria-hidden="true">←</span> BACK

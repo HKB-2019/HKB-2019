@@ -147,6 +147,14 @@ test('a device set to reduce motion gets the shop without the extra movement', a
   await expect(calm.locator('.hero__title')).toBeVisible();
   // No smooth scrolling and no drifting photos.
   await expect(calm.locator('html')).not.toHaveClass(/lenis|has-drift/);
+
+  // The bag does not slide in: it is in place from the first frame.
+  await calm.locator('.cart-btn').click();
+  const drawer = calm.locator('.drawer');
+  await expect(drawer).toBeVisible();
+  const box = await drawer.boundingBox();
+  expect(box.x + box.width).toBeLessThanOrEqual(calm.viewportSize().width + 1);
+  expect(await drawer.evaluate(el => getComputedStyle(el).transform)).toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
   await calm.close();
 });
 

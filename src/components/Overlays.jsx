@@ -15,7 +15,7 @@ import { FROM_SHOP } from '../lib/pageMorph.js';
 import { JoinForm } from './Newsletter.jsx';
 import Lines from './Lines.jsx';
 
-const ease = [0.33, 0.02, 0.18, 1];
+import { EASE_OUT, UI_IN, UI_OUT } from '../lib/motion.js';
 
 /* ------------------------------------------------------------ drawer shell */
 
@@ -82,8 +82,8 @@ function BagLines() {
           className="line-item"
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, x: 40 }}
-          transition={{ duration: 0.32, ease }}
+          exit={{ opacity: 0, x: 40, transition: { duration: UI_OUT, ease: EASE_OUT } }}
+          transition={{ duration: UI_IN, ease: EASE_OUT }}
         >
           <img className="line-item__img" src={item.img} alt={item.name} />
           <div>
@@ -434,10 +434,10 @@ function Modal({ label, labelledBy, wide, className = '', children }) {
       <motion.div
         ref={ref}
         className={`modal__panel ${className || (wide ? 'modal__panel--film' : 'modal__panel--sm')}`}
-        initial={{ opacity: 0, y: 20, scale: 0.984 }}
+        initial={{ opacity: 0, y: 14, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 12, scale: 0.988 }}
-        transition={{ duration: 0.42, ease }}
+        exit={{ opacity: 0, y: 8, scale: 0.98, transition: { duration: UI_OUT, ease: EASE_OUT } }}
+        transition={{ duration: UI_IN, ease: EASE_OUT }}
       >
         <button className="close-btn modal__close" data-close aria-label="Close" onClick={closeOverlay}>
           <Close />
@@ -601,8 +601,8 @@ export default function Overlays() {
             onClick={closeOverlay}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4, ease }}
+            exit={{ opacity: 0, transition: { duration: UI_OUT } }}
+            transition={{ duration: UI_IN, ease: EASE_OUT }}
           />
           {overlay === 'cart'  && <CartDrawer />}
           {overlay === 'saved' && <SavedDrawer />}

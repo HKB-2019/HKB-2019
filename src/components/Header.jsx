@@ -8,6 +8,7 @@ import { CURRENCIES } from '../data/currencies.js';
 import { jumpToTop } from '../lib/smoothScroll.js';
 import { ChevronDown, AccountIcon, BagIcon, Heart, Sun, Moon } from './Icons.jsx';
 import { useTheme } from '../lib/theme.js';
+import { EASE_OUT, UI_IN, UI_OUT } from '../lib/motion.js';
 
 export default function Header() {
   const { theme, toggle } = useTheme();
@@ -148,10 +149,12 @@ export default function Header() {
           <motion.nav
             className="mobile-nav is-open"
             aria-label="Mobile"
-            initial={{ height: 0 }}
-            animate={{ height: 'auto' }}
-            exit={{ height: 0 }}
-            transition={{ duration: 0.42, ease: [0.33, 0.02, 0.18, 1] }}
+            // Revealed downwards by a clip, not grown: animating height
+            // re-lays out the menu on every frame.
+            initial={{ clipPath: 'inset(0 0 100% 0)', opacity: 0 }}
+            animate={{ clipPath: 'inset(0 0 0% 0)', opacity: 1 }}
+            exit={{ clipPath: 'inset(0 0 100% 0)', opacity: 0, transition: { duration: UI_OUT, ease: EASE_OUT } }}
+            transition={{ duration: UI_IN, ease: EASE_OUT }}
           >
             {LINKS.map(({ href, label }) => (
               <a key={href} href={'/' + href} onClick={(e) => go(e, href)}>{label}</a>

@@ -5,7 +5,7 @@ import { asset } from '../lib/media.js';
 import { useHome } from '../store/ShopContext.jsx';
 import Lines from './Lines.jsx';
 
-const ease = [0.33, 0.02, 0.18, 1];
+import { EASE_SLOW as ease } from '../lib/motion.js';
 
 export default function Hero() {
   const { home, images, ready } = useHome();

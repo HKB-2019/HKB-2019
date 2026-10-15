@@ -9,7 +9,7 @@ import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel, photoFor } 
 import Swatches, { ColourDots } from './Swatches.jsx';
 import { Arrow, Heart } from './Icons.jsx';
 
-const ease = [0.33, 0.02, 0.18, 1];
+import { EASE_OUT, EASE_IN_OUT } from '../lib/motion.js';
 
 /**
  * Size buttons for one product: sold-out sizes shown, but struck through and
@@ -71,7 +71,7 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
       initial={{ opacity: 0, y: 26 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 12 }}
-      transition={{ duration: 0.55, ease, layout: { duration: 0.5, ease } }}
+      transition={{ duration: 0.4, ease: EASE_OUT, layout: { duration: 0.4, ease: EASE_IN_OUT } }}
     >
       <div className="card__media">
         {/* The photo opens the product page. Kept out of the tab order: the

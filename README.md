@@ -427,6 +427,23 @@ otherwise report revenue as `"4200000"`.
 
 ## Animation
 
+Timing and curves follow Emil Kowalski's rules (`.claude/skills/`), kept in
+one place: `src/lib/motion.js` and the matching `--ease-out` / `--ease-in-out`
+variables in `src/styles.css`.
+
+- **Everyday UI is quick:** panels, modals and the phone menu arrive in 0.28s
+  on a curve that starts fast and settles softly, and leave in 0.18s. Button
+  hovers take 0.2s. Only the home page's ceremonial moments (the hero photo,
+  the title) keep the slow-starting curve, on purpose.
+- **Pressed buttons give a little** (`scale(.97)`), so every tap is answered.
+- **Cheap to draw:** the phone menu is revealed with a clip rather than grown,
+  size buttons animate only their colours, and the photo zoom on hover is for
+  a mouse only (a tap on a phone fires a false hover).
+- **Reduce motion is respected everywhere:** `MotionConfig reducedMotion="user"`
+  (`src/App.jsx`) keeps Framer Motion's fades and drops its movement; CSS
+  transitions, the headline effect, the drifting photos and smooth scrolling
+  are off too. A browser test checks the bag no longer slides in.
+
 Framer Motion handles anything that needs to enter, leave, or be interrupted
 halfway:
 
