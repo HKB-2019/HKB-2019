@@ -374,6 +374,7 @@ function StockRow({ row, onSave }) {
       <td>
         <input
           className="admin-stock-input"
+          aria-label={`${row.name}, ${row.colour ? `${row.colour}, ` : ''}${row.size}, in stock`}
           type="number" min="0" inputMode="numeric"
           value={value}
           onChange={(e) => { setValue(e.target.value); setState(null); }}
@@ -487,6 +488,7 @@ export default function Admin() {
       </header>
 
       <main className="admin-main">
+        <h1 className="sr-only">MASQ. admin — {TABS.find(([t]) => t === tab)?.[1]}</h1>
         <Summary data={summary} goTo={goTo} />
 
         <AnimatePresence mode="wait">
@@ -511,7 +513,7 @@ export default function Admin() {
                 <div className="admin-table-wrap">
                   <table className="admin-table">
                     <thead>
-                      <tr><th>Piece</th><th>Colour, size</th><th className="num">Price</th><th>In stock</th><th></th></tr>
+                      <tr><th>Piece</th><th>Colour, size</th><th className="num">Price</th><th>In stock</th><th><span className="sr-only">Save</span></th></tr>
                     </thead>
                     <tbody>
                       {stock.map(row => (

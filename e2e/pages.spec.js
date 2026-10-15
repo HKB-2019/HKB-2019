@@ -52,7 +52,7 @@ test('the size guide, low-stock note and other pieces are on the product page', 
 
 test('the menu on a product page goes back to that part of the home page', async ({ page }) => {
   await page.goto('/product/cap');
-  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'COLLECTIONS' }).click();
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'ESSENTIALS' }).click();
   await expect(page).toHaveURL(/\/#essentials$/);
   await expect(page.locator('#essentials')).toBeInViewport();
 });

@@ -20,7 +20,7 @@ function Drawer({ label, title, count, children, foot }) {
   const { closeOverlay } = useShop();
   const ref = useFocusTrap(true);
   return (
-    <motion.aside
+    <motion.div
       ref={ref}
       className="drawer" data-lenis-prevent
       role="dialog" aria-modal="true" aria-label={label}
@@ -37,7 +37,7 @@ function Drawer({ label, title, count, children, foot }) {
       </div>
       <div className="drawer__body">{children}</div>
       {foot && <div className="drawer__foot">{foot}</div>}
-    </motion.aside>
+    </motion.div>
   );
 }
 

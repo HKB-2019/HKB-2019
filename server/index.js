@@ -79,20 +79,29 @@ async function pageMeta(path) {
                            FROM products p WHERE id = $1 AND ${onSale()}`, [product[1]]);
     if (!p) return { missing: true };
     const naira = `₦${(p.price_kobo / 100).toLocaleString('en-NG')}`;
+    const photo = photoUrls(p);
     const words = p.description.replace(/\s+/g, ' ').trim();
     return {
       title: `${p.name} — MASQ.`,
       description: words ? `${naira} · ${words.length > 150 ? words.slice(0, 149).trimEnd() + '…' : words}` : `${naira} · MASQ. Modern identity wear rooted in culture.`,
-      image: photoUrls(p).img2x || null,
+      image: photo.img2x || null,
       imageAlt: p.name,
-      type: 'product'
+      type: 'product',
+      // The big photo starts downloading with the page, not after the script.
+      // Same choices as the gallery's <img> (src/lib/media.js), or the
+      // browser fetches it twice.
+      preload: photo.img && { href: photo.img, srcset: `${photo.img} 700w, ${photo.img2x} 1400w`, sizes: '(max-width:900px) 100vw, 50vw' }
     };
   }
 
   if (path === '/') {
     // A hero photo uploaded in the admin replaces the built-in preview too.
     const { hero } = await getHomeImages();
-    if (hero) return { image: `/api/images/${hero}`, imageAlt: 'MASQ.' };
+    if (hero) {
+      const img = `/api/images/${hero}`;
+      return { image: img, imageAlt: 'MASQ.', preload: { href: img, srcset: `${img} 1x, ${img}/2x 2x` } };
+    }
+    return { preload: { href: '/assets/img/hero-model.webp' } };
   }
   return null;
 }
@@ -110,6 +119,12 @@ function fillMeta(html, meta, origin) {
     swap(/(<meta property="og:image" content=")[^"]*(")/, origin + meta.image);
     // The built-in preview's measurements do not describe another photo.
     html = html.replace(/<meta property="og:image:(width|height)" content="\d+">\s*/g, '');
+  }
+  if (meta.preload) {
+    const { href, srcset, sizes } = meta.preload;
+    const link = `<link rel="preload" as="image" fetchpriority="high" href="${escapeHtml(href)}"` +
+      (srcset ? ` imagesrcset="${escapeHtml(srcset)}"` : '') + (sizes ? ` imagesizes="${escapeHtml(sizes)}"` : '') + '>';
+    html = html.replace('</head>', `${link}\n</head>`);
   }
   return html;
 }

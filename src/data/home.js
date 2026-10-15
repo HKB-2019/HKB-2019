@@ -24,8 +24,8 @@ export const HOME_DEFAULT = {
   countdownTitle:  'The next drop',
   nav: {
     shop:        { label: 'SHOP',        show: true },
-    collections: { label: 'COLLECTIONS', show: true },
+    collections: { label: 'ESSENTIALS',  show: true },
     about:       { label: 'ABOUT',       show: true },
-    journal:     { label: 'JOURNAL',     show: true }
+    journal:     { label: 'FILM',        show: true }
   }
 };

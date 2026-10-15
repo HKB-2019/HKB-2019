@@ -118,7 +118,7 @@ test('the home page starts with the design’s own words', async () => {
   const { home } = await site();
   assert.equal(home.heroEyebrow, 'URBAN RITUALS');
   assert.equal(home.heroSub, 'Modern identity wear\nrooted in culture.');
-  assert.deepEqual(home.nav.collections, { label: 'COLLECTIONS', show: true });
+  assert.deepEqual(home.nav.collections, { label: 'ESSENTIALS', show: true });
   assert.deepEqual(home.images, { hero: null, band: null, film: null }, 'built-in photos until replaced');
 });
 
@@ -128,7 +128,7 @@ test('the home page words and menu can be changed, and a hidden menu item says s
   home.heroEyebrow = '  Drop  02  ';
   home.manifestoLine1 = 'We make masks.';
   home.nav.collections = { label: 'lookbook', show: true };
-  home.nav.journal = { label: 'JOURNAL', show: false };
+  home.nav.journal = { label: 'FILM', show: false };
   const res = await api('/settings/home', 'PUT', home);
   assert.equal(res.status, 200, res.raw);
 
@@ -212,6 +212,9 @@ test('a shared product link shows its name, price, words and photo', { skip: !bu
   assert.match(page.raw, /og:image" content="http:\/\/127\.0\.0\.1:\d+\/assets\/img\/prod-tee@2x\.webp"/);
   assert.match(page.raw, /og:type" content="product"/);
   assert.ok(!page.raw.includes('og:image:width'), 'the built-in preview’s size no longer applies');
+  assert.ok(page.raw.includes('<link rel="preload" as="image" fetchpriority="high" href="/assets/img/prod-tee.webp" ' +
+    'imagesrcset="/assets/img/prod-tee.webp 700w, /assets/img/prod-tee@2x.webp 1400w" imagesizes="(max-width:900px) 100vw, 50vw">'),
+    'the big photo starts loading with the page');
 
   const hidden = await api('/products/tee', 'PATCH', { hidden: true });
   assert.equal(hidden.status, 200);
@@ -224,8 +227,13 @@ test('a shared product link shows its name, price, words and photo', { skip: !bu
 });
 
 test('an uploaded hero becomes the home page’s preview photo', { skip: !built && 'run npm run build first' }, async () => {
+  const before = await shop.request('/');
+  assert.ok(before.raw.includes('<link rel="preload" as="image" fetchpriority="high" href="/assets/img/hero-model.webp">'),
+    'the built-in hero starts loading with the page');
   await shop.request('/api/admin/home/image/hero', { method: 'POST', cookie, json: photo() });
   const { img } = (await site()).home.images.hero;
   const home = await shop.request('/');
   assert.ok(home.raw.includes(`og:image" content="${shop.base}${img}"`));
+  assert.ok(home.raw.includes(`href="${img}" imagesrcset="${img} 1x, ${img}/2x 2x">`), 'and is the one loaded early');
+  assert.ok(!home.raw.includes('hero-model.webp'), 'the built-in one is not fetched for nothing');
 });

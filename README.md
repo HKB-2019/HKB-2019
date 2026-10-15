@@ -77,7 +77,7 @@ properties under `:root` in `styles.css`.
 | Control | Behaviour |
 | --- | --- |
 | `SHOP DROP 01` / `EXPLORE` / nav | Smooth-scroll to the section; nav underlines whatever is in view. From a product page, the menu goes back to that section. Its names, and which items show, are set in the admin |
-| Product photo or name | The photo glides into the product page (in browsers that support it). There: photos (swipe on a phone; hover for a close-up with a mouse; tap for full screen, tap again to zoom, drag to look around), colour swatches for a piece sold in colours (the photo, sizes and "only 2 left" follow the colour; the address keeps it, `?colour=Black`, so a shared link opens on it; a colour with no photo of its own says which colour is shown), sizes with "only 2 left", `ADD TO BAG` (asks for a size rather than guessing), save, size guide, description, details and care, delivery and returns, four more pieces |
+| Product photo or name | The photo glides into the product page (in browsers that support it). There: photos (swipe on a phone; hover for a close-up with a mouse; tap for full screen, tap again to zoom, drag to look around), colour swatches for a piece sold in colours (the photo, sizes and "only 2 left" follow the colour; the address keeps it, `?colour=Black`, so a shared link opens on it; a colour with no photo of its own says which colour is shown), sizes with "only 2 left", `ADD TO BAG` (asks for a size rather than guessing; on a phone, while it is out of view, a bar at the foot of the screen keeps the button — and the name and price, once those have scrolled away — in reach), save, size guide, description, details and care, delivery and returns, four more pieces |
 | Product card | `QUICK ADD` opens the sizes (sold-out sizes struck out) — with the colour swatches above them for a piece sold in colours, and "3 colours" under its price; a one-size piece in one colour adds straight away. On phones the button stays visible — there is no hover |
 | Heart on a card | Saves it; the heart in the header opens the saved list, from which it can be bought |
 | `VIEW ALL` | Shows the pieces the owner has placed behind it; existing cards glide to their new positions |
@@ -456,8 +456,11 @@ validator against that theme's card background.
 
 No blur and no grain anywhere. Frosted panels and noise overlays soften every
 edge underneath them, which on a near-black palette reads as haze rather than
-atmosphere; overlays use solid fills. Micro-type sits at 10–11px with tracking
-in the .13–.24em range — wider than that destroys word shapes at these sizes.
+atmosphere; overlays use solid fills. Micro-type sits at 11px (never smaller)
+with tracking in the .13–.24em range — wider than that destroys word shapes at
+these sizes. Sentences — notes, hints, errors, panel text — are 13px or more,
+reading text 15–16px kept to about 62 characters a line, and every box you type
+in is 16px on a phone so the phone does not zoom in when it is tapped.
 Hairlines are `--line` at roughly 1.5:1 against the page, so structure is
 actually visible.
 
@@ -467,7 +470,17 @@ mush; back-projection upscales, simulates the downscale that would have
 produced the source, and feeds the residual back in — about +20% mean gradient
 magnitude at 5x on these crops. On top of that: a fine unsharp pass for edges,
 a wider one for local contrast, and a mild S-curve so form lifts out of the
-shadows.
+shadows. The product photos were then rebuilt with Real-ESRGAN (x4plus), run
+without PyTorch from a small numpy port of the network, from a quarter-size
+copy up to the shipped widths: edges and printed marks come out crisp instead
+of soft.
+
+The big photo of the page you land on — the hero, or a product page's first
+photo — is named in the page's HTML by the server (`<link rel="preload">`,
+matching the `<img>`'s own `srcset`/`sizes` so it is not fetched twice), so it
+starts downloading with the page instead of after the script. Places that
+fill in once the shop's data arrives keep their room meanwhile, so nothing
+below them jumps.
 
 ### Resolution and zoom
 

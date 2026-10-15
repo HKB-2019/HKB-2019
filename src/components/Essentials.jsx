@@ -187,7 +187,7 @@ export default function Essentials() {
                   </span>
                 </div>
                 {!only && (
-                  <div className={`card__sizes slide__sizes${hasColours(p) ? ' card__sizes--colours' : ''}`} aria-hidden={picking !== p.id}>
+                  <div className={`card__sizes slide__sizes${hasColours(p) ? ' card__sizes--colours' : ''}`} inert={picking !== p.id}>
                     <SizeButtons product={p} onPicked={() => setPicking(null)}
                                  onColour={(c) => setShownColours(m => ({ ...m, [p.id]: c }))} />
                   </div>

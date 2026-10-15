@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ShopLayout from '../components/ShopLayout.jsx';
@@ -9,7 +10,7 @@ import { Heart } from '../components/Icons.jsx';
 import { askForRestock } from '../lib/api.js';
 import { track } from '../lib/analytics.js';
 import { isEmail } from '../lib/delivery.js';
-import { jumpToTop } from '../lib/smoothScroll.js';
+import { jumpToTop, glideTo } from '../lib/smoothScroll.js';
 import { useGlideToProduct, arrivedByPhoto } from '../lib/pageMorph.js';
 import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel } from '../lib/colours.js';
 import Swatches from '../components/Swatches.jsx';
@@ -203,10 +204,36 @@ function BuyBox({ product, colour, onColour }) {
     addToCart(product, chosen.size, colour);
   };
 
+  // On a phone the buying box sits below the photo. While it is out of view a
+  // bar at the foot of the screen keeps the name, price and button in reach.
+  // Its name and price only when those are out of view too.
+  const actions = useRef(null);
+  const price = useRef(null);
+  const [away, setAway] = useState(false);
+  const [priceAway, setPriceAway] = useState(false);
+  useEffect(() => {
+    if (!actions.current || !('IntersectionObserver' in window)) return;
+    const watch = new IntersectionObserver(entries => {
+      for (const e of entries) (e.target === actions.current ? setAway : setPriceAway)(!e.isIntersecting);
+    });
+    watch.observe(actions.current);
+    watch.observe(price.current);
+    return () => watch.disconnect();
+  }, []);
+  // A size still to choose: take them to the sizes rather than guess.
+  const barAdd = () => {
+    if (!chosen && !product.soldOut && !colourOut) {
+      setAsked(true);
+      glideTo(document.querySelector('.pdp__colours, .pdp__sizes') ?? actions.current, -90);
+      return;
+    }
+    add();
+  };
+
   return (
     <div className="pdp__info">
       <h1 className="pdp__name">{product.name}</h1>
-      <p className={`pdp__price${product.soldOut ? ' card__sold' : ''}`}>
+      <p className={`pdp__price${product.soldOut ? ' card__sold' : ''}`} ref={price}>
         {product.soldOut ? 'SOLD OUT' : format(product.price)}
       </p>
 
@@ -241,7 +268,7 @@ function BuyBox({ product, colour, onColour }) {
       )}
       {single?.left ? <p className="pdp__hint">ONLY {single.left} LEFT</p> : null}
 
-      <div className="pdp__actions">
+      <div className="pdp__actions" ref={actions}>
         <button className="btn btn--solid pdp__add" onClick={add} disabled={product.soldOut || colourOut}>
           {product.soldOut || colourOut ? 'SOLD OUT' : 'ADD TO BAG'}
         </button>
@@ -251,6 +278,21 @@ function BuyBox({ product, colour, onColour }) {
       </div>
 
       <RestockAsk product={product} colour={colour} />
+
+      {/* A shortcut for the eye and thumb only: the same name, price and
+          button are in the box above, where a screen reader finds them. Put
+          on the page itself: the box moves as it fades in, which would carry
+          a bar fixed inside it along. */}
+      {createPortal(<div className={`pdp__bar${away ? ' is-on' : ''}${priceAway ? '' : ' pdp__bar--button'}`} aria-hidden="true">
+        <p className="pdp__bar-text">
+          <span className="pdp__bar-name">{product.name}</span>
+          <span>{product.soldOut ? 'SOLD OUT' : format(product.price)}</span>
+        </p>
+        <button type="button" tabIndex={-1} className="btn btn--solid pdp__bar-add" onClick={barAdd}
+                disabled={product.soldOut || colourOut}>
+          {product.soldOut || colourOut ? 'SOLD OUT' : chosen || sizes.length < 2 ? 'ADD TO BAG' : 'CHOOSE SIZE'}
+        </button>
+      </div>, document.body)}
 
       {product.description && <p className="pdp__text">{product.description}</p>}
 

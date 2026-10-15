@@ -33,12 +33,12 @@ typography:
     lineHeight: 1.12
   body:
     fontFamily: "Inter, Helvetica Neue, Arial, sans-serif"
-    fontSize: "14.5px"
+    fontSize: "15px"
     fontWeight: 400
     lineHeight: 1.95
   label:
     fontFamily: "Inter, Helvetica Neue, Arial, sans-serif"
-    fontSize: "10px"
+    fontSize: "11px"
     fontWeight: 400
     letterSpacing: "0.16em"
 rounded:
@@ -75,7 +75,7 @@ A dark gallery for modern artefacts. Studio photographs on black, few words, gen
 - **Stay dark in both themes:** the hero (and the menu over it), the "Craft. Culture. Identity." band, the film strip, the Essentials carousel, the full-screen photo view.
 
 ## Typography
-Inter for the interface (the giant thin MASQ. title included); EB Garamond for editorial lines (hero line, manifesto, product names on their page). Micro labels are small, uppercase and widely tracked (.13–.24em) — this is the brand's voice, not decoration.
+Inter for the interface (the giant thin MASQ. title included); EB Garamond for editorial lines (hero line, manifesto, product names on their page). Micro labels are small (11px, never less), uppercase and widely tracked (.13–.24em) — this is the brand's voice, not decoration. Sentences are 13px or more; reading text 15–16px at about 62 characters a line; inputs 16px on phones.
 
 ## Layout
 1320px measure, fluid side padding, a generous vertical rhythm. Product frames are portrait 5:6. Grids of four on desktop, two on phones; the product page is photo left, buying box right (stacked on phones).

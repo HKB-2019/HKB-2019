@@ -59,6 +59,35 @@ test('a product page fits a phone, and its photos can be swiped', async ({ page 
   await expect(page.locator('.cart-count')).toHaveText('1');
 });
 
+test('on a phone, the name, price and button wait at the foot of the screen', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 }); // a small phone: the buying box starts below the photo
+  await page.goto('/product/hoodie');
+  const bar = page.locator('.pdp__bar');
+  await expect(bar).toHaveClass(/is-on/);
+  await expect(bar).toBeInViewport();
+  await expect(bar).toHaveClass(/pdp__bar--button/); // the name and price are on screen already: just the button
+  const button = bar.locator('.pdp__bar-add');
+  await expect(button).toHaveText('CHOOSE SIZE');
+
+  // No size yet: it takes them to the sizes and says so, rather than guess.
+  await button.tap();
+  await expect(page.getByText('CHOOSE A SIZE FIRST')).toBeVisible();
+  await expect(page.locator('.cart-count')).not.toHaveText('1');
+
+  await page.getByRole('button', { name: 'M', exact: true }).tap();
+  // Once the box itself is in view the bar steps aside.
+  await page.locator('.pdp__add').scrollIntoViewIfNeeded();
+  await expect(bar).not.toHaveClass(/is-on/);
+  await page.locator('.pdp__text').first().scrollIntoViewIfNeeded();
+  await page.mouse.wheel(0, 600);
+  await expect(bar).toHaveClass(/is-on/);
+  await expect(bar).not.toHaveClass(/pdp__bar--button/);
+  await expect(bar).toContainText('THE RITUAL HOODIE');
+  await expect(button).toHaveText('ADD TO BAG');
+  await button.tap();
+  await expect(page.locator('.cart-count')).toHaveText('1');
+});
+
 test('a long page in a panel can be read to the end, and a tap outside closes it', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 640 }); // a small phone
   await page.goto('/');

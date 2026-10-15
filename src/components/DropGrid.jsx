@@ -95,7 +95,7 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
           {product.soldOut ? 'SOLD OUT' : only ? 'ADD TO BAG' : 'QUICK ADD'}
         </button>
 
-        <div className={`card__sizes${hasColours(product) ? ' card__sizes--colours' : ''}`}>
+        <div className={`card__sizes${hasColours(product) ? ' card__sizes--colours' : ''}`} inert={!picking}>
           <SizeButtons product={product} onPicked={onClosePick} onColour={setShown} />
         </div>
       </div>

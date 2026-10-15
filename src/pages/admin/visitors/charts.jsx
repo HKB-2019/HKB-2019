@@ -278,7 +278,7 @@ export function Heatmap({ grid, unit }) {
           ? <><strong>{nf(shown.v ?? grid[shown.d][shown.hr])}</strong> {unit} · {DAYS[shown.d]} {hourLabel(shown.hr)}–{hourLabel((shown.hr + 1) % 24)}{!hover && ' · the busiest hour'}</>
           : `No ${unit} yet.`}
       </p>
-      <div className="viz-heat__grid" role="grid" aria-label={`${unit} by day and hour`}>
+      <div className="viz-heat__grid" role="group" aria-label={`${unit} by day and hour`}>
         <span />
         {Array.from({ length: 24 }, (_, hr) => <span key={hr} className="viz-heat__hour">{hr % 3 === 0 ? String(hr).padStart(2, '0') : ''}</span>)}
         {grid.map((row, d) => [
@@ -326,10 +326,10 @@ export function ChoroplethMap({ shapes, value, format, label, width: w, height: 
       <p className="viz-readout" aria-live="polite">
         {shown ? <><strong>{format(shown.v)}</strong> · {shown.s.label}{!hover && ' · the most'}</> : emptyNote}
       </p>
-      <svg viewBox={`0 0 ${w} ${h}`} className="viz-map__svg" role="img" aria-label={label}>
+      <svg viewBox={`0 0 ${w} ${h}`} className="viz-map__svg" role="group" aria-label={label}>
         {shapes.map((s, i) => (
           <path key={s.key} d={s.d} style={{ fill: scaleColor(values[i], max || 1) }} className="viz-map__shape"
-                tabIndex={values[i] ? 0 : -1}
+                tabIndex={values[i] ? 0 : -1} role="img"
                 aria-label={`${s.label}: ${format(values[i])}`}
                 onPointerEnter={() => setHover({ s, v: values[i] })} onPointerLeave={() => setHover(null)}
                 onFocus={() => setHover({ s, v: values[i] })} onBlur={() => setHover(null)} />
