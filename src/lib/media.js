@@ -14,7 +14,12 @@
  */
 export const asset = (path) => import.meta.env.BASE_URL + path.replace(/^\/+/, '');
 
-export const srcSet = (p) => (p.img2x ? `${p.img} 1x, ${p.img2x} 2x` : undefined);
+// By width, not by screen density: the browser then takes the larger copy
+// whenever the space on screen needs it — a wide product page on an ordinary
+// laptop screen included — rather than only on a sharp (2x) screen. Product
+// photos are made 700 and 1400 wide (src/pages/admin/photo.js); the sample
+// ones are within a few pixels of that.
+export const srcSet = (p) => (p.img2x ? `${p.img} 700w, ${p.img2x} 1400w` : undefined);
 
 export const CARD_SIZES  = '(max-width:900px) 46vw, (max-width:1464px) 21vw, 277px';
 export const SLIDE_SIZES = '(max-width:640px) 46vw, (max-width:1100px) 30vw, (max-width:1464px) 21vw, 290px';
