@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Route, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { finishPayment, previewOrder, resetPreview } from './api.js';
 import { useShop } from '../store/ShopContext.jsx';
@@ -48,6 +48,17 @@ export function PreviewBanner() {
   const [confirm, setConfirm] = useState(false);
   const inAdmin = pathname.startsWith('/admin');
 
+  // Its height, for anything else held at the foot of the screen (the stock
+  // save bar) to sit above it rather than under it.
+  const bar = useRef(null);
+  useEffect(() => {
+    const el = bar.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => document.documentElement.style.setProperty('--preview-bar-h', `${el.offsetHeight}px`));
+    ro.observe(el);
+    return () => { ro.disconnect(); document.documentElement.style.removeProperty('--preview-bar-h'); };
+  }, []);
+
   // The welcome pop-up shows once per tab; this brings it back at once.
   const { openOverlay } = useShop();
   const showWelcome = () => {
@@ -63,7 +74,7 @@ export function PreviewBanner() {
   };
 
   return (
-    <aside className="preview-bar" aria-label="About this preview">
+    <aside className="preview-bar" aria-label="About this preview" ref={bar}>
       <span className="preview-bar__tag">PREVIEW</span>
       <span className="preview-bar__text">Sample data in your browser. Nothing is charged or sent.</span>
       <span className="preview-bar__actions">

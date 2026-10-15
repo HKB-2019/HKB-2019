@@ -147,7 +147,10 @@ function Setup({ onDone }) {
 
 /* --------------------------------------------------------------- summary */
 
-function Summary({ data, goTo }) {
+/* The shop at a glance. The four figures belong to ORDERS, the day-to-day
+ * page; anything that needs acting on now (checkout closed, a refund owed)
+ * shows on every tab; the gentler notes only where they are acted on. */
+function Summary({ data, goTo, tab }) {
   if (!data) return null;
   const tiles = [
     { label: 'Revenue',            value: naira(data.revenueKobo) },
@@ -157,14 +160,16 @@ function Summary({ data, goTo }) {
   ];
   return (
     <>
-      <div className="admin-tiles">
-        {tiles.map(t => (
-          <div className="admin-tile" key={t.label}>
-            <span className="admin-tile__label">{t.label}</span>
-            <span className="admin-tile__value">{t.value}</span>
-          </div>
-        ))}
-      </div>
+      {tab === 'orders' && (
+        <div className="admin-tiles">
+          {tiles.map(t => (
+            <div className="admin-tile" key={t.label}>
+              <span className="admin-tile__label">{t.label}</span>
+              <span className="admin-tile__value">{t.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
       {data.checkoutOpen === false && (
         <p className="admin-alert" role="alert">
           <strong>Checkout is closed.</strong> Customers can browse and fill their bags, but cannot pay
@@ -180,13 +185,13 @@ function Summary({ data, goTo }) {
           “refund due” below to see who.
         </p>
       )}
-      {data.alertsReady > 0 && (
+      {data.alertsReady > 0 && ['orders', 'list'].includes(tab) && (
         <p className="admin-alert admin-alert--info">
           <strong>{data.alertsReady === 1 ? '1 person is' : `${data.alertsReady} people are`} waiting for a size that is back in stock.</strong>{' '}
           <button className="admin-link admin-link--strong" onClick={() => goTo('list')}>See who →</button>
         </p>
       )}
-      {data.lowStock.length > 0 && (
+      {data.lowStock.length > 0 && ['orders', 'stock'].includes(tab) && (
         <p className="admin-lowstock">
           <strong>Running low:</strong>{' '}
           {data.lowStock.map(s => `${s.name} (${s.colour ? `${s.colour}, ` : ''}${s.size}) — ${s.stock}`).join(' · ')}
@@ -441,7 +446,7 @@ export default function Admin() {
 
       <main className="admin-main">
         <h1 className="sr-only">MASQ. admin — {TABS.find(([t]) => t === tab)?.[1]}</h1>
-        <Summary data={summary} goTo={goTo} />
+        <Summary data={summary} goTo={goTo} tab={tab} />
 
         <AnimatePresence mode="wait">
           <motion.div

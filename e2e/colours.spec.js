@@ -56,7 +56,7 @@ test('the owner adds colours, and a customer buys the one they pick', async ({ p
   await page.goto('/admin#stock');
   // Sold, not yet sent: still on the shelf (4), but only 3 left to sell.
   const indigo = page.locator('tr', { hasText: 'Indigo, ONE SIZE' });
-  await expect(indigo.locator('input')).toHaveValue('4');
+  await expect(indigo.locator('td').nth(3)).toHaveText('4');
   await expect(indigo.locator('td').nth(4)).toHaveText('1');
   await expect(indigo.locator('td').nth(6)).toHaveText('3');
 });

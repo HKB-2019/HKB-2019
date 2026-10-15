@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { adminStock, adminSaveStockCounts, adminReceiveStock, adminStockHistory, adminDownload } from '../../lib/api.js';
 
-/* STOCK: count the shelf, type it, save once — or, when a delivery comes
- * in, type only how many arrived on each line (RECEIVE A DELIVERY).
+/* STOCK: what there is, line by line — read only, so nothing changes by a
+ * stray tap. Two ways to change it, each its own mode with a way back and a
+ * save bar that stays on screen:
+ *   RECEIVE A DELIVERY — type only how many arrived on each line;
+ *   COUNT THE SHELF    — after a stock-take, type what is really there.
  *
  * Pieces sold but not yet sent, and pieces someone is paying for right now,
  * are still on the shelf but no longer for sale. The owner types what is on
@@ -31,7 +34,7 @@ export default function StockTab({ onChanged }) {
   const [needsOnly, setNeedsOnly] = useState(false);
   const [note, setNote] = useState(null);           // { text, bad }
   const [busy, setBusy] = useState(false);
-  const [mode, setMode] = useState('count');        // 'count' | 'receive'
+  const [mode, setMode] = useState('view');         // 'view' | 'count' | 'receive'
   const [arrived, setArrived] = useState({});       // variantId → how many came (receive mode)
   const [deliveryNote, setDeliveryNote] = useState('');
 
@@ -53,6 +56,12 @@ export default function StockTab({ onChanged }) {
   const badDelivery = deliveries.filter(r => !whole(arrived[r.variantId]));
 
   const switchTo = (m) => { setMode(m); setTyped({}); setArrived({}); setDeliveryNote(''); setNote(null); };
+  // Back to the list; typed numbers would be lost, so ask first.
+  const leave = () => {
+    const unsaved = mode === 'receive' ? deliveries.length : changes.length;
+    if (unsaved && !window.confirm(`Leave without saving? What you typed on ${unsaved === 1 ? '1 line' : `${unsaved} lines`} will be lost.`)) return;
+    switchTo('view');
+  };
 
   const receive = async () => {
     setBusy(true); setNote(null);
@@ -60,7 +69,7 @@ export default function StockTab({ onChanged }) {
       const res = await adminReceiveStock(deliveries.map(r => ({ variantId: r.variantId, qty: Number(arrived[r.variantId]) })), deliveryNote);
       setRows(res.stock);
       setHistory(await adminStockHistory());
-      setMode('count'); setArrived({}); setDeliveryNote('');
+      setMode('view'); setArrived({}); setDeliveryNote('');
       setNote({ text: `Delivery added: ${res.received} ${res.received === 1 ? 'piece' : 'pieces'} on ${res.lines} ${res.lines === 1 ? 'line' : 'lines'}.` });
       onChanged?.();
     } catch (err) {
@@ -73,7 +82,7 @@ export default function StockTab({ onChanged }) {
     try {
       const res = await adminSaveStockCounts(changes.map(r => ({ variantId: r.variantId, shelf: Number(typed[r.variantId]) })));
       setRows(res.stock);
-      setTyped({});
+      setTyped({}); setMode('view');
       setHistory(await adminStockHistory());
       setNote({ text: res.changed === 1 ? '1 line saved.' : `${res.changed} lines saved.` });
       onChanged?.();
@@ -99,22 +108,32 @@ export default function StockTab({ onChanged }) {
             <span>Only low or sold out</span>
           </label>
           <button type="button" className="admin-action" onClick={download}>DOWNLOAD</button>
-          {mode === 'count' && (
-            <button type="button" className="admin-action admin-action--primary" onClick={() => switchTo('receive')}>RECEIVE A DELIVERY</button>
+          {mode === 'view' && (
+            <>
+              <button type="button" className="admin-action" onClick={() => switchTo('count')}>COUNT THE SHELF</button>
+              <button type="button" className="admin-action admin-action--primary" onClick={() => switchTo('receive')}>RECEIVE A DELIVERY</button>
+            </>
           )}
         </div>
       </div>
-      {mode === 'count' ? (
+      {mode === 'view' ? (
         <p className="admin-help">
-          Count what is on the shelf and type it, then SAVE ALL. Pieces already sold but not yet sent, and pieces
-          someone is paying for right now, are still on your shelf — the shop takes them off for you and shows what
-          is left to sell. A delivery just came in? Use RECEIVE A DELIVERY and type only how many arrived.
+          What you have, line by line. A delivery came in? Press RECEIVE A DELIVERY and type how many arrived.
+          Counted the shelf and the numbers are off (a piece lost, damaged or given away)? Press COUNT THE SHELF.
+          Pieces sold but not yet sent, and pieces someone is paying for right now, are still on your shelf — the
+          shop takes them off and shows what is left to sell.
         </p>
       ) : (
-        <p className="admin-help admin-stock__mode" role="status">
-          <strong>Receiving a delivery.</strong> Type how many arrived on each line — they are added to what is
-          already there. Leave the rest empty, then ADD TO STOCK.
-        </p>
+        <div className="admin-stock__mode">
+          <button type="button" className="admin-stock__back" onClick={leave}>← BACK TO STOCK</button>
+          {mode === 'receive' ? (
+            <p role="status"><strong>Receiving a delivery.</strong> Type how many arrived on each line — they are added to what is
+              already there. Leave the rest empty, then ADD TO STOCK at the bottom of the screen.</p>
+          ) : (
+            <p role="status"><strong>Counting the shelf.</strong> Type what is really on the shelf for any line that is wrong,
+              then SAVE ALL at the bottom of the screen.</p>
+          )}
+        </div>
       )}
 
       {!rows ? <p className="admin-empty">Loading…</p> : (
@@ -124,7 +143,7 @@ export default function StockTab({ onChanged }) {
               <thead>
                 <tr>
                   <th>Piece</th><th>Colour, size</th><th className="num">Price</th>
-                  <th>{mode === 'count' ? 'On the shelf' : 'Arrived (+)'}</th><th className="num">Waiting to be sent</th><th className="num">Being paid for</th>
+                  <th className={mode === 'view' ? 'num' : undefined}>{mode === 'receive' ? 'Arrived (+)' : 'On the shelf'}</th><th className="num">Waiting to be sent</th><th className="num">Being paid for</th>
                   <th className="num">Left to sell</th><th><span className="sr-only">State</span></th>
                 </tr>
               </thead>
@@ -142,8 +161,8 @@ export default function StockTab({ onChanged }) {
                       <td>{r.name}</td>
                       <td className="mono">{r.colour ? `${r.colour}, ${r.size}` : r.size}</td>
                       <td className="num">{naira(r.priceKobo)}</td>
-                      <td>
-                        {receiving ? (
+                      <td className={mode === 'view' ? 'num' : undefined} data-label={mode === 'view' ? 'Shelf' : undefined}>
+                        {mode === 'view' ? r.shelf : receiving ? (
                           <span className="admin-stock__arrive">
                             <input className={`admin-stock-input${!ok ? ' is-error' : ''}`}
                                    inputMode="numeric" placeholder="0" aria-label={`${lineName(r)}, how many arrived`}
@@ -173,22 +192,28 @@ export default function StockTab({ onChanged }) {
             </table>
           </div>
 
-          {mode === 'receive' ? (
-            <div className="admin-stock__foot">
+          {mode === 'view' && note && (
+            <p className={`admin-note admin-stock__done${note.bad ? ' admin-note--bad' : ' admin-note--ok'}`} role={note.bad ? 'alert' : 'status'}>{note.text}</p>
+          )}
+          {/* The save bar stays at the foot of the screen however long the list. */}
+          {mode === 'receive' && (
+            <div className="admin-stock__foot admin-stock__bar">
               <label className="admin-field admin-stock__note">
-                <span>Note <em>optional — the supplier, an invoice number</em></span>
-                <input maxLength={120} value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} />
+                <span>Note</span>
+                <input maxLength={120} placeholder="optional — supplier, invoice number" value={deliveryNote}
+                       onChange={(e) => setDeliveryNote(e.target.value)} />
               </label>
               <button type="button" className="admin-action admin-action--primary"
                       disabled={busy || deliveries.length === 0 || badDelivery.length > 0} onClick={receive}>
                 {busy ? 'ADDING…' : deliveries.length ? `ADD TO STOCK (${deliveries.length})` : 'ADD TO STOCK'}
               </button>
-              {!busy && <button type="button" className="admin-link" onClick={() => switchTo('count')}>cancel</button>}
+              {!busy && <button type="button" className="admin-link" onClick={leave}>cancel</button>}
               {badDelivery.length > 0 && <span className="admin-note admin-note--bad">Type whole numbers only.</span>}
               {note && <span className={`admin-note${note.bad ? ' admin-note--bad' : ' admin-note--ok'}`} role={note.bad ? 'alert' : 'status'}>{note.text}</span>}
             </div>
-          ) : (
-          <div className="admin-stock__foot">
+          )}
+          {mode === 'count' && (
+          <div className="admin-stock__foot admin-stock__bar">
             <button type="button" className="admin-action admin-action--primary"
                     disabled={busy || changes.length === 0 || invalid.length > 0} onClick={save}>
               {busy ? 'SAVING…' : changes.length ? `SAVE ALL (${changes.length})` : 'SAVE ALL'}
@@ -196,6 +221,7 @@ export default function StockTab({ onChanged }) {
             {changes.length > 0 && !busy && (
               <button type="button" className="admin-link" onClick={() => { setTyped({}); setNote(null); }}>undo changes</button>
             )}
+            {!busy && <button type="button" className="admin-link" onClick={leave}>cancel</button>}
             {invalid.length > 0 && <span className="admin-note admin-note--bad">Type whole numbers only.</span>}
             {note && <span className={`admin-note${note.bad ? ' admin-note--bad' : ' admin-note--ok'}`} role={note.bad ? 'alert' : 'status'}>{note.text}</span>}
           </div>

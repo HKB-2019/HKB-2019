@@ -1,14 +1,24 @@
-/* STOCK: the owner counts the shelf, saves every line at once, and can see
- * what changed. Pieces sold but not yet sent stay on the shelf. */
+/* STOCK: a read-only list; the owner counts the shelf or receives a
+ * delivery in a mode of its own, saves every line at once, and can see what
+ * changed. Pieces sold but not yet sent stay on the shelf. */
 
 import { test, expect, signIn, card, setStock, fillDelivery } from './fixtures.js';
 
 const shelf = (page, line) => page.getByLabel(`${line}, on the shelf`);
 const row = (page, line) => page.locator('tr', { has: page.getByLabel(`${line}, on the shelf`) });
+/** A line as the read-only list shows it: piece, then "colour, size". */
+const viewRow = (page, name, rest) => page.locator('.admin-stock__table tbody tr')
+  .filter({ has: page.getByRole('cell', { name, exact: true }) }).filter({ has: page.getByRole('cell', { name: rest, exact: true }) });
+const count = (page) => page.getByRole('button', { name: 'COUNT THE SHELF' }).click();
 
 test('the owner counts the shelf, saves all at once, and sees the record', async ({ page }) => {
   await signIn(page);
   await page.goto('/admin#stock');
+
+  // Read only until the owner chooses to count.
+  await expect(page.locator('.admin-stock__table input')).toHaveCount(0);
+  await count(page);
+  await expect(page.getByText('Counting the shelf.')).toBeVisible();
 
   // Two lines counted, one saved press.
   await shelf(page, 'THE MARK CAP, Black, ONE SIZE').fill('2');
@@ -17,13 +27,13 @@ test('the owner counts the shelf, saves all at once, and sees the record', async
   await expect(row(page, 'THE PATTERN SCARF, ONE SIZE')).toContainText('sold out');
   await page.getByRole('button', { name: 'SAVE ALL (2)' }).click();
   await expect(page.getByRole('status')).toHaveText('2 lines saved.');
-  await expect(page.getByRole('button', { name: 'SAVE ALL', exact: true })).toBeDisabled();
+  await expect(page.locator('.admin-stock__table input')).toHaveCount(0);           // back to the list
 
   // Only what needs attention.
   await page.locator('.admin-toggle', { hasText: 'Only low or sold out' }).click();
-  await expect(row(page, 'THE MARK CAP, Black, ONE SIZE')).toBeVisible();
-  await expect(row(page, 'THE PATTERN SCARF, ONE SIZE')).toBeVisible();
-  await expect(row(page, 'THE CARRIER BACKPACK, ONE SIZE')).toHaveCount(0);   // 8 left: fine
+  await expect(viewRow(page, 'THE MARK CAP', 'Black, ONE SIZE')).toBeVisible();
+  await expect(viewRow(page, 'THE PATTERN SCARF', 'ONE SIZE')).toBeVisible();
+  await expect(viewRow(page, 'THE CARRIER BACKPACK', 'ONE SIZE')).toHaveCount(0);   // 8 left: fine
 
   // The record of what changed.
   await page.getByText('Recent changes (2)').click();
@@ -51,6 +61,7 @@ test('a shelf count below what is already sold is caught, and nothing is saved',
   await expect(page.locator('.status__title')).toHaveText('Payment received');
 
   await page.goto('/admin#stock');
+  await count(page);
   const bag = 'THE CARRIER BACKPACK, ONE SIZE';
   await expect(shelf(page, bag)).toHaveValue('2');                       // still on the shelf
   await expect(row(page, bag).locator('td').nth(4)).toHaveText('2');     // waiting to be sent
@@ -63,6 +74,7 @@ test('a shelf count below what is already sold is caught, and nothing is saved',
   await page.getByRole('button', { name: 'SAVE ALL (2)' }).click();
   await expect(page.getByRole('alert')).toContainText('Nothing was saved. THE CARRIER BACKPACK, ONE SIZE: you counted 1, but 2 are sold');
   await page.reload();
+  await count(page);
   await expect(shelf(page, 'THE PATTERN SCARF, ONE SIZE')).toHaveValue('22');
 
   // Not a number: caught before it is sent.
@@ -87,16 +99,25 @@ test('a delivery is received: only what arrived is typed, it is added on top, an
   await page.getByRole('button', { name: 'ADD TO STOCK (2)' }).click();
   await expect(page.getByRole('status').last()).toHaveText('Delivery added: 24 pieces on 2 lines.');
 
-  // Back to counting, with the new numbers.
-  await expect(shelf(page, 'THE MARK CAP, Black, ONE SIZE')).toHaveValue('50');
-  await expect(shelf(page, 'THE SYMBOL JACKET, M')).toHaveValue('6');
+  // Back to the list, with the new numbers.
+  await expect(viewRow(page, 'THE MARK CAP', 'Black, ONE SIZE').locator('td').nth(3)).toHaveText('50');
+  await expect(viewRow(page, 'THE SYMBOL JACKET', 'M').locator('td').nth(3)).toHaveText('6');
   await page.getByText(/Recent changes/).click();
   await expect(page.locator('.admin-stock__history li').first()).toContainText('Delivery +');
   await expect(page.locator('.admin-stock__history')).toContainText('Delivery +20 · left to sell 30 → 50 · Aba workshop, invoice 12');
 
-  // Cancel leaves everything as it was.
+  // Going back asks first when something was typed, and then changes nothing.
   await page.getByRole('button', { name: 'RECEIVE A DELIVERY' }).click();
   await arrived('THE MARK CAP, Black, ONE SIZE').fill('5');
-  await page.getByRole('button', { name: 'cancel' }).click();
-  await expect(shelf(page, 'THE MARK CAP, Black, ONE SIZE')).toHaveValue('50');
+  page.once('dialog', d => d.dismiss());
+  await page.getByRole('button', { name: '← BACK TO STOCK' }).click();
+  await expect(arrived('THE MARK CAP, Black, ONE SIZE')).toHaveValue('5');     // stayed
+  page.once('dialog', d => d.accept());
+  await page.getByRole('button', { name: '← BACK TO STOCK' }).click();
+  await expect(viewRow(page, 'THE MARK CAP', 'Black, ONE SIZE').locator('td').nth(3)).toHaveText('50');
+
+  // The save bar is on screen even at the top of a long list.
+  await page.getByRole('button', { name: 'RECEIVE A DELIVERY' }).click();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(page.getByRole('button', { name: /^ADD TO STOCK/ })).toBeInViewport();
 });

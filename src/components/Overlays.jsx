@@ -7,6 +7,7 @@ import { useSectionLink } from '../lib/useSectionLink.js';
 import { asset } from '../lib/media.js';
 import { track, visitId } from '../lib/analytics.js';
 import { zoneFor, naira, isEmail, isPhone } from '../lib/delivery.js';
+import { countriesAbroad } from '../data/countries.js';
 import { Close, Heart } from './Icons.jsx';
 import { SizeButtons } from './DropGrid.jsx';
 import { useFocusTrap } from '../lib/useFocusTrap.js';
@@ -223,8 +224,11 @@ function DeliveryForm({ onBack }) {
     setDelivery(v => ({ ...v, address: { ...v.address, [key]: value } }));
     setErrors(x => ({ ...x, [key]: null })); setServerError(null);
   };
-  const setAbroad = (abroad) => {
-    setDelivery(v => ({ ...v, address: { ...v.address, country: abroad ? '' : 'Nigeria', state: '' } }));
+  const setCountry = (country) => {
+    // Nigeria's states are a list, other countries' are typed: switching
+    // between the two starts the state again.
+    setDelivery(v => ({ ...v, address: { ...v.address, country,
+      state: (country === 'Nigeria') === (v.address.country === 'Nigeria') ? v.address.state : '' } }));
     setErrors({}); setServerError(null);
   };
 
@@ -233,7 +237,7 @@ function DeliveryForm({ onBack }) {
     if (!isEmail(d.email)) e.email = 'Enter the email for your receipt.';
     if (d.name.trim().length < 2) e.name = 'Enter your full name.';
     if (!isPhone(d.phone)) e.phone = 'Enter a phone number the rider can call.';
-    if (!inNigeria && d.address.country.trim().length < 2) e.country = 'Enter your country.';
+    if (!inNigeria && d.address.country.trim().length < 2) e.country = 'Choose your country.';
     if (!d.address.state.trim()) e.state = inNigeria ? 'Choose your state.' : 'Enter your state or region.';
     if (d.address.city.trim().length < 2) e.city = 'Enter your city or area.';
     if (d.address.line1.trim().length < 3) e.line1 = 'Enter your street address.';
@@ -280,22 +284,27 @@ function DeliveryForm({ onBack }) {
                value={d.phone} onChange={set('phone')} {...err('phone')} />
       </Field>
 
-      {abroadOpen && (
-        <div className="delivery__where" role="radiogroup" aria-label="Delivering to">
-          <button type="button" role="radio" aria-checked={inNigeria}
-                  className={inNigeria ? 'is-on' : ''} onClick={() => setAbroad(false)}>NIGERIA</button>
-          <button type="button" role="radio" aria-checked={!inNigeria}
-                  className={!inNigeria ? 'is-on' : ''} onClick={() => setAbroad(true)}>OUTSIDE NIGERIA</button>
-        </div>
+      {/* Nigeria first; every other country below it. Delivery abroad is the
+          owner's choice (Settings): until it is on, the customer is told at
+          once rather than after typing a whole address. */}
+      <Field label="COUNTRY" id="d-country" error={errors.country}>
+        <select id="d-country" autoComplete="country-name"
+                value={d.address.country} onChange={(e) => setCountry(e.target.value)} {...err('country')}>
+          <option value="Nigeria">Nigeria</option>
+          {!inNigeria && !d.address.country && <option value="">Choose…</option>}
+          <optgroup label="Outside Nigeria">
+            {countriesAbroad().map(c => <option key={c} value={c}>{c}</option>)}
+          </optgroup>
+        </select>
+      </Field>
+      {!inNigeria && !abroadOpen && (
+        <p className="delivery__abroad" role="status">
+          We deliver within Nigeria only for now. Join the list at the foot of the page to hear when we ship
+          to {d.address.country || 'you'}.
+        </p>
       )}
 
-      {!inNigeria && (
-        <Field label="COUNTRY" id="d-country" error={errors.country}>
-          <input id="d-country" autoComplete="country-name"
-                 value={d.address.country} onChange={setAddr('country')} {...err('country')} />
-        </Field>
-      )}
-
+      {(inNigeria || abroadOpen) && (<>
       <Field label={inNigeria ? 'STATE' : 'STATE OR REGION'} id="d-state" error={errors.state}>
         {inNigeria ? (
           <select id="d-state" autoComplete="address-level1"
@@ -326,6 +335,7 @@ function DeliveryForm({ onBack }) {
                onChange={(e) => setDelivery(v => ({ ...v, newsletter: e.target.checked }))} />
         <span>Email me about new drops and restocks. Leave any time.</span>
       </label>
+      </>)}
 
       <div className="delivery__sum">
         <DiscountBox applied={applied} onApplied={setApplied} />
@@ -342,7 +352,7 @@ function DeliveryForm({ onBack }) {
         <div className="drawer__row drawer__row--total"><span>TOTAL</span><span>{naira(total)}</span></div>
       </div>
 
-      <button type="submit" className="btn btn--solid btn--block" disabled={busy || !cart.length}>
+      <button type="submit" className="btn btn--solid btn--block" disabled={busy || !cart.length || (!inNigeria && !abroadOpen)}>
         {busy ? 'TAKING YOU TO PAYSTACK…' : `PAY ${naira(total)}`}
       </button>
       <p className="drawer__note drawer__note--center">Secure payment by Paystack. We never see your card.</p>

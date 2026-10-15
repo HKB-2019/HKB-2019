@@ -176,6 +176,35 @@ test('the delivery form says what is missing, beside the box that is missing it'
   await expect(page).toHaveURL(/\/$/, { timeout: 1000 });   // still here, not at Paystack
 });
 
+test('a customer abroad picks their country from a list, and is told at once if we do not ship there yet', async ({ page }) => {
+  const toCheckout = async () => {
+    await page.goto('/product/scarf');
+    await page.getByRole('button', { name: 'ADD TO BAG' }).click();
+    await page.locator('.cart-btn').click();
+    await page.getByRole('button', { name: 'CHECKOUT' }).click();
+  };
+  await toCheckout();
+  await expect(page.locator('#d-country')).toHaveValue('Nigeria');
+  await page.selectOption('#d-country', 'Ghana');
+  await expect(page.getByRole('status').filter({ hasText: 'We deliver within Nigeria only for now' })).toContainText('ship to Ghana');
+  await expect(page.locator('#d-state')).toHaveCount(0);                      // no address to type for nothing
+  await expect(page.getByRole('button', { name: /^PAY/ })).toBeDisabled();
+
+  // The owner switches on delivery abroad: the address and its fee follow.
+  await signIn(page);
+  const res = await page.request.put('/api/admin/settings/delivery', { data: {
+    lagos: { enabled: true, feeKobo: 250_000 }, abuja: { enabled: true, feeKobo: 350_000 },
+    nigeria: { enabled: true, feeKobo: 500_000 }, international: { enabled: true, feeKobo: 4_000_000 }
+  } });
+  expect(res.ok()).toBe(true);
+  await toCheckout();
+  await page.selectOption('#d-country', 'Ghana');
+  await expect(page.getByLabel('STATE OR REGION')).toBeVisible();
+  await expect(page.locator('.delivery__sum')).toContainText('₦40,000');
+  await page.selectOption('#d-country', 'Nigeria');
+  await expect(page.locator('select#d-state')).toBeVisible();                 // Nigeria's states, as a list again
+});
+
 test('saved pieces can be found again, and bought from the saved list', async ({ page }) => {
   await page.goto('/');
   await card(page, 'THE PATTERN SCARF').getByRole('button', { name: 'Save THE PATTERN SCARF' }).click();
