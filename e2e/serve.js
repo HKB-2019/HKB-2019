@@ -45,6 +45,7 @@ const { subscribeLimit } = await import('../server/routes/subscribe.js');
 const { eventLimit } = await import('../server/routes/analytics.js');
 const { draftLimit } = await import('../server/routes/admin-products.js');
 const { createApp } = await import('../server/index.js');
+const { HOME_DEFAULT } = await import('../src/data/home.js');
 
 export const DELIVERY = {
   lagos:         { enabled: true,  feeKobo: 250_000 },
@@ -57,6 +58,8 @@ async function reset({ delivery = true } = {}) {
   await seed({ reset: true });
   await query("DELETE FROM settings WHERE key <> 'admin_password_hash'");
   if (delivery) await setSetting('delivery', DELIVERY);
+  // The welcome pop-up would cover what other tests click; e2e/welcome.spec.js turns it on.
+  await setSetting('home', { ...HOME_DEFAULT, welcome: { show: false, delay: 4 } });
   for (const ip of ['::ffff:127.0.0.1', '127.0.0.1', '::1']) clearFailures(ip);
   checkoutLimit.reset();
   discountLimit.reset();

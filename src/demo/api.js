@@ -177,9 +177,13 @@ const product = (id) => store.products.find(p => p.id === id);
 
 export const getProducts = () => settle(ordered().filter(onSale).map(p => shape(p, false)), 120);
 
+/* A preview saved before a newer setting existed (the welcome pop-up, say)
+ * gets that setting's default, as the server does. */
+const withHomeDefaults = (home) => ({ ...structuredClone(HOME_DEFAULT), ...home });
+
 export const getSite = () => settle({
   home: {
-    ...store.settings.home,
+    ...withHomeDefaults(store.settings.home),
     images: Object.fromEntries(Object.entries(store.homeImages).map(([k, v]) => [k, v ? { img: v.img, img2x: v.img2x } : null]))
   },
   pages: store.settings.pages,
@@ -614,7 +618,7 @@ export const adminRemoveHomeImage = (slot) =>
 
 /* --------------------------------------------- admin: settings, list */
 
-export const adminSettings = () => settle(store.settings);
+export const adminSettings = () => settle({ ...store.settings, home: withHomeDefaults(store.settings.home) });
 
 export const adminSaveSetting = (key, value) => attempt(() => {
   let clean = value;

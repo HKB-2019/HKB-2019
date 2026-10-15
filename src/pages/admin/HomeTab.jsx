@@ -108,6 +108,14 @@ const GROUPS = [
   ]]
 ];
 
+/* The welcome pop-up's words; its switch and timing are set beside them.
+ * The seconds match the server's list (server/lib/settings.js). */
+const WELCOME_FIELDS = [
+  ['welcomeTitle', 'Pop-up heading', 60, 1],
+  ['welcomeNote', 'Pop-up text', 200, 2]
+];
+const WELCOME_DELAYS = [0, 2, 4, 8, 15, 30, 60];
+
 const MENU_HELP = {
   shop: 'goes to the product grid',
   collections: 'goes to the Essentials carousel',
@@ -153,6 +161,37 @@ function Words({ value, onSaved }) {
           ))}
         </fieldset>
       ))}
+
+      <fieldset className="admin-card__part admin-fieldset">
+        <legend className="admin-product__label">Welcome pop-up</legend>
+        <p className="admin-help">
+          Offers the mailing list to someone visiting for the first time, on the home page only. Each visitor sees it once
+          (again after 30 days if they closed it; never once they have joined). Sign-ups join the same list as the form at the foot of the page (the LIST tab).
+        </p>
+        <div className="admin-menu-row">
+          <label className="admin-toggle">
+            <input type="checkbox" checked={home.welcome.show}
+                   onChange={(e) => set('welcome', { ...home.welcome, show: e.target.checked })} />
+            <span className="admin-toggle__box" aria-hidden="true" />
+            <span>Show the pop-up</span>
+          </label>
+          <label className="admin-field">
+            <span>Appears after</span>
+            <select value={home.welcome.delay} disabled={!home.welcome.show}
+                    onChange={(e) => set('welcome', { ...home.welcome, delay: Number(e.target.value) })}>
+              {WELCOME_DELAYS.map(d => <option key={d} value={d}>{d === 0 ? 'at once' : `${d} seconds`}</option>)}
+            </select>
+          </label>
+        </div>
+        {WELCOME_FIELDS.map(([key, label, max, lines]) => (
+          <label className="admin-field admin-field--wide" key={key}>
+            <span>{label}</span>
+            {lines > 1
+              ? <textarea rows={lines} maxLength={max} value={home[key]} onChange={(e) => set(key, e.target.value)} />
+              : <input maxLength={max} value={home[key]} onChange={(e) => set(key, e.target.value)} />}
+          </label>
+        ))}
+      </fieldset>
 
       <fieldset className="admin-card__part admin-fieldset">
         <legend className="admin-product__label">Menu</legend>

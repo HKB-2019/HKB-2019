@@ -139,6 +139,25 @@ test('the home page words and menu can be changed, and a hidden menu item says s
   assert.equal(after.nav.journal.show, false);
 });
 
+test('the welcome pop-up is on by default, and its switch and timing are checked', async () => {
+  assert.deepEqual((await site()).home.welcome, { show: true, delay: 4 });
+  assert.equal((await site()).home.welcomeTitle, 'Be first to the next drop.');
+
+  const { body: current } = await api('/settings');
+  const off = await api('/settings/home', 'PUT', { ...current.home, welcome: { show: false, delay: 15 } });
+  assert.equal(off.status, 200, off.raw);
+  assert.deepEqual((await site()).home.welcome, { show: false, delay: 15 });
+
+  const odd = await api('/settings/home', 'PUT', { ...current.home, welcome: { show: true, delay: 7 } });
+  assert.equal(odd.status, 400);
+  assert.match(odd.body.error, /0, 2, 4, 8, 15, 30, 60 seconds/);
+
+  // Words saved before the pop-up existed still read, with its defaults.
+  const { welcome, welcomeTitle, welcomeNote, ...older } = current.home;
+  await shop.query("UPDATE settings SET value = $1 WHERE key = 'home'", [JSON.stringify(older)]);
+  assert.deepEqual((await site()).home.welcome, { show: true, delay: 4 });
+});
+
 test('home page words that would break the page are refused', async () => {
   const { body: current } = await api('/settings');
   for (const [field, value, message] of [

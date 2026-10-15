@@ -22,6 +22,11 @@ export const HOME_DEFAULT = {
   newsletterNote:  'First access to every drop, and the story behind each mask. Nothing else.',
   // Over the countdown, while pieces are waiting for their drop time.
   countdownTitle:  'The next drop',
+  // The pop-up that offers the mailing list to a first-time visitor.
+  welcomeTitle:    'Be first to the next drop.',
+  welcomeNote:     'New drops, restocks and the story behind each mask, straight to your inbox. Nothing else.',
+  // Shown on the home page, `delay` seconds after a first-time visitor lands.
+  welcome:         { show: true, delay: 4 },
   nav: {
     shop:        { label: 'SHOP',        show: true },
     collections: { label: 'ESSENTIALS',  show: true },

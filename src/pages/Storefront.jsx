@@ -12,10 +12,15 @@ import DropCountdown from '../components/DropCountdown.jsx';
 import { useShop, useHome } from '../store/ShopContext.jsx';
 import { scrollToId } from '../lib/scroll.js';
 import { jumpTo } from '../lib/smoothScroll.js';
+import { readStore, writeStore } from '../lib/storage.js';
+import { WELCOME_KEY } from '../components/Newsletter.jsx';
+
+// Someone who closed the welcome pop-up is asked again after this long; someone who joined, never.
+const ASK_AGAIN_MS = 30 * 24 * 3_600_000;
 
 export default function Storefront() {
-  const { openOverlay, catalogueStatus } = useShop();
-  const { ready } = useHome();
+  const { openOverlay, overlay, catalogueStatus } = useShop();
+  const { home, ready } = useHome();
   const { hash, key } = useLocation();
   const how = useNavigationType();
 
@@ -45,6 +50,22 @@ export default function Storefront() {
     if (spot.all) window.dispatchEvent(new CustomEvent('masq:expand-drop'));
     requestAnimationFrame(() => requestAnimationFrame(() => jumpTo(spot.y)));
   }, [spot, ready, catalogueStatus]);
+
+  // The welcome pop-up: the mailing list, offered to a first-time visitor a
+  // few seconds after they land (the owner sets how many, or switches it off,
+  // in the admin). Never over another panel, and never twice: it is noted as
+  // shown the moment it opens.
+  const welcome = home.welcome;
+  useEffect(() => {
+    if (!ready || !welcome?.show || overlay) return;
+    const seen = readStore(WELCOME_KEY, null);
+    if (seen && (seen.state === 'joined' || Date.now() - seen.at < ASK_AGAIN_MS)) return;
+    const timer = setTimeout(() => {
+      writeStore(WELCOME_KEY, { state: 'shown', at: Date.now() });
+      openOverlay('welcome');
+    }, welcome.delay * 1000);
+    return () => clearTimeout(timer);
+  }, [ready, welcome?.show, welcome?.delay, overlay, openOverlay]);
 
   // The big photos drift as the page scrolls (src/lib/drift.js), fetched
   // once the page is showing, and not at all on a device set to reduce motion.

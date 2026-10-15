@@ -142,8 +142,11 @@ export const HOME_FIELDS = {
   craftTitle: [60, false], craftText: [240, true], dropTitle: [60, false],
   manifestoLine1: [60, false], manifestoLine2: [60, false], manifestoTag: [80, false],
   essentialsTitle: [40, false], newsletterTitle: [60, false], newsletterNote: [200, true],
-  countdownTitle: [40, false]
+  countdownTitle: [40, false], welcomeTitle: [60, false], welcomeNote: [200, true]
 };
+
+/** Seconds the welcome pop-up waits after a visitor lands: from at once to a minute. */
+export const WELCOME_DELAYS = [0, 2, 4, 8, 15, 30, 60];
 
 export function cleanText(v, { label, max, multiline = true, allowEmpty = false }) {
   if (typeof v !== 'string') throw bad(`${label}: text is missing.`);
@@ -160,6 +163,10 @@ function validHome(value) {
   for (const [key, [max, multiline]] of Object.entries(HOME_FIELDS)) {
     out[key] = cleanText(value[key] ?? HOME_DEFAULT[key], { label: key, max, multiline });
   }
+  const w = value.welcome ?? HOME_DEFAULT.welcome;
+  const delay = w.delay ?? HOME_DEFAULT.welcome.delay;
+  if (!WELCOME_DELAYS.includes(delay)) throw bad(`Welcome pop-up: wait one of ${WELCOME_DELAYS.join(', ')} seconds.`);
+  out.welcome = { show: w.show !== false, delay };
   out.nav = {};
   for (const item of NAV) {
     const n = value.nav?.[item] ?? HOME_DEFAULT.nav[item];

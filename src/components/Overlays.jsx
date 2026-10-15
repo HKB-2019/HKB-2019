@@ -12,6 +12,8 @@ import { SizeButtons } from './DropGrid.jsx';
 import { useFocusTrap } from '../lib/useFocusTrap.js';
 import ZoomViewer from './ZoomViewer.jsx';
 import { FROM_SHOP } from '../lib/pageMorph.js';
+import { JoinForm } from './Newsletter.jsx';
+import Lines from './Lines.jsx';
 
 const ease = [0.33, 0.02, 0.18, 1];
 
@@ -420,7 +422,7 @@ function SavedDrawer() {
 
 /* --------------------------------------------------------------- modal shell */
 
-function Modal({ label, labelledBy, wide, children }) {
+function Modal({ label, labelledBy, wide, className = '', children }) {
   const { closeOverlay } = useShop();
   const ref = useFocusTrap(true);
   return (
@@ -431,7 +433,7 @@ function Modal({ label, labelledBy, wide, children }) {
          onClick={(e) => { if (e.target === e.currentTarget) closeOverlay(); }}>
       <motion.div
         ref={ref}
-        className={`modal__panel ${wide ? 'modal__panel--film' : 'modal__panel--sm'}`}
+        className={`modal__panel ${className || (wide ? 'modal__panel--film' : 'modal__panel--sm')}`}
         initial={{ opacity: 0, y: 20, scale: 0.984 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 12, scale: 0.988 }}
@@ -451,6 +453,37 @@ function Modal({ label, labelledBy, wide, children }) {
 /* Replaces a sign-in form that did nothing: it told people "Welcome back"
  * and "Account created" while discarding what they typed. Until real
  * accounts exist, the honest thing to offer is the one thing we can do. */
+/* ----------------------------------------------------------- welcome */
+
+/**
+ * The mailing list, offered once to a first-time visitor on the home page
+ * (opened by src/pages/Storefront.jsx). The words are the owner's, from
+ * Home page → Words in the admin.
+ */
+function WelcomeModal() {
+  const { closeOverlay } = useShop();
+  const { home, images } = useHome();
+  const [joined, setJoined] = useState(false);
+  const photo = images.hero?.img ?? asset('assets/img/hero-model.webp');
+
+  return (
+    <Modal labelledBy="welcomeTitle" className="modal__panel--welcome">
+      <div className="welcome">
+        <div className="welcome__photo" aria-hidden="true"><img src={photo} alt="" /></div>
+        <div className="welcome__body">
+          <p className="eyebrow">The List</p>
+          <h2 className="welcome__title" id="welcomeTitle">{home.welcomeTitle}</h2>
+          <p className="welcome__note"><Lines text={home.welcomeNote} /></p>
+          <JoinForm id="welcome-email" onJoined={() => setJoined(true)} />
+          <button type="button" className={joined ? 'btn btn--ghost welcome__done' : 'welcome__skip'} onClick={closeOverlay}>
+            {joined ? 'CONTINUE TO THE SHOP' : 'NO THANKS'}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 function TrackOrderModal() {
   const { closeOverlay } = useShop();
   const navigate = useNavigate();
@@ -575,6 +608,7 @@ export default function Overlays() {
           {overlay === 'saved' && <SavedDrawer />}
           {overlay === 'track' && <TrackOrderModal />}
           {overlay === 'film'  && <FilmModal />}
+          {overlay === 'welcome' && <WelcomeModal />}
           {info                && <InfoModal title={info} />}
           {overlay.zoom        && <ZoomViewer {...overlay.zoom} />}
         </motion.div>
