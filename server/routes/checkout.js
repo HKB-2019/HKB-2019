@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { transaction, one as oneRow } from '../db.js';
+import { transaction, one as oneRow, query } from '../db.js';
 import { assertKobo } from '../lib/money.js';
 import { initializeTransaction, newReference } from '../lib/paystack.js';
 import { releaseStock } from '../lib/orders.js';
@@ -243,6 +243,12 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
   }
 
   const total = order.subtotal - order.discountKobo + order.shipping;
+
+  // "Email me about new drops", ticked at checkout (never ticked for them):
+  // onto the mailing list. A failure here must not cost the sale.
+  if (body.newsletter === true) {
+    await query('INSERT INTO subscribers (email) VALUES ($1) ON CONFLICT (email) DO NOTHING', [order.email]).catch(() => {});
+  }
 
   // Paystack is called AFTER the order exists, so a failure here leaves a
   // pending order we can reconcile rather than a charge with nothing behind it.

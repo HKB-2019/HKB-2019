@@ -843,6 +843,8 @@ html{ scrollbar-color:var(--line) var(--bg); }
 .modal__text{ margin:0; font-size:16px; line-height:1.85; color:var(--ink-dim); max-width:62ch; }
 
 /* The welcome pop-up: the hero's photo beside the mailing list. */
+.delivery__optin{ display:flex; gap:12px; align-items:flex-start; margin:4px 0 22px; font-size:13px; line-height:1.6; color:var(--ink-dim); cursor:pointer; }
+.delivery__optin input{ width:18px; height:18px; margin:2px 0 0; flex:0 0 auto; accent-color:var(--violet); }
 .modal__panel.modal__panel--welcome{ max-width:820px; padding:0; overflow:hidden; }
 .welcome{ display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); }
 .welcome__photo{ position:relative; background:#050407; min-height:100%; }
@@ -1246,6 +1248,94 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
   .admin-stock__table td:nth-child(8):empty{ display:none; }
   .admin-stock__arrive{ flex-direction:column; align-items:flex-end; gap:4px; }
   .admin-stock__table td[colspan]{ grid-column:1 / -1; }
+}
+/* CUSTOMERS tab: one line per person; a line opens into their record. */
+.admin-crm .admin-filters{ align-items:center; gap:10px 12px; }
+.admin-crm .admin-filters select{ height:36px; }
+.admin-crm__search, .admin-crm__input{
+  height:36px; padding:0 12px; min-width:0;
+  background:var(--bg-2); border:1px solid var(--line-soft); color:var(--ink); font:inherit; font-size:15px;
+  transition:border-color .3s var(--ease-out);
+}
+.admin-crm__search{ width:min(300px, 100%); }
+.admin-crm__search:focus, .admin-crm__input:focus{ outline:none; border-color:var(--violet-soft); }
+.admin-crm__tiles{ margin-bottom:22px; }
+.admin-crm__shown{ margin:0 0 10px; font-size:13px; color:var(--ink-faint); }
+.admin-crm__table{ min-width:860px; }
+.admin-crm__table td{ vertical-align:top; }
+.admin-crm__table tr.is-open td{ background:rgb(var(--violet-soft-rgb) / .06); border-bottom-color:transparent; }
+.admin-crm__person{
+  display:grid; gap:3px; justify-items:start; text-align:left; padding:0; font-size:13px; color:var(--ink-dim);
+  min-width:200px; max-width:300px; overflow-wrap:anywhere;
+}
+.admin-crm__person strong{ font-weight:500; font-size:15px; color:var(--ink); text-decoration:underline; text-decoration-color:transparent; text-underline-offset:3px; transition:text-decoration-color .3s var(--ease-out); }
+.admin-crm__person:hover strong, .admin-crm__person[aria-expanded="true"] strong{ text-decoration-color:var(--violet-soft); }
+.admin-crm__person:focus-visible{ outline:1px solid var(--violet-soft); outline-offset:4px; }
+.admin-crm__kind{ display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+.admin-crm__tags{ display:flex; flex-wrap:wrap; gap:5px; }
+.admin-crm__tags span, .admin-crm__tagedit li{
+  padding:2px 8px; font-size:12px; color:var(--ink); border:1px solid rgb(var(--violet-soft-rgb) / .45); background:var(--tint); white-space:nowrap;
+}
+.admin-crm__detail > td{ padding:0 16px 22px; background:rgb(var(--violet-soft-rgb) / .06); }
+.admin-crm__detail:hover > td{ background:rgb(var(--violet-soft-rgb) / .06); }
+.admin-crm__card{ display:grid; gap:22px; padding-top:6px; }
+.admin-crm__cols{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr); gap:22px 36px; }
+.admin-crm__block{ display:grid; gap:6px; align-content:start; font-size:14px; min-width:0; }
+.admin-crm__block a{ color:var(--violet-soft); text-decoration:none; overflow-wrap:anywhere; }
+.admin-crm__block a:hover{ text-decoration:underline; text-underline-offset:3px; }
+.admin-crm__h{ margin:6px 0 4px; font-size:11px; letter-spacing:.2em; text-transform:uppercase; font-weight:400; color:var(--ink-dim); }
+.admin-crm__faint{ color:var(--ink-faint); font-size:13px; line-height:1.5; }
+.admin-crm__orders{ list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.admin-crm__orders li{ display:grid; gap:3px; }
+.admin-crm__orderhead{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; font-size:13px; }
+.admin-crm__orderhead time{ color:var(--ink-dim); font-variant-numeric:tabular-nums; min-width:96px; }
+.admin-crm__total{ margin-left:auto; color:var(--ink); font-variant-numeric:tabular-nums; }
+.admin-crm__tagedit{ list-style:none; margin:0 0 4px; padding:0; display:flex; flex-wrap:wrap; gap:6px; }
+.admin-crm__tagedit li{ display:inline-flex; align-items:center; gap:4px; padding-right:2px; }
+.admin-crm__tagedit button{
+  width:24px; height:24px; display:grid; place-items:center; font-size:16px; line-height:1; color:var(--ink-faint); transition:color .2s;
+}
+.admin-crm__tagedit button:hover:not(:disabled){ color:var(--bad-text); }
+.admin-crm__addtag{ display:flex; gap:8px; }
+.admin-crm__addtag .admin-crm__input{ flex:1 1 auto; max-width:240px; }
+.admin-crm__suggest{ margin:2px 0 0; display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+.admin-crm__suggest .admin-chip{ text-transform:none; letter-spacing:0; font-size:12px; }
+.admin-crm__foot{ display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; border-top:1px solid var(--line-soft); padding-top:14px; }
+.admin-crm__foot .admin-note{ margin-left:0; }
+.admin-crm__forget{ margin-left:auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:10px 14px; }
+.admin-crm__warn{ flex:1 1 320px; max-width:56ch; font-size:13px; color:var(--ink-dim); }
+@media (max-width:760px){
+  .admin-crm__cols{ grid-template-columns:minmax(0,1fr); }
+  .admin-crm__search{ width:100%; flex:1 1 100%; }
+}
+/* A phone: one card per person, the record opening beneath it. */
+@media (max-width:640px){
+  .admin-crm .admin-table-wrap{ overflow:visible; }
+  .admin-crm__table{ min-width:0; width:100%; }
+  .admin-crm__table thead{ display:none; }
+  .admin-crm__table, .admin-crm__table tbody{ display:block; }
+  .admin-crm__table tr{
+    display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); column-gap:10px; row-gap:8px;
+    padding:14px 10px; border-bottom:1px solid var(--line-soft);
+  }
+  .admin-crm__table td{ display:block; padding:0; border:0; text-align:left; min-width:0; font-size:13px; }
+  .admin-crm__table td:nth-child(1){ grid-column:1 / -1; }
+  .admin-crm__person{ min-width:0; max-width:none; }
+  .admin-crm__table td:nth-child(2){ grid-column:1 / -1; color:var(--ink-dim); }
+  .admin-crm__table td:nth-child(2)::before{ display:none; }
+  .admin-crm__table td:nth-child(n+3){ text-align:left; }
+  .admin-crm__table td:nth-child(7){ grid-column:1 / -1; }
+  .admin-crm__table td.is-none{ display:none; }
+  .admin-crm__table td[data-label]::before{
+    content:attr(data-label); display:block; margin-bottom:2px;
+    color:var(--ink-faint); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+  }
+  .admin-crm__table tr.admin-crm__detail{ display:block; padding:0 10px 18px; background:rgb(var(--violet-soft-rgb) / .06); }
+  .admin-crm__table tr.is-open{ border-bottom:0; background:rgb(var(--violet-soft-rgb) / .06); }
+  .admin-crm__table tr.is-open td{ background:none; }
+  .admin-crm__detail > td{ padding:0; background:none; }
+  .admin-crm__table td[colspan]{ grid-column:1 / -1; }
+  .admin-crm__forget{ margin-left:0; justify-content:flex-start; }
 }
 .admin-stock__history time{ color:var(--ink-faint); min-width:120px; font-variant-numeric:tabular-nums; }
 .admin-stock__history strong{ color:var(--ink); font-weight:500; }

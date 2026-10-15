@@ -91,6 +91,9 @@ function sampleStore() {
       rates: { ...DEFAULT_RATES }
     },
     homeImages: { hero: null, band: null, film: null },
+    customers: {
+      'chidi@example.com': { tags: ['VIP'], notes: 'Bought two hoodies for his brother. Asks about the next drop.', createdAt: ago(190) }
+    },
     nextId: 100
   };
 }
@@ -257,7 +260,7 @@ export function askForRestock(productId, size, email, colour = '') {
   return settle({ ok: true });
 }
 
-export async function startCheckout({ email, name, phone, address }, items, discountCode) {
+export async function startCheckout({ email, name, phone, address, newsletter }, items, discountCode) {
   const zone = openZones().find(z => z.zone === zoneFor(address));
   if (!zone) return fail('Sorry — we don’t deliver there yet.');
   let discount = null;
@@ -283,6 +286,8 @@ export async function startCheckout({ email, name, phone, address }, items, disc
     fulfilledAt: null, items: lines.map(([, l]) => l), shippingKobo: zone.feeKobo, createdAt: new Date().toISOString(), paidAt: null,
     discountCode: discount?.result.code ?? null, discountKobo: discount?.result.discountKobo ?? 0
   });
+  const e = email.trim().toLowerCase();
+  if (newsletter && !store.subscribers.some(s => s.email === e)) store.subscribers.unshift({ id: Date.now(), email: e, joinedAt: new Date().toISOString() });
   save();
   return settle({ reference, authorizationUrl: `#/pay?reference=${reference}` }, 500);
 }
@@ -826,6 +831,98 @@ export const adminClearAlerts = (productId, size, colour = '') => attempt(() => 
 
 export const adminRemoveAlert = (id) =>
   attempt(() => { store.alerts = store.alerts.filter(a => a.id !== id); return { ok: true }; });
+
+/* ---------------------------------------------------------- customers */
+
+/* As server/routes/admin-customers.js: one record per email, joined up from
+ * orders, the mailing list and restock requests, plus the owner's tags and
+ * notes (kept here under store.customers). */
+
+const notesOf = () => (store.customers ??= {});
+
+function people() {
+  const emails = new Set([
+    ...store.orders.map(o => o.email.toLowerCase()),
+    ...store.subscribers.map(s => s.email.toLowerCase()),
+    ...store.alerts.map(a => a.email.toLowerCase()),
+    ...Object.entries(notesOf()).filter(([, c]) => c.notes || c.tags.length).map(([e]) => e)
+  ]);
+  const list = [...emails].filter(e => !e.endsWith('@removed.invalid')).map(personOf);
+  const latest = (p) => p.lastOrderAt ?? p.firstSeenAt ?? '';
+  return list.sort((a, b) => latest(b).localeCompare(latest(a)) || a.email.localeCompare(b.email));
+}
+
+function personOf(email) {
+  const mine = store.orders.filter(o => o.email.toLowerCase() === email);
+  const paid = mine.filter(o => o.status === 'paid');
+  const named = [...mine].filter(o => o.name).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  const sub = store.subscribers.find(s => s.email.toLowerCase() === email);
+  const alerts = store.alerts.filter(a => a.email.toLowerCase() === email);
+  const c = notesOf()[email];
+  const dates = (xs) => xs.filter(Boolean).sort();
+  return {
+    email, name: named?.name ?? null, phone: named?.phone ?? null,
+    city: named?.address?.city ?? null, state: named?.address?.state ?? null, country: named?.address?.country ?? null,
+    orders: paid.length, spentKobo: paid.reduce((n, o) => n + totalOf(o), 0),
+    unfinished: mine.filter(o => ['pending', 'abandoned', 'failed'].includes(o.status)).length,
+    firstOrderAt: dates(paid.map(o => o.createdAt))[0] ?? null,
+    lastOrderAt: dates(paid.map(o => o.createdAt)).at(-1) ?? null,
+    subscribed: Boolean(sub), subscribedAt: sub?.joinedAt ?? null,
+    waiting: alerts.length, tags: c?.tags ?? [], notes: c?.notes ?? '',
+    firstSeenAt: dates([...mine.map(o => o.createdAt), sub?.joinedAt, ...alerts.map(a => a.askedAt), c?.createdAt])[0] ?? null,
+    kind: paid.length ? 'buyer' : 'prospect',
+    address: named?.address ?? null
+  };
+}
+
+const known = (email) => people().find(p => p.email === String(email).trim().toLowerCase());
+
+export const adminCustomers = () => settle(people().map(({ address, ...p }) => p));
+
+export function adminCustomer(email) {
+  const p = known(email);
+  if (!p) return fail('No one with that email.', 404);
+  const orderList = store.orders.filter(o => o.email.toLowerCase() === p.email)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .map(o => ({ reference: o.reference, status: o.status, placedAt: o.createdAt, sentAt: o.fulfilledAt ?? null,
+                 totalKobo: totalOf(o), items: o.items.map(i => ({ name: i.name, colour: i.colour || null, size: i.size, qty: i.qty })) }));
+  const waitingFor = store.alerts.filter(a => a.email.toLowerCase() === p.email)
+    .map(a => ({ name: product(a.productId)?.name ?? 'A piece no longer listed', colour: a.colour || null, size: a.size, askedAt: a.askedAt }));
+  return settle({ ...p, orderList, waitingFor });
+}
+
+export const adminUpdateCustomer = (email, change) => attempt(() => {
+  const p = known(email);
+  if (!p) throw new Error('No one with that email.');
+  const c = notesOf()[p.email] ??= { tags: [], notes: '', createdAt: new Date().toISOString() };
+  if ('tags' in change) {
+    const tags = [...new Set(change.tags.map(t => String(t ?? '').replace(/\s+/g, ' ').trim()).filter(Boolean))];
+    if (tags.length > 10) throw new Error('Up to 10 tags.');
+    if (tags.some(t => t.length > 24)) throw new Error('Keep each tag under 24 characters.');
+    c.tags = tags;
+  }
+  if ('notes' in change) {
+    const notes = String(change.notes).replace(/\r\n?/g, '\n').trim();
+    if (notes.length > 2000) throw new Error('Keep notes under 2,000 characters.');
+    c.notes = notes;
+  }
+  const { address, ...out } = personOf(p.email);
+  return out;
+});
+
+export const adminForgetCustomer = (email) => attempt(() => {
+  const p = known(email);
+  if (!p) throw new Error('No one with that email.');
+  const mine = store.orders.filter(o => o.email.toLowerCase() === p.email);
+  if (mine.some(o => o.status === 'pending' || (o.status === 'paid' && !o.fulfilledAt))) {
+    throw new Error('This person has an order still being paid for or waiting to be sent. Send it (or refund it) first.');
+  }
+  mine.forEach(o => Object.assign(o, { email: `removed-${store.nextId++}@removed.invalid`, name: null, phone: null, address: null }));
+  store.subscribers = store.subscribers.filter(s => s.email.toLowerCase() !== p.email);
+  store.alerts = store.alerts.filter(a => a.email.toLowerCase() !== p.email);
+  delete notesOf()[p.email];
+  return { ok: true, ordersKeptWithoutName: mine.length };
+});
 
 /** Downloads cannot leave a preview page, so this says so instead. */
 export const adminDownload = () => fail('Downloads are switched off in this preview. On the live shop this saves a spreadsheet.');

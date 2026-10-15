@@ -126,6 +126,12 @@ CREATE TABLE IF NOT EXISTS customers (
   email      TEXT        NOT NULL UNIQUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- The owner's own words about a person (the CUSTOMERS tab): tags such as
+-- VIP or wholesale, and private notes. Everything else about a customer is
+-- read from their orders, the mailing list and their restock requests.
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS tags       JSONB       NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS notes      TEXT        NOT NULL DEFAULT '';
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;
 
 -- status:
 --   pending    stock is held; the customer is on (or left) Paystack's page

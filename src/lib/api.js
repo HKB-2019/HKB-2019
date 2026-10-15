@@ -27,11 +27,12 @@ export const getSite     = () => request('/site');
  * Send WHAT is being bought and WHERE it goes. The server decides what it
  * costs — the item prices and the delivery fee both come from its database.
  */
-export const startCheckout = ({ email, name, phone, address }, items, discountCode, analyticsSession) =>
+export const startCheckout = ({ email, name, phone, address, newsletter }, items, discountCode, analyticsSession) =>
   request('/checkout', {
     method: 'POST',
     body: JSON.stringify({
       email, name, phone, address,
+      ...(newsletter ? { newsletter: true } : {}),
       ...(discountCode ? { discountCode } : {}),
       ...(analyticsSession ? { analyticsSession } : {}),
       items: items.map(i => ({ productId: i.id, colour: i.colour ?? '', size: i.size, qty: i.qty }))
@@ -138,6 +139,13 @@ export const adminSettings      = ()            => adminRequest('/admin/settings
 export const adminSaveSetting   = (key, value)  => adminRequest(`/admin/settings/${key}`, { method:'PUT', body: JSON.stringify(value) });
 export const adminSubscribers   = ()            => adminRequest('/admin/subscribers');
 export const adminRemoveSubscriber = (id)       => adminRequest(`/admin/subscribers/${id}`, { method:'DELETE' });
+
+// Customers: everyone the shop knows, by email (CSV: adminDownload('/admin/customers.csv')).
+const customerPath = (email) => `/admin/customers/${encodeURIComponent(email)}`;
+export const adminCustomers       = ()              => adminRequest('/admin/customers');
+export const adminCustomer        = (email)         => adminRequest(customerPath(email));
+export const adminUpdateCustomer  = (email, change) => adminRequest(customerPath(email), { method:'PATCH', body: JSON.stringify(change) });
+export const adminForgetCustomer  = (email)         => adminRequest(customerPath(email), { method:'DELETE' });
 
 /** Download a spreadsheet the admin is allowed to see, as a file. */
 export async function adminDownload(path) {

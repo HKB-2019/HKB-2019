@@ -13,12 +13,14 @@ import ListTab from './admin/ListTab.jsx';
 import HomeTab from './admin/HomeTab.jsx';
 import SalesTab from './admin/SalesTab.jsx';
 import StockTab from './admin/StockTab.jsx';
+import CustomersTab from './admin/CustomersTab.jsx';
 
 // Charts and maps load only when the tab is opened — never for shoppers.
 const VisitorsTab = lazy(() => import('./admin/visitors/VisitorsTab.jsx'));
 
 const TABS = [
   ['orders', 'ORDERS'],
+  ['customers', 'CUSTOMERS'],
   ['visitors', 'VISITORS'],
   ['sales', 'SALES'],
   ['products', 'PRODUCTS'],
@@ -457,6 +459,7 @@ export default function Admin() {
             )}
             {tab === 'products' && <ProductsTab onSummaryChange={refreshSummary} />}
             {tab === 'stock' && <StockTab onChanged={refreshSummary} />}
+            {tab === 'customers' && <CustomersTab onChanged={refreshSummary} />}
             {tab === 'home' && <HomeTab />}
             {tab === 'sales' && <SalesTab />}
             {tab === 'visitors' && (

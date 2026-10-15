@@ -320,6 +320,12 @@ function DeliveryForm({ onBack }) {
         <input id="d-line2" autoComplete="address-line2"
                value={d.address.line2} onChange={setAddr('line2')} />
       </Field>
+      {/* Never ticked for them: news is only sent to people who asked. */}
+      <label className="delivery__optin">
+        <input type="checkbox" checked={Boolean(d.newsletter)}
+               onChange={(e) => setDelivery(v => ({ ...v, newsletter: e.target.checked }))} />
+        <span>Email me about new drops and restocks. Leave any time.</span>
+      </label>
 
       <div className="delivery__sum">
         <DiscountBox applied={applied} onApplied={setApplied} />
