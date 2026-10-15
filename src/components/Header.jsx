@@ -6,9 +6,11 @@ import { useSectionLink } from '../lib/useSectionLink.js';
 import { NAV, NAV_TARGETS } from '../data/home.js';
 import { CURRENCIES } from '../data/currencies.js';
 import { jumpToTop } from '../lib/smoothScroll.js';
-import { ChevronDown, AccountIcon, BagIcon, Heart } from './Icons.jsx';
+import { ChevronDown, AccountIcon, BagIcon, Heart, Sun, Moon } from './Icons.jsx';
+import { useTheme } from '../lib/theme.js';
 
 export default function Header() {
+  const { theme, toggle } = useTheme();
   const { cartQty, currency, setCurrency, openOverlay, wishlist } = useShop();
   const { home, ready } = useHome();
   const { pathname } = useLocation();
@@ -107,6 +109,12 @@ export default function Header() {
             </ul>
           </div>
 
+          {/* Light or dark. On a phone it is in the menu: the bar is full. */}
+          <button className="icon-btn theme-btn" onClick={toggle}
+                  aria-label={theme === 'light' ? 'Switch to the dark theme' : 'Switch to the light theme'}>
+            {theme === 'light' ? <Moon /> : <Sun />}
+          </button>
+
           <button className="icon-btn saved-btn" aria-label={`Saved pieces (${wishlist.length})`} aria-haspopup="dialog"
                   onClick={() => openOverlay('saved')}>
             <Heart />
@@ -146,6 +154,10 @@ export default function Header() {
             {LINKS.map(({ href, label }) => (
               <a key={href} href={'/' + href} onClick={(e) => go(e, href)}>{label}</a>
             ))}
+            <button type="button" className="mobile-nav__theme" onClick={toggle}>
+              {theme === 'light' ? <Moon /> : <Sun />}
+              {theme === 'light' ? 'Dark theme' : 'Light theme'}
+            </button>
           </motion.nav>
         )}
       </AnimatePresence>

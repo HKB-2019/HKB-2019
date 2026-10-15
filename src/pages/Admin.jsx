@@ -6,6 +6,8 @@ import {
 } from '../lib/api.js';
 import ProductsTab from './admin/ProductsTab.jsx';
 import { pageHref } from '../lib/media.js';
+import { useTheme } from '../lib/theme.js';
+import { Sun, Moon } from '../components/Icons.jsx';
 import SettingsTab from './admin/SettingsTab.jsx';
 import ListTab from './admin/ListTab.jsx';
 import HomeTab from './admin/HomeTab.jsx';
@@ -391,6 +393,7 @@ function StockRow({ row, onSave }) {
 /* ------------------------------------------------------------------ page */
 
 export default function Admin() {
+  const { theme, toggle } = useTheme();
   const [signedIn, setSignedIn] = useState(null);   // null = still checking
   const [needsSetup, setNeedsSetup] = useState(false);
   const [summary, setSummary]   = useState(null);
@@ -465,6 +468,10 @@ export default function Admin() {
         <div className="admin-header__inner">
           <a href={pageHref('/')} className="logo" aria-label="MASQ. — back to the shop">MASQ<span>.</span></a>
           <span className="admin-badge">ADMIN</span>
+          <button className="icon-btn admin-theme" onClick={toggle}
+                  aria-label={theme === 'light' ? 'Switch to the dark theme' : 'Switch to the light theme'}>
+            {theme === 'light' ? <Moon /> : <Sun />}
+          </button>
           <button className="admin-signout"
                   onClick={() => adminLogout().then(() => setSignedIn(false))}>SIGN OUT</button>
         </div>

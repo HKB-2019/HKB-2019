@@ -3,17 +3,18 @@ import { useEffect, useRef, useState } from 'react';
 /* The VISITORS tab's charts, drawn as plain SVG and HTML.
  *
  * Colour does one job per chart. A single measure takes one violet; the
- * previous period is grey; ordered steps (the funnel) take a violet ramp
- * from bright to deep; amounts on a map or grid take a violet scale from
- * dim to bright. Every ramp was checked with the dataviz validator against
- * the admin's background (#0b0b10). Text never wears a data colour, and
- * every chart can be read as a table. */
+ * previous period is amber; ordered steps (the funnel) take a violet ramp
+ * from strong to faint; amounts on a map or grid take a violet scale from
+ * faint to strong. The colours are CSS variables (styles.css, "charts"), one
+ * set per theme, each checked with the dataviz validator against that
+ * theme's card background. Text never wears a data colour, and every chart
+ * can be read as a table. */
 
-export const SERIES = '#8e83c9';                      // one measure: 5.8:1 on the surface
-export const PREVIOUS = '#5c5a66';                    // the period before, for comparison
-export const FUNNEL = ['#bdb0ff', '#a89cf0', '#9588da', '#8174c4', '#6f61af', '#5d4e9a'];
-export const SCALE = ['#2e284a', '#423b66', '#584f84', '#7167a6', '#8b80c9', '#a79aee', '#c3b5ff'];
-export const NO_DATA = '#14141b';
+export const SERIES = 'var(--chart-series)';          // one measure
+export const PREVIOUS = 'var(--chart-previous)';      // the period before, for comparison
+export const FUNNEL = [1, 2, 3, 4, 5, 6].map(n => `var(--chart-funnel-${n})`);
+export const SCALE = [1, 2, 3, 4, 5, 6, 7].map(n => `var(--chart-scale-${n})`);
+export const NO_DATA = 'var(--chart-none)';
 
 /* ------------------------------------------------------------ numbers */
 
@@ -98,7 +99,7 @@ export function Sparkline({ values }) {
   const d = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join('');
   return (
     <svg className="viz-spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
-      <path d={d} fill="none" stroke={SERIES} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"
+      <path d={d} fill="none" style={{ stroke: SERIES }} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"
             opacity="0.8" vectorEffect="non-scaling-stroke" />
     </svg>
   );
@@ -190,11 +191,11 @@ export function LineChart({ points, label, previousLabel, format = nf, xLabel })
           <text key={q.key} x={x(i)} y={h - 8} className="viz-axis"
                 textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}>{q.tick}</text>
         ))}
-        {hasPrev && <path d={line('previous')} fill="none" stroke={PREVIOUS} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />}
-        <path d={area} fill={SERIES} opacity="0.1" />
-        <path d={line('value')} fill="none" stroke={SERIES} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        {hasPrev && <path d={line('previous')} fill="none" style={{ stroke: PREVIOUS }} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />}
+        <path d={area} style={{ fill: SERIES }} opacity="0.1" />
+        <path d={line('value')} fill="none" style={{ stroke: SERIES }} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
         <line x1={x(shown)} x2={x(shown)} y1={padT} y2={padT + ih} className="viz-cross" />
-        <circle cx={x(shown)} cy={y(p.value)} r="4.5" fill={SERIES} stroke="#0b0b10" strokeWidth="2" />
+        <circle cx={x(shown)} cy={y(p.value)} r="4.5" style={{ fill: SERIES, stroke: 'var(--bg-3)' }} strokeWidth="2" />
       </svg>
     </div>
   );
@@ -327,7 +328,7 @@ export function ChoroplethMap({ shapes, value, format, label, width: w, height: 
       </p>
       <svg viewBox={`0 0 ${w} ${h}`} className="viz-map__svg" role="img" aria-label={label}>
         {shapes.map((s, i) => (
-          <path key={s.key} d={s.d} fill={scaleColor(values[i], max || 1)} className="viz-map__shape"
+          <path key={s.key} d={s.d} style={{ fill: scaleColor(values[i], max || 1) }} className="viz-map__shape"
                 tabIndex={values[i] ? 0 : -1}
                 aria-label={`${s.label}: ${format(values[i])}`}
                 onPointerEnter={() => setHover({ s, v: values[i] })} onPointerLeave={() => setHover(null)}

@@ -159,6 +159,10 @@ adminProductsRouter.post('/admin/products', async (req, res) => {
   const sizes = Array.isArray(b.sizes) && b.sizes.length ? b.sizes.map(cleanSize) : ['ONE SIZE'];
   if (new Set(sizes).size !== sizes.length) throw fail(400, 'Each size can only be listed once.');
   if (sizes.length > 12) throw fail(400, 'That is more sizes than a product needs.');
+  // Colours from the start, if it comes in more than one: [{ name, hex }].
+  const colours = Array.isArray(b.colours) ? b.colours.map(c => ({ name: cleanColourName(c?.name), hex: cleanHex(c?.hex) })) : [];
+  if (colours.length > MAX_COLOURS) throw fail(400, `A product can have ${MAX_COLOURS} colours.`);
+  if (new Set(colours.map(c => c.name)).size !== colours.length) throw fail(400, 'Each colour can only be listed once.');
 
   const id = await transaction(async (tx) => {
     const id = await newId(tx, name);
@@ -168,8 +172,14 @@ adminProductsRouter.post('/admin/products', async (req, res) => {
                             description, details)
       VALUES ($1, $2, $3, '', $4, TRUE, TRUE, FALSE, TRUE, $5, $6, $7)
     `, [id, name, priceKobo, badge, next, description, details]);
-    for (const size of sizes) {
-      await tx.query('INSERT INTO variants (product_id, size, stock) VALUES ($1, $2, 0)', [id, size]);
+    for (const [position, c] of colours.entries()) {
+      await tx.query('INSERT INTO product_colours (product_id, name, hex, position) VALUES ($1, $2, $3, $4)',
+        [id, c.name, c.hex, position]);
+    }
+    for (const colour of colours.length ? colours.map(c => c.name) : ['']) {
+      for (const size of sizes) {
+        await tx.query('INSERT INTO variants (product_id, colour, size, stock) VALUES ($1, $2, $3, 0)', [id, colour, size]);
+      }
     }
     return id;
   });

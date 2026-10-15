@@ -434,6 +434,7 @@ function NewProduct({ onCreated }) {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [sizes, setSizes] = useState('');
+  const [colours, setColours] = useState([]);       // [{ name, hex }]
   const [state, run] = useAction();
 
   const submit = (e) => {
@@ -442,8 +443,8 @@ function NewProduct({ onCreated }) {
     if (Number.isNaN(priceNaira)) return run(async () => { throw new Error('Type the price in whole naira, e.g. 28000.'); });
     const list = sizes.split(',').map(s => s.trim()).filter(Boolean);
     run(async () => {
-      const p = await adminCreateProduct({ name, priceNaira, sizes: list });
-      setName(''); setPrice(''); setSizes(''); setOpen(false);
+      const p = await adminCreateProduct({ name, priceNaira, sizes: list, colours });
+      setName(''); setPrice(''); setSizes(''); setColours([]); setOpen(false);
       onCreated(p);
       return p;
     });
@@ -469,12 +470,57 @@ function NewProduct({ onCreated }) {
         <span>Sizes <em>comma separated — leave empty for one size</em></span>
         <input value={sizes} placeholder="S, M, L, XL" onChange={(e) => setSizes(e.target.value)} />
       </label>
+      <NewColours colours={colours} onChange={setColours} />
       <div className="admin-new__actions">
         <button className="admin-action admin-action--primary" disabled={!name.trim() || !price.trim()}>CREATE</button>
         <button type="button" className="admin-link" onClick={() => setOpen(false)}>cancel</button>
         <Note state={state} />
       </div>
     </form>
+  );
+}
+
+/** Colours for a product not made yet: a list kept here, sent with CREATE. */
+function NewColours({ colours, onChange }) {
+  const [name, setName] = useState('');
+  const [hex, setHex] = useState('#141416');
+  const [touched, setTouched] = useState(false);
+  const tidy = name.trim().replace(/\s+/g, ' ');
+  const taken = colours.some(c => c.name.toLowerCase() === tidy.toLowerCase());
+
+  const add = () => {
+    if (!tidy || taken || colours.length >= 12) return;
+    onChange([...colours, { name: tidy, hex }]);
+    setName(''); setTouched(false);
+  };
+
+  return (
+    <div className="admin-field admin-field--wide admin-new__colours">
+      <span>Colours <em>optional — only if it comes in more than one; the first is the one in its main photo</em></span>
+      {colours.length > 0 && (
+        <ul className="admin-new__chips">
+          {colours.map(c => (
+            <li key={c.name}>
+              <i style={{ '--swatch': c.hex }} aria-hidden="true" />{c.name}
+              <button type="button" className="admin-link" aria-label={`Remove ${c.name}`}
+                      onClick={() => onChange(colours.filter(x => x !== c))}>×</button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="admin-product__addsize admin-product__colours">
+        <input type="color" value={hex} aria-label="Swatch for the colour to add"
+               onChange={(e) => { setHex(e.target.value); setTouched(true); }} />
+        <input value={name} maxLength={24} placeholder="e.g. Black" aria-label="Colour to add"
+               onChange={(e) => {
+                 setName(e.target.value);
+                 const preset = COLOUR_PRESETS[e.target.value.trim().toLowerCase()];
+                 if (preset && !touched) setHex(preset);
+               }}
+               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} />
+        <button type="button" className="admin-action" disabled={!tidy || taken} onClick={add}>ADD COLOUR</button>
+      </div>
+    </div>
   );
 }
 

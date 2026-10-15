@@ -444,10 +444,12 @@ export const adminCreateProduct = (b) => attempt(() => {
   let id = base, n = 1;
   while (product(id)) id = `${base}-${++n}`;
   const sizes = (b.sizes?.length ? b.sizes : ['ONE SIZE']).map(s => String(s).trim().toUpperCase());
+  const colours = (b.colours ?? []).map(c => ({ id: store.nextId++, name: titleCase(c.name), hex: cleanHex(c.hex), photo: null }));
   store.products.push({
     id, name, priceKobo, img: '', uploaded: null, badge: null, inDrop: true, featured: true, inEssentials: false,
-    hidden: true, position: store.products.length, description: '', details: '', extras: [], colours: [],
-    sizes: sizes.map(size => ({ variantId: store.nextId++, colour: '', size, stock: 0 }))
+    hidden: true, position: store.products.length, description: '', details: '', extras: [], colours,
+    sizes: (colours.length ? colours.map(c => c.name) : ['']).flatMap(colour =>
+      sizes.map(size => ({ variantId: store.nextId++, colour, size, stock: 0 })))
   });
   return current(id);
 });

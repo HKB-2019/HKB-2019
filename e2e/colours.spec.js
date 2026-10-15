@@ -71,3 +71,24 @@ test('the colour swatches work from the keyboard', async ({ page }) => {
   await expect(page.getByRole('radio', { name: 'Black' })).toBeFocused();
   await expect(page.getByRole('radio', { name: 'Black' })).toHaveAttribute('aria-checked', 'true');
 });
+
+test('a new product is made with its colours in one go', async ({ page }) => {
+  await signIn(page);
+  await page.goto('/admin#products');
+  await page.getByRole('button', { name: '+ NEW PRODUCT' }).click();
+  const form = page.locator('.admin-new');
+  await form.getByLabel('Name').fill('THE WRAP SKIRT');
+  await form.getByLabel('Price (₦)').fill('30000');
+  await form.getByLabel(/^Sizes/).fill('S, M');
+  await form.getByLabel('Colour to add', { exact: true }).fill('Black');
+  await form.getByRole('button', { name: 'ADD COLOUR' }).click();
+  await form.getByLabel('Colour to add', { exact: true }).fill('Sand');
+  await form.getByLabel('Colour to add', { exact: true }).press('Enter');
+  await expect(form.locator('.admin-new__chips li')).toHaveText(['Black×', 'Sand×']);
+  await form.getByRole('button', { name: 'CREATE' }).click();
+
+  const card = page.locator('.admin-product', { has: page.locator('input[value="THE WRAP SKIRT"]') });
+  await expect(card.getByLabel('Name of colour Black')).toHaveValue('Black');
+  await expect(card.getByLabel('Name of colour Sand')).toHaveValue('Sand');
+  await expect(card.getByLabel('THE WRAP SKIRT, Sand, size M, in stock')).toHaveValue('0');
+});

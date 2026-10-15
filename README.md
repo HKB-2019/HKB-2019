@@ -248,7 +248,7 @@ someone opens it, so a shopper's phone never downloads it.
 | **Orders** | Every order with the customer's name, phone (tap to call), address, items, any discount code, and total including delivery. `MARK SENT` asks for the courier and tracking number, which the customer then sees on their order page (and can be corrected later). `refunded?` records a refund made in Paystack, and can put the pieces back in stock. Filters by status. `DOWNLOAD CSV` for packing and dispatch |
 | **Visitors** | Today, 7, 30, 90 days or 12 months, each compared with the period before. Visitors, visits, conversion rate, money in and per visitor, bounce rate, time per visit, returning visitors; visitors over time; the shopping funnel (visited → viewed a piece → added to bag → checkout → payment → paid) with the drop at each step; sources and campaigns with the sales each brought; a tracked-link maker; pieces (views, adds, add rate, sold); pages; devices, systems and browsers (including in-app browsers like Instagram's); a world map of visitors by country; a Nigeria map of buyers by state; visits and orders by day and hour; goals; unfinished checkouts; repeat customers; who is on the site now. Every chart can be shown as a table |
 | **Sales** | Money in by week (Monday to Sunday, Lagos time) for the last 12 weeks, average order, discounts given, best-selling pieces and sizes. Paid orders only. Discount codes: per cent or naira off the pieces (never the delivery), optional minimum spend, number of uses and end date; switch off or delete |
-| **Products** | One card per product: name, price, badge (save with a button), and switches for on sale, in the drop grid, before `VIEW ALL`, in the carousel (save at once). Reorder with ↑ ↓. **Colours**: none for a piece in one colour; or name each (swatch, name, optional photo of its own). The first named takes over the counts already there and is the colour in the main photo; each after it starts at 0. Rename one, or remove it once its counts are 0 (the last one leaves the piece sold by size, counts kept). Sizes with their counts — per colour; add a size (it comes in every colour); remove one once its counts are 0 and nobody is paying for it. `+ NEW PRODUCT` starts off sale — add a photo and counts, then switch it on. Each card also has the product page's description and "details and care", up to six more photos, and a link to see it on the shop. A **drop time** keeps a piece hidden and unbuyable until then |
+| **Products** | One card per product: name, price, badge (save with a button), and switches for on sale, in the drop grid, before `VIEW ALL`, in the carousel (save at once). Reorder with ↑ ↓. **Colours**: none for a piece in one colour; or name each (swatch, name, optional photo of its own). The first named takes over the counts already there and is the colour in the main photo; each after it starts at 0. Rename one, or remove it once its counts are 0 (the last one leaves the piece sold by size, counts kept). Sizes with their counts — per colour; add a size (it comes in every colour); remove one once its counts are 0 and nobody is paying for it. `+ NEW PRODUCT` takes its name, price, sizes and, if it comes in more than one, its colours; it starts off sale — add a photo and counts, then switch it on. Each card also has the product page's description and "details and care", up to six more photos, and a link to see it on the shop. A **drop time** keeps a piece hidden and unbuyable until then |
 | **Home page** | The three wide photos (top of the page, craft band, film strip) — change or put back the original. Every line of words on the home page. The menu: rename an item, or switch it off |
 | **Stock** | Every colour and size of everything in one list, for counting the shelf |
 | **List** | Everyone who joined from the footer. Download as CSV into your email tool; remove someone who asks. Below it, everyone waiting for a sold-out size, grouped by piece and size, marked when that size is back — copy their emails, then clear it |
@@ -432,6 +432,25 @@ passes its own `y` offset.
 
 A 1320px measure with a generous vertical rhythm (`--sec-y`) and portrait 5:6
 product frames. Inter for the interface, EB Garamond for the editorial lines.
+
+### Light and dark
+
+Both, with a sun / moon switch in the header (in the menu on a phone, where
+the bar is full) and in the admin's bar. Until someone chooses, the site
+follows their device, and changes with it; once they choose, it is kept in
+their browser (`masq:theme`). `public/theme.js` sets it before the page is
+drawn, so it never flashes the wrong one — a file rather than inline script,
+because the security policy allows scripts from the site only.
+
+Every colour is a variable at the top of `src/styles.css`; the light theme
+redefines them under `:root[data-theme="light"]`. Text colours are at least
+4.5:1 on every ground in both. See-through colours are written as channels
+(`rgb(var(--ink-rgb) / .2)`), so they follow too. A few things are more than a
+colour swap: the studio photos are shot on black, so in light they sit as
+clean panels (the hero below the menu, without its fade), and the film strip
+keeps the dark look so its label always reads on the photo. The admin's
+charts have their own colours per theme, each checked with the dataviz
+validator against that theme's card background.
 
 No blur and no grain anywhere. Frosted panels and noise overlays soften every
 edge underneath them, which on a near-black palette reads as haze rather than

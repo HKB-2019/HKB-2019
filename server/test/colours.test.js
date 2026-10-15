@@ -181,3 +181,20 @@ test('the sales summary names the colours that sell', async () => {
   const { colours } = (await api('/sales')).body;
   assert.deepEqual(colours, [{ name: 'THE FACE TEE', colour: 'White', qty: 3 }]);
 });
+
+test('a new product can be made with its colours from the start', async () => {
+  const res = await api('/products', 'POST', {
+    name: 'The Wrap Skirt', priceNaira: 30000, sizes: ['S', 'M'],
+    colours: [{ name: 'black', hex: '#111111' }, { name: 'Sand', hex: '#C8B48A' }]
+  });
+  assert.equal(res.status, 201, res.raw);
+  assert.deepEqual(res.body.colours.map(c => [c.name, c.hex]), [['Black', '#111111'], ['Sand', '#c8b48a']]);
+  assert.deepEqual(res.body.sizes.map(s => `${s.colour} ${s.size} ${s.stock}`),
+    ['Black S 0', 'Black M 0', 'Sand S 0', 'Sand M 0'], 'every size in every colour, at 0');
+
+  const twice = await api('/products', 'POST', { name: 'Twice', priceNaira: 1000,
+    colours: [{ name: 'Red', hex: '#aa0000' }, { name: 'red', hex: '#bb0000' }] });
+  assert.equal(twice.status, 400);
+  const noSwatch = await api('/products', 'POST', { name: 'No swatch', priceNaira: 1000, colours: [{ name: 'Red' }] });
+  assert.equal(noSwatch.status, 400);
+});

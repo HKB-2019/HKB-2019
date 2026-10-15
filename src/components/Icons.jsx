@@ -77,3 +77,17 @@ export const XIcon = () => (
     <path d="M5 17.6 9.9 12M12.3 9.6 17.2 4.4" stroke="currentColor" strokeWidth="1.3"/>
   </svg>
 );
+
+export const Sun = () => (
+  <svg viewBox="0 0 22 22" aria-hidden="true">
+    <circle cx="11" cy="11" r="3.8" fill="none" stroke="currentColor" strokeWidth="1.3"/>
+    <path d="M11 2.2v2.3M11 17.5v2.3M2.2 11h2.3M17.5 11h2.3M4.8 4.8l1.6 1.6M15.6 15.6l1.6 1.6M4.8 17.2l1.6-1.6M15.6 6.4l1.6-1.6"
+          stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+  </svg>
+);
+
+export const Moon = () => (
+  <svg viewBox="0 0 22 22" aria-hidden="true">
+    <path d="M17.8 13.6A7.4 7.4 0 0 1 8.4 4.2a7.4 7.4 0 1 0 9.4 9.4z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+  </svg>
+);
