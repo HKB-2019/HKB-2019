@@ -325,6 +325,9 @@ html{ scrollbar-color:var(--line) var(--bg); }
 }
 /* Pressed: a small give, so every tap is answered. */
 .btn:active:not(:disabled){ transform:scale(.97); }
+/* Switched off: plainly so, and no hover fill pretending otherwise. */
+.btn:disabled{ opacity:.45; cursor:not-allowed; }
+.btn:disabled::before{ transform:scaleY(0); }
 
 .btn--solid{ background:var(--violet); color:var(--on-accent); }
 .btn--solid::before{ background:var(--violet-hi); }

@@ -185,6 +185,9 @@ test('a customer abroad picks their country from a list, and is told at once if 
   };
   await toCheckout();
   await expect(page.locator('#d-country')).toHaveValue('Nigeria');
+  await expect(page.locator('.drawer__row--total')).toContainText('₦18,000');     // no delivery fee before a state
+  await page.selectOption('#d-state', 'Lagos');
+  await expect(page.locator('.drawer__row--total')).toContainText('₦20,500');     // + ₦2,500 Lagos
   await page.selectOption('#d-country', 'Ghana');
   await expect(page.getByRole('status').filter({ hasText: 'We deliver within Nigeria only for now' })).toContainText('ship to Ghana');
   await expect(page.locator('#d-state')).toHaveCount(0);                      // no address to type for nothing

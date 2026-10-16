@@ -211,7 +211,8 @@ function DeliveryForm({ onBack }) {
 
   const zone = zoneFor(d.address);
   const open = zones.find(z => z.zone === zone);
-  const fee = open ? open.feeKobo : null;
+  // No fee in the total until there is somewhere to deliver to (a state, in Nigeria).
+  const fee = open && (!inNigeria || d.address.state) ? open.feeKobo : null;
   const discountKobo = applied?.discountKobo ?? 0;
   const total = cartSubtotal * 100 - discountKobo + (fee ?? 0);
 
