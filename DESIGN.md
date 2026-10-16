@@ -92,10 +92,11 @@ Square corners everywhere; the only circles are colour swatches and the film's p
 - Section heads: tracked caps title, a small faint count of the pieces (07), a hairline, the link.
 - Countdown: serif numerals divided by hairlines, like a watch face.
 - Swatches: round, ringed when chosen, struck through when sold out.
+- Gift card: drawn as the physical card, from the logo's own artwork (`src/assets/giftcard`): deep violet, the full-colour MASQ. wordmark and mask on the front with the amount in serif, the symbol row, motto and code on the back. It is the one place the logo's colours, a card's rounded corners and type under 11px appear; everything on it is repeated at full size in the gallery label underneath.
 - Panels (bag, saved, pages): slide or fade over a scrim; close on Escape or a tap outside.
 
 ## Do's and Don'ts
-- Do keep violet as the only accent; don't add new hues to the interface (product colours live only in swatches and photos).
+- Do keep violet as the only accent; don't add new hues to the interface (product colours live only in swatches and photos, the logo's colours only on the gift card).
 - Do keep the uppercase tracked labels and hairlines — they are the brand, whatever a generic rulebook says about "eyebrows" or "thin rules".
 - Don't add gradients, glass or glows; don't round corners.
 - Do check every change in both themes and at 360px.

@@ -1124,40 +1124,52 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 .gift__other{ margin:14px 0 0; }
 
 /* The card. Square corners, hairline frame, the mask in violet line-work. */
-.giftcard-wrap{ width:min(480px, 100%); display:grid; gap:26px; perspective:1400px; }
+.giftcard-wrap{ container-type:inline-size; width:min(520px, 100%); display:grid; gap:26px; perspective:1400px; }
 .giftcard-tilt{ transform-style:preserve-3d; }
 .giftcard-flip{ position:relative; display:grid; transform-style:preserve-3d; }
+/* The card itself, built from the logo's artwork (src/assets/giftcard): a deep
+   violet card, the only place the logo's full colours appear. It is drawn as
+   the physical card, so it has a bank card's rounded corners; everything in it
+   is sized to the card (cqw), so it reads the same at any width. */
 .giftcard{
+  --card-ground:#170d30; --card-ink:#efe6d6; --card-soft:#b4a6e0; --card-faint:#8d82aa; --card-line:rgba(180,166,224,.26);
   grid-area:1 / 1; position:relative; aspect-ratio:1.586; overflow:hidden;
-  padding:clamp(20px,3.2vw,30px);
-  display:grid; grid-template-rows:auto 1fr auto; gap:10px;
-  background:var(--bg-3); color:var(--ink); border:1px solid var(--line);
+  border-radius:3.6cqw; background:var(--card-ground); color:var(--card-ink);
   backface-visibility:hidden; -webkit-backface-visibility:hidden;
 }
-.giftcard::before{ content:''; position:absolute; inset:9px; pointer-events:none; border:1px solid var(--line-soft); }
-.giftcard > *{ position:relative; }
-.giftcard--back{ transform:rotateY(180deg); place-items:center; grid-template-rows:1fr auto; }
-.giftcard__mark{
-  position:absolute; right:-6%; top:50%; height:128%; width:auto; transform:translateY(-50%);
-  color:var(--violet-soft); opacity:.16; pointer-events:none;
-}
-.giftcard__emblem{ width:auto; height:46%; color:var(--violet-soft); opacity:.55; }
-.giftcard__top{ display:flex; justify-content:space-between; align-items:baseline; }
-.giftcard__logo{ font-size:clamp(17px,1.8vw,21px); letter-spacing:.04em; }
-.giftcard__logo span{ color:var(--violet-soft); }
-.giftcard__kind{ font-size:11px; letter-spacing:.26em; color:var(--ink-faint); }
+.giftcard::after{ content:''; position:absolute; inset:2.2cqw; border:1px solid var(--card-line); border-radius:1.8cqw; pointer-events:none; }
+.giftcard-tilt{ cursor:pointer; }
+.giftcard img{ display:block; pointer-events:none; user-select:none; }
+.giftcard__wordmark{ position:absolute; left:6.6cqw; top:6.4cqw; height:5.4cqw; width:auto; }
+.giftcard__kind{ position:absolute; left:6.8cqw; top:13.6cqw; font-size:max(8px, 1.3cqw); letter-spacing:.32em; text-transform:uppercase; color:var(--card-soft); }
+.giftcard__mask{ position:absolute; right:6.4cqw; top:50%; height:82%; width:auto; transform:translateY(-50%); }
 .giftcard__amount{
-  align-self:end; display:block; font-family:var(--serif); font-weight:400; line-height:1;
-  font-size:clamp(42px,6vw,72px); font-variant-numeric:tabular-nums; letter-spacing:-.01em;
+  position:absolute; left:6cqw; bottom:10.6cqw; font-family:var(--serif); font-weight:400; line-height:1;
+  font-size:11.4cqw; font-variant-numeric:tabular-nums; letter-spacing:-.01em;
 }
 .giftcard__amount span{ display:inline-block; }
-.giftcard__foot{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-dim); }
-.giftcard__code{ color:var(--ink); letter-spacing:.2em; font-variant-numeric:tabular-nums; }
-.giftcard__code--blank{ color:var(--ink-faint); }
+.giftcard__for{
+  position:absolute; left:6.8cqw; bottom:6.6cqw; max-width:44cqw; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+  font-size:max(8px, 1.5cqw); letter-spacing:.32em; text-transform:uppercase; opacity:.82;
+}
+.giftcard--back{ transform:rotateY(180deg); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.giftcard__symbols{ height:3cqw; width:auto; margin-bottom:5.2cqw; }
+.giftcard__motto{ margin:0 -.42em 0 0; font-size:max(8px, 1.6cqw); line-height:2.1; letter-spacing:.42em; text-transform:uppercase; }
+.giftcard__code{
+  margin-top:5.2cqw; padding:1.6cqw 3cqw; border:1px solid var(--card-line);
+  font-family:ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-size:3.2cqw; letter-spacing:.14em;
+}
+.giftcard__code--blank{ color:var(--card-faint); }
+.giftcard__small{ position:absolute; left:0; right:0; bottom:5.6cqw; font-size:max(7px, 1.15cqw); letter-spacing:.3em; text-transform:uppercase; color:var(--card-faint); }
 
 /* The gallery label under it. */
-.giftcard__label{ margin:0; display:grid; gap:5px; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-faint); }
+.giftcard__label{ margin:0; display:grid; justify-items:start; gap:5px; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-faint); }
 .giftcard__label-line{ font-family:var(--serif); font-size:19px; letter-spacing:0; text-transform:none; color:var(--ink); }
+.giftcard__turn{
+  margin-top:10px; padding:6px 0; background:none; border:0; border-bottom:1px solid var(--line);
+  font:inherit; letter-spacing:inherit; text-transform:inherit; color:var(--ink-dim); cursor:pointer;
+}
+.giftcard__turn:hover{ color:var(--ink); border-color:var(--violet-soft); }
 
 .gift__codeline{ display:grid; gap:10px; margin:0 0 22px; padding:20px 0; border-block:1px solid var(--line-soft); }
 .gift__code{ font-size:clamp(20px,2.6vw,27px); letter-spacing:.18em; font-variant-numeric:tabular-nums; user-select:all; }

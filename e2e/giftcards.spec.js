@@ -39,6 +39,9 @@ test('a gift card is bought, paid for, and spent over two orders', async ({ page
   expect(code).toMatch(/^MASQ-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
   await expect(page.getByRole('link', { name: 'SEND ON WHATSAPP' })).toHaveAttribute('href', new RegExp(`wa\\.me.*${code}`));
   await expect(page.locator('.gift__message')).toHaveText('Happy birthday.');
+  await expect(page.locator('.giftcard__code')).toHaveText(code);       // on the card's back, turned to face us
+  await page.getByRole('button', { name: 'See the front' }).click();
+  await expect(page.locator('.giftcard__for')).toHaveText('For Kemi');
 
   // First order: the scarf, ₦18,000 + ₦2,500 Lagos. The card covers it all.
   await toCheckout(page, 'scarf');

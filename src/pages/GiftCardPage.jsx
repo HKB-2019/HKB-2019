@@ -3,14 +3,17 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion } from 'framer-motion';
 import { buyGiftCard, getGiftCard } from '../lib/api.js';
 import { naira, isEmail } from '../lib/delivery.js';
-import { CraftMark } from '../components/Icons.jsx';
+import maskUrl from '../assets/giftcard/mask.webp';
+import wordmarkUrl from '../assets/giftcard/wordmark.webp';
+import symbolsUrl from '../assets/giftcard/symbols.webp';
 import { EASE_OUT, EASE_SLOW } from '../lib/motion.js';
 
 /* /gift-card — buy a MASQ. gift card, and (with ?reference=, where Paystack
  * sends the buyer back) see it once paid: its code, to copy or send.
  *
  * The card is shown like an artefact in the gallery: on a dark stage (dark in
- * both themes, like the hero), with a label under it. The rules live on the
+ * both themes, like the hero), with a label under it. It is the one place the
+ * logo's full colours appear (src/assets/giftcard, cut from the logo). The rules live on the
  * server (server/lib/giftcards.js): ₦10,000, ₦25,000, ₦50,000, ₦100,000 or
  * any whole amount from ₦5,000 to ₦500,000; twelve months; pieces and delivery. */
 
@@ -18,9 +21,13 @@ const PRESETS = [10_000, 25_000, 50_000, 100_000];
 const MIN = 5_000, MAX = 500_000;
 const longDate = (iso) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
-/** The card. `revealed` false shows its back; it turns over once, when the code arrives. */
-function Card({ amountKobo, to, code, until, revealed = true }) {
+/** The card, built from the logo's own artwork. The front carries the mask, the
+ * amount and the name; the back the code. It turns over by a click, and once by
+ * itself when `revealed` turns true (the code has arrived). */
+function Card({ amountKobo, to, code, until, revealed = false }) {
   const calm = useReducedMotion();
+  const [back, setBack] = useState(revealed);
+  useEffect(() => { if (revealed) setBack(true); }, [revealed]);
   // A slight tilt towards the pointer, on a computer: the card as an object.
   const rx = useMotionValue(0), ry = useMotionValue(0);
   const sx = useSpring(rx, { stiffness: 140, damping: 18 }), sy = useSpring(ry, { stiffness: 140, damping: 18 });
@@ -32,22 +39,21 @@ function Card({ amountKobo, to, code, until, revealed = true }) {
     rx.set(-((e.clientY - r.top) / r.height - 0.5) * 8);
   };
   const rest = () => { rx.set(0); ry.set(0); };
+  const turn = () => setBack(b => !b);
 
   return (
-    <div className="giftcard-wrap" onPointerMove={tilt} onPointerLeave={rest}>
-      <motion.div className="giftcard-tilt" style={{ rotateX, rotateY }}>
+    <div className="giftcard-wrap">
+      <motion.div className="giftcard-tilt" style={{ rotateX, rotateY }} onPointerMove={tilt} onPointerLeave={rest} onClick={turn}>
         <motion.div
           className="giftcard-flip"
           initial={false}
-          animate={{ rotateY: revealed ? 0 : 180 }}
+          animate={{ rotateY: back ? 180 : 0 }}
           transition={calm ? { duration: 0 } : { duration: 1.1, ease: EASE_SLOW }}
         >
-          <div className="giftcard giftcard--front">
-            <CraftMark className="giftcard__mark" />
-            <div className="giftcard__top">
-              <span className="giftcard__logo">MASQ<span>.</span></span>
-              <span className="giftcard__kind">GIFT CARD</span>
-            </div>
+          <div className="giftcard giftcard--front" aria-hidden={back}>
+            <img className="giftcard__wordmark" src={wordmarkUrl} alt="MASQ." />
+            <span className="giftcard__kind">Gift card</span>
+            <img className="giftcard__mask" src={maskUrl} alt="" />
             <div className="giftcard__amount" aria-live="polite">
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
@@ -59,22 +65,22 @@ function Card({ amountKobo, to, code, until, revealed = true }) {
                 >{amountKobo ? naira(amountKobo) : '₦—'}</motion.span>
               </AnimatePresence>
             </div>
-            <div className="giftcard__foot">
-              <span>{to ? `For ${to}` : 'For someone'}</span>
-              <span className={code ? 'giftcard__code' : 'giftcard__code giftcard__code--blank'}>{code ?? 'MASQ-••••-••••'}</span>
-            </div>
+            <span className="giftcard__for">{to ? `For ${to}` : 'For someone'}</span>
           </div>
-          <div className="giftcard giftcard--back" aria-hidden="true">
-            <CraftMark className="giftcard__emblem" />
-            <span className="giftcard__logo">MASQ<span>.</span></span>
+          <div className="giftcard giftcard--back" aria-hidden={!back}>
+            <img className="giftcard__symbols" src={symbolsUrl} alt="" />
+            <p className="giftcard__motto">We wear identity.<br />Unapologetically yours.</p>
+            <span className={code ? 'giftcard__code' : 'giftcard__code giftcard__code--blank'}>{code ?? 'MASQ-••••-••••'}</span>
+            <span className="giftcard__small">{until ? `Use by ${until}` : 'Twelve months'} · pieces and delivery</span>
           </div>
         </motion.div>
       </motion.div>
-      <p className="giftcard__label">
+      <div className="giftcard__label">
         <span>MASQ. gift card</span>
         <span className="giftcard__label-line">{amountKobo ? naira(amountKobo) : 'Choose an amount'}{to ? ` · for ${to}` : ''}</span>
         <span>{until ? `Use by ${until}` : 'Lasts twelve months'} · pieces and delivery</span>
-      </p>
+        <button type="button" className="giftcard__turn" onClick={turn}>{back ? 'See the front' : 'Turn it over'}</button>
+      </div>
     </div>
   );
 }
