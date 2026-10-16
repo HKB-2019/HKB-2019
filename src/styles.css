@@ -48,7 +48,7 @@
   /* a chosen chip, a note: violet laid over the ground */
   --tint:          rgb(35 21 78 / .42);
   /* how much the craft band's photo is washed toward the ground */
-  --band-wash:     .68;
+  --band-wash:     .34;
   /* surfaces that float: menus, toasts */
   --raised:        #0e0e15;
   --shadow:        rgba(0,0,0,.6);
@@ -88,6 +88,7 @@
      here is at least 4.5:1 on all three grounds. */
   color-scheme:light;
   --bg:            #f6f3ee;
+  --paper:         #f6f3ee;   /* the page, kept for the dark bands to fade into */
   --bg-2:          #efebe4;
   --bg-3:          #e8e3da;
   --ink:           #141217;
@@ -419,10 +420,15 @@ html{ scrollbar-color:var(--line) var(--bg); }
 }
 .craft__bg::after{
   content:''; position:absolute; inset:0;
-  background:rgb(var(--bg-rgb) / var(--band-wash));
+  /* A light wash, so the carving reads as carving; deeper behind the words,
+     with a low violet glow there, so they stay easy to read. */
+  background:
+    radial-gradient(ellipse 44% 64% at 50% 52%, rgb(var(--bg-rgb) / .66), rgb(var(--bg-rgb) / 0) 100%),
+    radial-gradient(ellipse 62% 90% at 50% 58%, rgb(var(--violet-rgb) / .42), rgb(var(--violet-rgb) / 0) 72%),
+    rgb(var(--bg-rgb) / var(--band-wash));
 }
 .craft__inner{
-  position:relative; text-align:center;
+  position:relative; z-index:1; text-align:center;
   max-width:var(--maxw); margin:0 auto; padding-inline:var(--pad);
 }
 .craft__mark{ width:30px; height:42px; margin:0 auto 30px; color:var(--ink-dim); opacity:.85; }
@@ -2286,11 +2292,21 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
   --line: #2e2e38; --line-soft: #1e1e25;
   --violet: #23154e; --violet-hi: #32206e; --violet-soft: #a9a2cd;
   --bg-rgb: 5 4 7; --ink-rgb: 244 241 235; --violet-rgb: 35 21 78; --violet-soft-rgb: 169 162 205;
-  --raised: #0e0e15; --shadow: rgba(0,0,0,.6); --band-wash: .68;
+  --raised: #0e0e15; --shadow: rgba(0,0,0,.6); --band-wash: .34;
   --tint: rgb(35 21 78 / .42);
   color:var(--ink);
 }
 :root[data-theme="light"] :is(.hero, .craft){ background:var(--bg); }
+/* The dark band ends softly in the paper below instead of on a hard edge
+   (stops eased, so the dark does not turn muddy grey on the way). */
+:root[data-theme="light"] .craft::after{
+  content:''; position:absolute; inset:auto 0 0; height:clamp(56px,7vw,104px); pointer-events:none;
+  background:linear-gradient(to bottom,
+    rgb(246 243 238 / 0) 0%, rgb(246 243 238 / .03) 18%, rgb(246 243 238 / .1) 34%, rgb(246 243 238 / .24) 50%,
+    rgb(246 243 238 / .46) 66%, rgb(246 243 238 / .72) 82%, var(--paper) 100%);
+}
+/* …and the countdown under it sits on that same paper, not a lavender band. */
+:root[data-theme="light"] .countdown{ background:var(--bg); border-top-color:transparent; }
 
 /* Form boxes at 16px: smaller makes a phone zoom the page when one is tapped. */
 @media (max-width:900px){ input:not([type=checkbox]):not([type=radio]):not([type=color]), select, textarea{ font-size:16px !important; } }
