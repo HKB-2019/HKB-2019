@@ -75,7 +75,7 @@ A dark gallery for modern artefacts. Studio photographs on black, few words, gen
 - **Stay dark in both themes:** the hero (and the menu over it), the "Craft. Culture. Identity." band, the film strip, the Essentials carousel, the full-screen photo view.
 
 ## Typography
-Inter for the interface (the giant thin MASQ. title included); EB Garamond for editorial lines (hero line, manifesto, product names on their page). Micro labels are small (11px, never less), uppercase and widely tracked (.13–.24em) — this is the brand's voice, not decoration. Sentences are 13px or more; reading text 15–16px at about 62 characters a line; inputs 16px on phones.
+Inter for the interface (the giant thin MASQ. title included, its full stop in violet mist as in the footer); EB Garamond for editorial lines (hero line, manifesto, product names on their page), with its true italic, never a slanted roman, for the manifesto's second line. Micro labels are small (11px, never less), uppercase and widely tracked (.13–.24em) — this is the brand's voice, not decoration. Sentences are 13px or more; reading text 15–16px at about 62 characters a line; inputs 16px on phones.
 
 ## Layout
 1320px measure, fluid side padding, a generous vertical rhythm. Product frames are portrait 5:6. Grids of four on desktop, two on phones; the product page is photo left, buying box right (stacked on phones).
@@ -88,7 +88,9 @@ Square corners everywhere; the only circles are colour swatches and the film's p
 
 ## Components
 - Buttons: square, 50px tall, uppercase tracked labels; solid violet or ghost outline.
-- Cards: photo, then name (tracked caps) and price; quick-add slides up from the photo.
+- Cards: photo, then name (tracked caps) left and price right on one line, like a gallery label (stacked on phones); photos fade in as they arrive; the owner's second photo shows on hover; quick-add slides up from the photo.
+- Section heads: tracked caps title, a small faint count of the pieces (07), a hairline, the link.
+- Countdown: serif numerals divided by hairlines, like a watch face.
 - Swatches: round, ringed when chosen, struck through when sold out.
 - Panels (bag, saved, pages): slide or fade over a scrim; close on Escape or a tap outside.
 

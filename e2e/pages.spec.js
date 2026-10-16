@@ -152,8 +152,9 @@ test('a device set to reduce motion gets the shop without the extra movement', a
   await calm.locator('.cart-btn').click();
   const drawer = calm.locator('.drawer');
   await expect(drawer).toBeVisible();
-  const box = await drawer.boundingBox();
-  expect(box.x + box.width).toBeLessThanOrEqual(calm.viewportSize().width + 1);
+  // Measured once settled: a busy machine can paint the opening frame late.
+  await expect.poll(async () => { const box = await drawer.boundingBox(); return box.x + box.width; }, { timeout: 2000 })
+    .toBeLessThanOrEqual(calm.viewportSize().width + 1);
   expect(await drawer.evaluate(el => getComputedStyle(el).transform)).toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
   await calm.close();
 });

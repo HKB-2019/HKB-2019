@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useShop, useHome } from '../store/ShopContext.jsx';
 import { srcSet, SLIDE_SIZES } from '../lib/media.js';
-import { expandDropGrid, SizeButtons } from './DropGrid.jsx';
+import { expandDropGrid, SizeButtons, fadeIn } from './DropGrid.jsx';
 import { Arrow, CaretLeft, CaretRight } from './Icons.jsx';
 import { useGlideToProduct, FROM_SHOP } from '../lib/pageMorph.js';
 import { hasColours, onlyChoice, firstColour, photoFor } from '../lib/colours.js';
@@ -130,6 +130,7 @@ export default function Essentials() {
     <section className="section essentials" id="essentials">
       <div className="section__head">
         <h2 className="section__title">{home.essentialsTitle}</h2>
+        {essentials.length > 0 && <span className="section__count" aria-label={`${essentials.length} pieces`}>{String(essentials.length).padStart(2, '0')}</span>}
         <span className="section__rule" aria-hidden="true" />
         <button className="link-arrow" onClick={() => {
           expandDropGrid();
@@ -174,7 +175,7 @@ export default function Essentials() {
                 {pic.img && (
                   <Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)} className="slide__link" draggable="false"
                         aria-label={`${p.name} — see the details`}>
-                    <img key={pic.img} src={pic.img} srcSet={srcSet(pic)} sizes={SLIDE_SIZES} alt="" loading="lazy" draggable="false" />
+                    <img key={pic.img} src={pic.img} srcSet={srcSet(pic)} sizes={SLIDE_SIZES} alt="" loading="lazy" draggable="false" {...fadeIn} />
                   </Link>
                 )}
                 <div className="slide__meta">

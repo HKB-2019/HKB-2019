@@ -7,7 +7,7 @@ export default function Manifesto() {
     <section className="manifesto">
       <Reveal className="manifesto__inner">
         <p className="manifesto__line">{home.manifestoLine1}</p>
-        <p className="manifesto__line">{home.manifestoLine2}</p>
+        <p className="manifesto__line manifesto__line--turn">{home.manifestoLine2}</p>
         <p className="manifesto__tag">{home.manifestoTag}</p>
       </Reveal>
     </section>

@@ -11,6 +11,12 @@ import { Arrow, Heart } from './Icons.jsx';
 
 import { EASE_OUT, EASE_IN_OUT } from '../lib/motion.js';
 
+/** Photos fade in once they have arrived, instead of popping in line by line. */
+export const fadeIn = {
+  ref: (el) => { if (el?.complete && el.naturalWidth) el.classList.add('is-loaded'); },
+  onLoad: (e) => e.currentTarget.classList.add('is-loaded')
+};
+
 /**
  * Size buttons for one product: sold-out sizes shown, but struck through and
  * disabled. A piece sold in colours gets its swatches first, and the sizes
@@ -52,6 +58,8 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
   // The colour being looked at in the quick-add; its photo shows on the card.
   const [shown, setShown] = useState(() => firstColour(product));
   const pic = hasColours(product) ? photoFor(product, shown) : product;
+  // The owner's second photo, if there is one, shows when the card is pointed at.
+  const second = !hasColours(product) || shown === firstColour(product) ? product.photos?.[1] : null;
   // …and the product page opens on that colour.
   const to = hasColours(product) && shown !== firstColour(product) ? `${base}?colour=${encodeURIComponent(shown)}` : base;
 
@@ -78,7 +86,10 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
             name below is the same link, and one stop per card is enough. */}
         <Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)} className="card__link" tabIndex={-1} aria-hidden="true">
           {pic.img && (
-            <img key={pic.img} className="card__img" src={pic.img} srcSet={srcSet(pic)} sizes={CARD_SIZES} alt="" loading="lazy" />
+            <img key={pic.img} className="card__img" src={pic.img} srcSet={srcSet(pic)} sizes={CARD_SIZES} alt="" loading="lazy" {...fadeIn} />
+          )}
+          {pic.img && second?.img && (
+            <img className="card__img card__img--second" src={second.img} srcSet={srcSet(second)} sizes={CARD_SIZES} alt="" loading="lazy" {...fadeIn} />
           )}
         </Link>
 
@@ -100,10 +111,12 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
         </div>
       </div>
 
-      <h3 className="card__name"><Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)}>{product.name}</Link></h3>
-      <p className={`card__price${product.soldOut ? ' card__sold' : ''}`}>
-        {product.soldOut ? 'SOLD OUT' : format(product.price)}
-      </p>
+      <div className="card__meta">
+        <h3 className="card__name"><Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)}>{product.name}</Link></h3>
+        <p className={`card__price${product.soldOut ? ' card__sold' : ''}`}>
+          {product.soldOut ? 'SOLD OUT' : format(product.price)}
+        </p>
+      </div>
       <ColourDots product={product} />
     </motion.article>
   );
@@ -147,6 +160,7 @@ export default function DropGrid() {
     }}>
       <div className="section__head">
         <h2 className="section__title">{home.dropTitle}</h2>
+        {inDrop.length > 0 && <span className="section__count" aria-label={`${inDrop.length} pieces`}>{String(inDrop.length).padStart(2, '0')}</span>}
         <span className="section__rule" aria-hidden="true" />
         {hasMore && (
           <button className="link-arrow" aria-expanded={showAll} onClick={onViewAll}>
