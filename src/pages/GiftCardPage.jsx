@@ -1,33 +1,80 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion } from 'framer-motion';
 import { buyGiftCard, getGiftCard } from '../lib/api.js';
 import { naira, isEmail } from '../lib/delivery.js';
+import { CraftMark } from '../components/Icons.jsx';
+import { EASE_OUT, EASE_SLOW } from '../lib/motion.js';
 
 /* /gift-card — buy a MASQ. gift card, and (with ?reference=, where Paystack
  * sends the buyer back) see it once paid: its code, to copy or send.
- * The rules live on the server (server/lib/giftcards.js): ₦10,000, ₦25,000,
- * ₦50,000, ₦100,000 or any whole amount from ₦5,000 to ₦500,000; twelve
- * months; pieces and delivery. */
+ *
+ * The card is shown like an artefact in the gallery: on a dark stage (dark in
+ * both themes, like the hero), with a label under it. The rules live on the
+ * server (server/lib/giftcards.js): ₦10,000, ₦25,000, ₦50,000, ₦100,000 or
+ * any whole amount from ₦5,000 to ₦500,000; twelve months; pieces and delivery. */
 
 const PRESETS = [10_000, 25_000, 50_000, 100_000];
 const MIN = 5_000, MAX = 500_000;
 const longDate = (iso) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
-/** The card itself, as the person receiving it would picture it. */
-function Card({ amountKobo, to, code, until }) {
+/** The card. `revealed` false shows its back; it turns over once, when the code arrives. */
+function Card({ amountKobo, to, code, until, revealed = true }) {
+  const calm = useReducedMotion();
+  // A slight tilt towards the pointer, on a computer: the card as an object.
+  const rx = useMotionValue(0), ry = useMotionValue(0);
+  const sx = useSpring(rx, { stiffness: 140, damping: 18 }), sy = useSpring(ry, { stiffness: 140, damping: 18 });
+  const rotateX = useTransform(sx, v => `${v}deg`), rotateY = useTransform(sy, v => `${v}deg`);
+  const tilt = (e) => {
+    if (calm || e.pointerType !== 'mouse') return;
+    const r = e.currentTarget.getBoundingClientRect();
+    ry.set(((e.clientX - r.left) / r.width - 0.5) * 8);
+    rx.set(-((e.clientY - r.top) / r.height - 0.5) * 8);
+  };
+  const rest = () => { rx.set(0); ry.set(0); };
+
   return (
-    <div className="giftcard" aria-hidden={!code}>
-      <div className="giftcard__top">
-        <span className="giftcard__logo">MASQ<span>.</span></span>
-        <span className="giftcard__kind">GIFT CARD</span>
-      </div>
-      <p className="giftcard__amount">{amountKobo ? naira(amountKobo) : '₦—'}</p>
-      <div className="giftcard__foot">
-        <span>{to ? `For ${to}` : 'For someone'}</span>
-        {code ? <span className="giftcard__code">{code}</span> : <span>Lasts 12 months</span>}
-      </div>
-      {until && <span className="giftcard__until">Use by {until}</span>}
+    <div className="giftcard-wrap" onPointerMove={tilt} onPointerLeave={rest}>
+      <motion.div className="giftcard-tilt" style={{ rotateX, rotateY }}>
+        <motion.div
+          className="giftcard-flip"
+          initial={false}
+          animate={{ rotateY: revealed ? 0 : 180 }}
+          transition={calm ? { duration: 0 } : { duration: 1.1, ease: EASE_SLOW }}
+        >
+          <div className="giftcard giftcard--front">
+            <CraftMark className="giftcard__mark" />
+            <div className="giftcard__top">
+              <span className="giftcard__logo">MASQ<span>.</span></span>
+              <span className="giftcard__kind">GIFT CARD</span>
+            </div>
+            <div className="giftcard__amount" aria-live="polite">
+              <AnimatePresence mode="popLayout" initial={false}>
+                <motion.span
+                  key={amountKobo ?? 'none'}
+                  initial={calm ? false : { opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={calm ? undefined : { opacity: 0, y: -8 }}
+                  transition={{ duration: 0.32, ease: EASE_OUT }}
+                >{amountKobo ? naira(amountKobo) : '₦—'}</motion.span>
+              </AnimatePresence>
+            </div>
+            <div className="giftcard__foot">
+              <span>{to ? `For ${to}` : 'For someone'}</span>
+              <span className={code ? 'giftcard__code' : 'giftcard__code giftcard__code--blank'}>{code ?? 'MASQ-••••-••••'}</span>
+            </div>
+          </div>
+          <div className="giftcard giftcard--back" aria-hidden="true">
+            <CraftMark className="giftcard__emblem" />
+            <span className="giftcard__logo">MASQ<span>.</span></span>
+          </div>
+        </motion.div>
+      </motion.div>
+      <p className="giftcard__label">
+        <span>MASQ. gift card</span>
+        <span className="giftcard__label-line">{amountKobo ? naira(amountKobo) : 'Choose an amount'}{to ? ` · for ${to}` : ''}</span>
+        <span>{until ? `Use by ${until}` : 'Lasts twelve months'} · pieces and delivery</span>
+      </p>
     </div>
   );
 }
@@ -43,6 +90,7 @@ function Buy() {
   const otherNaira = Number(other.replace(/[,\s₦]/g, ''));
   const amount = choice === 'other' ? (Number.isInteger(otherNaira) && otherNaira >= MIN && otherNaira <= MAX ? otherNaira : null) : choice;
   const set = (k) => (e) => { setForm(f => ({ ...f, [k]: e.target.value })); setErrors(x => ({ ...x, [k]: null })); setServerError(null); };
+  const pick = (v) => { setChoice(v); setErrors(x => ({ ...x, amount: null })); };
 
   const pay = async (e) => {
     e.preventDefault();
@@ -65,26 +113,26 @@ function Buy() {
 
   return (
     <div className="gift">
-      <div className="gift__show">
+      <div className="gift-stage">
         <Card amountKobo={amount ? amount * 100 : null} to={form.recipientName.trim()} />
       </div>
       <form className="gift__form" onSubmit={pay} noValidate>
         <p className="eyebrow">Gift card</p>
-        <h1 className="status__title">Give MASQ.</h1>
-        <p className="status__note">A card for any piece in the shop, and its delivery. Spend it in one order or over several, within twelve months.</p>
+        <h1 className="gift__title">Give MASQ.</h1>
+        <p className="gift__intro">A card for any piece in the shop, and its delivery. Spend it in one order or over several, within twelve months.</p>
 
-        <fieldset className="gift__amounts">
+        <fieldset className="gift__group">
           <legend className="gift__label">Amount</legend>
-          <div className="gift__chips">
+          <div className="gift__tiles" role="radiogroup" aria-label="Amount">
             {PRESETS.map(n => (
-              <label key={n} className={`gift__chip${choice === n ? ' is-on' : ''}`}>
-                <input type="radio" name="amount" checked={choice === n} onChange={() => { setChoice(n); setErrors(x => ({ ...x, amount: null })); }} />
+              <label key={n} className={`gift__tile${choice === n ? ' is-on' : ''}`}>
+                <input type="radio" name="amount" checked={choice === n} onChange={() => pick(n)} />
                 {naira(n * 100)}
               </label>
             ))}
-            <label className={`gift__chip${choice === 'other' ? ' is-on' : ''}`}>
-              <input type="radio" name="amount" checked={choice === 'other'} onChange={() => setChoice('other')} />
-              Other
+            <label className={`gift__tile gift__tile--other${choice === 'other' ? ' is-on' : ''}`}>
+              <input type="radio" name="amount" checked={choice === 'other'} onChange={() => pick('other')} />
+              Other amount
             </label>
           </div>
           {choice === 'other' && (
@@ -97,24 +145,31 @@ function Buy() {
           {errors.amount && <small className="field__error" id="g-amount-error">{errors.amount}</small>}
         </fieldset>
 
-        <label className="field field--tight" htmlFor="g-email">
-          <span>YOUR EMAIL<em className="field__hint"> · for the receipt</em></span>
-          <input id="g-email" type="email" autoComplete="email" inputMode="email" value={form.email} onChange={set('email')} {...fieldErr('email')} />
-          {errors.email && <small className="field__error" id="g-email-error">{errors.email}</small>}
-        </label>
-        <label className="field field--tight" htmlFor="g-name">
-          <span>WHO IT IS FOR<em className="field__hint"> · optional</em></span>
-          <input id="g-name" maxLength={60} value={form.recipientName} onChange={set('recipientName')} />
-        </label>
-        <label className="field field--tight" htmlFor="g-their-email">
-          <span>THEIR EMAIL<em className="field__hint"> · optional</em></span>
-          <input id="g-their-email" type="email" inputMode="email" value={form.recipientEmail} onChange={set('recipientEmail')} {...fieldErr('recipientEmail')} />
-          {errors.recipientEmail && <small className="field__error" id="g-recipientEmail-error">{errors.recipientEmail}</small>}
-        </label>
-        <label className="field field--tight" htmlFor="g-message">
-          <span>A MESSAGE<em className="field__hint"> · optional</em></span>
-          <textarea id="g-message" rows={3} maxLength={300} value={form.message} onChange={set('message')} />
-        </label>
+        <fieldset className="gift__group">
+          <legend className="gift__label">Who it is for</legend>
+          <label className="field field--tight" htmlFor="g-name">
+            <span>THEIR NAME<em className="field__hint"> · optional, shown on the card</em></span>
+            <input id="g-name" maxLength={60} value={form.recipientName} onChange={set('recipientName')} />
+          </label>
+          <label className="field field--tight" htmlFor="g-their-email">
+            <span>THEIR EMAIL<em className="field__hint"> · optional</em></span>
+            <input id="g-their-email" type="email" inputMode="email" value={form.recipientEmail} onChange={set('recipientEmail')} {...fieldErr('recipientEmail')} />
+            {errors.recipientEmail && <small className="field__error" id="g-recipientEmail-error">{errors.recipientEmail}</small>}
+          </label>
+          <label className="field field--tight" htmlFor="g-message">
+            <span>A MESSAGE<em className="field__hint"> · optional</em></span>
+            <textarea id="g-message" rows={3} maxLength={300} value={form.message} onChange={set('message')} />
+          </label>
+        </fieldset>
+
+        <fieldset className="gift__group">
+          <legend className="gift__label">From you</legend>
+          <label className="field field--tight" htmlFor="g-email">
+            <span>YOUR EMAIL<em className="field__hint"> · for the receipt</em></span>
+            <input id="g-email" type="email" autoComplete="email" inputMode="email" value={form.email} onChange={set('email')} {...fieldErr('email')} />
+            {errors.email && <small className="field__error" id="g-email-error">{errors.email}</small>}
+          </label>
+        </fieldset>
 
         <button type="submit" className="btn btn--solid btn--block" disabled={busy}>
           {busy ? 'TAKING YOU TO PAYSTACK…' : amount ? `PAY ${naira(amount * 100)}` : 'PAY'}
@@ -130,6 +185,7 @@ function Bought({ reference }) {
   const [card, setCard] = useState(null);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
     let live = true, tries = 0;
@@ -145,6 +201,14 @@ function Bought({ reference }) {
     return () => { live = false; };
   }, [reference]);
 
+  // Paid: the card turns over to show its code, once, a moment after the page settles.
+  const active = card?.status === 'active';
+  useEffect(() => {
+    if (!active) return;
+    const t = setTimeout(() => setRevealed(true), 450);
+    return () => clearTimeout(t);
+  }, [active]);
+
   const copy = async () => {
     try { await navigator.clipboard.writeText(card.code); setCopied(true); setTimeout(() => setCopied(false), 1800); }
     catch { setCopied(false); }
@@ -152,22 +216,22 @@ function Bought({ reference }) {
 
   if (error) {
     return (
-      <div className="gift gift--one">
+      <div className="gift gift--note">
         <p className="eyebrow">Gift card</p>
-        <h1 className="status__title">We could not find that gift card</h1>
-        <p className="status__note">Check the link in your receipt.</p>
+        <h1 className="gift__title">We could not find that gift card</h1>
+        <p className="gift__intro">Check the link in your receipt.</p>
       </div>
     );
   }
-  if (!card) return <div className="gift gift--one"><div className="status__wait" aria-hidden="true" /></div>;
+  if (!card) return <div className="gift gift--note"><div className="status__wait" aria-hidden="true" /></div>;
 
-  if (card.status !== 'active') {
+  if (!active) {
     const unpaid = card.status === 'abandoned' || card.payment === 'not_completed';
     return (
-      <div className="gift gift--one">
+      <div className="gift gift--note">
         <p className="eyebrow">Gift card</p>
-        <h1 className="status__title">{unpaid ? 'Payment not completed' : 'Confirming your payment'}</h1>
-        <p className="status__note">{unpaid
+        <h1 className="gift__title">{unpaid ? 'Payment not completed' : 'Confirming your payment'}</h1>
+        <p className="gift__intro">{unpaid
           ? 'Nothing was taken. You can try again whenever you like.'
           : 'This usually takes a few seconds. The code appears here as soon as the payment is confirmed.'}</p>
         {!unpaid && <div className="status__wait" aria-hidden="true" />}
@@ -182,13 +246,13 @@ function Bought({ reference }) {
 
   return (
     <div className="gift">
-      <div className="gift__show">
-        <Card amountKobo={card.amountKobo} to={card.recipientName} code={card.code} until={longDate(card.expiresAt)} />
+      <div className="gift-stage">
+        <Card amountKobo={card.amountKobo} to={card.recipientName} code={card.code} until={longDate(card.expiresAt)} revealed={revealed} />
       </div>
       <div className="gift__form">
         <p className="eyebrow">Gift card</p>
-        <h1 className="status__title">Your gift card is ready</h1>
-        <p className="status__note">
+        <h1 className="gift__title">Your gift card is ready</h1>
+        <p className="gift__intro">
           Send the code to {card.recipientName || 'the person it is for'}. They type it at checkout under
           “Have a gift card?”. Anyone with the code can spend it, so send it only to them.
         </p>
@@ -201,7 +265,7 @@ function Bought({ reference }) {
           <button type="button" className="btn btn--solid" onClick={copy}>{copied ? 'COPIED' : 'COPY CODE'}</button>
           <a className="btn btn--ghost" href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer">SEND ON WHATSAPP</a>
         </div>
-        <p className="status__email">{naira(card.amountKobo)} · use by {longDate(card.expiresAt)} · pieces and delivery</p>
+        <Link className="gift__back" to="/">Back to the shop</Link>
       </div>
     </div>
   );
@@ -211,11 +275,11 @@ export default function GiftCardPage() {
   const [params] = useSearchParams();
   const reference = params.get('reference') || params.get('trxref') || '';
   return (
-    <div className="status">
+    <div className="status gift-page">
       <header className="status__bar">
         <Link to="/" className="logo">MASQ<span>.</span></Link>
       </header>
-      <motion.main className="status__panel gift-page" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <motion.main className="gift-page__main" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
         {reference ? <Bought reference={reference} /> : <Buy />}
       </motion.main>
     </div>

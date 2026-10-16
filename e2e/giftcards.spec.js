@@ -21,13 +21,13 @@ test('a gift card is bought, paid for, and spent over two orders', async ({ page
   await page.goto('/');
   await page.getByRole('link', { name: 'Gift cards' }).click();
   await expect(page.getByRole('heading', { name: 'Give MASQ.' })).toBeVisible();
-  await page.getByText('Other', { exact: true }).click();
+  await page.getByRole('radio', { name: 'Other amount' }).check();
   await page.getByLabel(/AMOUNT IN NAIRA/).fill('4000');
   await page.getByLabel(/YOUR EMAIL/).fill('tolu@example.com');
   await page.getByRole('button', { name: 'PAY' }).click();
   await expect(page.locator('#g-amount-error')).toContainText('₦5,000 to ₦500,000');
-  await page.getByText('₦25,000', { exact: true }).click();
-  await page.getByLabel(/WHO IT IS FOR/).fill('Kemi');
+  await page.getByRole('radio', { name: '₦25,000' }).check();
+  await page.getByLabel(/THEIR NAME/).fill('Kemi');
   await page.getByLabel(/A MESSAGE/).fill('Happy birthday.');
   await page.getByRole('button', { name: 'PAY ₦25,000' }).click();
   await expect(page.locator('h1')).toHaveText('Pay ₦25,000');

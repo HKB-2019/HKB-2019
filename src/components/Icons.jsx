@@ -49,8 +49,8 @@ export const CaretRight = () => (
   <svg viewBox="0 0 12 18" aria-hidden="true"><path d="M2.5 1 10 9l-7.5 8" fill="none" stroke="currentColor" strokeWidth="1.4"/></svg>
 );
 
-export const CraftMark = () => (
-  <svg className="craft__mark" viewBox="0 0 40 56" aria-hidden="true">
+export const CraftMark = ({ className = 'craft__mark' }) => (
+  <svg className={className} viewBox="0 0 40 56" aria-hidden="true">
     <path d="M20 2c7 0 12 6 12 15 0 12-5 24-12 37C13 41 8 29 8 17 8 8 13 2 20 2z" fill="none" stroke="currentColor" strokeWidth="1.4"/>
     <path d="M20 8v34M13 17h5M22 17h5M13 25h5M22 25h5M15 33h10" stroke="currentColor" strokeWidth="1.1"/>
   </svg>
