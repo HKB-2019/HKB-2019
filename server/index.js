@@ -12,6 +12,8 @@ import { adminRouter } from './routes/admin.js';
 import { adminProductsRouter, adminUploadRouter } from './routes/admin-products.js';
 import { adminSalesRouter } from './routes/admin-sales.js';
 import { adminCustomersRouter } from './routes/admin-customers.js';
+import { giftCardsRouter } from './routes/giftcards.js';
+import { adminGiftCardsRouter } from './routes/admin-giftcards.js';
 import { analyticsRouter } from './routes/analytics.js';
 import { one } from './db.js';
 import { photoUrls, onSale } from './lib/catalogue.js';
@@ -168,6 +170,8 @@ export function createApp() {
   app.use('/api', adminProductsRouter);
   app.use('/api', adminSalesRouter);
   app.use('/api', adminCustomersRouter);
+  app.use('/api', giftCardsRouter);
+  app.use('/api', adminGiftCardsRouter);
   app.use('/api', analyticsRouter);
 
   // An address under /api that matched nothing is a mistake, and says so in

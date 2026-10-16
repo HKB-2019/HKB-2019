@@ -17,7 +17,7 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
   const { reference } = req.params;
 
   const load = () => one(`
-    SELECT id, reference, email, status, subtotal_kobo, shipping_kobo, discount_code, discount_kobo,
+    SELECT id, reference, email, status, subtotal_kobo, shipping_kobo, discount_code, discount_kobo, gift_kobo,
            currency, address, paid_at, fulfilled_at, courier, tracking, refunded_at, created_at
       FROM orders WHERE reference = $1
   `, [reference]);
@@ -55,6 +55,9 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
     discountKobo: order.discount_kobo,
     shippingKobo: order.shipping_kobo,
     totalKobo: order.subtotal_kobo - order.discount_kobo + order.shipping_kobo,
+    // What a gift card paid, and what was left for the card.
+    giftKobo: order.gift_kobo,
+    paidByCardKobo: order.subtotal_kobo - order.discount_kobo + order.shipping_kobo - order.gift_kobo,
     // Sent: when, and how to follow it. Only for a paid order.
     sentAt: order.status === 'paid' ? order.fulfilled_at : null,
     courier: order.status === 'paid' && order.fulfilled_at ? order.courier : null,

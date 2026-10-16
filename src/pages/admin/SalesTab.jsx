@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   adminSales, adminDiscounts, adminCreateDiscount, adminUpdateDiscount, adminDeleteDiscount
 } from '../../lib/api.js';
+import GiftCardsSection from './GiftCardsSection.jsx';
 
 /* What has sold, and the discount codes. Paid orders only: an order still
  * waiting for payment, or refunded, is not money the shop has. */
@@ -268,6 +269,8 @@ export default function SalesTab() {
           On paid orders: {sales.codes.map(c => `${c.code} ${c.orders}× (${naira(c.discountKobo)} off)`).join(' · ')}
         </p>
       )}
+
+      <GiftCardsSection />
     </section>
   );
 }

@@ -27,13 +27,14 @@ export const getSite     = () => request('/site');
  * Send WHAT is being bought and WHERE it goes. The server decides what it
  * costs — the item prices and the delivery fee both come from its database.
  */
-export const startCheckout = ({ email, name, phone, address, newsletter }, items, discountCode, analyticsSession) =>
+export const startCheckout = ({ email, name, phone, address, newsletter }, items, discountCode, analyticsSession, giftCode) =>
   request('/checkout', {
     method: 'POST',
     body: JSON.stringify({
       email, name, phone, address,
       ...(newsletter ? { newsletter: true } : {}),
       ...(discountCode ? { discountCode } : {}),
+      ...(giftCode ? { giftCode } : {}),
       ...(analyticsSession ? { analyticsSession } : {}),
       items: items.map(i => ({ productId: i.id, colour: i.colour ?? '', size: i.size, qty: i.qty }))
     })
@@ -54,6 +55,11 @@ export const subscribe = (email) =>
   request('/subscribe', { method: 'POST', body: JSON.stringify({ email }) });
 
 export const getOrder = (reference) => request(`/orders/${encodeURIComponent(reference)}`);
+
+/* Gift cards: buy one (a payment of its own), see it once paid, check one in the bag. */
+export const buyGiftCard   = (card) => request('/gift-cards', { method: 'POST', body: JSON.stringify(card) });
+export const getGiftCard   = (reference) => request(`/gift-cards/${encodeURIComponent(reference)}`);
+export const checkGiftCard = (code) => request('/gift-cards/check', { method: 'POST', body: JSON.stringify({ code }) });
 
 /* ---------------------------------------------------------------- admin */
 
@@ -139,6 +145,11 @@ export const adminSettings      = ()            => adminRequest('/admin/settings
 export const adminSaveSetting   = (key, value)  => adminRequest(`/admin/settings/${key}`, { method:'PUT', body: JSON.stringify(value) });
 export const adminSubscribers   = ()            => adminRequest('/admin/subscribers');
 export const adminRemoveSubscriber = (id)       => adminRequest(`/admin/subscribers/${id}`, { method:'DELETE' });
+
+// Gift cards: every card, make one, cancel one.
+export const adminGiftCards       = ()     => adminRequest('/admin/gift-cards');
+export const adminMakeGiftCard    = (card) => adminRequest('/admin/gift-cards', { method:'POST', body: JSON.stringify(card) });
+export const adminCancelGiftCard  = (id)   => adminRequest(`/admin/gift-cards/${id}/cancel`, { method:'POST' });
 
 // Customers: everyone the shop knows, by email (CSV: adminDownload('/admin/customers.csv')).
 const customerPath = (email) => `/admin/customers/${encodeURIComponent(email)}`;

@@ -7,6 +7,7 @@ import { openZones, zoneFor, NIGERIAN_STATES, ZONE_LABELS } from '../lib/setting
 import { rateLimit } from '../lib/limits.js';
 import { onSale } from '../lib/catalogue.js';
 import { applyCode } from '../lib/discounts.js';
+import { usableCard, spendCard, recordSpend } from '../lib/giftcards.js';
 import { attribution } from '../lib/analytics.js';
 
 export const checkoutRouter = Router();
@@ -82,7 +83,11 @@ function deliveryDetails(body) {
 /**
  * POST /api/checkout
  * Body: { email, name, phone, address: { line1, line2, city, state, postcode?, country },
- *         items: [{ productId, colour, size, qty }] }
+ *         items: [{ productId, colour, size, qty }], discountCode?, giftCode? }
+ *
+ * A gift card pays after any discount, delivery included; what it covers is
+ * taken off the card now and given back if this order is never paid. When it
+ * covers everything, the order is paid at once and Paystack is not involved.
  *
  * `colour` is the colour's name for a product sold in colours, and left out
  * (or '') for one that is not.
@@ -211,6 +216,11 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
         throw fail(400, 'That is over ₦1,000,000 for one checkout. Please split it into two orders.');
       }
 
+      // A gift card, locked so two checkouts cannot both spend its balance.
+      const card = body.giftCode ? await usableCard(tx, body.giftCode, { lock: true }) : null;
+      const giftKobo = card ? await spendCard(tx, card, subtotal - discountKobo + shipping) : 0;
+      const paidInFull = giftKobo === subtotal - discountKobo + shipping;
+
       const reference = newReference();
       const normalisedEmail = String(email).trim().toLowerCase();
 
@@ -225,13 +235,17 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
       const { id } = await tx.one(`
         INSERT INTO orders (reference, customer_id, email, status, subtotal_kobo, shipping_kobo,
                             currency, customer_name, phone, address, delivery_zone,
-                            discount_code, discount_kobo, session_id, channel, campaign)
-        VALUES ($1, $2, $3, 'pending', $4, $5, 'NGN', $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                            discount_code, discount_kobo, session_id, channel, campaign,
+                            gift_card_id, gift_kobo, paid_at)
+        VALUES ($1, $2, $3, $15, $4, $5, 'NGN', $6, $7, $8, $9, $10, $11, $12, $13, $14, $16, $17,
+                CASE WHEN $15 = 'paid' THEN now() END)
         RETURNING id
       `, [reference, customer.id, normalisedEmail, subtotal, shipping,
           who.name, who.phone, JSON.stringify(who.address), who.zone,
           discount?.code ?? null, discountKobo,
-          from?.session ?? null, from?.channel ?? null, from?.campaign ?? null]);
+          from?.session ?? null, from?.channel ?? null, from?.campaign ?? null,
+          paidInFull ? 'paid' : 'pending', card?.id ?? null, giftKobo]);
+      if (card && giftKobo) await recordSpend(tx, card.id, id, giftKobo);
 
       for (const l of lines) {
         await tx.query(`
@@ -241,7 +255,7 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
         `, [id, l.productId, l.variantId, l.name, l.colour, l.size, l.unitPriceKobo, l.qty]);
       }
 
-      return { id, reference, subtotal, shipping, discount, discountKobo, email: normalisedEmail, lines };
+      return { id, reference, subtotal, shipping, discount, discountKobo, giftKobo, card, paidInFull, email: normalisedEmail, lines };
     });
   } catch (err) {
     if (!err.status) console.error('[checkout] failed:', err);
@@ -251,6 +265,11 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
   }
 
   const total = order.subtotal - order.discountKobo + order.shipping;
+  const due = total - order.giftKobo;
+  const totals = {
+    subtotalKobo: order.subtotal, discountKobo: order.discountKobo, shippingKobo: order.shipping,
+    giftKobo: order.giftKobo, totalKobo: total, dueKobo: due
+  };
 
   // "Email me about new drops", ticked at checkout (never ticked for them):
   // onto the mailing list. A failure here must not cost the sale.
@@ -258,18 +277,24 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
     await query('INSERT INTO subscribers (email) VALUES ($1) ON CONFLICT (email) DO NOTHING', [order.email]).catch(() => {});
   }
 
+  // Paid by the gift card alone: nothing to take, so straight to the order page.
+  if (order.paidInFull) {
+    return res.json({ reference: order.reference, authorizationUrl: null, paid: true, ...totals });
+  }
+
   // Paystack is called AFTER the order exists, so a failure here leaves a
   // pending order we can reconcile rather than a charge with nothing behind it.
   try {
     const data = await initializeTransaction({
       email: order.email,
-      amountKobo: total,
+      amountKobo: due,
       reference: order.reference,
       callbackUrl: callbackUrl(),
       metadata: {
         order_id: order.id,
         items: order.lines.length,
         ...(order.discount ? { discount_code: order.discount.code } : {}),
+        ...(order.giftKobo ? { gift_card: `…${order.card.code.slice(-4)}`, gift_kobo: order.giftKobo } : {}),
         // Shown on the transaction in the Paystack dashboard.
         custom_fields: [
           { display_name: 'Name',     variable_name: 'name',     value: who.name },
@@ -279,14 +304,7 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
       }
     });
 
-    res.json({
-      reference: order.reference,
-      authorizationUrl: data.authorization_url,
-      subtotalKobo: order.subtotal,
-      discountKobo: order.discountKobo,
-      shippingKobo: order.shipping,
-      totalKobo: total
-    });
+    res.json({ reference: order.reference, authorizationUrl: data.authorization_url, ...totals });
   } catch (err) {
     await releaseStock(order.reference, 'abandoned');
     res.status(502).json({ error: 'Could not reach the payment provider. Nothing has been charged.' });

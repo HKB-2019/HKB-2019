@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useShop, useHome } from '../store/ShopContext.jsx';
 import { useSectionLink } from '../lib/useSectionLink.js';
 import { Instagram, TikTok, XIcon } from './Icons.jsx';
@@ -55,6 +56,7 @@ export default function Footer() {
               {section('#essentials', 'The Essentials')}
               {section('#craft', 'About MASQ.')}
               {panel('saved', 'Saved pieces')}
+              <li><Link to="/gift-card">Gift cards</Link></li>
             </ul>
           </div>
           <div className="footer__col">

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShop, useHome } from '../store/ShopContext.jsx';
-import { startCheckout, checkDiscount } from '../lib/api.js';
+import { startCheckout, checkDiscount, checkGiftCard } from '../lib/api.js';
 import { useSectionLink } from '../lib/useSectionLink.js';
 import { asset } from '../lib/media.js';
 import { track, visitId } from '../lib/analytics.js';
@@ -197,6 +197,51 @@ function DiscountBox({ applied, onApplied }) {
   );
 }
 
+/**
+ * "HAVE A GIFT CARD?" — the card's balance, shown before paying. Nothing is
+ * held here: checkout checks the card again and takes what it pays then.
+ */
+function GiftCardBox({ gift, onGift, usingKobo }) {
+  const [open, setOpen] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [state, setState] = useState(null);     // null | 'checking' | error message
+
+  const apply = async () => {
+    if (!typed.trim()) return;
+    setState('checking');
+    try { onGift(await checkGiftCard(typed)); setState(null); }
+    catch (e) { setState(e.message); }
+  };
+
+  if (gift) {
+    const left = gift.balanceKobo - usingKobo;
+    return (
+      <div className="discount discount--on">
+        <span><strong>{gift.code}</strong> · {left > 0 ? `${naira(left)} left on it after this` : `pays ${naira(usingKobo)}`}</span>
+        <button type="button" className="discount__remove" onClick={() => { onGift(null); setTyped(''); }}>REMOVE</button>
+      </div>
+    );
+  }
+  if (!open) return <button type="button" className="discount__open" onClick={() => setOpen(true)}>HAVE A GIFT CARD?</button>;
+  return (
+    <div className="discount">
+      <label className="sr-only" htmlFor="d-gift">Gift card code</label>
+      <div className="discount__row">
+        <input id="d-gift" autoComplete="off" autoCapitalize="characters" spellCheck="false" placeholder="MASQ-XXXX-XXXX"
+               value={typed} maxLength={20}
+               onChange={(e) => { setTyped(e.target.value); if (state && state !== 'checking') setState(null); }}
+               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); apply(); } }}
+               aria-invalid={Boolean(state && state !== 'checking')}
+               aria-describedby={state && state !== 'checking' ? 'd-gift-error' : undefined} />
+        <button type="button" className="btn btn--ghost" onClick={apply} disabled={state === 'checking' || !typed.trim()}>
+          {state === 'checking' ? '…' : 'APPLY'}
+        </button>
+      </div>
+      {state && state !== 'checking' && <p className="field__error" id="d-gift-error" role="alert">{state}</p>}
+    </div>
+  );
+}
+
 function DeliveryForm({ onBack }) {
   const { cart, cartSubtotal, delivery, setDelivery, site, toast, discountCode, closeOverlay } = useShop();
   const [applied, setApplied] = useState(null);
@@ -215,6 +260,11 @@ function DeliveryForm({ onBack }) {
   const fee = open && (!inNigeria || d.address.state) ? open.feeKobo : null;
   const discountKobo = applied?.discountKobo ?? 0;
   const total = cartSubtotal * 100 - discountKobo + (fee ?? 0);
+  // A gift card pays after any discount, delivery included; Paystack takes the rest.
+  const [gift, setGift] = useState(null);
+  const giftKobo = gift ? Math.min(gift.balanceKobo, total) : 0;
+  const due = total - giftKobo;
+  const navigate = useNavigate();
 
   const set = (key) => (e) => {
     setDelivery(v => ({ ...v, [key]: e.target.value }));
@@ -261,11 +311,13 @@ function DeliveryForm({ onBack }) {
 
     setBusy(true); setServerError(null);
     try {
-      const { authorizationUrl } = await startCheckout(d, cart, applied ? discountCode : undefined, visitId());
+      const { authorizationUrl, reference } = await startCheckout(d, cart, applied ? discountCode : undefined, visitId(), gift?.code);
       track('checkout', { valueKobo: total });
       // Leaving for the payment page: the bag closes behind us, so coming
       // back (the preview's payment page is in the same page) finds the shop.
       closeOverlay();
+      // Paid in full by a gift card: nothing for Paystack, straight to the order.
+      if (!authorizationUrl) { navigate(`/order?reference=${encodeURIComponent(reference)}`); return; }
       window.location.href = authorizationUrl;   // hand off to Paystack
     } catch (err) {
       setBusy(false);
@@ -347,6 +399,7 @@ function DeliveryForm({ onBack }) {
 
       <div className="delivery__sum">
         <DiscountBox applied={applied} onApplied={setApplied} />
+        <GiftCardBox gift={gift} onGift={setGift} usingKobo={giftKobo} />
         <div className="drawer__row"><span>ITEMS</span><span>{naira(cartSubtotal * 100)}</span></div>
         {discountKobo > 0 && (
           <div className="drawer__row drawer__row--discount"><span>DISCOUNT</span><span>−{naira(discountKobo)}</span></div>
@@ -357,11 +410,14 @@ function DeliveryForm({ onBack }) {
             ? (open ? (fee === 0 ? 'FREE' : naira(fee)) : 'NOT AVAILABLE')
             : '—'}</span>
         </div>
-        <div className="drawer__row drawer__row--total"><span>TOTAL</span><span>{naira(total)}</span></div>
+        {giftKobo > 0 && (
+          <div className="drawer__row drawer__row--discount"><span>GIFT CARD</span><span>−{naira(giftKobo)}</span></div>
+        )}
+        <div className="drawer__row drawer__row--total"><span>{giftKobo > 0 ? 'TO PAY' : 'TOTAL'}</span><span>{naira(due)}</span></div>
       </div>
 
       <button type="submit" className="btn btn--solid btn--block" disabled={busy || !cart.length}>
-        {busy ? 'TAKING YOU TO PAYSTACK…' : `PAY ${naira(total)}`}
+        {busy ? (due === 0 ? 'PLACING YOUR ORDER…' : 'TAKING YOU TO PAYSTACK…') : due === 0 && giftKobo > 0 ? 'PLACE ORDER' : `PAY ${naira(due)}`}
       </button>
       <p className="drawer__note drawer__note--center">Secure payment by Paystack. We never see your card.</p>
 

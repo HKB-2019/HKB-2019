@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getOrder } from '../lib/api.js';
 import { useShop } from '../store/ShopContext.jsx';
@@ -38,7 +38,11 @@ export default function OrderStatus() {
   const { clearCart } = useShop();
   const cleared = useRef(false);
 
+  // A gift card's payment comes back here when Paystack's own default is used.
+  const isGift = reference.startsWith('gift-');
+
   useEffect(() => {
+    if (isGift) return;
     if (!reference) { setError('No order reference in the link.'); return; }
 
     let live = true;
@@ -65,13 +69,15 @@ export default function OrderStatus() {
 
     check();
     return () => { live = false; };
-  }, [reference, clearCart]);
+  }, [reference, clearCart, isGift]);
 
   const status = order?.status === 'pending' && order.payment === 'not_completed'
     ? 'unpaid'
     : order?.status === 'paid' && order.sentAt ? 'sent'
     : (order?.status ?? 'pending');
   const copy = COPY[status] ?? COPY.pending;
+
+  if (isGift) return <Navigate to={`/gift-card?reference=${encodeURIComponent(reference)}`} replace />;
 
   return (
     <div className="status">
@@ -139,6 +145,16 @@ export default function OrderStatus() {
                 <p className="status__total">
                   <span>Total</span><span className="num">{naira(order.totalKobo ?? order.subtotalKobo)}</span>
                 </p>
+                {order.giftKobo > 0 && (
+                  <>
+                    <p className="status__line status__line--discount">
+                      <span>Paid by gift card</span><span className="num">−{naira(order.giftKobo)}</span>
+                    </p>
+                    <p className="status__line">
+                      <span>Paid by card</span><span className="num">{naira(order.paidByCardKobo)}</span>
+                    </p>
+                  </>
+                )}
                 <p className="status__email">
                   {['paid', 'refunded'].includes(order.status) ? 'Receipt to' : 'Order for'} {order.email}
                 </p>

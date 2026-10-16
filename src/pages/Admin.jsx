@@ -333,6 +333,9 @@ function Orders({ orders, onChanged, filter, setFilter }) {
                     {o.discountKobo > 0 && (
                       <em className="admin-sub admin-sub--discount">{o.discountCode} −{naira(o.discountKobo)}</em>
                     )}
+                    {o.giftKobo > 0 && (
+                      <em className="admin-sub admin-sub--discount">gift card −{naira(o.giftKobo)}</em>
+                    )}
                     {o.shippingKobo > 0 && (
                       <em className="admin-sub">incl. {naira(o.shippingKobo)} delivery{o.zone ? ` · ${ZONE_LABELS[o.zone] ?? o.zone}` : ''}</em>
                     )}

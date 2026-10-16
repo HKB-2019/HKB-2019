@@ -3,6 +3,7 @@ import { one, query, transaction } from '../db.js';
 import { onSale } from '../lib/catalogue.js';
 import { openZones, getSettings, setSetting, SETTING_KEYS, ZONE_LABELS } from '../lib/settings.js';
 import { toCsv } from '../lib/csv.js';
+import { returnToCard } from '../lib/giftcards.js';
 import {
   verifyPassword, issueSession, requireAdmin, COOKIE,
   recordFailure, isLockedOut, clearFailures,
@@ -121,7 +122,7 @@ adminRouter.get('/admin/orders', requireAdmin, async (req, res) => {
   const orders = await query(`
     SELECT id, reference, email, status, subtotal_kobo, shipping_kobo, currency,
            customer_name, phone, address, delivery_zone, discount_code, discount_kobo,
-           courier, tracking, paid_at, fulfilled_at, refunded_at, created_at
+           courier, tracking, paid_at, fulfilled_at, refunded_at, created_at, gift_kobo
       FROM orders
      WHERE ($1::text IS NULL OR status = $1)
      ORDER BY id DESC
@@ -151,6 +152,7 @@ adminRouter.get('/admin/orders', requireAdmin, async (req, res) => {
     discountKobo: o.discount_kobo,
     shippingKobo: o.shipping_kobo,
     totalKobo: o.subtotal_kobo - o.discount_kobo + o.shipping_kobo,
+    giftKobo: o.gift_kobo,
     currency: o.currency,
     paidAt: o.paid_at,
     fulfilledAt: o.fulfilled_at,
@@ -245,7 +247,7 @@ adminRouter.post('/admin/orders/:reference/fulfil', requireAdmin, async (req, re
 adminRouter.post('/admin/orders/:reference/refunded', requireAdmin, async (req, res) => {
   const restock = req.body?.restock === true;
   const result = await transaction(async (tx) => {
-    const order = await tx.one('SELECT id, status, fulfilled_at FROM orders WHERE reference = $1 FOR UPDATE',
+    const order = await tx.one('SELECT id, status, fulfilled_at, gift_card_id, gift_kobo FROM orders WHERE reference = $1 FOR UPDATE',
       [req.params.reference]);
     if (!order) return { status: 404, error: 'Order not found.' };
     if (!['paid', 'refund_due'].includes(order.status)) {
@@ -257,11 +259,13 @@ adminRouter.post('/admin/orders/:reference/refunded', requireAdmin, async (req, 
         await tx.query('UPDATE variants SET stock = stock + $1 WHERE id = $2', [i.qty, i.variant_id]);
       }
     }
+    // What a gift card paid goes back on the card; Paystack refunds only its own part.
+    await returnToCard(tx, order);
     await tx.query(`UPDATE orders SET status = 'refunded', refunded_at = now() WHERE id = $1`, [order.id]);
-    return null;
+    return { giftReturnedKobo: order.gift_kobo };
   });
-  if (result) return res.status(result.status).json({ error: result.error });
-  res.json({ ok: true });
+  if (result.error) return res.status(result.status).json({ error: result.error });
+  res.json({ ok: true, giftReturnedKobo: result.giftReturnedKobo });
 });
 
 /* -------------------------------------------------------------- stock */
@@ -485,7 +489,7 @@ adminRouter.get('/admin/orders.csv', requireAdmin, async (req, res) => {
   const orders = await query(`
     SELECT o.id, o.reference, o.status, o.created_at, o.paid_at, o.fulfilled_at,
            o.customer_name, o.email, o.phone, o.address, o.delivery_zone,
-           o.subtotal_kobo, o.shipping_kobo, o.discount_code, o.discount_kobo, o.courier, o.tracking,
+           o.subtotal_kobo, o.shipping_kobo, o.discount_code, o.discount_kobo, o.gift_kobo, o.courier, o.tracking,
            COALESCE(string_agg(i.qty || '× ' || i.name || ' (' || CASE WHEN i.colour <> '' THEN i.colour || ', ' ELSE '' END || i.size || ')', '; ' ORDER BY i.id), '') AS items
       FROM orders o LEFT JOIN order_items i ON i.order_id = o.id
      WHERE ($1::text IS NULL OR o.status = $1)
@@ -497,7 +501,7 @@ adminRouter.get('/admin/orders.csv', requireAdmin, async (req, res) => {
   const csv = toCsv(
     ['Reference', 'Status', 'Placed', 'Paid', 'Sent', 'Name', 'Email', 'Phone',
      'Address', 'City', 'State', 'Postcode', 'Country', 'Delivery', 'Items', 'Items ₦', 'Discount code', 'Discount ₦',
-     'Delivery ₦', 'Total ₦', 'Courier', 'Tracking'],
+     'Delivery ₦', 'Total ₦', 'Paid by gift card ₦', 'Courier', 'Tracking'],
     orders.map(o => {
       const a = o.address ?? {};
       return [
@@ -507,7 +511,7 @@ adminRouter.get('/admin/orders.csv', requireAdmin, async (req, res) => {
         [a.line1, a.line2].filter(Boolean).join(', '), a.city ?? '', a.state ?? '', a.postcode ?? '', a.country ?? '',
         ZONE_LABELS[o.delivery_zone] ?? '', o.items,
         naira(o.subtotal_kobo), o.discount_code ?? '', naira(o.discount_kobo), naira(o.shipping_kobo),
-        naira(o.subtotal_kobo - o.discount_kobo + o.shipping_kobo), o.courier ?? '', o.tracking ?? ''
+        naira(o.subtotal_kobo - o.discount_kobo + o.shipping_kobo), naira(o.gift_kobo), o.courier ?? '', o.tracking ?? ''
       ];
     })
   );

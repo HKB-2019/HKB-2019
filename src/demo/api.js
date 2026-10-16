@@ -91,6 +91,11 @@ function sampleStore() {
       rates: { ...DEFAULT_RATES }
     },
     homeImages: { hero: null, band: null, film: null },
+    giftCards: [
+      { id: 1, code: 'MASQ-7K3P-Q9XD', amountKobo: 2500000, balanceKobo: 2500000, status: 'active', reference: 'gift-' + '7'.repeat(24),
+        buyerEmail: 'tolu@example.com', recipientName: 'Kemi', recipientEmail: null, message: 'Happy birthday. Wear it well.',
+        note: null, activatedAt: ago(48), expiresAt: new Date(Date.now() + 364 * 86_400_000).toISOString(), uses: [] }
+    ],
     customers: {
       'chidi@example.com': { tags: ['VIP'], notes: 'Bought two hoodies for his brother. Asks about the next drop.', createdAt: ago(190) }
     },
@@ -260,7 +265,7 @@ export function askForRestock(productId, size, email, colour = '') {
   return settle({ ok: true });
 }
 
-export async function startCheckout({ email, name, phone, address, newsletter }, items, discountCode) {
+export async function startCheckout({ email, name, phone, address, newsletter }, items, discountCode, _session, giftCode) {
   const zone = openZones().find(z => z.zone === zoneFor(address));
   if (!zone) return fail('Sorry — we don’t deliver there yet.');
   // As the server: a postcode only abroad, tidied; none kept for Nigeria.
@@ -283,22 +288,43 @@ export async function startCheckout({ email, name, phone, address, newsletter },
     if (v.stock < i.qty) return fail(v.stock ? `${what} — only ${v.stock} left.` : `${what} has sold out.`, 409);
     lines.push([v, { name: p.name, colour, size: i.size, qty: i.qty, unitPriceKobo: p.priceKobo }]);
   }
+  let card = null;
+  if (giftCode) {
+    try { card = usableGift(giftCode); } catch (err) { return fail(err.message); }
+  }
   lines.forEach(([v, l]) => { v.stock -= l.qty; });       // held while paying, as the real shop does
   if (discount) discount.c.uses += 1;
   const reference = 'masq-' + hex(24);
+  const itemsKobo = lines.reduce((n, [, l]) => n + l.unitPriceKobo * l.qty, 0);
+  const totalKobo = itemsKobo - (discount?.result.discountKobo ?? 0) + zone.feeKobo;
+  const giftKobo = card ? Math.min(card.balanceKobo, totalKobo) : 0;
+  const paidInFull = giftKobo > 0 && giftKobo === totalKobo;
+  if (card) { card.balanceKobo -= giftKobo; card.uses.push({ orderReference: reference, amountKobo: -giftKobo, kind: 'spend', at: new Date().toISOString() }); }
   store.orders.unshift({
-    reference, email: email.trim().toLowerCase(), name, phone, address, zone: zone.zone, status: 'pending',
-    fulfilledAt: null, items: lines.map(([, l]) => l), shippingKobo: zone.feeKobo, createdAt: new Date().toISOString(), paidAt: null,
-    discountCode: discount?.result.code ?? null, discountKobo: discount?.result.discountKobo ?? 0
+    reference, email: email.trim().toLowerCase(), name, phone, address, zone: zone.zone, status: paidInFull ? 'paid' : 'pending',
+    fulfilledAt: null, items: lines.map(([, l]) => l), shippingKobo: zone.feeKobo, createdAt: new Date().toISOString(),
+    paidAt: paidInFull ? new Date().toISOString() : null,
+    discountCode: discount?.result.code ?? null, discountKobo: discount?.result.discountKobo ?? 0,
+    giftCode: card?.code ?? null, giftKobo
   });
   const e = email.trim().toLowerCase();
   if (newsletter && !store.subscribers.some(s => s.email === e)) store.subscribers.unshift({ id: Date.now(), email: e, joinedAt: new Date().toISOString() });
   save();
+  if (paidInFull) return settle({ reference, authorizationUrl: null, paid: true }, 500);
   return settle({ reference, authorizationUrl: `#/pay?reference=${reference}` }, 500);
 }
 
 /** The pretend payment page's two buttons. */
 export function finishPayment(reference, paid) {
+  const g = gifts().find(x => x.reference === reference);
+  if (g) {
+    if (g.status !== 'pending') return;
+    if (paid) Object.assign(g, { status: 'active', balanceKobo: g.amountKobo, activatedAt: new Date().toISOString(),
+                                 expiresAt: new Date(Date.now() + 365 * 86_400_000).toISOString() });
+    else g.status = 'abandoned';
+    save();
+    return;
+  }
   const o = store.orders.find(x => x.reference === reference);
   if (!o || o.status !== 'pending') return;
   if (paid) { o.status = 'paid'; o.paidAt = new Date().toISOString(); }
@@ -310,13 +336,17 @@ export function finishPayment(reference, paid) {
     }
     const c = store.codes.find(x => x.code === o.discountCode);
     if (c) c.uses = Math.max(0, c.uses - 1);
+    returnGift(o);
   }
   save();
 }
 
-export function previewOrder(reference) {
+/** What the pretend payment page asks for: an order's remainder, or a gift card. */
+export function previewDue(reference) {
+  const g = gifts().find(x => x.reference === reference);
+  if (g) return { kobo: g.amountKobo, what: 'gift' };
   const o = store.orders.find(x => x.reference === reference);
-  return o ? structuredClone(o) : null;
+  return o ? { kobo: totalOf(o) - (o.giftKobo ?? 0), what: 'order' } : null;
 }
 
 const mask = (email) => email.replace(/^(.)[^@]*(@.*)$/, '$1•••$2');
@@ -330,6 +360,7 @@ export function getOrder(reference) {
     reference: o.reference, status: o.status, email: mask(o.email),
     subtotalKobo: subtotal(o), shippingKobo: o.shippingKobo, totalKobo: totalOf(o),
     discountCode: o.discountCode ?? null, discountKobo: o.discountKobo ?? 0,
+    giftKobo: o.giftKobo ?? 0, paidByCardKobo: totalOf(o) - (o.giftKobo ?? 0),
     deliveryTo: `${o.address.city}, ${o.address.state}`, payment: null, currency: 'NGN',
     sentAt: o.status === 'paid' ? o.fulfilledAt : null,
     courier: o.status === 'paid' && o.fulfilledAt ? o.courier ?? null : null,
@@ -362,7 +393,7 @@ export function adminOrders(status) {
   return settle(store.orders.filter(o => !status || o.status === status).map((o, i) => ({
     id: store.orders.length - i, reference: o.reference, email: o.email, name: o.name, phone: o.phone,
     address: o.address, zone: o.zone, status: o.status, subtotalKobo: subtotal(o), shippingKobo: o.shippingKobo,
-    totalKobo: totalOf(o), discountCode: o.discountCode ?? null, discountKobo: o.discountKobo ?? 0,
+    totalKobo: totalOf(o), discountCode: o.discountCode ?? null, discountKobo: o.discountKobo ?? 0, giftKobo: o.giftKobo ?? 0,
     courier: o.courier ?? null, tracking: o.tracking ?? null, refundedAt: o.refundedAt ?? null,
     currency: 'NGN', paidAt: o.paidAt, fulfilledAt: o.fulfilledAt,
     createdAt: o.createdAt, items: o.items
@@ -408,10 +439,11 @@ export function adminRefunded(reference, restock) {
       if (v) v.stock += l.qty;
     }
   }
+  returnGift(o);
   o.status = 'refunded';
   o.refundedAt = new Date().toISOString();
   save();
-  return settle({ ok: true });
+  return settle({ ok: true, giftReturnedKobo: o.giftKobo ?? 0 });
 }
 
 /* Stock as the server reports it (server/routes/admin.js): what is left to
@@ -927,6 +959,112 @@ export const adminForgetCustomer = (email) => attempt(() => {
   store.alerts = store.alerts.filter(a => a.email.toLowerCase() !== p.email);
   delete notesOf()[p.email];
   return { ok: true, ordersKeptWithoutName: mine.length };
+});
+
+/* ---------------------------------------------------------- gift cards */
+
+/* As server/lib/giftcards.js: bought with a payment of its own (the pretend
+ * payment page here), live for twelve months, spent at checkout after any
+ * discount, delivery included; given back if that order is not paid. */
+
+const gifts = () => (store.giftCards ??= []);
+const GIFT_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const giftCode = () => `MASQ-${[0, 0, 0, 0].map(() => GIFT_CHARS[Math.floor(Math.random() * GIFT_CHARS.length)]).join('')}-${[0, 0, 0, 0].map(() => GIFT_CHARS[Math.floor(Math.random() * GIFT_CHARS.length)]).join('')}`;
+const cleanGift = (v) => {
+  const raw = String(v ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const body = raw.startsWith('MASQ') ? raw.slice(4) : raw;
+  return /^[A-Z0-9]{8}$/.test(body) ? `MASQ-${body.slice(0, 4)}-${body.slice(4)}` : null;
+};
+
+function usableGift(raw) {
+  const code = cleanGift(raw);
+  if (!code) throw new Error('That is not a gift card code. It looks like MASQ-XXXX-XXXX.');
+  const g = gifts().find(x => x.code === code);
+  if (!g || g.status === 'pending' || g.status === 'abandoned') throw new Error(`${code} is not a gift card we recognise.`);
+  if (g.status === 'cancelled') throw new Error(`${code} has been cancelled.`);
+  if (new Date(g.expiresAt) <= new Date()) throw new Error(`${code} has run out.`);
+  if (g.balanceKobo <= 0) throw new Error(`${code} has been spent.`);
+  return g;
+}
+
+function returnGift(o) {
+  if (!o.giftCode || !o.giftKobo) return;
+  const g = gifts().find(x => x.code === o.giftCode);
+  if (!g) return;
+  g.balanceKobo += o.giftKobo;
+  g.uses.push({ orderReference: o.reference, amountKobo: o.giftKobo, kind: 'return', at: new Date().toISOString() });
+}
+
+export function buyGiftCard({ amountKobo, email, recipientName, recipientEmail, message }) {
+  if (!Number.isInteger(amountKobo) || amountKobo % 100 || amountKobo < 500000 || amountKobo > 50000000) {
+    return fail('Choose an amount from ₦5,000 to ₦500,000, in whole naira.');
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(email ?? '').trim())) return fail('Please enter your email, for the receipt.');
+  const reference = 'gift-' + hex(24);
+  gifts().unshift({
+    id: store.nextId++, code: giftCode(), amountKobo, balanceKobo: 0, status: 'pending', reference,
+    buyerEmail: email.trim().toLowerCase(), recipientName: (recipientName ?? '').trim() || null,
+    recipientEmail: recipientEmail || null, message: (message ?? '').trim() || null, note: null,
+    activatedAt: null, expiresAt: null, uses: []
+  });
+  save();
+  return settle({ reference, authorizationUrl: `#/pay?reference=${reference}`, amountKobo }, 500);
+}
+
+export function getGiftCard(reference) {
+  const g = gifts().find(x => x.reference === reference);
+  if (!g) return fail('Gift card not found.', 404);
+  const live = g.status === 'active';
+  return settle({
+    reference, status: g.status, amountKobo: g.amountKobo, balanceKobo: live ? g.balanceKobo : null,
+    code: live ? g.code : null, expiresAt: live ? g.expiresAt : null,
+    recipientName: g.recipientName, message: g.message, payment: null
+  });
+}
+
+export function checkGiftCard(code) {
+  try { const g = usableGift(code); return settle({ code: g.code, balanceKobo: g.balanceKobo, expiresAt: g.expiresAt }); }
+  catch (err) { return fail(err.message); }
+}
+
+const giftState = (g) => g.status === 'cancelled' ? 'cancelled'
+  : new Date(g.expiresAt) <= new Date() ? 'expired' : g.balanceKobo === 0 ? 'spent' : 'active';
+const shapeGift = (g) => ({
+  id: g.id, code: g.code, amountKobo: g.amountKobo, balanceKobo: g.balanceKobo, state: giftState(g),
+  madeBy: g.reference ? 'customer' : 'shop', buyerEmail: g.buyerEmail, recipientName: g.recipientName,
+  recipientEmail: g.recipientEmail, message: g.message, note: g.note, activatedAt: g.activatedAt,
+  expiresAt: g.expiresAt, uses: g.uses
+});
+
+export function adminGiftCards() {
+  const cards = gifts().filter(g => g.status === 'active' || g.status === 'cancelled').map(shapeGift);
+  const live = cards.filter(c => c.state === 'active');
+  const sold = cards.filter(c => c.madeBy === 'customer');
+  return settle({ cards, totals: {
+    soldCount: sold.length, soldKobo: sold.reduce((n, c) => n + c.amountKobo, 0),
+    outstandingKobo: live.reduce((n, c) => n + c.balanceKobo, 0), liveCount: live.length
+  } });
+}
+
+export const adminMakeGiftCard = ({ amountKobo, recipientName, note }) => attempt(() => {
+  if (!Number.isInteger(amountKobo) || amountKobo % 100 || amountKobo < 50000 || amountKobo > 50000000) {
+    throw new Error('Choose an amount from ₦500 to ₦500,000, in whole naira.');
+  }
+  const g = {
+    id: store.nextId++, code: giftCode(), amountKobo, balanceKobo: amountKobo, status: 'active', reference: null,
+    buyerEmail: null, recipientName: (recipientName ?? '').trim() || null, recipientEmail: null, message: null,
+    note: (note ?? '').trim() || null, activatedAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 365 * 86_400_000).toISOString(), uses: []
+  };
+  gifts().unshift(g);
+  return shapeGift(g);
+});
+
+export const adminCancelGiftCard = (id) => attempt(() => {
+  const g = gifts().find(x => x.id === id && x.status === 'active');
+  if (!g) throw new Error('No working gift card with that number.');
+  g.status = 'cancelled';
+  return shapeGift(g);
 });
 
 /** Downloads cannot leave a preview page, so this says so instead. */

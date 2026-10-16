@@ -1,6 +1,7 @@
 import { one, query, transaction } from '../db.js';
 import { verifyTransaction, paystackConfigured } from './paystack.js';
 import { releaseCode, retakeCode } from './discounts.js';
+import { returnToCard, retakeFromCard, reconcileGift, pendingGiftReferences } from './giftcards.js';
 
 /* Everything that moves an order out of `pending` goes through this file.
  *
@@ -18,11 +19,11 @@ const ABANDON_AFTER_MIN = Number(process.env.ABANDON_AFTER_MINUTES || 30);
 /** Hours of failed lookups before an order is given up on anyway. */
 const GIVE_UP_AFTER_HOURS = 24;
 
-/** Put held stock (and a held discount use) back and close the order. Safe to call twice. */
+/** Put held stock (and a held discount use, and a gift card's amount) back and close the order. Safe to call twice. */
 export async function releaseStock(reference, status) {
   await transaction(async (tx) => {
     const order = await tx.one(
-      'SELECT id, status, discount_code FROM orders WHERE reference = $1 FOR UPDATE', [reference]);
+      'SELECT id, status, discount_code, gift_card_id, gift_kobo FROM orders WHERE reference = $1 FOR UPDATE', [reference]);
     if (!order || order.status !== 'pending') return;   // already settled
 
     const items = await tx.query(
@@ -31,6 +32,7 @@ export async function releaseStock(reference, status) {
       await tx.query('UPDATE variants SET stock = stock + $1 WHERE id = $2', [i.qty, i.variant_id]);
     }
     await releaseCode(tx, order.discount_code);
+    await returnToCard(tx, order);
     await tx.query('UPDATE orders SET status = $1 WHERE id = $2', [status, order.id]);
   });
 }
@@ -49,7 +51,7 @@ export async function releaseStock(reference, status) {
 async function confirmPayment(orderId, paystackId) {
   return transaction(async (tx) => {
     // Locked, so the webhook and the sweeper cannot both do this at once.
-    const order = await tx.one('SELECT id, status, discount_code FROM orders WHERE id = $1 FOR UPDATE', [orderId]);
+    const order = await tx.one('SELECT id, status, discount_code, gift_card_id, gift_kobo FROM orders WHERE id = $1 FOR UPDATE', [orderId]);
 
     if (['paid', 'refund_due', 'refunded'].includes(order.status)) return order.status;
 
@@ -65,6 +67,8 @@ async function confirmPayment(orderId, paystackId) {
           [i.qty, i.variant_id]);
         if (took.length === 0) { retaken = false; break; }
       }
+      // The gift card's share went back to the card too; it must still be there.
+      if (retaken) retaken = await retakeFromCard(tx, order);
 
       if (!retaken) {
         await tx.query('ROLLBACK TO SAVEPOINT retake');
@@ -100,7 +104,7 @@ async function confirmPayment(orderId, paystackId) {
  */
 export async function reconcile(reference, { release = false, giveUp = false, onVerify } = {}) {
   const order = await one(
-    'SELECT id, status, subtotal_kobo, shipping_kobo, discount_kobo FROM orders WHERE reference = $1', [reference]);
+    'SELECT id, status, subtotal_kobo, shipping_kobo, discount_kobo, gift_kobo FROM orders WHERE reference = $1', [reference]);
   if (!order) return null;
   if (['paid', 'refund_due', 'refunded'].includes(order.status)) return order.status;
 
@@ -118,8 +122,9 @@ export async function reconcile(reference, { release = false, giveUp = false, on
   }
 
   if (data.status === 'success') {
-    // What Paystack was asked for: the items, less any discount, plus delivery.
-    const due = order.subtotal_kobo - order.discount_kobo + order.shipping_kobo;
+    // What Paystack was asked for: the items, less any discount, plus delivery,
+    // less what a gift card paid.
+    const due = order.subtotal_kobo - order.discount_kobo + order.shipping_kobo - order.gift_kobo;
     if (data.amount !== due || (data.currency && data.currency !== 'NGN')) {
       console.error(
         `[orders] ${reference} AMOUNT MISMATCH: paid ${data.amount} ${data.currency ?? ''} kobo, ` +
@@ -167,7 +172,13 @@ export async function sweepPending() {
     const status = await reconcile(r.reference, { release: r.stale, giveUp: r.stuck });
     outcome[status] = (outcome[status] ?? 0) + 1;
   }
-  return { checked: rows.length, outcome };
+  // Gift card purchases: a payment whose webhook was missed still makes the card.
+  const gifts = await pendingGiftReferences({ checkAfterMin: CHECK_AFTER_MIN, abandonAfterMin: ABANDON_AFTER_MIN });
+  for (const g of gifts) {
+    const status = await reconcileGift(g.reference, { release: g.stale });
+    outcome[`gift ${status}`] = (outcome[`gift ${status}`] ?? 0) + 1;
+  }
+  return { checked: rows.length + gifts.length, outcome };
 }
 
 let timer = null;

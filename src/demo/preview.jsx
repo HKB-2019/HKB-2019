@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Route, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { finishPayment, previewOrder, resetPreview } from './api.js';
+import { finishPayment, previewDue, resetPreview } from './api.js';
 import { useShop } from '../store/ShopContext.jsx';
 import { forgetWelcome, markWelcome } from '../lib/welcome.js';
 
@@ -12,24 +12,25 @@ function PretendPayment() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const reference = params.get('reference') ?? '';
-  const order = previewOrder(reference);
-  const total = order ? order.items.reduce((n, i) => n + i.unitPriceKobo * i.qty, 0) + order.shippingKobo : 0;
+  // An order's remainder (after any discount and gift card), or a gift card's price.
+  const due = previewDue(reference);
+  const total = due?.kobo ?? 0;
 
   const done = (paid) => {
     finishPayment(reference, paid);
-    navigate(`/order?reference=${encodeURIComponent(reference)}`);
+    navigate(`/${due?.what === 'gift' ? 'gift-card' : 'order'}?reference=${encodeURIComponent(reference)}`);
   };
 
   return (
     <div className="status">
       <main className="status__panel">
         <p className="eyebrow">Payment page — preview</p>
-        <h1 className="status__title">{order ? `Pay ${naira(total)}` : 'No such order'}</h1>
+        <h1 className="status__title">{due ? `Pay ${naira(total)}` : 'No such order'}</h1>
         <p className="status__note">
           On the live shop this is Paystack’s own page, where the customer pays by card, bank transfer or USSD.
           Here nothing is charged: choose what happens.
         </p>
-        {order && (
+        {due && (
           <>
             <button className="btn btn--solid btn--block" onClick={() => done(true)}>PAY (PRETEND)</button>
             <button className="btn btn--ghost btn--block" style={{ marginTop: 10 }} onClick={() => done(false)}>CANCEL PAYMENT</button>

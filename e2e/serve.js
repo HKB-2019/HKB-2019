@@ -41,6 +41,7 @@ const { query } = await import('../server/db.js');
 const { seed } = await import('../server/seed.js');
 const { setSetting } = await import('../server/lib/settings.js');
 const { checkoutLimit, discountLimit } = await import('../server/routes/checkout.js');
+const { giftBuyLimit, giftCheckLimit } = await import('../server/routes/giftcards.js');
 const { subscribeLimit } = await import('../server/routes/subscribe.js');
 const { eventLimit } = await import('../server/routes/analytics.js');
 const { draftLimit } = await import('../server/routes/admin-products.js');
@@ -63,6 +64,8 @@ async function reset({ delivery = true } = {}) {
   for (const ip of ['::ffff:127.0.0.1', '127.0.0.1', '::1']) clearFailures(ip);
   checkoutLimit.reset();
   discountLimit.reset();
+  giftBuyLimit.reset();
+  giftCheckLimit.reset();
   subscribeLimit.reset();
   eventLimit.reset();
   draftLimit.reset();

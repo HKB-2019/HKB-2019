@@ -44,6 +44,7 @@ export async function startShop() {
   const { checkoutLimit, discountLimit } = await import('../routes/checkout.js');
   const { subscribeLimit } = await import('../routes/subscribe.js');
   const { eventLimit } = await import('../routes/analytics.js');
+  const { giftBuyLimit, giftCheckLimit } = await import('../routes/giftcards.js');
   const { createApp } = await import('../index.js');
   const { createServer } = await import('node:http');
 
@@ -73,6 +74,8 @@ export async function startShop() {
     discountLimit.reset();
     subscribeLimit.reset();
     eventLimit.reset();
+    giftBuyLimit.reset();
+    giftCheckLimit.reset();
   };
 
   /** Signed in as the admin; returns the Cookie header to send. */
@@ -128,7 +131,8 @@ export function stubPaystack(one) {
     }
     if (u.includes('/transaction/verify/')) {
       const ref = decodeURIComponent(u.split('/verify/')[1]);
-      const order = await one('SELECT subtotal_kobo - discount_kobo + shipping_kobo AS due FROM orders WHERE reference = $1', [ref]);
+      const order = await one('SELECT subtotal_kobo - discount_kobo + shipping_kobo - gift_kobo AS due FROM orders WHERE reference = $1', [ref])
+        ?? await one('SELECT amount_kobo AS due FROM gift_cards WHERE reference = $1', [ref]);
       return Response.json({ status: true, data: {
         id: 99887766, reference: ref, currency: 'NGN',
         status: paystack.verify.status, amount: paystack.verify.amount ?? order?.due ?? 0 } });
