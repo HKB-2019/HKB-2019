@@ -1898,6 +1898,7 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
   background:var(--violet); padding:4px 9px;
 }
 .preview-bar__text{ flex:1 1 220px; min-width:0; }
+.preview-bar__built{ color:var(--ink-faint); white-space:nowrap; }
 .preview-bar__actions{ display:flex; flex-wrap:wrap; gap:6px; }
 .preview-bar__actions button{
   padding:6px 11px; font-size:11px; letter-spacing:.16em; color:var(--ink-dim);

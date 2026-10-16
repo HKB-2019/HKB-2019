@@ -20,7 +20,12 @@ export default defineConfig(({ mode }) => ({
   base: './',
   define: {
     'import.meta.env.VITE_DEMO': JSON.stringify('1'),
-    'import.meta.env.VITE_DEMO_START': JSON.stringify(mode === 'admin' ? '/admin' : '')
+    'import.meta.env.VITE_DEMO_START': JSON.stringify(mode === 'admin' ? '/admin' : ''),
+    // When this preview was built, shown in its banner, so an old copy kept
+    // by a browser or app can be told from the current one.
+    'import.meta.env.VITE_DEMO_BUILT': JSON.stringify(new Date().toLocaleString('en-GB', {
+      timeZone: 'Africa/Lagos', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+    }))
   },
   // Swapped by what a file IS, not how an import spells it: "./api.js" from
   // inside src/lib is the same file as "../lib/api.js" from a component.

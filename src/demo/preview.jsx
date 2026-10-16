@@ -76,7 +76,10 @@ export function PreviewBanner() {
   return (
     <aside className="preview-bar" aria-label="About this preview" ref={bar}>
       <span className="preview-bar__tag">PREVIEW</span>
-      <span className="preview-bar__text">Sample data in your browser. Nothing is charged or sent.</span>
+      <span className="preview-bar__text">
+        Sample data in your browser. Nothing is charged or sent.
+        {import.meta.env.VITE_DEMO_BUILT && <> <span className="preview-bar__built">Updated {import.meta.env.VITE_DEMO_BUILT}</span></>}
+      </span>
       <span className="preview-bar__actions">
         <button onClick={() => navigate(inAdmin ? '/' : '/admin')}>{inAdmin ? 'OPEN THE SHOP' : 'OPEN THE ADMIN'}</button>
         {!inAdmin && <button onClick={showWelcome}>SEE THE POP-UP</button>}
