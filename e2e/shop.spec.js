@@ -176,22 +176,21 @@ test('the delivery form says what is missing, beside the box that is missing it'
   await expect(page).toHaveURL(/\/$/, { timeout: 1000 });   // still here, not at Paystack
 });
 
-test('a customer abroad picks their country from a list, and is told at once if we do not ship there yet', async ({ page }) => {
+test('the country list shows only once the owner delivers abroad; then a customer abroad picks theirs', async ({ page }) => {
   const toCheckout = async () => {
     await page.goto('/product/scarf');
     await page.getByRole('button', { name: 'ADD TO BAG' }).click();
     await page.locator('.cart-btn').click();
     await page.getByRole('button', { name: 'CHECKOUT' }).click();
   };
+  // Nigeria only: no country to choose, just the states.
   await toCheckout();
-  await expect(page.locator('#d-country')).toHaveValue('Nigeria');
+  await expect(page.locator('#d-country')).toHaveCount(0);
+  await expect(page.locator('select#d-state')).toBeVisible();
+  await expect(page.locator('#d-postcode')).toHaveCount(0);
   await expect(page.locator('.drawer__row--total')).toContainText('₦18,000');     // no delivery fee before a state
   await page.selectOption('#d-state', 'Lagos');
   await expect(page.locator('.drawer__row--total')).toContainText('₦20,500');     // + ₦2,500 Lagos
-  await page.selectOption('#d-country', 'Ghana');
-  await expect(page.getByRole('status').filter({ hasText: 'We deliver within Nigeria only for now' })).toContainText('ship to Ghana');
-  await expect(page.locator('#d-state')).toHaveCount(0);                      // no address to type for nothing
-  await expect(page.getByRole('button', { name: /^PAY/ })).toBeDisabled();
 
   // The owner switches on delivery abroad: the address and its fee follow.
   await signIn(page);
@@ -201,6 +200,7 @@ test('a customer abroad picks their country from a list, and is told at once if 
   } });
   expect(res.ok()).toBe(true);
   await toCheckout();
+  await expect(page.locator('#d-country')).toHaveValue('Nigeria');
   await page.selectOption('#d-country', 'Ghana');
   await expect(page.getByLabel('STATE OR REGION')).toBeVisible();
   await expect(page.locator('.delivery__sum')).toContainText('₦40,000');
@@ -225,6 +225,15 @@ test('a customer abroad picks their country from a list, and is told at once if 
   await expect(page.locator('.status__title')).toHaveText('Payment received');
   await page.goto('/admin#orders');
   await expect(page.locator('.admin-who__addr').first()).toContainText('London, Greater London WC2E 9LA, United Kingdom');
+
+  // Switched off again: the country list goes with it.
+  await page.request.put('/api/admin/settings/delivery', { data: {
+    lagos: { enabled: true, feeKobo: 250_000 }, abuja: { enabled: true, feeKobo: 350_000 },
+    nigeria: { enabled: true, feeKobo: 500_000 }, international: { enabled: false, feeKobo: 4_000_000 }
+  } });
+  await toCheckout();
+  await expect(page.locator('#d-country')).toHaveCount(0);
+  await expect(page.locator('select#d-state')).toBeVisible();
 });
 
 test('saved pieces can be found again, and bought from the saved list', async ({ page }) => {

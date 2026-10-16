@@ -12,7 +12,7 @@ import { PAGES, PAGES_DEFAULT } from '../data/pages.js';
 import { GUIDE_CURRENCIES, DEFAULT_RATES } from '../data/currencies.js';
 import { sampleReport } from './sampleAnalytics.js';
 
-const KEY = 'masq:preview-store-4';   // a new number whenever the sample's shape changes
+const KEY = 'masq:preview-store-5';   // a new number whenever the sample's shape changes
 const ZONES = ['lagos', 'abuja', 'nigeria', 'international'];
 const ZONE_LABELS = { lagos: 'Lagos', abuja: 'Abuja (FCT)', nigeria: 'Rest of Nigeria', international: 'Outside Nigeria' };
 const STATES = [

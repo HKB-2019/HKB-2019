@@ -205,10 +205,10 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   amount is confirmed with Paystack directly.
 - **Real delivery.** Checkout asks for name, phone and address, prices
   delivery by area from the owner's settings, and charges items plus
-  delivery. It stays closed until at least one area has a fee. COUNTRY is a
-  list: Nigeria first (its states then a list too), every other country below.
-  Until the owner switches on delivery abroad (Settings), choosing another
-  country says so at once — before any address is typed — and PAY stays off.
+  delivery. It stays closed until at least one area has a fee. While delivery
+  abroad is off (Settings → Outside Nigeria), there is no country to choose:
+  the address is in Nigeria, with its states as a list. Once it is on, a
+  COUNTRY list appears: Nigeria first, every other country below.
   Abroad, the form also asks for a **postcode / ZIP** (optional — many
   countries have none; never asked for in Nigeria). It shows on the order in
   the admin and has its own column in the orders spreadsheet, for the courier.

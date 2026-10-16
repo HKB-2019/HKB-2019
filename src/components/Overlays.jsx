@@ -225,6 +225,11 @@ function DeliveryForm({ onBack }) {
     setDelivery(v => ({ ...v, address: { ...v.address, [key]: value } }));
     setErrors(x => ({ ...x, [key]: null })); setServerError(null);
   };
+  // Delivery abroad switched off (or not yet loaded as on): the address is in Nigeria.
+  useEffect(() => {
+    if (site && !abroadOpen && !inNigeria) setCountry('Nigeria');
+  }, [site, abroadOpen, inNigeria]);   // eslint-disable-line react-hooks/exhaustive-deps
+
   const setCountry = (country) => {
     // Nigeria's states are a list, other countries' are typed: switching
     // between the two starts the state again.
@@ -287,27 +292,22 @@ function DeliveryForm({ onBack }) {
                value={d.phone} onChange={set('phone')} {...err('phone')} />
       </Field>
 
-      {/* Nigeria first; every other country below it. Delivery abroad is the
-          owner's choice (Settings): until it is on, the customer is told at
-          once rather than after typing a whole address. */}
-      <Field label="COUNTRY" id="d-country" error={errors.country}>
-        <select id="d-country" autoComplete="country-name"
-                value={d.address.country} onChange={(e) => setCountry(e.target.value)} {...err('country')}>
-          <option value="Nigeria">Nigeria</option>
-          {!inNigeria && !d.address.country && <option value="">Choose…</option>}
-          <optgroup label="Outside Nigeria">
-            {countriesAbroad().map(c => <option key={c} value={c}>{c}</option>)}
-          </optgroup>
-        </select>
-      </Field>
-      {!inNigeria && !abroadOpen && (
-        <p className="delivery__abroad" role="status">
-          We deliver within Nigeria only for now. Join the list at the foot of the page to hear when we ship
-          to {d.address.country || 'you'}.
-        </p>
+      {/* Only when the owner delivers abroad (Settings → Outside Nigeria):
+          Nigeria first, every other country below it. Otherwise there is no
+          choice to make, and the address is in Nigeria. */}
+      {abroadOpen && (
+        <Field label="COUNTRY" id="d-country" error={errors.country}>
+          <select id="d-country" autoComplete="country-name"
+                  value={d.address.country} onChange={(e) => setCountry(e.target.value)} {...err('country')}>
+            <option value="Nigeria">Nigeria</option>
+            {!inNigeria && !d.address.country && <option value="">Choose…</option>}
+            <optgroup label="Outside Nigeria">
+              {countriesAbroad().map(c => <option key={c} value={c}>{c}</option>)}
+            </optgroup>
+          </select>
+        </Field>
       )}
 
-      {(inNigeria || abroadOpen) && (<>
       <Field label={inNigeria ? 'STATE' : 'STATE OR REGION'} id="d-state" error={errors.state}>
         {inNigeria ? (
           <select id="d-state" autoComplete="address-level1"
@@ -344,7 +344,6 @@ function DeliveryForm({ onBack }) {
                onChange={(e) => setDelivery(v => ({ ...v, newsletter: e.target.checked }))} />
         <span>Email me about new drops and restocks. Leave any time.</span>
       </label>
-      </>)}
 
       <div className="delivery__sum">
         <DiscountBox applied={applied} onApplied={setApplied} />
@@ -361,7 +360,7 @@ function DeliveryForm({ onBack }) {
         <div className="drawer__row drawer__row--total"><span>TOTAL</span><span>{naira(total)}</span></div>
       </div>
 
-      <button type="submit" className="btn btn--solid btn--block" disabled={busy || !cart.length || (!inNigeria && !abroadOpen)}>
+      <button type="submit" className="btn btn--solid btn--block" disabled={busy || !cart.length}>
         {busy ? 'TAKING YOU TO PAYSTACK…' : `PAY ${naira(total)}`}
       </button>
       <p className="drawer__note drawer__note--center">Secure payment by Paystack. We never see your card.</p>

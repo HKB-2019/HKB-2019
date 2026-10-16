@@ -1447,10 +1447,6 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 }
 .delivery__back:hover{ color:var(--ink); }
 
-.delivery__abroad{
-  margin:-6px 0 22px; padding:12px 14px; font-size:13px; line-height:1.6; color:var(--ink-dim);
-  border-left:2px solid var(--violet-soft); background:var(--tint);
-}
 
 .delivery__sum{ margin:26px 0 22px; padding-top:18px; border-top:1px solid var(--line); }
 
