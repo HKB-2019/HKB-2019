@@ -6,6 +6,7 @@ import Storefront from './pages/Storefront.jsx';
 import OrderStatus from './pages/OrderStatus.jsx';
 import ProductPage from './pages/ProductPage.jsx';
 import GiftCardPage from './pages/GiftCardPage.jsx';
+import GiftCardOpen from './pages/GiftCardOpen.jsx';
 import { previewRoutes, PreviewBanner } from './lib/preview.jsx';
 
 // The preview is one page on someone else's site, so its pages live after
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/order" element={<OrderStatus />} />
         {/* buy a gift card; where Paystack sends its buyer back */}
         <Route path="/gift-card" element={<GiftCardPage />} />
+        <Route path="/gift/:code" element={<GiftCardOpen />} />
         <Route path="/admin" element={<Suspense fallback={null}><Admin /></Suspense>} />
         {previewRoutes}
         <Route path="*" element={<Storefront />} />

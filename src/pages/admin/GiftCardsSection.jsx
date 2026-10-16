@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { adminGiftCards, adminMakeGiftCard, adminCancelGiftCard } from '../../lib/api.js';
+import { DESIGNS, designOf } from '../../components/GiftCard.jsx';
 
 /* Gift cards, in SALES: every card bought in the shop or made here, what is
  * left on it and where it was spent; make one; cancel one. The rules are the
@@ -11,7 +12,7 @@ const STATE = { active: ['working', 'paid'], spent: ['spent', 'abandoned'], expi
 
 function MakeCard({ onMade }) {
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ amount: '', recipientName: '', note: '' });
+  const [f, setF] = useState({ amount: '', recipientName: '', note: '', design: 'violet' });
   const [state, setState] = useState(null);
   const set = (k) => (e) => { setF(v => ({ ...v, [k]: e.target.value })); setState(null); };
 
@@ -20,8 +21,8 @@ function MakeCard({ onMade }) {
     const n = Number(String(f.amount).replace(/[₦,\s]/g, ''));
     setState('saving');
     try {
-      const card = await adminMakeGiftCard({ amountKobo: Math.round(n * 100), recipientName: f.recipientName, note: f.note });
-      setF({ amount: '', recipientName: '', note: '' }); setOpen(false); setState(null); onMade(card);
+      const card = await adminMakeGiftCard({ amountKobo: Math.round(n * 100), recipientName: f.recipientName, note: f.note, design: f.design });
+      setF({ amount: '', recipientName: '', note: '', design: 'violet' }); setOpen(false); setState(null); onMade(card);
     } catch (err) { setState(err.message); }
   };
 
@@ -35,6 +36,12 @@ function MakeCard({ onMade }) {
       <label className="admin-field">
         <span>For <em>optional</em></span>
         <input value={f.recipientName} maxLength={60} placeholder="Name" onChange={set('recipientName')} />
+      </label>
+      <label className="admin-field">
+        <span>Colour</span>
+        <select value={f.design} onChange={set('design')}>
+          {DESIGNS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+        </select>
       </label>
       <label className="admin-field admin-field--wide">
         <span>Note <em>optional — only you see it</em></span>
@@ -98,6 +105,7 @@ function CardRow({ c, isNew, onChanged }) {
               {c.message && <p><span>Message</span>{c.message}</p>}
               {c.recipientEmail && <p><span>Their email</span>{c.recipientEmail}</p>}
               {c.note && <p><span>Note</span>{c.note}</p>}
+              <p><span>Colour</span>{designOf(c.design).name}</p>
               <p><span>Live since</span>{date(c.activatedAt)}</p>
               <div>
                 <span>Spent on</span>

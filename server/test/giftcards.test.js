@@ -213,3 +213,36 @@ test('the owner sees every card, what is left and where it went', async () => {
   const csv = await shop.request('/api/admin/orders.csv', { cookie });
   assert.ok(csv.raw.split(/\r?\n/)[0].includes('"Paid by gift card ₦"'));
 });
+
+test('a card keeps the colour it was bought in, and the person given it can open it by its code', async () => {
+  const res = await shop.request('/api/gift-cards', { method: 'POST', json: {
+    amountKobo: 25_000_00, email: 'buyer@example.com', recipientName: 'Kemi', message: 'For you.', design: 'teal' } });
+  const open = (code) => shop.request('/api/gift-cards/open', { method: 'POST', json: { code } });
+
+  // Not paid yet: there is nothing to open, even with the code.
+  const pending = await card(25_000_00);
+  assert.equal(pending.design, 'teal');
+  assert.equal((await open(pending.code)).status, 404);
+
+  await webhook(res.body.reference);
+  assert.equal((await shop.request(`/api/gift-cards/${res.body.reference}`)).body.design, 'teal');
+  const seen = await open(pending.code.toLowerCase());
+  assert.equal(seen.status, 200, seen.raw);
+  assert.deepEqual(
+    [seen.body.code, seen.body.state, seen.body.amountKobo, seen.body.balanceKobo, seen.body.recipientName, seen.body.message, seen.body.design],
+    [pending.code, 'active', 25_000_00, 25_000_00, 'Kemi', 'For you.', 'teal']);
+  assert.equal(seen.body.buyerEmail, undefined, 'who bought it is not shown');
+
+  // Spent, it still opens, and says so. A wrong code does not.
+  await shop.checkout(cap({ giftCode: pending.code }));
+  await shop.query('UPDATE gift_cards SET balance_kobo = 0 WHERE code = $1', [pending.code]);
+  assert.equal((await open(pending.code)).body.state, 'spent');
+  assert.equal((await open('MASQ-AAAA-BBBB')).status, 404);
+  assert.equal((await open('hello')).status, 404);
+
+  // A colour we do not make is violet; the owner's cards choose one too.
+  await shop.request('/api/gift-cards', { method: 'POST', json: { amountKobo: 10_000_00, email: 'b@example.com', design: 'gold' } });
+  assert.equal((await card(10_000_00)).design, 'violet');
+  const mine = await api('/gift-cards', 'POST', { amountKobo: 20_000_00, design: 'clay' });
+  assert.equal(mine.body.design, 'clay');
+});

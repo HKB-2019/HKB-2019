@@ -212,7 +212,8 @@ export function createApp() {
       const origin = (process.env.RENDER_EXTERNAL_URL || process.env.PUBLIC_URL ||
         (/^[a-z0-9.-]+(:\d{1,5})?$/i.test(host) ? `${req.protocol}://${host}` : '')).replace(/\/$/, '');
       res.set({ 'Content-Security-Policy': CSP, 'Cache-Control': 'no-cache' });
-      if (req.path.startsWith('/admin')) res.set('X-Robots-Tag', 'noindex, nofollow');
+      // The back room, and a gift card opened by its code, are not for search engines.
+      if (req.path.startsWith('/admin') || req.path.startsWith('/gift/')) res.set('X-Robots-Tag', 'noindex, nofollow');
       const meta = await pageMeta(req.path);
       if (meta?.missing) res.status(404);
       res.type('html').send(fillMeta(html, meta, origin).replaceAll('__ORIGIN__', origin));

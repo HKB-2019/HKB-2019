@@ -371,6 +371,10 @@ CREATE TABLE IF NOT EXISTS gift_cards (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- The card's colour, chosen by the buyer, so the person receiving it sees the
+-- same card (src/components/GiftCard.jsx). Unknown names show as violet.
+ALTER TABLE gift_cards ADD COLUMN IF NOT EXISTS design TEXT NOT NULL DEFAULT 'violet';
+
 -- Every movement of a card's balance: spent on an order (negative), or
 -- given back when that order was not paid or was refunded (positive).
 CREATE TABLE IF NOT EXISTS gift_card_uses (

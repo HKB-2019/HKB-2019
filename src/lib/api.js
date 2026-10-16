@@ -60,6 +60,7 @@ export const getOrder = (reference) => request(`/orders/${encodeURIComponent(ref
 export const buyGiftCard   = (card) => request('/gift-cards', { method: 'POST', body: JSON.stringify(card) });
 export const getGiftCard   = (reference) => request(`/gift-cards/${encodeURIComponent(reference)}`);
 export const checkGiftCard = (code) => request('/gift-cards/check', { method: 'POST', body: JSON.stringify({ code }) });
+export const openGiftCard  = (code) => request('/gift-cards/open', { method: 'POST', body: JSON.stringify({ code }) });
 
 /* ---------------------------------------------------------------- admin */
 

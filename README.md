@@ -214,10 +214,14 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   the admin and has its own column in the orders spreadsheet, for the courier.
 - **Gift cards.** Sold at /gift-card (linked from the footer): ₦10,000,
   ₦25,000, ₦50,000, ₦100,000 or any whole amount from ₦5,000 to ₦500,000,
-  with an optional name, email and message for the person it is for. A card
-  is its own Paystack payment (reference `gift-…`) and works only once
-  Paystack confirms the amount; the buyer then sees its code (MASQ-XXXX-XXXX)
-  to copy or send on WhatsApp. It lasts twelve months and pays for pieces and
+  in one of five colours (violet, night, teal, clay, rose), with an optional
+  name, email and message for the person it is for. A card is its own
+  Paystack payment (reference `gift-…`) and works only once Paystack confirms
+  the amount; the buyer then sees its code (MASQ-XXXX-XXXX) and a link,
+  /gift/MASQ-XXXX-XXXX, to copy or send on WhatsApp. The link opens the same
+  card, in the same colour, for the person given it: their name, the message,
+  then the card turns over to show the code and what is left (tries count
+  against the same limit as codes at checkout). It lasts twelve months and pays for pieces and
   delivery, after any discount code, in one order or several. What it pays is
   taken off the card when the order is placed and given back if that order is
   not paid (like held stock), or when it is marked refunded; Paystack is asked

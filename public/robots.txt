@@ -1,5 +1,6 @@
-# The back room and the API are not for search engines.
+# The back room, the API and gift cards opened by their code are not for search engines.
 User-agent: *
 Disallow: /admin
 Disallow: /api/
 Disallow: /order
+Disallow: /gift/

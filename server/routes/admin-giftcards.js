@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { one, query } from '../db.js';
 import { requireAdmin } from '../lib/auth.js';
-import { newCode, shapeCard, LASTS_MONTHS, MAX_KOBO } from '../lib/giftcards.js';
+import { newCode, shapeCard, cleanDesign, LASTS_MONTHS, MAX_KOBO } from '../lib/giftcards.js';
 
 /* GIFT CARDS in the admin (under SALES): every card bought or made, what is
  * left on it and where it was spent; make one (a giveaway, a goodwill
@@ -44,7 +44,7 @@ adminGiftCardsRouter.get('/admin/gift-cards', async (_req, res) => {
   });
 });
 
-/** POST /admin/gift-cards  { amountKobo, recipientName?, note? } — a card made by the shop, live at once. */
+/** POST /admin/gift-cards  { amountKobo, recipientName?, note?, design? } — a card made by the shop, live at once. */
 adminGiftCardsRouter.post('/admin/gift-cards', async (req, res) => {
   const b = req.body ?? {};
   const amount = b.amountKobo;
@@ -54,10 +54,10 @@ adminGiftCardsRouter.post('/admin/gift-cards', async (req, res) => {
   let card = null;
   for (let tries = 0; !card && tries < 5; tries++) {
     card = await one(`
-      INSERT INTO gift_cards (code, amount_kobo, balance_kobo, status, recipient_name, note, activated_at, expires_at)
-      VALUES ($1, $2, $2, 'active', $3, $4, now(), now() + make_interval(months => $5))
+      INSERT INTO gift_cards (code, amount_kobo, balance_kobo, status, recipient_name, note, design, activated_at, expires_at)
+      VALUES ($1, $2, $2, 'active', $3, $4, $6, now(), now() + make_interval(months => $5))
       ON CONFLICT (code) DO NOTHING
-      RETURNING *`, [newCode(), amount, words(b.recipientName, 60) || null, words(b.note, 200) || null, LASTS_MONTHS]);
+      RETURNING *`, [newCode(), amount, words(b.recipientName, 60) || null, words(b.note, 200) || null, LASTS_MONTHS, cleanDesign(b.design)]);
   }
   if (!card) throw fail(500, 'Could not make a card. Try again.');
   res.status(201).json(shapeCard(card));

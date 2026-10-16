@@ -3,7 +3,8 @@ import { one, query } from '../db.js';
 import { initializeTransaction, paystackConfigured } from '../lib/paystack.js';
 import { rateLimit } from '../lib/limits.js';
 import {
-  checkAmount, newCode, newGiftReference, isGiftReference, reconcileGift, usableCard, giftNaira
+  checkAmount, newCode, newGiftReference, isGiftReference, reconcileGift, usableCard, giftNaira,
+  cleanGiftCode, cleanDesign
 } from '../lib/giftcards.js';
 
 /* Gift cards, for customers: buy one, see it once paid, and check one at
@@ -26,7 +27,7 @@ function callbackUrl() {
 }
 
 /**
- * POST /api/gift-cards  { amountKobo, email, recipientName?, recipientEmail?, message? }
+ * POST /api/gift-cards  { amountKobo, email, recipientName?, recipientEmail?, message?, design? }
  * Starts the payment for a card. The card exists from now, but only works
  * once Paystack confirms the money (server/lib/giftcards.js).
  */
@@ -44,11 +45,11 @@ giftCardsRouter.post('/gift-cards', giftBuyLimit, async (req, res) => {
   for (let tries = 0; !card && tries < 5; tries++) {
     card = await one(`
       INSERT INTO gift_cards (code, amount_kobo, balance_kobo, status, reference, buyer_email,
-                              recipient_name, recipient_email, message)
-      VALUES ($1, $2, 0, 'pending', $3, $4, $5, $6, $7)
+                              recipient_name, recipient_email, message, design)
+      VALUES ($1, $2, 0, 'pending', $3, $4, $5, $6, $7, $8)
       ON CONFLICT (code) DO NOTHING
       RETURNING id`, [newCode(), amount, reference, email, words(b.recipientName, 60) || null,
-        b.recipientEmail ? b.recipientEmail.trim().toLowerCase() : null, words(b.message, 300) || null]);
+        b.recipientEmail ? b.recipientEmail.trim().toLowerCase() : null, words(b.message, 300) || null, cleanDesign(b.design)]);
   }
   if (!card) return res.status(500).json({ error: 'Something went wrong. Nothing has been charged.' });
 
@@ -76,7 +77,7 @@ giftCardsRouter.get('/gift-cards/:reference', async (req, res) => {
   const { reference } = req.params;
   if (!isGiftReference(reference)) return res.status(404).json({ error: 'Gift card not found.' });
   const load = () => one(`
-    SELECT status, code, amount_kobo, balance_kobo, recipient_name, message, expires_at
+    SELECT status, code, amount_kobo, balance_kobo, recipient_name, message, design, expires_at
       FROM gift_cards WHERE reference = $1`, [reference]);
   let card = await load();
   if (!card) return res.status(404).json({ error: 'Gift card not found.' });
@@ -97,6 +98,7 @@ giftCardsRouter.get('/gift-cards/:reference', async (req, res) => {
     expiresAt: live ? card.expires_at : null,
     recipientName: card.recipient_name,
     message: card.message,
+    design: card.design,
     payment: card.status === 'pending' && ['abandoned', 'failed'].includes(paystackStatus) ? 'not_completed' : null
   });
 });
@@ -108,4 +110,30 @@ giftCardsRouter.get('/gift-cards/:reference', async (req, res) => {
 giftCardsRouter.post('/gift-cards/check', giftCheckLimit, async (req, res) => {
   const card = await usableCard({ one }, req.body?.code);
   res.json({ code: card.code, balanceKobo: card.balanceKobo, expiresAt: card.expiresAt });
+});
+
+/**
+ * POST /api/gift-cards/open  { code } — the card as the person given it sees
+ * it, from the link the buyer sends (/gift/MASQ-XXXX-XXXX): its colour, the
+ * name and message on it, and what is left. The code is the key, as it is at
+ * checkout, and tries count against the same limit.
+ */
+giftCardsRouter.post('/gift-cards/open', giftCheckLimit, async (req, res) => {
+  const code = cleanGiftCode(req.body?.code);
+  const card = code && await one(`
+    SELECT code, status, amount_kobo, balance_kobo, recipient_name, message, design, expires_at
+      FROM gift_cards WHERE code = $1 AND status IN ('active', 'cancelled')`, [code]);
+  if (!card) return res.status(404).json({ error: 'We could not find a gift card with that code. Check it against the message you were sent.' });
+  const expired = card.expires_at && new Date(card.expires_at) <= new Date();
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    code: card.code,
+    state: card.status === 'cancelled' ? 'cancelled' : expired ? 'expired' : card.balance_kobo === 0 ? 'spent' : 'active',
+    amountKobo: card.amount_kobo,
+    balanceKobo: card.balance_kobo,
+    expiresAt: card.expires_at,
+    recipientName: card.recipient_name,
+    message: card.message,
+    design: cleanDesign(card.design)
+  });
 });

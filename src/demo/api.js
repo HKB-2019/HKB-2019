@@ -94,7 +94,7 @@ function sampleStore() {
     giftCards: [
       { id: 1, code: 'MASQ-7K3P-Q9XD', amountKobo: 2500000, balanceKobo: 2500000, status: 'active', reference: 'gift-' + '7'.repeat(24),
         buyerEmail: 'tolu@example.com', recipientName: 'Kemi', recipientEmail: null, message: 'Happy birthday. Wear it well.',
-        note: null, activatedAt: ago(48), expiresAt: new Date(Date.now() + 364 * 86_400_000).toISOString(), uses: [] }
+        note: null, design: 'violet', activatedAt: ago(48), expiresAt: new Date(Date.now() + 364 * 86_400_000).toISOString(), uses: [] }
     ],
     customers: {
       'chidi@example.com': { tags: ['VIP'], notes: 'Bought two hoodies for his brother. Asks about the next drop.', createdAt: ago(190) }
@@ -995,7 +995,10 @@ function returnGift(o) {
   g.uses.push({ orderReference: o.reference, amountKobo: o.giftKobo, kind: 'return', at: new Date().toISOString() });
 }
 
-export function buyGiftCard({ amountKobo, email, recipientName, recipientEmail, message }) {
+const GIFT_DESIGNS = ['violet', 'night', 'teal', 'clay', 'rose'];
+const giftDesign = (v) => GIFT_DESIGNS.includes(v) ? v : 'violet';
+
+export function buyGiftCard({ amountKobo, email, recipientName, recipientEmail, message, design }) {
   if (!Number.isInteger(amountKobo) || amountKobo % 100 || amountKobo < 500000 || amountKobo > 50000000) {
     return fail('Choose an amount from ₦5,000 to ₦500,000, in whole naira.');
   }
@@ -1005,7 +1008,7 @@ export function buyGiftCard({ amountKobo, email, recipientName, recipientEmail, 
     id: store.nextId++, code: giftCode(), amountKobo, balanceKobo: 0, status: 'pending', reference,
     buyerEmail: email.trim().toLowerCase(), recipientName: (recipientName ?? '').trim() || null,
     recipientEmail: recipientEmail || null, message: (message ?? '').trim() || null, note: null,
-    activatedAt: null, expiresAt: null, uses: []
+    design: giftDesign(design), activatedAt: null, expiresAt: null, uses: []
   });
   save();
   return settle({ reference, authorizationUrl: `#/pay?reference=${reference}`, amountKobo }, 500);
@@ -1018,7 +1021,18 @@ export function getGiftCard(reference) {
   return settle({
     reference, status: g.status, amountKobo: g.amountKobo, balanceKobo: live ? g.balanceKobo : null,
     code: live ? g.code : null, expiresAt: live ? g.expiresAt : null,
-    recipientName: g.recipientName, message: g.message, payment: null
+    recipientName: g.recipientName, message: g.message, design: giftDesign(g.design), payment: null
+  });
+}
+
+/** As POST /api/gift-cards/open: the card as the person given it sees it. */
+export function openGiftCard(raw) {
+  const code = cleanGift(raw);
+  const g = code && gifts().find(x => x.code === code && (x.status === 'active' || x.status === 'cancelled'));
+  if (!g) return fail('We could not find a gift card with that code. Check it against the message you were sent.', 404);
+  return settle({
+    code: g.code, state: giftState(g), amountKobo: g.amountKobo, balanceKobo: g.balanceKobo, expiresAt: g.expiresAt,
+    recipientName: g.recipientName, message: g.message, design: giftDesign(g.design)
   });
 }
 
@@ -1032,7 +1046,7 @@ const giftState = (g) => g.status === 'cancelled' ? 'cancelled'
 const shapeGift = (g) => ({
   id: g.id, code: g.code, amountKobo: g.amountKobo, balanceKobo: g.balanceKobo, state: giftState(g),
   madeBy: g.reference ? 'customer' : 'shop', buyerEmail: g.buyerEmail, recipientName: g.recipientName,
-  recipientEmail: g.recipientEmail, message: g.message, note: g.note, activatedAt: g.activatedAt,
+  recipientEmail: g.recipientEmail, message: g.message, design: giftDesign(g.design), note: g.note, activatedAt: g.activatedAt,
   expiresAt: g.expiresAt, uses: g.uses
 });
 
@@ -1046,14 +1060,14 @@ export function adminGiftCards() {
   } });
 }
 
-export const adminMakeGiftCard = ({ amountKobo, recipientName, note }) => attempt(() => {
+export const adminMakeGiftCard = ({ amountKobo, recipientName, note, design }) => attempt(() => {
   if (!Number.isInteger(amountKobo) || amountKobo % 100 || amountKobo < 50000 || amountKobo > 50000000) {
     throw new Error('Choose an amount from ₦500 to ₦500,000, in whole naira.');
   }
   const g = {
     id: store.nextId++, code: giftCode(), amountKobo, balanceKobo: amountKobo, status: 'active', reference: null,
     buyerEmail: null, recipientName: (recipientName ?? '').trim() || null, recipientEmail: null, message: null,
-    note: (note ?? '').trim() || null, activatedAt: new Date().toISOString(),
+    note: (note ?? '').trim() || null, design: giftDesign(design), activatedAt: new Date().toISOString(),
     expiresAt: new Date(Date.now() + 365 * 86_400_000).toISOString(), uses: []
   };
   gifts().unshift(g);

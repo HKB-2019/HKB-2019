@@ -28,6 +28,8 @@ test('a gift card is bought, paid for, and spent over two orders', async ({ page
   await expect(page.locator('#g-amount-error')).toContainText('₦5,000 to ₦500,000');
   await page.getByRole('radio', { name: '₦25,000' }).check();
   await page.getByLabel(/THEIR NAME/).fill('Kemi');
+  await page.getByRole('radio', { name: 'Teal' }).click();
+  await expect(page.locator('.gift__chosen')).toHaveText(' · Teal');
   await page.getByLabel(/A MESSAGE/).fill('Happy birthday.');
   await page.getByRole('button', { name: 'PAY ₦25,000' }).click();
   await expect(page.locator('h1')).toHaveText('Pay ₦25,000');
@@ -42,6 +44,16 @@ test('a gift card is bought, paid for, and spent over two orders', async ({ page
   await expect(page.locator('.giftcard__code')).toHaveText(code);       // on the card's back, turned to face us
   await page.getByRole('button', { name: 'See the front' }).click();
   await expect(page.locator('.giftcard__for')).toHaveText('For Kemi');
+
+  // The person given it opens the same card, in teal, from the link sent to them.
+  const wa = await page.getByRole('link', { name: 'SEND ON WHATSAPP' }).getAttribute('href');
+  expect(decodeURIComponent(wa)).toContain(`/gift/${code}`);
+  await page.goto(`/gift/${code}`);
+  await expect(page.getByRole('heading', { name: 'For you, Kemi' })).toBeVisible();
+  await expect(page.locator('.giftcard-wrap')).toHaveAttribute('style', /#083f47/);
+  await expect(page.locator('.gift__message')).toHaveText('Happy birthday.');
+  await expect(page.locator('#gift-code')).toHaveText(code);
+  await expect(page.getByRole('button', { name: 'See the front' })).toBeVisible();   // it turned over by itself
 
   // First order: the scarf, ₦18,000 + ₦2,500 Lagos. The card covers it all.
   await toCheckout(page, 'scarf');

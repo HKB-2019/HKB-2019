@@ -14,6 +14,9 @@ export const PRESETS_KOBO = [10_000_00, 25_000_00, 50_000_00, 100_000_00];
 export const MIN_KOBO = 5_000_00;
 export const MAX_KOBO = 500_000_00;
 export const LASTS_MONTHS = 12;
+/* The colours a card comes in (src/components/GiftCard.jsx draws them). */
+export const DESIGNS = ['violet', 'night', 'teal', 'clay', 'rose'];
+export const cleanDesign = (v) => DESIGNS.includes(v) ? v : 'violet';
 
 function fail(status, message) {
   return Object.assign(new Error(message), { status, expose: true });
@@ -173,6 +176,7 @@ export function shapeCard(c, uses = []) {
     recipientName: c.recipient_name,
     recipientEmail: c.recipient_email,
     message: c.message,
+    design: c.design,
     note: c.note,
     activatedAt: c.activated_at,
     expiresAt: c.expires_at,

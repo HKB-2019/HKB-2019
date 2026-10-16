@@ -1,94 +1,28 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion } from 'framer-motion';
+import { Link, useHref, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { buyGiftCard, getGiftCard } from '../lib/api.js';
 import { naira, isEmail } from '../lib/delivery.js';
-import maskUrl from '../assets/giftcard/mask.webp';
-import wordmarkUrl from '../assets/giftcard/wordmark.webp';
-import symbolsUrl from '../assets/giftcard/symbols.webp';
-import { EASE_OUT, EASE_SLOW } from '../lib/motion.js';
+import Card, { DesignSwatches, designOf, longDate } from '../components/GiftCard.jsx';
 
 /* /gift-card — buy a MASQ. gift card, and (with ?reference=, where Paystack
  * sends the buyer back) see it once paid: its code, to copy or send.
  *
  * The card is shown like an artefact in the gallery: on a dark stage (dark in
- * both themes, like the hero), with a label under it. It is the one place the
- * logo's full colours appear (src/assets/giftcard, cut from the logo). The rules live on the
+ * both themes, like the hero), with a label under it (src/components/GiftCard.jsx).
+ * The buyer chooses its colour; the person given it opens the same card from
+ * the link the buyer sends (/gift/:code, src/pages/GiftCardOpen.jsx). The rules live on the
  * server (server/lib/giftcards.js): ₦10,000, ₦25,000, ₦50,000, ₦100,000 or
  * any whole amount from ₦5,000 to ₦500,000; twelve months; pieces and delivery. */
 
 const PRESETS = [10_000, 25_000, 50_000, 100_000];
 const MIN = 5_000, MAX = 500_000;
-const longDate = (iso) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-
-/** The card, built from the logo's own artwork. The front carries the mask, the
- * amount and the name; the back the code. It turns over by a click, and once by
- * itself when `revealed` turns true (the code has arrived). */
-function Card({ amountKobo, to, code, until, revealed = false }) {
-  const calm = useReducedMotion();
-  const [back, setBack] = useState(revealed);
-  useEffect(() => { if (revealed) setBack(true); }, [revealed]);
-  // A slight tilt towards the pointer, on a computer: the card as an object.
-  const rx = useMotionValue(0), ry = useMotionValue(0);
-  const sx = useSpring(rx, { stiffness: 140, damping: 18 }), sy = useSpring(ry, { stiffness: 140, damping: 18 });
-  const rotateX = useTransform(sx, v => `${v}deg`), rotateY = useTransform(sy, v => `${v}deg`);
-  const tilt = (e) => {
-    if (calm || e.pointerType !== 'mouse') return;
-    const r = e.currentTarget.getBoundingClientRect();
-    ry.set(((e.clientX - r.left) / r.width - 0.5) * 8);
-    rx.set(-((e.clientY - r.top) / r.height - 0.5) * 8);
-  };
-  const rest = () => { rx.set(0); ry.set(0); };
-  const turn = () => setBack(b => !b);
-
-  return (
-    <div className="giftcard-wrap">
-      <motion.div className="giftcard-tilt" style={{ rotateX, rotateY }} onPointerMove={tilt} onPointerLeave={rest} onClick={turn}>
-        <motion.div
-          className="giftcard-flip"
-          initial={false}
-          animate={{ rotateY: back ? 180 : 0 }}
-          transition={calm ? { duration: 0 } : { duration: 1.1, ease: EASE_SLOW }}
-        >
-          <div className="giftcard giftcard--front" aria-hidden={back}>
-            <img className="giftcard__wordmark" src={wordmarkUrl} alt="MASQ." />
-            <span className="giftcard__kind">Gift card</span>
-            <img className="giftcard__mask" src={maskUrl} alt="" />
-            <div className="giftcard__amount" aria-live="polite">
-              <AnimatePresence mode="popLayout" initial={false}>
-                <motion.span
-                  key={amountKobo ?? 'none'}
-                  initial={calm ? false : { opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={calm ? undefined : { opacity: 0, y: -8 }}
-                  transition={{ duration: 0.32, ease: EASE_OUT }}
-                >{amountKobo ? naira(amountKobo) : '₦—'}</motion.span>
-              </AnimatePresence>
-            </div>
-            <span className="giftcard__for">{to ? `For ${to}` : 'For someone'}</span>
-          </div>
-          <div className="giftcard giftcard--back" aria-hidden={!back}>
-            <img className="giftcard__symbols" src={symbolsUrl} alt="" />
-            <p className="giftcard__motto">We wear identity.<br />Unapologetically yours.</p>
-            <span className={code ? 'giftcard__code' : 'giftcard__code giftcard__code--blank'}>{code ?? 'MASQ-••••-••••'}</span>
-            <span className="giftcard__small">{until ? `Use by ${until}` : 'Twelve months'} · pieces and delivery</span>
-          </div>
-        </motion.div>
-      </motion.div>
-      <div className="giftcard__label">
-        <span>MASQ. gift card</span>
-        <span className="giftcard__label-line">{amountKobo ? naira(amountKobo) : 'Choose an amount'}{to ? ` · for ${to}` : ''}</span>
-        <span>{until ? `Use by ${until}` : 'Lasts twelve months'} · pieces and delivery</span>
-        <button type="button" className="giftcard__turn" onClick={turn}>{back ? 'See the front' : 'Turn it over'}</button>
-      </div>
-    </div>
-  );
-}
 
 function Buy() {
   const [choice, setChoice] = useState(25_000);       // a preset, or 'other'
   const [other, setOther] = useState('');
   const [form, setForm] = useState({ email: '', recipientName: '', recipientEmail: '', message: '' });
+  const [design, setDesign] = useState('violet');
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState(null);
@@ -110,7 +44,7 @@ function Buy() {
     try {
       const { authorizationUrl } = await buyGiftCard({
         amountKobo: amount * 100, email: form.email.trim(), recipientName: form.recipientName.trim(),
-        recipientEmail: form.recipientEmail.trim() || undefined, message: form.message.trim()
+        recipientEmail: form.recipientEmail.trim() || undefined, message: form.message.trim(), design
       });
       window.location.href = authorizationUrl;    // to Paystack
     } catch (e2) { setServerError(e2.message); setBusy(false); }
@@ -120,7 +54,7 @@ function Buy() {
   return (
     <div className="gift">
       <div className="gift-stage">
-        <Card amountKobo={amount ? amount * 100 : null} to={form.recipientName.trim()} />
+        <Card amountKobo={amount ? amount * 100 : null} to={form.recipientName.trim()} design={design} />
       </div>
       <form className="gift__form" onSubmit={pay} noValidate>
         <p className="eyebrow">Gift card</p>
@@ -149,6 +83,11 @@ function Buy() {
             </label>
           )}
           {errors.amount && <small className="field__error" id="g-amount-error">{errors.amount}</small>}
+        </fieldset>
+
+        <fieldset className="gift__group">
+          <legend className="gift__label">Colour<span className="gift__chosen"> · {designOf(design).name}</span></legend>
+          <DesignSwatches value={design} onChange={setDesign} />
         </fieldset>
 
         <fieldset className="gift__group">
@@ -190,8 +129,9 @@ function Buy() {
 function Bought({ reference }) {
   const [card, setCard] = useState(null);
   const [error, setError] = useState(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState(null);
   const [revealed, setRevealed] = useState(false);
+  const openHref = useHref(card?.code ? `/gift/${card.code}` : '/gift-card');
 
   useEffect(() => {
     let live = true, tries = 0;
@@ -215,9 +155,9 @@ function Bought({ reference }) {
     return () => clearTimeout(t);
   }, [active]);
 
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(card.code); setCopied(true); setTimeout(() => setCopied(false), 1800); }
-    catch { setCopied(false); }
+  const copy = (what, value) => async () => {
+    try { await navigator.clipboard.writeText(value); setCopied(what); setTimeout(() => setCopied(null), 1800); }
+    catch { setCopied(null); }
   };
 
   if (error) {
@@ -246,21 +186,24 @@ function Bought({ reference }) {
     );
   }
 
-  const text = `A MASQ. gift card for you${card.recipientName ? `, ${card.recipientName}` : ''}: ${naira(card.amountKobo)}. `
-    + `Code ${card.code}, to use at checkout by ${longDate(card.expiresAt)}.`
-    + (card.message ? `\n\n${card.message}` : '');
+  // The link opens the card as they will see it; the code is in the message too.
+  const link = new URL(openHref, window.location.href).toString();
+  const text = `A MASQ. gift card for you${card.recipientName ? `, ${card.recipientName}` : ''}: ${naira(card.amountKobo)}.`
+    + (card.message ? `\n\n${card.message}` : '')
+    + `\n\nOpen it: ${link}\nCode ${card.code}, to use at checkout by ${longDate(card.expiresAt)}.`;
 
   return (
     <div className="gift">
       <div className="gift-stage">
-        <Card amountKobo={card.amountKobo} to={card.recipientName} code={card.code} until={longDate(card.expiresAt)} revealed={revealed} />
+        <Card amountKobo={card.amountKobo} to={card.recipientName} code={card.code} until={longDate(card.expiresAt)} design={card.design} revealed={revealed} />
       </div>
       <div className="gift__form">
         <p className="eyebrow">Gift card</p>
         <h1 className="gift__title">Your gift card is ready</h1>
         <p className="gift__intro">
-          Send the code to {card.recipientName || 'the person it is for'}. They type it at checkout under
-          “Have a gift card?”. Anyone with the code can spend it, so send it only to them.
+          Send it to {card.recipientName || 'the person it is for'}: the link opens this card, in this colour,
+          with your message. They type the code at checkout under “Have a gift card?”. Anyone with the
+          code or the link can spend it, so send it only to them.
         </p>
         <p className="gift__codeline">
           <span className="gift__label">Code</span>
@@ -268,8 +211,9 @@ function Bought({ reference }) {
         </p>
         {card.message && <blockquote className="gift__message">{card.message}</blockquote>}
         <div className="gift__actions">
-          <button type="button" className="btn btn--solid" onClick={copy}>{copied ? 'COPIED' : 'COPY CODE'}</button>
-          <a className="btn btn--ghost" href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer">SEND ON WHATSAPP</a>
+          <a className="btn btn--solid" href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer">SEND ON WHATSAPP</a>
+          <button type="button" className="btn btn--ghost" onClick={copy('link', link)}>{copied === 'link' ? 'LINK COPIED' : 'COPY LINK'}</button>
+          <button type="button" className="btn btn--ghost" onClick={copy('code', card.code)}>{copied === 'code' ? 'COPIED' : 'COPY CODE'}</button>
         </div>
         <Link className="gift__back" to="/">Back to the shop</Link>
       </div>
