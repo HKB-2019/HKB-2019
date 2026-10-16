@@ -209,7 +209,7 @@ function Person({ email, allTags, onChanged, onForgotten }) {
 
   const address = p.address && [
     [p.address.line1, p.address.line2].filter(Boolean).join(', '),
-    [p.address.city, p.address.state, p.address.country].filter(Boolean).join(', ')
+    [p.address.city, [p.address.state, p.address.postcode].filter(Boolean).join(' '), p.address.country].filter(Boolean).join(', ')
   ].filter(Boolean);
   const unused = allTags.filter(t => !p.tags.includes(t)).slice(0, 8);
 

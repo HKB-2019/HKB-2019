@@ -209,6 +209,9 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   list: Nigeria first (its states then a list too), every other country below.
   Until the owner switches on delivery abroad (Settings), choosing another
   country says so at once — before any address is typed — and PAY stays off.
+  Abroad, the form also asks for a **postcode / ZIP** (optional — many
+  countries have none; never asked for in Nigeria). It shows on the order in
+  the admin and has its own column in the orders spreadsheet, for the courier.
 - **An admin that runs the shop.** Orders with who and where, `MARK SENT`,
   spreadsheet export; products — name, price, badge, placement, on or off
   sale, order, sizes, counts, photo; stock take; the mailing list; delivery

@@ -60,11 +60,19 @@ function deliveryDetails(body) {
     state = match;
   }
 
+  // A postcode, for the courier abroad (DHL and the like ask for one). Optional,
+  // since many countries have none; not asked for, and not kept, in Nigeria.
+  const postcode = inNigeria ? '' : String(a.postcode ?? '').replace(/\s+/g, ' ').trim().toUpperCase();
+  if (postcode && !/^[A-Z0-9][A-Z0-9 -]{1,11}$/.test(postcode)) {
+    throw fail(400, 'Please check the postcode: letters, numbers, spaces and dashes only.');
+  }
+
   const address = {
     line1: text(a.line1, { label: 'street address', min: 3, max: 120 }),
     line2: String(a.line2 ?? '').replace(/\s+/g, ' ').trim().slice(0, 120),
     city: text(a.city, { label: 'city or area', min: 2, max: 60 }),
     state,
+    ...(postcode ? { postcode } : {}),
     country: inNigeria ? 'Nigeria' : country
   };
 
@@ -73,7 +81,7 @@ function deliveryDetails(body) {
 
 /**
  * POST /api/checkout
- * Body: { email, name, phone, address: { line1, line2, city, state, country },
+ * Body: { email, name, phone, address: { line1, line2, city, state, postcode?, country },
  *         items: [{ productId, colour, size, qty }] }
  *
  * `colour` is the colour's name for a product sold in colours, and left out

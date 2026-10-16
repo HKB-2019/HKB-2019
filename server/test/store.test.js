@@ -92,6 +92,26 @@ test('abroad is charged the international fee once it is switched on', async () 
   assert.equal((await orderRow(res.body.reference)).delivery_zone, 'international');
 });
 
+test('a postcode is kept for an address abroad, tidied; never asked for in Nigeria', async () => {
+  const { setSetting } = await import('../lib/settings.js');
+  await setSetting('delivery', { ...DELIVERY, international: { enabled: true, feeKobo: 4_500_000 } });
+  const london = { line1: '10 Long Acre', city: 'London', state: 'Greater London', country: 'United Kingdom' };
+  const res = await shop.checkout({ email: 'a@example.com', ...item(), address: { ...london, postcode: '  wc2e   9la ' } });
+  assert.equal(res.status, 200, res.raw);
+  assert.equal((await orderRow(res.body.reference)).address.postcode, 'WC2E 9LA');
+
+  const none = await shop.checkout({ email: 'b@example.com', ...item(), address: { ...london, postcode: '' } });
+  assert.equal(none.status, 200, 'optional: many countries have none');
+  assert.equal('postcode' in (await orderRow(none.body.reference)).address, false);
+
+  const bad = await shop.checkout({ email: 'c@example.com', ...item(), address: { ...london, postcode: '<script>' } });
+  assert.equal(bad.status, 400);
+  assert.match(bad.body.error, /postcode/);
+
+  const lagos = await shop.checkout({ email: 'd@example.com', ...item(), address: { ...WHO.address, postcode: '101233' } });
+  assert.equal('postcode' in (await orderRow(lagos.body.reference)).address, false);
+});
+
 test('the order keeps who and where, for the parcel', async () => {
   const res = await shop.checkout({ email: 'Ada@Example.com', ...item('tee', 'M', 2) });
   const o = await orderRow(res.body.reference);

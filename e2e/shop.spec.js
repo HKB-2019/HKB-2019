@@ -203,6 +203,25 @@ test('a customer abroad picks their country from a list, and is told at once if 
   await expect(page.locator('.delivery__sum')).toContainText('₦40,000');
   await page.selectOption('#d-country', 'Nigeria');
   await expect(page.locator('select#d-state')).toBeVisible();                 // Nigeria's states, as a list again
+  await expect(page.locator('#d-postcode')).toHaveCount(0);                   // no postcode asked for at home
+
+  // An order to London, with its postcode, reaches the owner ready for the courier.
+  await page.selectOption('#d-country', 'United Kingdom');
+  await page.fill('#d-email', 'tolu@example.com');
+  await page.fill('#d-name', 'Tolu Ade');
+  await page.fill('#d-phone', '+44 20 7946 0000');
+  await page.fill('#d-state', 'Greater London');
+  await page.fill('#d-city', 'London');
+  await page.fill('#d-line1', '10 Long Acre');
+  await page.fill('#d-postcode', 'wc2e 9la!');
+  await page.getByRole('button', { name: /^PAY/ }).click();
+  await expect(page.locator('#d-postcode-error')).toContainText('Letters, numbers');
+  await page.fill('#d-postcode', 'wc2e 9la');
+  await page.getByRole('button', { name: /^PAY/ }).click();
+  await page.click('#pay');
+  await expect(page.locator('.status__title')).toHaveText('Payment received');
+  await page.goto('/admin#orders');
+  await expect(page.locator('.admin-who__addr').first()).toContainText('London, Greater London WC2E 9LA, United Kingdom');
 });
 
 test('saved pieces can be found again, and bought from the saved list', async ({ page }) => {

@@ -496,7 +496,7 @@ adminRouter.get('/admin/orders.csv', requireAdmin, async (req, res) => {
   const naira = (k) => (k / 100).toFixed(2);
   const csv = toCsv(
     ['Reference', 'Status', 'Placed', 'Paid', 'Sent', 'Name', 'Email', 'Phone',
-     'Address', 'City', 'State', 'Country', 'Delivery', 'Items', 'Items ₦', 'Discount code', 'Discount ₦',
+     'Address', 'City', 'State', 'Postcode', 'Country', 'Delivery', 'Items', 'Items ₦', 'Discount code', 'Discount ₦',
      'Delivery ₦', 'Total ₦', 'Courier', 'Tracking'],
     orders.map(o => {
       const a = o.address ?? {};
@@ -504,7 +504,7 @@ adminRouter.get('/admin/orders.csv', requireAdmin, async (req, res) => {
         o.reference, o.status, o.created_at?.toISOString?.() ?? o.created_at,
         o.paid_at?.toISOString?.() ?? o.paid_at ?? '', o.fulfilled_at?.toISOString?.() ?? o.fulfilled_at ?? '',
         o.customer_name ?? '', o.email, o.phone ?? '',
-        [a.line1, a.line2].filter(Boolean).join(', '), a.city ?? '', a.state ?? '', a.country ?? '',
+        [a.line1, a.line2].filter(Boolean).join(', '), a.city ?? '', a.state ?? '', a.postcode ?? '', a.country ?? '',
         ZONE_LABELS[o.delivery_zone] ?? '', o.items,
         naira(o.subtotal_kobo), o.discount_code ?? '', naira(o.discount_kobo), naira(o.shipping_kobo),
         naira(o.subtotal_kobo - o.discount_kobo + o.shipping_kobo), o.courier ?? '', o.tracking ?? ''

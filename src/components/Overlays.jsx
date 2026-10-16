@@ -241,6 +241,8 @@ function DeliveryForm({ onBack }) {
     if (!d.address.state.trim()) e.state = inNigeria ? 'Choose your state.' : 'Enter your state or region.';
     if (d.address.city.trim().length < 2) e.city = 'Enter your city or area.';
     if (d.address.line1.trim().length < 3) e.line1 = 'Enter your street address.';
+    const pc = (d.address.postcode ?? '').trim();
+    if (!inNigeria && pc && !/^[A-Za-z0-9][A-Za-z0-9 -]{1,11}$/.test(pc)) e.postcode = 'Letters, numbers, spaces and dashes only.';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -329,6 +331,12 @@ function DeliveryForm({ onBack }) {
         <input id="d-line2" autoComplete="address-line2"
                value={d.address.line2} onChange={setAddr('line2')} />
       </Field>
+      {!inNigeria && (
+        <Field label="POSTCODE / ZIP" id="d-postcode" error={errors.postcode} hint="if you have one">
+          <input id="d-postcode" autoComplete="postal-code" maxLength={12} autoCapitalize="characters"
+                 value={d.address.postcode ?? ''} onChange={setAddr('postcode')} {...err('postcode')} />
+        </Field>
+      )}
       {/* Never ticked for them: news is only sent to people who asked. */}
       <label className="delivery__optin">
         <input type="checkbox" checked={Boolean(d.newsletter)}

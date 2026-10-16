@@ -319,6 +319,7 @@ test('the orders spreadsheet has the delivery details, and cannot run a formula'
   assert.deepEqual([...bytes.slice(0, 3)], [0xEF, 0xBB, 0xBF], 'marked as UTF-8 so ₦ survives Excel');
   assert.ok(res.raw.includes(`"'=HYPERLINK(""http://evil.test"",""click"")"`), 'neutralised as text');
   assert.ok(res.raw.includes('"12 Admiralty Way"'));
+  assert.ok(res.raw.split(/\r?\n/)[0].includes('"State","Postcode","Country"'), 'a postcode column, for couriers abroad');
   assert.ok(res.raw.includes('"2× THE MARK CAP (Black, ONE SIZE)"'));
   assert.ok(res.raw.includes('"2500.00"'), 'delivery fee');
 });

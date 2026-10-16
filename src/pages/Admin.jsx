@@ -319,7 +319,7 @@ function Orders({ orders, onChanged, filter, setFilter }) {
                     {o.address && (
                       <span className="admin-who__addr">
                         {[o.address.line1, o.address.line2].filter(Boolean).join(', ')}<br />
-                        {[o.address.city, o.address.state, o.address.country !== 'Nigeria' ? o.address.country : null].filter(Boolean).join(', ')}
+                        {[o.address.city, [o.address.state, o.address.postcode].filter(Boolean).join(' '), o.address.country !== 'Nigeria' ? o.address.country : null].filter(Boolean).join(', ')}
                       </span>
                     )}
                   </td>

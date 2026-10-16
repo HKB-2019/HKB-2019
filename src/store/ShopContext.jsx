@@ -66,7 +66,7 @@ export function ShopProvider({ children }) {
   // an address has no business sitting in localStorage on a shared phone.
   const [delivery, setDelivery] = useState({
     email: '', name: '', phone: '',
-    address: { line1: '', line2: '', city: '', state: '', country: 'Nigeria' }
+    address: { line1: '', line2: '', city: '', state: '', postcode: '', country: 'Nigeria' }
   });
 
   // A discount code typed in the bag: kept for this visit only, and checked

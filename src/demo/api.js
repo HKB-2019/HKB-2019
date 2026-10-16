@@ -263,6 +263,11 @@ export function askForRestock(productId, size, email, colour = '') {
 export async function startCheckout({ email, name, phone, address, newsletter }, items, discountCode) {
   const zone = openZones().find(z => z.zone === zoneFor(address));
   if (!zone) return fail('Sorry — we don’t deliver there yet.');
+  // As the server: a postcode only abroad, tidied; none kept for Nigeria.
+  const { postcode: rawPostcode = '', ...rest } = address;
+  const postcode = address.country === 'Nigeria' ? '' : String(rawPostcode).replace(/\s+/g, ' ').trim().toUpperCase();
+  if (postcode && !/^[A-Z0-9][A-Z0-9 -]{1,11}$/.test(postcode)) return fail('Please check the postcode: letters, numbers, spaces and dashes only.');
+  address = { ...rest, ...(postcode ? { postcode } : {}) };
   let discount = null;
   if (discountCode) {
     try { discount = priceCode(discountCode, bagSubtotal(items)); } catch (err) { return fail(err.message); }
