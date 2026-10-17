@@ -38,6 +38,9 @@ owner's references.
 ## Decided, unless the owner says otherwise
 
 - **Search and Journal**: left out for now; the menu keeps the pages that work.
+- **Collections and the other menu pages** (the SHOP ▾ and COLLECTIONS ▾ drop-downs
+  and what they lead to): the owner will supply designs for these. Build them from
+  those designs when they arrive; until then, don't invent them.
 - **"Trusted by a global community" with four faces**: left out until there are real customers to show.
 
 ## When it is built
