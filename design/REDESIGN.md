@@ -38,9 +38,54 @@ owner's references.
 ## Decided, unless the owner says otherwise
 
 - **Search and Journal**: left out for now; the menu keeps the pages that work.
-- **Collections and the other menu pages** (the SHOP ▾ and COLLECTIONS ▾ drop-downs
-  and what they lead to): the owner will supply designs for these. Build them from
-  those designs when they arrive; until then, don't invent them.
+- **Collections and the other menu pages**: the owner supplied designs (below). Build
+  from those; don't invent other pages.
+
+## Shop, category and product pages (supplied 17 Oct)
+
+| File | Page |
+|---|---|
+| `shop-all.webp` | Shop: all products |
+| `category-tshirts.webp` | T-Shirts |
+| `category-headwear.webp` | Headwear |
+| `category-bags.webp` | Bags & Accessories |
+| `product-page.webp` | A product (The Face Tee) |
+
+**Category pages share one layout:**
+1. A hero with a label (SHOP, T-SHIRTS…), a two-line serif headline with one violet word
+   ("Wear Identity. Live **Culture.**", "More Than A **Cap.**", "Carry Your **Culture.**"),
+   a short line, a violet button, the photo on the right, and the brush "WEAR IDENTITY LIVE CULTURE".
+2. A row of sub-category panels (All / T-Shirts / Headwear… or All Headwear / Caps / Bucket
+   Hats / Beanies), the chosen one outlined in violet, each with a → button.
+3. A filter column on the left: Category (with counts), Price range slider, Colour,
+   Size, Availability (In stock / Pre-order), Collection, Apply Filters and Reset.
+4. A grid of product panels with a count ("24 PRODUCTS"), Sort by, NEW badge, a heart
+   (saved), colour dots, a quick-add bag button, and page numbers.
+5. A "DROP 01 Urban Rituals" banner with EXPLORE THE COLLECTION →.
+6. The footer (ours stays, as agreed).
+
+**Product page:** breadcrumbs; thumbnails on the left, a large photo with arrows and a
+full-screen button; category label, name, price, SKU; colour by name ("Color: Royal Violet")
+with swatches; size buttons and Size Guide; stock line; quantity with − / +; Add to Cart and
+Buy Now; three reassurance lines (delivery, returns, secure payment); a "See it closer" video
+panel; tabs (Description, Materials, Size & Fit, Shipping, Returns) with a ticked list;
+"Complete the Look" and "You Might Also Like" rows.
+
+**What these need that the shop doesn't have yet:**
+- **Categories and sub-categories** on products, chosen in the admin (T-Shirts: Graphic,
+  Essential, Limited Edition; Headwear: Caps, Bucket Hats, Beanies; Bags: Backpacks,
+  Crossbody, Tote; Accessories; Outerwear), and a **Collection** (Drop 01, Essentials, Limited Edition).
+- **Filters** worked by the server or the page: price, colour, size, in stock, pre-order.
+- **Pre-order**: a product that can be ordered before it is in stock.
+- **SKU**, **materials**, **size & fit** text per product, edited in the admin.
+- A **"New"** flag, and **"Complete the look"** picks per product.
+
+**Ask the owner before building:**
+- **Reviews and stars** ("4.8 (128 reviews)"): only real ones. Build a reviews feature, or leave the stars out.
+- **"Fast delivery 2–5 business days", "7-day return policy"**: must match the shop's real terms.
+- The many **new products** in the pictures (bucket hats, beanies, totes, duffle, tees…): they
+  appear once the owner adds them in the admin; the pages are built to hold them.
+- The **"Trusted by a global community"** faces appear on these pages too: still left out until real.
 - **"Trusted by a global community" with four faces**: left out until there are real customers to show.
 
 ## When it is built
