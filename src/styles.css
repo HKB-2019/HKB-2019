@@ -1202,12 +1202,21 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 .gift__back:hover{ color:var(--ink); }
 .gift__left{ font-size:13px; color:var(--ink-dim); }
 .gift__how{ margin:0; font-size:14px; line-height:1.6; color:var(--ink-dim); }
-.gift__topup-open{
-  justify-self:start; display:block; margin-top:26px; text-align:left; padding:6px 0; background:none; border:0; border-bottom:1px solid var(--line);
-  font:inherit; font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--ink-dim); cursor:pointer;
-}
-.gift__topup-open:hover{ color:var(--ink); border-color:var(--violet-soft); }
+.gift__topup-open{ margin-top:26px; }
 .gift__topup{ margin-top:30px; padding-top:26px; border-top:1px solid var(--line-soft); display:grid; gap:14px; }
+.gift__topup--first{ margin-top:30px; padding-top:0; border-top:0; }
+/* Buy a card | Top up a card, at the head of /gift-card */
+.gift__modes{ display:flex; gap:28px; margin:0 0 clamp(28px,4vw,44px); border-bottom:1px solid var(--line-soft); }
+.gift__mode{
+  padding:0 0 12px; margin-bottom:-1px; border-bottom:1px solid transparent;
+  font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--ink-faint); transition:color .25s, border-color .25s;
+}
+.gift__mode:hover{ color:var(--ink); }
+.gift__mode[aria-current="page"]{ color:var(--ink); border-color:var(--violet-soft); }
+.gift__find{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:end; }
+.gift__find .btn{ height:50px; padding:0 22px; }
+.gift__found{ margin:18px 0 0; font-size:14px; color:var(--ink-dim); }
+.gift__found strong{ color:var(--ink); font-weight:400; letter-spacing:.12em; }
 .gift__topup-note{ margin:0 0 22px; padding:12px 14px; font-size:14px; line-height:1.5; border-left:1px solid var(--line); color:var(--ink-dim); }
 .gift__topup-note.is-good{ border-color:var(--good); color:var(--ink); }
 .gift__topup-note.is-bad{ border-color:var(--bad-line); color:var(--ink); }

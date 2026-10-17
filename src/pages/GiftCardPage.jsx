@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useHref, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { buyGiftCard, getGiftCard } from '../lib/api.js';
+import { buyGiftCard, getGiftCard, openGiftCard } from '../lib/api.js';
 import { naira, isEmail } from '../lib/delivery.js';
 import Card, { DesignSwatches, designOf, longDate } from '../components/GiftCard.jsx';
+import TopUp from '../components/GiftTopUp.jsx';
 
 /* /gift-card — buy a MASQ. gift card, and (with ?reference=, where Paystack
- * sends the buyer back) see it once paid: its code, to copy or send.
+ * sends the buyer back) see it once paid: its code, to copy or send. With
+ * ?topup, add money to a card someone already has, found by its code.
  *
  * The card is shown like an artefact in the gallery: on a dark stage (dark in
  * both themes, like the hero), with a label under it (src/components/GiftCard.jsx).
@@ -17,6 +19,74 @@ import Card, { DesignSwatches, designOf, longDate } from '../components/GiftCard
 
 const PRESETS = [10_000, 25_000, 50_000, 100_000];
 const MIN = 5_000, MAX = 500_000;
+
+/** Buy a card | Top up a card. */
+function Modes({ topup }) {
+  return (
+    <nav className="gift__modes" aria-label="Gift cards">
+      <Link className="gift__mode" to="/gift-card" aria-current={topup ? undefined : 'page'}>Buy a card</Link>
+      <Link className="gift__mode" to="/gift-card?topup" aria-current={topup ? 'page' : undefined}>Top up a card</Link>
+    </nav>
+  );
+}
+
+/** Top up a card someone already has: find it by its code, then add money. */
+function TopUpFind() {
+  const [code, setCode] = useState('');
+  const [card, setCard] = useState(null);
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  const find = async (e) => {
+    e.preventDefault();
+    setBusy(true); setError(null); setCard(null);
+    try {
+      const c = await openGiftCard(code);
+      if (c.state === 'expired') setError('This card has run out, so money cannot be added to it.');
+      else if (c.state === 'cancelled') setError('This card has been cancelled, so money cannot be added to it.');
+      else setCard(c);
+    } catch (err) { setError(err.message); }
+    setBusy(false);
+  };
+
+  return (
+    <div className="gift">
+      <div className="gift-stage">
+        <Card amountKobo={card?.amountKobo ?? null} to={card?.recipientName} code={card?.code} design={card?.design}
+              until={card ? longDate(card.expiresAt) : undefined}
+              lines={card ? ['MASQ. gift card', `${naira(card.balanceKobo)} on it now`, `Use by ${longDate(card.expiresAt)} · pieces and delivery`]
+                           : ['MASQ. gift card', 'Your card shows here', 'Type its code to find it']} />
+      </div>
+      <div className="gift__form">
+        <Modes topup />
+        <p className="eyebrow">Gift card</p>
+        <h1 className="gift__title">Top up a card</h1>
+        <p className="gift__intro">
+          Add money to a MASQ. gift card you have, or one you gave. Type its code: it is on the back of the
+          card, and in the message it came with.
+        </p>
+        <form className="gift__find" onSubmit={find} noValidate>
+          <label className="field field--tight" htmlFor="t-code">
+            <span>CARD CODE</span>
+            <input id="t-code" autoCapitalize="characters" autoComplete="off" spellCheck={false} placeholder="MASQ-XXXX-XXXX"
+                   value={code} onChange={(e) => { setCode(e.target.value); setError(null); }}
+                   aria-invalid={error ? true : undefined} aria-describedby={error ? 't-code-error' : undefined} />
+          </label>
+          <button type="submit" className="btn btn--ghost" disabled={busy || !code.trim()}>{busy ? 'FINDING…' : 'FIND CARD'}</button>
+        </form>
+        {error && <small className="field__error" id="t-code-error" role="alert">{error}</small>}
+        {card && (
+          <>
+            <p className="gift__found">
+              <strong>{card.code}</strong> · {naira(card.balanceKobo)} on it · use by {longDate(card.expiresAt)}
+            </p>
+            <TopUp key={card.code} code={card.code} balanceKobo={card.balanceKobo} startOpen />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function Buy() {
   const [choice, setChoice] = useState(25_000);       // a preset, or 'other'
@@ -57,6 +127,7 @@ function Buy() {
         <Card amountKobo={amount ? amount * 100 : null} to={form.recipientName.trim()} design={design} />
       </div>
       <form className="gift__form" onSubmit={pay} noValidate>
+        <Modes />
         <p className="eyebrow">Gift card</p>
         <h1 className="gift__title">Give MASQ.</h1>
         <p className="gift__intro">A card for any piece in the shop, and its delivery. Spend it in one order or over several, within twelve months.</p>
@@ -230,7 +301,7 @@ export default function GiftCardPage() {
         <Link to="/" className="logo">MASQ<span>.</span></Link>
       </header>
       <motion.main className="gift-page__main" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-        {reference ? <Bought reference={reference} /> : <Buy />}
+        {reference ? <Bought reference={reference} /> : params.has('topup') ? <TopUpFind /> : <Buy />}
       </motion.main>
     </div>
   );

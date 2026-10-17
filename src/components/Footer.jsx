@@ -57,6 +57,7 @@ export default function Footer() {
               {section('#craft', 'About MASQ.')}
               {panel('saved', 'Saved pieces')}
               <li><Link to="/gift-card">Gift cards</Link></li>
+              <li><Link to="/gift-card?topup">Top up a gift card</Link></li>
             </ul>
           </div>
           <div className="footer__col">

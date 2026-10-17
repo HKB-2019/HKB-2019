@@ -1,87 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { openGiftCard, topUpGiftCard, getTopup } from '../lib/api.js';
-import { naira, isEmail } from '../lib/delivery.js';
+import { openGiftCard, getTopup } from '../lib/api.js';
+import { naira } from '../lib/delivery.js';
 import Card, { longDate } from '../components/GiftCard.jsx';
+import TopUp from '../components/GiftTopUp.jsx';
 
 /* /gift/:code — the card as the person given it sees it, from the link the
  * buyer sends: the same colour, their name and the message on it, then the
  * card turns over to show the code, with what is left and how to spend it.
  * The code is the key, as it is at checkout (POST /api/gift-cards/open).
- * Money can be added here too (a top-up): paid on Paystack, which sends the
- * payer back here with ?reference=gtop-…, and added once Paystack confirms. */
-
-const TOPUP_PRESETS = [5_000, 10_000, 25_000, 50_000];
-const MIN = 5_000, MAX = 500_000;
-
-/** Add money: an amount and an email for the receipt, then Paystack. */
-function TopUp({ code, balanceKobo }) {
-  const [open, setOpen] = useState(false);
-  const [choice, setChoice] = useState(10_000);
-  const [other, setOther] = useState('');
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const otherNaira = Number(other.replace(/[,\s₦]/g, ''));
-  const amount = choice === 'other' ? (Number.isInteger(otherNaira) && otherNaira >= MIN && otherNaira <= MAX ? otherNaira : null) : choice;
-  const room = MAX * 100 - balanceKobo;
-
-  const pay = async (e) => {
-    e.preventDefault();
-    if (!amount) return setError(`Choose an amount from ${naira(MIN * 100)} to ${naira(MAX * 100)}, in whole naira.`);
-    if (amount * 100 > room) return setError(`A card holds up to ${naira(MAX * 100)}. You can add up to ${naira(Math.floor(room / 100_00) * 100_00)} to this one.`);
-    if (!isEmail(email)) return setError('Enter your email, for the receipt.');
-    setBusy(true); setError(null);
-    try {
-      const { authorizationUrl } = await topUpGiftCard({ code, amountKobo: amount * 100, email: email.trim() });
-      window.location.href = authorizationUrl;    // to Paystack
-    } catch (err) { setError(err.message); setBusy(false); }
-  };
-
-  if (!open) {
-    return <button type="button" className="gift__topup-open" onClick={() => setOpen(true)}>Add money to this card</button>;
-  }
-  return (
-    <form className="gift__topup" onSubmit={pay} noValidate>
-      <fieldset className="gift__group">
-        <legend className="gift__label">Add money</legend>
-        <div className="gift__tiles" role="radiogroup" aria-label="Amount to add">
-          {TOPUP_PRESETS.map(n => (
-            <label key={n} className={`gift__tile${choice === n ? ' is-on' : ''}`}>
-              <input type="radio" name="topup" checked={choice === n} onChange={() => { setChoice(n); setError(null); }} />
-              {naira(n * 100)}
-            </label>
-          ))}
-          <label className={`gift__tile gift__tile--other${choice === 'other' ? ' is-on' : ''}`}>
-            <input type="radio" name="topup" checked={choice === 'other'} onChange={() => { setChoice('other'); setError(null); }} />
-            Other amount
-          </label>
-        </div>
-        {choice === 'other' && (
-          <label className="field field--tight gift__other" htmlFor="t-other">
-            <span>AMOUNT IN NAIRA<em className="field__hint"> · {naira(MIN * 100)} or more</em></span>
-            <input id="t-other" inputMode="numeric" placeholder="e.g. 15000" value={other} autoFocus
-                   onChange={(e) => { setOther(e.target.value); setError(null); }} />
-          </label>
-        )}
-        <label className="field field--tight" htmlFor="t-email">
-          <span>YOUR EMAIL<em className="field__hint"> · for the receipt</em></span>
-          <input id="t-email" type="email" autoComplete="email" inputMode="email" value={email}
-                 onChange={(e) => { setEmail(e.target.value); setError(null); }} />
-        </label>
-      </fieldset>
-      <button type="submit" className="btn btn--solid btn--block" disabled={busy}>
-        {busy ? 'TAKING YOU TO PAYSTACK…' : amount ? `ADD ${naira(amount * 100)}` : 'ADD MONEY'}
-      </button>
-      <p className="drawer__note drawer__note--center">
-        Paid by card, bank transfer or USSD on Paystack. It is on the card as soon as it is paid,
-        and the card then lasts twelve months from today.
-      </p>
-      <p className={`form-msg${error ? ' is-show is-error' : ''}`} role="status" aria-live="polite">{error ?? ''}</p>
-    </form>
-  );
-}
+ * Money can be added here too (a top-up, src/components/GiftTopUp.jsx): paid
+ * on Paystack, which sends the payer back here with ?reference=gtop-…, and
+ * added once Paystack confirms. */
 
 /** Back from Paystack after adding money: is it on the card yet? */
 function useTopup(reference, onPaid) {

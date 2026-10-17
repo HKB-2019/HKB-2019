@@ -92,6 +92,15 @@ test('a gift card is bought, paid for, and spent over two orders', async ({ page
   await expect(page.locator('.gift__topup-note')).toContainText('₦10,000 added. ₦10,000 on the card now');
   await expect(page.getByRole('heading', { name: 'For you, Kemi' })).toBeVisible();
 
+  // Anyone can find it to top up from the foot of the shop, by its code.
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Top up a gift card' }).click();
+  await expect(page.getByRole('heading', { name: 'Top up a card' })).toBeVisible();
+  await page.getByLabel('CARD CODE').fill(code.toLowerCase().replace(/-/g, ' '));
+  await page.getByRole('button', { name: 'FIND CARD' }).click();
+  await expect(page.locator('.gift__found')).toContainText(`${code} · ₦10,000 on it`);
+  await expect(page.getByRole('button', { name: 'ADD ₦10,000' })).toBeVisible();
+
   // The owner: where it went, and a card of their own.
   await signIn(page);
   await page.goto('/admin#sales');
