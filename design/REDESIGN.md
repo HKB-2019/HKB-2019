@@ -49,6 +49,8 @@ owner's references.
 | `category-tshirts.webp` | T-Shirts |
 | `category-headwear.webp` | Headwear |
 | `category-bags.webp` | Bags & Accessories |
+| `category-outerwear.webp` | Outerwear (Hoodies, Jackets, Layered Pieces) |
+| `menu-shop-dropdown.webp` | The SHOP ▾ menu, open |
 | `product-page.webp` | A product (The Face Tee) |
 
 **Category pages share one layout:**
@@ -63,6 +65,18 @@ owner's references.
    (saved), colour dots, a quick-add bag button, and page numbers.
 5. A "DROP 01 Urban Rituals" banner with EXPLORE THE COLLECTION →.
 6. The footer (ours stays, as agreed).
+
+**The SHOP ▾ menu (open):** a wide panel under the menu bar in four columns: SHOP BY
+CATEGORY (T-Shirts, Headwear, Bags & Accessories, Outerwear, Accessories, each with a small
+photo, a one-line description and →, then "Shop All Products"); FEATURED THIS SEASON (one
+large product card); POPULAR PICKS (four small product cards with colour dots and quick add);
+and a DROP 01 Urban Rituals panel with EXPLORE THE DROP → and "WEAR IDENTITY. LIVE CULTURE."
+COLLECTIONS ▾ is expected to open the same way (design not supplied yet).
+
+**Reassurance strip:** Fast Delivery (2–5 business days), Easy Returns (7-day return policy),
+Secure Payment (100% secure checkout): under the hero in the menu design, and above the
+footer on the Outerwear page. The Outerwear page's Drop 01 banner also carries the play
+button and People / Places / Patterns / Purpose.
 
 **Product page:** breadcrumbs; thumbnails on the left, a large photo with arrows and a
 full-screen button; category label, name, price, SKU; colour by name ("Color: Royal Violet")
