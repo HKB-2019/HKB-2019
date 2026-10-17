@@ -1457,7 +1457,10 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
   .admin-stock__table td[colspan]{ grid-column:1 / -1; }
 }
 /* SALES → Gift cards: a card's code opens where it was spent. */
-.admin-gift__code{ padding:0; font-size:13px; letter-spacing:.06em; color:var(--ink); text-decoration:underline; text-decoration-color:var(--line); text-underline-offset:4px; }
+.admin-gift__filters{ margin:22px 0 14px; }
+.admin-gift__from{ display:block; font-size:13px; color:var(--ink-dim); }
+.admin-gift__from--shop{ color:var(--ink); }
+.admin-gift__code{ padding:0; white-space:nowrap; font-size:13px; letter-spacing:.06em; color:var(--ink); text-decoration:underline; text-decoration-color:var(--line); text-underline-offset:4px; }
 .admin-gift__code:hover, .admin-gift__code[aria-expanded="true"]{ text-decoration-color:var(--violet-soft); }
 .admin-gift__detail > td{ background:rgb(var(--violet-soft-rgb) / .05); }
 .admin-gift__more{ display:grid; gap:8px; font-size:13px; color:var(--ink-dim); }

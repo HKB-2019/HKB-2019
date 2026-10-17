@@ -91,11 +91,8 @@ function sampleStore() {
       rates: { ...DEFAULT_RATES }
     },
     homeImages: { hero: null, band: null, film: null },
-    giftCards: [
-      { id: 1, code: 'MASQ-7K3P-Q9XD', amountKobo: 2500000, balanceKobo: 2500000, status: 'active', reference: 'gift-' + '7'.repeat(24),
-        buyerEmail: 'tolu@example.com', recipientName: 'Kemi', recipientEmail: null, message: 'Happy birthday. Wear it well.',
-        note: null, design: 'violet', activatedAt: ago(48), expiresAt: new Date(Date.now() + 364 * 86_400_000).toISOString(), uses: [] }
-    ],
+    giftCards: sampleGifts(),
+    giftSamples: true,
     customers: {
       'chidi@example.com': { tags: ['VIP'], notes: 'Bought two hoodies for his brother. Asks about the next drop.', createdAt: ago(190) }
     },
@@ -107,10 +104,32 @@ function sampleStore() {
 
 let store = load();
 
+/* Cards bought in the shop, for the admin to show: one untouched, one part spent. */
+function sampleGifts() {
+  const until = (days) => new Date(Date.now() + days * 86_400_000).toISOString();
+  return [
+    { id: 1, code: 'MASQ-7K3P-Q9XD', amountKobo: 2500000, balanceKobo: 2500000, status: 'active', reference: 'gift-' + '7'.repeat(24),
+      buyerEmail: 'tolu@example.com', recipientName: 'Kemi', recipientEmail: null, message: 'Happy birthday. Wear it well.',
+      note: null, design: 'violet', activatedAt: ago(48), expiresAt: until(364), uses: [] },
+    { id: 9001, code: 'MASQ-4HNW-T8RE', amountKobo: 5000000, balanceKobo: 1350000, status: 'active', reference: 'gift-' + '4'.repeat(24),
+      buyerEmail: 'ada@example.com', recipientName: 'Bisi', recipientEmail: 'bisi@example.com', message: 'For the new job.',
+      note: null, design: 'teal', activatedAt: ago(24 * 20), expiresAt: until(345),
+      uses: [{ orderReference: 'MASQ-1042', amountKobo: -3650000, kind: 'spend', at: ago(24 * 6) }] }
+  ];
+}
+
 function load() {
   try {
     const saved = JSON.parse(localStorage.getItem(KEY));
-    if (saved?.products) return saved;
+    if (saved?.products) {
+      // A preview begun before these samples were added gets them now.
+      if (!saved.giftSamples) {
+        const have = saved.giftCards ?? [];
+        saved.giftCards = [...have, ...sampleGifts().filter(s => !have.some(g => g.code === s.code || g.id === s.id))];
+        saved.giftSamples = true;
+      }
+      return saved;
+    }
   } catch { /* fall through to the sample */ }
   return sampleStore();
 }

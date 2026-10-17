@@ -105,7 +105,8 @@ test('a gift card is bought, paid for, and spent over two orders', async ({ page
   await signIn(page);
   await page.goto('/admin#sales');
   const row = page.locator('tr', { has: page.getByRole('button', { name: code }) });
-  await expect(row).toContainText('bought by tolu@example.com');
+  await expect(row).toContainText('Bought in the shop');
+  await expect(row).toContainText('by tolu@example.com');
   await expect(row).toContainText('working');
   await row.getByRole('button', { name: code }).click();
   await expect(page.locator('.admin-gift__more li')).toHaveCount(3);
@@ -115,5 +116,13 @@ test('a gift card is bought, paid for, and spent over two orders', async ({ page
   await page.getByLabel(/^For/).fill('Giveaway winner');
   await page.getByRole('button', { name: 'MAKE CARD' }).click();
   await expect(page.locator('.admin-gift tr.is-changed')).toContainText('Giveaway winner');
-  await expect(page.locator('.admin-gift tr.is-changed')).toContainText('made here');
+  await expect(page.locator('.admin-gift tr.is-changed')).toContainText('Made here');
+
+  // Each kind on its own: the card bought in the shop, then the one made here.
+  await page.getByRole('button', { name: /^bought in the shop \(1\)$/ }).click();
+  await expect(page.locator('.admin-gift tbody tr', { hasText: 'Giveaway winner' })).toHaveCount(0);
+  await expect(page.locator('.admin-gift tbody tr', { has: page.getByRole('button', { name: code }) })).toHaveCount(1);
+  await page.getByRole('button', { name: /^made here \(1\)$/ }).click();
+  await expect(page.locator('.admin-gift tbody tr', { hasText: 'Giveaway winner' })).toHaveCount(1);
+  await expect(page.locator('.admin-gift tbody tr', { has: page.getByRole('button', { name: code }) })).toHaveCount(0);
 });

@@ -80,7 +80,11 @@ function CardRow({ c, isNew, onChanged }) {
       <tr className={`${c.state === 'active' ? '' : 'is-off'}${isNew ? ' is-changed' : ''}`}>
         <td>
           <button type="button" className="admin-gift__code mono" aria-expanded={open} onClick={() => setOpen(o => !o)}>{c.code}</button>
-          <em className="admin-sub">{c.madeBy === 'shop' ? 'made here' : `bought by ${c.buyerEmail}`}</em>
+        </td>
+        <td>
+          {c.madeBy === 'shop'
+            ? <span className="admin-gift__from">Made here</span>
+            : <><span className="admin-gift__from admin-gift__from--shop">Bought in the shop</span><em className="admin-sub">by {c.buyerEmail}</em></>}
         </td>
         <td className="num">{naira(c.amountKobo)}</td>
         <td className="num">{naira(c.balanceKobo)}</td>
@@ -100,7 +104,7 @@ function CardRow({ c, isNew, onChanged }) {
       </tr>
       {open && (
         <tr className="admin-gift__detail">
-          <td colSpan={7}>
+          <td colSpan={8}>
             <div className="admin-gift__more">
               {c.message && <p><span>Message</span>{c.message}</p>}
               {c.recipientEmail && <p><span>Their email</span>{c.recipientEmail}</p>}
@@ -138,9 +142,12 @@ export default function GiftCardsSection() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [made, setMade] = useState(null);
+  const [from, setFrom] = useState('');   // '', 'customer' or 'shop'
 
   const load = () => adminGiftCards().then(setData).catch(err => setError(err.message));
   useEffect(() => { load(); }, []);
+
+  const shown = data ? data.cards.filter(c => !from || c.madeBy === from) : [];
 
   return (
     <>
@@ -167,13 +174,22 @@ export default function GiftCardsSection() {
               <div className="admin-tile" key={l}><span className="admin-tile__label">{l}</span><span className="admin-tile__value">{v}</span></div>
             ))}
           </div>
+          <div className="admin-filters admin-gift__filters">
+            {[['', 'all'], ['customer', 'bought in the shop'], ['shop', 'made here']].map(([k, l]) => (
+              <button key={k || 'all'} className={`admin-chip${from === k ? ' is-on' : ''}`} onClick={() => setFrom(k)}>
+                {l} ({data.cards.filter(c => !k || c.madeBy === k).length})
+              </button>
+            ))}
+          </div>
           {data.cards.length === 0 ? (
             <p className="admin-empty">No gift cards yet. Customers buy them from “Gift cards” at the foot of every page.</p>
+          ) : shown.length === 0 ? (
+            <p className="admin-empty">{from === 'customer' ? 'No cards bought in the shop yet.' : 'No cards made here yet.'}</p>
           ) : (
             <div className="admin-table-wrap">
               <table className="admin-table admin-gift">
-                <thead><tr><th>Code</th><th className="num">Amount</th><th className="num">Left</th><th>For</th><th>Use by</th><th>Status</th><th></th></tr></thead>
-                <tbody>{data.cards.map(c => <CardRow key={c.id} c={c} isNew={c.id === made} onChanged={load} />)}</tbody>
+                <thead><tr><th>Code</th><th>From</th><th className="num">Amount</th><th className="num">Left</th><th>For</th><th>Use by</th><th>Status</th><th></th></tr></thead>
+                <tbody>{shown.map(c => <CardRow key={c.id} c={c} isNew={c.id === made} onChanged={load} />)}</tbody>
               </table>
             </div>
           )}
