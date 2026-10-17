@@ -1151,17 +1151,17 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
   position:absolute; inset:0; background:var(--card-doodle, #451a6b); transition:background-color .5s var(--ease);
   -webkit-mask:var(--doodle) center / 100% 100% no-repeat; mask:var(--doodle) center / 100% 100% no-repeat;
 }
-/* the wordmark and the amount at a card's usual sizes: the logo about a fifth
+/* the wordmark and the amount at a card's usual sizes: the logo about a sixth
    of the width, the amount the clear second thing, not a headline */
-.giftcard__wordmark{ left:5.3cqw; top:5.4cqw; width:19cqw; height:auto; }
+.giftcard__wordmark{ left:5.3cqw; top:5.4cqw; width:15cqw; height:auto; }
 .giftcard__kind{
   position:absolute; right:5.38cqw; top:5.62cqw; margin-right:-.41em; line-height:1;
   font-size:max(7px, 2.96cqw); letter-spacing:.41em; text-transform:uppercase;
 }
 .giftcard__mask{ left:73.2cqw; top:19.9cqw; height:20.2cqw; width:auto; }
 .giftcard__amount{
-  position:absolute; left:4.95cqw; top:36cqw; font-family:var(--serif); font-weight:700; line-height:1;
-  font-size:11cqw; font-variant-numeric:lining-nums tabular-nums; letter-spacing:-.03em;
+  position:absolute; left:5cqw; top:37.8cqw; font-family:var(--serif); font-weight:700; line-height:1;
+  font-size:9cqw; font-variant-numeric:lining-nums tabular-nums; letter-spacing:-.02em;
 }
 .giftcard__amount span{ display:inline-block; }
 .giftcard__for{
