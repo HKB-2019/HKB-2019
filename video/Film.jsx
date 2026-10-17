@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import {
-  AbsoluteFill, Sequence, Img, staticFile, useCurrentFrame, useVideoConfig,
+  AbsoluteFill, Sequence, Img, Audio, staticFile, useCurrentFrame, useVideoConfig,
   interpolate, Easing, random, delayRender, continueRender
 } from 'remotion';
 
 /* The MASQ. brand film: 40 seconds, 1920 × 1080, shot as if through one
  * camera: a 2.39:1 frame, fine grain, a vignette and one colour grade over
  * everything; words revealed from behind an edge, never faded; light moving
- * across thread and cloth. Silent: music is laid in later, once the owner has
- * a track they hold the rights to.
+ * across thread and cloth. The score is original, made for the film by
+ * video/score.py and timed to these scenes.
  *
  *  1  A line, then the five symbols drawn by hand        5s
  *  2  URBAN RITUALS · Drop 01                            3.5s
@@ -58,7 +58,7 @@ function Surface() {
   const f = useCurrentFrame();
   return (
     <AbsoluteFill style={{ pointerEvents: 'none' }}>
-      <svg width={W} height={H} style={{ position: 'absolute', inset: 0, mixBlendMode: 'overlay', opacity: 0.22 }}>
+      <svg width={W} height={H} style={{ position: 'absolute', inset: 0, mixBlendMode: 'overlay', opacity: 0.12 }}>
         <filter id="grain">
           <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed={f % 97} stitchTiles="stitch" />
           <feColorMatrix type="saturate" values="0" />
@@ -195,16 +195,24 @@ function Opening({ length }) {
   const fade = useFade(length, 1, 18);
   const line = interpolate(f, [8, 44], [0, 1], { ...clamp, easing: OUT });
   const lift = interpolate(f, [40, 70], [0, 1], { ...clamp, easing: OUT });
-  const drift = interpolate(f, [0, length], [1, 1.05], clamp);
+  // once drawn, the symbols settle beneath and the mask is uncovered above them
+  const settle = interpolate(f, [104, 140], [0, 1], { ...clamp, easing: OUT });
+  const reveal = interpolate(f, [118, 168], [0, 1], { ...clamp, easing: OUT });
+  const drift = interpolate(f, [0, length], [1, 1.04], clamp);
   return (
     <AbsoluteFill style={{ background: '#000', opacity: fade, alignItems: 'center', justifyContent: 'center' }}>
-      <Glow x="50%" y="50%" size={1000} strength={0.16 * lift} />
+      <Glow x="50%" y="46%" size={1000} strength={0.12 * lift + 0.14 * reveal} />
       <Dust seed="o" count={30} strength={lift} />
-      {/* a hairline of violet, then the symbols drawn above it */}
       <div style={{ position: 'absolute', top: 620, left: '50%', width: 760, height: 2, background: VIOLET,
-                    transform: `translateX(-50%) scaleX(${line})`, opacity: 0.7 * (1 - lift * 0.6) }} />
-      <div style={{ display: 'flex', gap: 70, transform: `translateY(${-30 + (1 - lift) * 20}px) scale(${drift})` }}>
+                    transform: `translateX(-50%) scaleX(${line})`, opacity: 0.7 * (1 - lift * 0.6) * (1 - settle) }} />
+      <div style={{ position: 'absolute', top: 470 + settle * 330, left: '50%', display: 'flex', gap: 70,
+                    transform: `translate(-50%, ${(1 - lift) * 20}px) scale(${1 - settle * 0.45})`, transformOrigin: 'center top' }}>
         {SYMBOLS.map((_, i) => <Symbol key={i} index={i} at={44 + i * 12} size={120} />)}
+      </div>
+      <div style={{ position: 'absolute', top: 178, left: '50%', transform: `translateX(-50%) scale(${drift})`,
+                    clipPath: `inset(${(1 - reveal) * 100}% 0 0 0)` }}>
+        <Img src={staticFile('img/mask.webp')} style={{ height: 560, display: 'block', opacity: reveal }} />
+        <Sequence from={150}><Sweep dur={40} strength={0.35} width={9} /></Sequence>
       </div>
     </AbsoluteFill>
   );
@@ -243,19 +251,16 @@ function Embroidery({ length }) {
   const f = useCurrentFrame();
   const fade = useFade(length, 14, 14);
   const p = interpolate(f, [0, length], [0, 1], { ...clamp, easing: SLOW });
-  const h = 820, w = Math.round(3800 * h / 548);
+  const h = 820, w = Math.round(6934 * h / 1000);
   const x = -(w - W) * (0.12 + p * 0.42);
-  const scale = 1 + p * 0.04;
+  const scale = 1 + p * 0.02;
   const words = ['People.', 'Places.', 'Patterns.', 'Purpose.'];
   const each = Math.floor((length - 24) / words.length);
   return (
     <AbsoluteFill style={{ background: '#000', opacity: fade }}>
       {/* sharp in the middle, softer at the edges: a shallow lens */}
       <div style={{ position: 'absolute', left: 0, right: 0, top: (H - h) / 2, height: h, overflow: 'hidden' }}>
-        <Img src={staticFile('img/film-still.webp')} style={{ position: 'absolute', height: h, width: w, maxWidth: 'none', left: x, transform: `scale(${scale})`, ...grade, filter: 'blur(3px) contrast(1.1) brightness(.8)' }} />
-        <div style={{ position: 'absolute', inset: 0, WebkitMaskImage: 'radial-gradient(ellipse 52% 70% at 55% 50%, #000 40%, transparent 80%)' }}>
-          <Img src={staticFile('img/film-still.webp')} style={{ position: 'absolute', height: h, width: w, maxWidth: 'none', left: x, transform: `scale(${scale})`, ...grade }} />
-        </div>
+        <Img src={staticFile('img/film-still.webp')} style={{ position: 'absolute', height: h, width: w, maxWidth: 'none', left: x, transform: `scale(${scale})`, ...grade }} />
         <Sweep at={10} dur={length - 20} angle={100} strength={0.2} width={10} />
       </div>
       <AbsoluteFill style={{ background: 'linear-gradient(to right, rgba(0,0,0,.85) 0%, rgba(0,0,0,.2) 38%, rgba(0,0,0,0) 60%)' }} />
@@ -283,22 +288,22 @@ function Swap({ text, length, last }) {
 }
 
 const PIECES = [
-  ['img/prod-tee@2x.webp', 'The Face Tee', '50% 35%'],
+  ['img/hero.webp', 'The Face Tee', '67% 62%', 1.55],     // the print, close, from the approved photo
   ['img/prod-cap@2x.webp', 'The Mark Cap', '50% 55%'],
   ['img/prod-backpack@2x.webp', 'The Carrier Backpack', '50% 45%'],
   ['img/prod-scarf@2x.webp', 'The Pattern Scarf', '50% 50%']
 ];
 
-function Piece({ length, src, name, position, index }) {
+function Piece({ length, src, name, position, index, zoom = 1 }) {
   const f = useCurrentFrame();
   // each cut opens a little close and eases out: a camera settling
-  const s = interpolate(f, [0, length], [1.16, 1.05], { ...clamp, easing: OUT });
+  const s = zoom * interpolate(f, [0, length], [1.16, 1.05], { ...clamp, easing: OUT });
   const flash = interpolate(f, [0, 3], [0.55, 0], clamp);
   const slide = interpolate(f, [0, 14], [60, 0], { ...clamp, easing: OUT });
   return (
     <AbsoluteFill style={{ background: '#040404' }}>
       <div style={{ position: 'absolute', right: 120, top: 0, width: 1000, height: H, overflow: 'hidden' }}>
-        <Img src={staticFile(src)} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: position, transform: `scale(${s}) translateX(${slide}px)`, ...grade }} />
+        <Img src={staticFile(src)} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: position, transformOrigin: position, transform: `scale(${s}) translateX(${slide}px)`, ...grade }} />
         <AbsoluteFill style={{ background: 'linear-gradient(to right, #040404 0%, rgba(4,4,4,0) 30%, rgba(4,4,4,0) 80%, #040404 100%)' }} />
         <Sweep at={6} dur={length} strength={0.14} />
       </div>
@@ -316,9 +321,9 @@ function Pieces({ length }) {
   const each = Math.round(length / PIECES.length);
   return (
     <AbsoluteFill style={{ background: '#040404' }}>
-      {PIECES.map(([src, name, position], i) => (
+      {PIECES.map(([src, name, position, zoom], i) => (
         <Sequence key={src} from={i * each} durationInFrames={each}>
-          <Piece length={each} src={src} name={name} position={position} index={i} />
+          <Piece length={each} src={src} name={name} position={position} index={i} zoom={zoom} />
         </Sequence>
       ))}
     </AbsoluteFill>
@@ -330,7 +335,7 @@ function Model({ length }) {
   const fade = useFade(length, 18, 18);
   const p = interpolate(f, [0, length], [0, 1], { ...clamp, easing: SLOW });
   // a slow push and a drift to the right: the camera walking in
-  const s = 1.02 + p * 0.09;
+  const s = 1.0 + p * 0.06;
   const x = -p * 1.4;
   return (
     <AbsoluteFill style={{ background: '#000', opacity: fade }}>
@@ -359,11 +364,12 @@ function End({ length }) {
     <AbsoluteFill style={{ background: '#000', opacity: fade, alignItems: 'center', justifyContent: 'center' }}>
       <Glow x="50%" y="46%" size={1000} strength={0.14} />
       <Dust seed="w" count={28} strength={0.7} />
+      <Img src={staticFile('img/mask.webp')} style={{ height: 270, marginBottom: 34, opacity: interpolate(f, [0, 24], [0, 1], { ...clamp, easing: OUT }), transform: `scale(${grow})` }} />
       <div style={{ position: 'relative', transform: `scale(${grow})`, clipPath: `inset(0 ${open}% 0 ${open}%)` }}>
-        <Img src={staticFile('img/wordmark.webp')} style={{ width: 640, display: 'block' }} />
+        <Img src={staticFile('img/wordmark.webp')} style={{ width: 520, display: 'block' }} />
         <Sequence from={34}><Sweep dur={40} strength={0.5} width={8} /></Sequence>
       </div>
-      <Track text="MASQ is a language — worn, not spoken." at={46} size={22} from={0.7} to={0.38} color={DIM} style={{ marginTop: 62 }} />
+      <Track text="MASQ is a language — worn, not spoken." at={46} size={22} from={0.7} to={0.38} color={DIM} style={{ marginTop: 44 }} />
     </AbsoluteFill>
   );
 }
@@ -371,7 +377,7 @@ function End({ length }) {
 /* ---------------------------------------------------------------- film */
 
 const SCENES = [
-  [Opening, 5], [Title, 3.5], [Manifesto, 6], [Embroidery, 5.5], [Pieces, 7.5], [Model, 7], [End, 5.5]
+  [Opening, 6.5], [Title, 3.5], [Manifesto, 6], [Embroidery, 5.5], [Pieces, 7.5], [Model, 7], [End, 5.5]
 ];
 export const FILM_FRAMES = SCENES.reduce((n, [, sec]) => n + Math.round(sec * FPS), 0);
 
@@ -391,6 +397,7 @@ export function Film() {
         );
       })}
       <Surface />
+      <Audio src={staticFile('audio/score.mp3')} />
     </AbsoluteFill>
   );
 }

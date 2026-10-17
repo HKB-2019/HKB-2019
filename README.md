@@ -610,9 +610,11 @@ real product photography when it is available.
 
 `video/` holds MASQ. videos made in code with [Remotion](https://www.remotion.dev)
 (a development tool: nothing of it reaches shoppers). `video/Film.jsx` is the brand
-film, 40 seconds at 1920 × 1080 in a 2.39:1 cinema frame with grain, silent, from the logo, the product photos and the
-hero photo in `video/public`. `npm run video` renders it to `out/brand-film.mp4`
-(in a sandbox without a downloadable Chrome, add `--browser-executable=<path to Chrome>`).
-Remotion is free for individuals and small companies; larger companies need its paid
-company licence.
-
+film: 41.5 seconds at 1920 × 1080, in a 2.39:1 cinema frame with grain, from the
+logo, the product photos and the approved hero photo (sharpened copies in
+`video/public/img`). Its score is original, made for the film by `video/score.py`
+(`python3 video/score.py` writes a WAV; it is kept as `video/public/audio/score.mp3`),
+so the owner holds it outright. `npm run video` renders the film to
+`out/brand-film.mp4` (in a sandbox without a downloadable Chrome, add
+`--browser-executable=<path to Chrome>`). Remotion is free for individuals and small
+companies; larger companies need its paid company licence.
