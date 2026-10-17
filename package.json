@@ -16,7 +16,8 @@
     "admin:password": "node --env-file-if-exists=.env server/tools/hash-password.js",
     "test:e2e": "playwright test",
     "test:all": "npm test && npm run test:e2e",
-    "build:preview": "node tools/build-preview.mjs"
+    "build:preview": "node tools/build-preview.mjs",
+    "video": "remotion render video/index.jsx BrandFilm out/brand-film.mp4 --public-dir=video/public"
   },
   "engines": {
     "node": ">=22"

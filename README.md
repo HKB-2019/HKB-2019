@@ -605,3 +605,14 @@ that resolution. Several assets needed repair or reframing:
 the mockup (`python3 tools/build-assets.py path/to/mockup.webp`, needs Pillow
 and numpy). It is a build tool, not part of the site — replace the files with
 real product photography when it is available.
+
+## Videos (Remotion)
+
+`video/` holds MASQ. videos made in code with [Remotion](https://www.remotion.dev)
+(a development tool: nothing of it reaches shoppers). `video/Film.jsx` is the brand
+film, 35 seconds at 1920 × 1080, silent, from the logo, the product photos and the
+hero photo in `video/public`. `npm run video` renders it to `out/brand-film.mp4`
+(in a sandbox without a downloadable Chrome, add `--browser-executable=<path to Chrome>`).
+Remotion is free for individuals and small companies; larger companies need its paid
+company licence.
+
