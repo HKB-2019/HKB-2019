@@ -35,6 +35,18 @@ owner's references.
   Framer Motion, View Transitions, photo zoom, reduced motion respected.
 - Saved pieces, gift cards, the admin-editable home page, phones at 360px.
 
+## Three.js (the owner said yes, 17 Oct)
+
+One moment of 3D, not everywhere. Proposed, unless the owner picks another place:
+- **Behind the hero model**: a soft violet light field with the five logo symbols drifting
+  slowly in depth, the light leaning towards the pointer. It sits between the dark
+  background and the photo, so the model stays crisp in front.
+- Loaded only on the home page hero, after the page has shown, and only on screens that
+  can afford it; paused when scrolled away or the tab is hidden.
+- Off for anyone who has asked for reduced motion, and on phones that struggle: the
+  still photo shows instead, exactly as now.
+- Install `three` at build time (an exact version), import only the parts used.
+
 ## Decided, unless the owner says otherwise
 
 - **Search and Journal**: left out for now; the menu keeps the pages that work.
