@@ -108,17 +108,24 @@ function CardRow({ c, isNew, onChanged }) {
               <p><span>Colour</span>{designOf(c.design).name}</p>
               <p><span>Live since</span>{date(c.activatedAt)}</p>
               <div>
-                <span>Spent on</span>
+                <span>History</span>
                 {c.uses.length === 0 ? 'Nothing yet.' : (
                   <ol>{c.uses.map((u, i) => (
                     <li key={i}>
                       <time dateTime={u.at}>{date(u.at)}</time>
-                      <span className="mono">{u.orderReference ?? '—'}</span>
-                      <span className="num">{u.kind === 'spend' ? `−${naira(-u.amountKobo)}` : `+${naira(u.amountKobo)} back`}</span>
+                      <span className="mono">{u.kind === 'topup' ? 'top-up' : u.orderReference ?? '—'}</span>
+                      <span className="num">{u.kind === 'spend' ? `−${naira(-u.amountKobo)}` : u.kind === 'topup' ? `+${naira(u.amountKobo)} added` : `+${naira(u.amountKobo)} back`}</span>
                     </li>
                   ))}</ol>
                 )}
               </div>
+              {c.topupsToRefund?.length > 0 && (
+                <p className="admin-note admin-note--bad">
+                  <span>To refund</span>
+                  {c.topupsToRefund.map(t => `${naira(t.amountKobo)} from ${t.email}`).join(', ')}: money added after the
+                  card was cancelled. Refund it on Paystack.
+                </p>
+              )}
             </div>
           </td>
         </tr>
@@ -144,7 +151,8 @@ export default function GiftCardsSection() {
       <p className="admin-help">
         Bought by customers at /gift-card, or made here: a giveaway, a goodwill gesture, store credit for a return.
         Each lasts twelve months and pays for pieces and delivery, after any discount code. If an order paid with a
-        card is refunded, what the card paid goes back on it.
+        card is refunded, what the card paid goes back on it. Whoever holds a card can add money to it from its page;
+        it then lasts twelve months from that day. “Sold for” counts what cards were bought for and every top-up.
       </p>
       {error && <p className="admin-note admin-note--bad" role="alert">{error}</p>}
       {!data ? <p className="admin-empty">Loading…</p> : (

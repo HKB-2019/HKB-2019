@@ -12,13 +12,13 @@ function PretendPayment() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const reference = params.get('reference') ?? '';
-  // An order's remainder (after any discount and gift card), or a gift card's price.
+  // An order's remainder (after any discount and gift card), a gift card's price, or money added to one.
   const due = previewDue(reference);
   const total = due?.kobo ?? 0;
 
   const done = (paid) => {
     finishPayment(reference, paid);
-    navigate(`/${due?.what === 'gift' ? 'gift-card' : 'order'}?reference=${encodeURIComponent(reference)}`);
+    navigate(`${due?.back ?? '/order'}?reference=${encodeURIComponent(reference)}`);
   };
 
   return (

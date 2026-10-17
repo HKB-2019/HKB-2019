@@ -1202,6 +1202,15 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 .gift__back:hover{ color:var(--ink); }
 .gift__left{ font-size:13px; color:var(--ink-dim); }
 .gift__how{ margin:0; font-size:14px; line-height:1.6; color:var(--ink-dim); }
+.gift__topup-open{
+  justify-self:start; display:block; margin-top:26px; text-align:left; padding:6px 0; background:none; border:0; border-bottom:1px solid var(--line);
+  font:inherit; font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--ink-dim); cursor:pointer;
+}
+.gift__topup-open:hover{ color:var(--ink); border-color:var(--violet-soft); }
+.gift__topup{ margin-top:30px; padding-top:26px; border-top:1px solid var(--line-soft); display:grid; gap:14px; }
+.gift__topup-note{ margin:0 0 22px; padding:12px 14px; font-size:14px; line-height:1.5; border-left:1px solid var(--line); color:var(--ink-dim); }
+.gift__topup-note.is-good{ border-color:var(--good); color:var(--ink); }
+.gift__topup-note.is-bad{ border-color:var(--bad-line); color:var(--ink); }
 /* a card that is spent, run out or cancelled rests, dimmed */
 .gift-stage.is-ended .giftcard-tilt{ opacity:.55; filter:grayscale(.6); }
 

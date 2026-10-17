@@ -172,7 +172,7 @@ export async function sweepPending() {
     const status = await reconcile(r.reference, { release: r.stale, giveUp: r.stuck });
     outcome[status] = (outcome[status] ?? 0) + 1;
   }
-  // Gift card purchases: a payment whose webhook was missed still makes the card.
+  // Gift card purchases and top-ups: a payment whose webhook was missed still counts.
   const gifts = await pendingGiftReferences({ checkAfterMin: CHECK_AFTER_MIN, abandonAfterMin: ABANDON_AFTER_MIN });
   for (const g of gifts) {
     const status = await reconcileGift(g.reference, { release: g.stale });

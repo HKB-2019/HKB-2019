@@ -80,14 +80,27 @@ test('a gift card is bought, paid for, and spent over two orders', async ({ page
   await applyGift(page, code);
   await expect(page.locator('#d-gift-error')).toContainText('has been spent');
 
+  // Money added to it from its page, paid on Paystack: on the card when they come back.
+  await page.goto(`/gift/${code}`);
+  await expect(page.getByRole('heading', { name: 'This card has been spent' })).toBeVisible();
+  await page.getByRole('button', { name: 'Add money to this card' }).click();
+  await page.getByRole('radio', { name: '₦10,000' }).check();
+  await page.getByLabel(/YOUR EMAIL/).fill('kemi@example.com');
+  await page.getByRole('button', { name: 'ADD ₦10,000' }).click();
+  await expect(page.locator('h1')).toHaveText('Pay ₦10,000');
+  await page.click('#pay');
+  await expect(page.locator('.gift__topup-note')).toContainText('₦10,000 added. ₦10,000 on the card now');
+  await expect(page.getByRole('heading', { name: 'For you, Kemi' })).toBeVisible();
+
   // The owner: where it went, and a card of their own.
   await signIn(page);
   await page.goto('/admin#sales');
   const row = page.locator('tr', { has: page.getByRole('button', { name: code }) });
   await expect(row).toContainText('bought by tolu@example.com');
-  await expect(row).toContainText('spent');
+  await expect(row).toContainText('working');
   await row.getByRole('button', { name: code }).click();
-  await expect(page.locator('.admin-gift__more li')).toHaveCount(2);
+  await expect(page.locator('.admin-gift__more li')).toHaveCount(3);
+  await expect(page.locator('.admin-gift__more li').last()).toContainText('+₦10,000 added');
   await page.getByRole('button', { name: '+ MAKE A CARD' }).click();
   await page.getByLabel(/Amount \(₦\)/).fill('20000');
   await page.getByLabel(/^For/).fill('Giveaway winner');

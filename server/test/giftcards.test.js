@@ -246,3 +246,64 @@ test('a card keeps the colour it was bought in, and the person given it can open
   const mine = await api('/gift-cards', 'POST', { amountKobo: 20_000_00, design: 'clay' });
   assert.equal(mine.body.design, 'clay');
 });
+
+test('money can be added to a card that works, once Paystack confirms it', async () => {
+  const code = await made(20_000);
+  const topup = (json) => shop.request('/api/gift-cards/topups', { method: 'POST', json: { code, email: 'kemi@example.com', ...json } });
+  const before = await shop.one('SELECT expires_at FROM gift_cards WHERE code = $1', [code]);
+  await shop.query("UPDATE gift_cards SET expires_at = now() + interval '2 months' WHERE code = $1", [code]);
+
+  // Refused: amounts outside the rules, more than a card holds, no email, no such card.
+  for (const amountKobo of [4_000_00, 12_345_50, '10000']) assert.equal((await topup({ amountKobo })).status, 400, `amount ${amountKobo}`);
+  const full = await topup({ amountKobo: 490_000_00 });
+  assert.equal(full.status, 400);
+  assert.match(full.body.error, /add up to ₦480,000/);
+  assert.equal((await topup({ amountKobo: 10_000_00, email: 'nope' })).status, 400);
+  assert.equal((await shop.request('/api/gift-cards/topups', { method: 'POST', json: { code: 'MASQ-AAAA-BBBB', amountKobo: 10_000_00, email: 'k@example.com' } })).status, 404);
+
+  // Started: Paystack is asked for exactly that, and sent back to the card's page.
+  const res = await topup({ amountKobo: 10_000_00 });
+  assert.equal(res.status, 200, res.raw);
+  assert.match(res.body.reference, /^gtop-[a-f0-9]{24}$/);
+  const init = inits().at(-1);
+  assert.equal(init.body.amount, 10_000_00);
+
+  // Not paid yet: nothing added.
+  paystack.verify = { status: 'ongoing', amount: null };
+  const waiting = await shop.request(`/api/gift-cards/topups/${res.body.reference}`);
+  assert.deepEqual([waiting.body.status, waiting.body.balanceKobo], ['pending', null]);
+  assert.equal((await card(20_000_00)).balance_kobo, 20_000_00);
+
+  // Paid: added once (the webhook twice changes nothing), and the card lasts twelve months from today.
+  paystack.verify = { status: 'success', amount: null };
+  await webhook(res.body.reference);
+  await webhook(res.body.reference);
+  const done = await shop.request(`/api/gift-cards/topups/${res.body.reference}`);
+  assert.deepEqual([done.body.status, done.body.balanceKobo, done.body.code], ['paid', 30_000_00, code]);
+  const months = (new Date(done.body.expiresAt) - Date.now()) / (30.44 * 864e5);
+  assert.ok(months > 11.8 && months < 12.2, `expires in ${months} months`);
+  assert.ok(new Date(done.body.expiresAt) >= new Date(before.expires_at) - 864e5);
+
+  // The owner sees it: a 'topup' in the card's history, and in the money taken for cards.
+  const { cards, totals } = (await api('/gift-cards')).body;
+  const mine = cards.find(c => c.code === code);
+  assert.deepEqual(mine.uses.map(u => [u.kind, u.amountKobo]), [['topup', 10_000_00]]);
+  assert.equal(totals.soldKobo, 10_000_00);
+
+  // A wrong amount from Paystack adds nothing.
+  const odd = await topup({ amountKobo: 5_000_00 });
+  paystack.verify = { status: 'success', amount: 4_000_00 };
+  await webhook(odd.body.reference);
+  assert.equal((await shop.request(`/api/gift-cards/topups/${odd.body.reference}`)).body.status, 'pending');
+  assert.equal((await card(20_000_00)).balance_kobo, 30_000_00);
+
+  // Paid after the card was cancelled: owed back, and the owner is told.
+  paystack.verify = { status: 'success', amount: null };
+  const late = await topup({ amountKobo: 5_000_00 });
+  await api(`/gift-cards/${mine.id}/cancel`, 'POST');
+  await webhook(late.body.reference);
+  assert.equal((await shop.request(`/api/gift-cards/topups/${late.body.reference}`)).body.status, 'refund_due');
+  const owed = (await api('/gift-cards')).body.cards.find(c => c.code === code).topupsToRefund;
+  assert.deepEqual(owed.map(t => [t.amountKobo, t.email]), [[5_000_00, 'kemi@example.com']]);
+  assert.match((await topup({ amountKobo: 5_000_00 })).body.error, /cancelled/);
+});

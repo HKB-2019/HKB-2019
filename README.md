@@ -221,7 +221,11 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   /gift/MASQ-XXXX-XXXX, to copy or send on WhatsApp. The link opens the same
   card, in the same colour, for the person given it: their name, the message,
   then the card turns over to show the code and what is left (tries count
-  against the same limit as codes at checkout). It lasts twelve months and pays for pieces and
+  against the same limit as codes at checkout). From that page, whoever holds
+  a card can **add money to it** (a top-up, ₦5,000 or more, up to ₦500,000 on
+  the card): its own Paystack payment (reference `gtop-…`), added once Paystack
+  confirms the amount, after which the card lasts twelve months from that day.
+  Paid after the card was cancelled, it shows in the admin as money to refund. It lasts twelve months and pays for pieces and
   delivery, after any discount code, in one order or several. What it pays is
   taken off the card when the order is placed and given back if that order is
   not paid (like held stock), or when it is marked refunded; Paystack is asked

@@ -61,6 +61,8 @@ export const buyGiftCard   = (card) => request('/gift-cards', { method: 'POST', 
 export const getGiftCard   = (reference) => request(`/gift-cards/${encodeURIComponent(reference)}`);
 export const checkGiftCard = (code) => request('/gift-cards/check', { method: 'POST', body: JSON.stringify({ code }) });
 export const openGiftCard  = (code) => request('/gift-cards/open', { method: 'POST', body: JSON.stringify({ code }) });
+export const topUpGiftCard = (topup) => request('/gift-cards/topups', { method: 'POST', body: JSON.stringify(topup) });
+export const getTopup      = (reference) => request(`/gift-cards/topups/${encodeURIComponent(reference)}`);
 
 /* ---------------------------------------------------------------- admin */
 

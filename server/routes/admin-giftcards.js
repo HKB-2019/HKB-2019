@@ -26,17 +26,22 @@ async function cardsWithUses(where = '', params = []) {
     SELECT u.gift_card_id, u.amount_kobo, u.kind, u.created_at, o.reference
       FROM gift_card_uses u LEFT JOIN orders o ON o.id = u.order_id
      WHERE u.gift_card_id = ANY($1::int[]) ORDER BY u.id`, [cards.map(c => c.id)]) : [];
-  return cards.map(c => shapeCard(c, uses.filter(u => u.gift_card_id === c.id)));
+  const owed = cards.length ? await query(`
+    SELECT gift_card_id, reference, amount_kobo, email, paid_at FROM gift_card_topups
+     WHERE status = 'refund_due' AND gift_card_id = ANY($1::int[]) ORDER BY id`, [cards.map(c => c.id)]) : [];
+  return cards.map(c => shapeCard(c, uses.filter(u => u.gift_card_id === c.id), owed.filter(t => t.gift_card_id === c.id)));
 }
 
 adminGiftCardsRouter.get('/admin/gift-cards', async (_req, res) => {
   const cards = await cardsWithUses();
   const live = cards.filter(c => c.state === 'active');
+  const toppedUp = await one(`SELECT COALESCE(SUM(amount_kobo), 0)::int AS kobo FROM gift_card_topups WHERE status = 'paid'`);
   res.json({
     cards,
     totals: {
       soldCount: cards.filter(c => c.madeBy === 'customer').length,
-      soldKobo: cards.filter(c => c.madeBy === 'customer').reduce((n, c) => n + c.amountKobo, 0),
+      // Money in for cards: what they were bought for, and every top-up since.
+      soldKobo: cards.filter(c => c.madeBy === 'customer').reduce((n, c) => n + c.amountKobo, 0) + toppedUp.kobo,
       // Money customers hold on cards that still work: owed in goods.
       outstandingKobo: live.reduce((n, c) => n + c.balanceKobo, 0),
       liveCount: live.length

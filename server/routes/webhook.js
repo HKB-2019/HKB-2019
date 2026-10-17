@@ -3,7 +3,7 @@ import express from 'express';
 import { one, query } from '../db.js';
 import { verifyWebhookSignature } from '../lib/paystack.js';
 import { reconcile, releaseStock } from '../lib/orders.js';
-import { reconcileGift, isGiftReference } from '../lib/giftcards.js';
+import { reconcileGift, isGiftReference, isTopupReference } from '../lib/giftcards.js';
 
 export const webhookRouter = Router();
 
@@ -62,8 +62,8 @@ webhookRouter.post(
     }
 
     try {
-      if (isGiftReference(reference)) {
-        // A gift card's purchase: activated once Paystack confirms the amount.
+      if (isGiftReference(reference) || isTopupReference(reference)) {
+        // A gift card's purchase or top-up: counted once Paystack confirms the amount.
         const status = await reconcileGift(reference, { release: event.event === 'charge.failed' });
         console.log(`[webhook] gift ${reference} → ${status}`);
       } else if (event.event === 'charge.success') {

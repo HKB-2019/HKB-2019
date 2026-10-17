@@ -316,6 +316,19 @@ export async function startCheckout({ email, name, phone, address, newsletter },
 
 /** The pretend payment page's two buttons. */
 export function finishPayment(reference, paid) {
+  const t = topups().find(x => x.reference === reference);
+  if (t) {
+    if (t.status !== 'pending') return;
+    const g = gifts().find(x => x.id === t.cardId);
+    if (paid && g?.status === 'active') {
+      g.balanceKobo += t.amountKobo;
+      g.expiresAt = new Date(Math.max(new Date(g.expiresAt).getTime(), Date.now() + 365 * 86_400_000)).toISOString();
+      g.uses.push({ orderReference: null, amountKobo: t.amountKobo, kind: 'topup', at: new Date().toISOString() });
+      t.status = 'paid';
+    } else t.status = paid ? 'refund_due' : 'abandoned';
+    save();
+    return;
+  }
   const g = gifts().find(x => x.reference === reference);
   if (g) {
     if (g.status !== 'pending') return;
@@ -341,12 +354,15 @@ export function finishPayment(reference, paid) {
   save();
 }
 
-/** What the pretend payment page asks for: an order's remainder, or a gift card. */
+/** What the pretend payment page asks for, and where it sends the payer back
+ *  to: an order's remainder, a gift card, or money added to one. */
 export function previewDue(reference) {
+  const t = topups().find(x => x.reference === reference);
+  if (t) return { kobo: t.amountKobo, back: `/gift/${gifts().find(x => x.id === t.cardId)?.code}` };
   const g = gifts().find(x => x.reference === reference);
-  if (g) return { kobo: g.amountKobo, what: 'gift' };
+  if (g) return { kobo: g.amountKobo, back: '/gift-card' };
   const o = store.orders.find(x => x.reference === reference);
-  return o ? { kobo: totalOf(o) - (o.giftKobo ?? 0), what: 'order' } : null;
+  return o ? { kobo: totalOf(o) - (o.giftKobo ?? 0), back: '/order' } : null;
 }
 
 const mask = (email) => email.replace(/^(.)[^@]*(@.*)$/, '$1•••$2');
@@ -968,6 +984,7 @@ export const adminForgetCustomer = (email) => attempt(() => {
  * discount, delivery included; given back if that order is not paid. */
 
 const gifts = () => (store.giftCards ??= []);
+const topups = () => (store.giftTopups ??= []);
 const GIFT_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const giftCode = () => `MASQ-${[0, 0, 0, 0].map(() => GIFT_CHARS[Math.floor(Math.random() * GIFT_CHARS.length)]).join('')}-${[0, 0, 0, 0].map(() => GIFT_CHARS[Math.floor(Math.random() * GIFT_CHARS.length)]).join('')}`;
 const cleanGift = (v) => {
@@ -1025,6 +1042,34 @@ export function getGiftCard(reference) {
   });
 }
 
+/** As POST /api/gift-cards/topups: add money to a card that works. */
+export function topUpGiftCard({ code: raw, amountKobo, email }) {
+  const code = cleanGift(raw);
+  const g = code && gifts().find(x => x.code === code && (x.status === 'active' || x.status === 'cancelled'));
+  if (!g) return fail('We could not find a gift card with that code.', 404);
+  if (g.status === 'cancelled') return fail('This card has been cancelled, so money cannot be added to it.');
+  if (new Date(g.expiresAt) <= new Date()) return fail('This card has run out, so money cannot be added to it.');
+  if (!Number.isInteger(amountKobo) || amountKobo % 100 || amountKobo < 500000 || amountKobo > 50000000) {
+    return fail('Choose an amount from ₦5,000 to ₦500,000, in whole naira.');
+  }
+  if (g.balanceKobo + amountKobo > 50000000) return fail('A card holds up to ₦500,000.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(email ?? '').trim())) return fail('Please enter your email, for the receipt.');
+  const reference = 'gtop-' + hex(24);
+  topups().push({ id: store.nextId++, cardId: g.id, amountKobo, reference, email: email.trim().toLowerCase(), status: 'pending' });
+  save();
+  return settle({ reference, authorizationUrl: `#/pay?reference=${reference}`, amountKobo }, 500);
+}
+
+/** As GET /api/gift-cards/topups/:reference. */
+export function getTopup(reference) {
+  const t = topups().find(x => x.reference === reference);
+  if (!t) return fail('Top-up not found.', 404);
+  const g = gifts().find(x => x.id === t.cardId);
+  const paid = t.status === 'paid';
+  return settle({ reference, status: t.status, amountKobo: t.amountKobo, code: g?.code,
+    balanceKobo: paid ? g.balanceKobo : null, expiresAt: paid ? g.expiresAt : null, payment: null });
+}
+
 /** As POST /api/gift-cards/open: the card as the person given it sees it. */
 export function openGiftCard(raw) {
   const code = cleanGift(raw);
@@ -1047,7 +1092,8 @@ const shapeGift = (g) => ({
   id: g.id, code: g.code, amountKobo: g.amountKobo, balanceKobo: g.balanceKobo, state: giftState(g),
   madeBy: g.reference ? 'customer' : 'shop', buyerEmail: g.buyerEmail, recipientName: g.recipientName,
   recipientEmail: g.recipientEmail, message: g.message, design: giftDesign(g.design), note: g.note, activatedAt: g.activatedAt,
-  expiresAt: g.expiresAt, uses: g.uses
+  expiresAt: g.expiresAt, uses: g.uses,
+  topupsToRefund: topups().filter(t => t.cardId === g.id && t.status === 'refund_due').map(t => ({ reference: t.reference, amountKobo: t.amountKobo, email: t.email, at: null }))
 });
 
 export function adminGiftCards() {
@@ -1055,7 +1101,7 @@ export function adminGiftCards() {
   const live = cards.filter(c => c.state === 'active');
   const sold = cards.filter(c => c.madeBy === 'customer');
   return settle({ cards, totals: {
-    soldCount: sold.length, soldKobo: sold.reduce((n, c) => n + c.amountKobo, 0),
+    soldCount: sold.length, soldKobo: sold.reduce((n, c) => n + c.amountKobo, 0) + topups().filter(t => t.status === 'paid').reduce((n, t) => n + t.amountKobo, 0),
     outstandingKobo: live.reduce((n, c) => n + c.balanceKobo, 0), liveCount: live.length
   } });
 }

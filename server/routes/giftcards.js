@@ -4,7 +4,7 @@ import { initializeTransaction, paystackConfigured } from '../lib/paystack.js';
 import { rateLimit } from '../lib/limits.js';
 import {
   checkAmount, newCode, newGiftReference, isGiftReference, reconcileGift, usableCard, giftNaira,
-  cleanGiftCode, cleanDesign
+  cleanGiftCode, cleanDesign, cardToTopUp, newTopupReference, isTopupReference
 } from '../lib/giftcards.js';
 
 /* Gift cards, for customers: buy one, see it once paid, and check one at
@@ -19,10 +19,11 @@ const words = (v, max) => String(v ?? '').replace(/\r\n?/g, '\n').replace(/[ \t]
 export const giftBuyLimit = rateLimit({ windowMs: 10 * 60_000, max: 20, message: 'Too many tries. Please wait a few minutes.' });
 export const giftCheckLimit = rateLimit({ windowMs: 10 * 60_000, max: 30, message: 'Too many codes tried. Please wait a few minutes and try again.' });
 
-/* Where Paystack sends a buyer back to: the gift card page, beside /order. */
-function callbackUrl() {
-  if (process.env.PAYSTACK_CALLBACK_URL) return process.env.PAYSTACK_CALLBACK_URL.replace(/\/order\/?$/, '') + '/gift-card';
-  if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL.replace(/\/$/, '') + '/gift-card';
+/* Where Paystack sends a buyer back to: the gift card page, beside /order
+   (or, for a top-up, the card's own page). */
+function callbackUrl(path = '/gift-card') {
+  if (process.env.PAYSTACK_CALLBACK_URL) return process.env.PAYSTACK_CALLBACK_URL.replace(/\/order\/?$/, '') + path;
+  if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL.replace(/\/$/, '') + path;
   return undefined;
 }
 
@@ -135,5 +136,66 @@ giftCardsRouter.post('/gift-cards/open', giftCheckLimit, async (req, res) => {
     recipientName: card.recipient_name,
     message: card.message,
     design: cleanDesign(card.design)
+  });
+});
+
+/**
+ * POST /api/gift-cards/topups  { code, amountKobo, email } — add money to a
+ * card that works, from its page (/gift/:code): its own Paystack payment,
+ * added to the card once Paystack confirms it (server/lib/giftcards.js).
+ */
+giftCardsRouter.post('/gift-cards/topups', giftBuyLimit, async (req, res) => {
+  const b = req.body ?? {};
+  if (!paystackConfigured()) return res.status(503).json({ error: 'Adding money to cards is not open yet. Please try again soon.' });
+  if (!isEmail(b.email)) return res.status(400).json({ error: 'Please enter your email, for the receipt.' });
+  const card = await cardToTopUp(b.code, b.amountKobo);
+
+  const reference = newTopupReference();
+  const email = b.email.trim().toLowerCase();
+  const topup = await one(`
+    INSERT INTO gift_card_topups (gift_card_id, amount_kobo, reference, email)
+    VALUES ($1, $2, $3, $4) RETURNING id`, [card.id, b.amountKobo, reference, email]);
+  try {
+    const data = await initializeTransaction({
+      email, amountKobo: b.amountKobo, reference, callbackUrl: callbackUrl(`/gift/${card.code}`),
+      metadata: { gift_card_topup: true, custom_fields: [
+        { display_name: 'Gift card top-up', variable_name: 'gift_card_topup', value: giftNaira(b.amountKobo) }
+      ] }
+    });
+    res.json({ reference, authorizationUrl: data.authorization_url, amountKobo: b.amountKobo });
+  } catch (err) {
+    await query(`UPDATE gift_card_topups SET status = 'abandoned' WHERE id = $1`, [topup.id]);
+    console.error('[gift] paystack initialize failed:', err.message);
+    res.status(502).json({ error: 'Could not reach the payment provider. Nothing has been charged.' });
+  }
+});
+
+/**
+ * GET /api/gift-cards/topups/:reference — where Paystack sends the payer
+ * back: whether the money is on the card yet, and what the card holds now.
+ */
+giftCardsRouter.get('/gift-cards/topups/:reference', async (req, res) => {
+  const { reference } = req.params;
+  if (!isTopupReference(reference)) return res.status(404).json({ error: 'Top-up not found.' });
+  const load = () => one(`
+    SELECT t.status, t.amount_kobo, c.code, c.balance_kobo, c.expires_at
+      FROM gift_card_topups t JOIN gift_cards c ON c.id = t.gift_card_id WHERE t.reference = $1`, [reference]);
+  let t = await load();
+  if (!t) return res.status(404).json({ error: 'Top-up not found.' });
+
+  let paystackStatus = null;
+  if (t.status === 'pending' && paystackConfigured()) {
+    await reconcileGift(reference, { onVerify: (d) => { paystackStatus = d.status; } });
+    t = await load();
+  }
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    reference,
+    status: t.status,
+    amountKobo: t.amount_kobo,
+    code: t.code,
+    balanceKobo: t.status === 'paid' ? t.balance_kobo : null,
+    expiresAt: t.status === 'paid' ? t.expires_at : null,
+    payment: t.status === 'pending' && ['abandoned', 'failed'].includes(paystackStatus) ? 'not_completed' : null
   });
 });

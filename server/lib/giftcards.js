@@ -40,6 +40,8 @@ export function cleanGiftCode(v) {
 
 export const newGiftReference = () => 'gift-' + randomBytes(12).toString('hex');
 export const isGiftReference = (ref) => /^gift-[a-f0-9]{24}$/.test(String(ref ?? ''));
+export const newTopupReference = () => 'gtop-' + randomBytes(12).toString('hex');
+export const isTopupReference = (ref) => /^gtop-[a-f0-9]{24}$/.test(String(ref ?? ''));
 
 /** A whole-naira amount a customer may buy: one of the four, or ₦5,000–₦500,000. */
 export function checkAmount(kobo) {
@@ -125,6 +127,7 @@ async function activate(cardId, paystackId) {
  * `release` lets an unpaid purchase be marked abandoned. Returns its status.
  */
 export async function reconcileGift(reference, { release = false, onVerify } = {}) {
+  if (isTopupReference(reference)) return reconcileTopup(reference, { release, onVerify });
   const card = await one('SELECT id, status, amount_kobo FROM gift_cards WHERE reference = $1', [reference]);
   if (!card) return null;
   if (card.status === 'active' || card.status === 'cancelled') return card.status;
@@ -152,18 +155,97 @@ export async function reconcileGift(reference, { release = false, onVerify } = {
   return card.status;
 }
 
-/** Pending purchases worth asking Paystack about (the sweeper's share). */
-export async function pendingGiftReferences({ checkAfterMin, abandonAfterMin }) {
-  return query(`
-    SELECT reference, created_at < now() - make_interval(mins => $2) AS stale
-      FROM gift_cards
-     WHERE status = 'pending' AND reference IS NOT NULL
-       AND created_at < now() - make_interval(mins => $1)
-     ORDER BY id LIMIT 100`, [checkAfterMin, abandonAfterMin]);
+/* --------------------------------------------------------- topping one up */
+
+/**
+ * A card someone may add money to, as { id, code, balanceKobo }: it works
+ * (paid for, not cancelled, not run out), and what is added keeps it within
+ * the most a card holds. Throws a 400 a customer can act on.
+ */
+export async function cardToTopUp(rawCode, addKobo) {
+  const code = cleanGiftCode(rawCode);
+  const card = code && await one('SELECT id, code, status, balance_kobo, expires_at FROM gift_cards WHERE code = $1', [code]);
+  if (!card || !['active', 'cancelled'].includes(card.status)) throw fail(404, 'We could not find a gift card with that code.');
+  if (card.status === 'cancelled') throw fail(400, 'This card has been cancelled, so money cannot be added to it.');
+  if (card.expires_at && new Date(card.expires_at) <= new Date()) throw fail(400, 'This card has run out, so money cannot be added to it.');
+  checkAmount(addKobo);
+  if (card.balance_kobo + addKobo > MAX_KOBO) {
+    const room = Math.floor((MAX_KOBO - card.balance_kobo) / 100_00) * 100_00;
+    throw fail(400, room >= MIN_KOBO
+      ? `A card holds up to ${naira(MAX_KOBO)}. You can add up to ${naira(room)} to this one.`
+      : `A card holds up to ${naira(MAX_KOBO)}, and this one is nearly full. Spend some first.`);
+  }
+  return { id: card.id, code: card.code, balanceKobo: card.balance_kobo };
 }
 
-/** A card as the owner sees it. */
-export function shapeCard(c, uses = []) {
+/**
+ * Add a top-up's money to its card: Paystack has confirmed it. The card then
+ * lasts twelve months from today (or longer, if it already did). Paid after
+ * the card was cancelled, it is owed back instead. Safe to call twice.
+ */
+async function applyTopup(topupId, paystackId) {
+  return transaction(async (tx) => {
+    const t = await tx.one('SELECT * FROM gift_card_topups WHERE id = $1 FOR UPDATE', [topupId]);
+    if (t.status === 'paid' || t.status === 'refund_due') return t.status;
+    const card = await tx.one('SELECT id, status FROM gift_cards WHERE id = $1 FOR UPDATE', [t.gift_card_id]);
+    if (card.status !== 'active') {
+      await tx.query(`UPDATE gift_card_topups SET status = 'refund_due', paystack_id = $1, paid_at = now() WHERE id = $2`, [paystackId, t.id]);
+      console.error(`[gift] top-up ${t.reference} paid for a card that is ${card.status}: REFUND DUE`);
+      return 'refund_due';
+    }
+    await tx.query(`
+      UPDATE gift_cards SET balance_kobo = balance_kobo + $1,
+             expires_at = GREATEST(expires_at, now() + make_interval(months => $2))
+       WHERE id = $3`, [t.amount_kobo, LASTS_MONTHS, card.id]);
+    await tx.query(`INSERT INTO gift_card_uses (gift_card_id, order_id, amount_kobo, kind) VALUES ($1, NULL, $2, 'topup')`,
+      [card.id, t.amount_kobo]);
+    await tx.query(`UPDATE gift_card_topups SET status = 'paid', paystack_id = $1, paid_at = now() WHERE id = $2`, [paystackId, t.id]);
+    return 'paid';
+  });
+}
+
+/** As reconcileGift, for a top-up: verify with Paystack, then add the money. */
+async function reconcileTopup(reference, { release = false, onVerify } = {}) {
+  const t = await one('SELECT id, status, amount_kobo FROM gift_card_topups WHERE reference = $1', [reference]);
+  if (!t) return null;
+  if (t.status !== 'pending') return t.status;
+
+  let data;
+  try {
+    data = await verifyTransaction(reference);
+    onVerify?.(data);
+  } catch (err) {
+    console.warn(`[gift] could not verify ${reference}: ${err.message}`);
+    return t.status;
+  }
+  if (data.status === 'success') {
+    if (data.amount !== t.amount_kobo || (data.currency && data.currency !== 'NGN')) {
+      console.error(`[gift] ${reference} AMOUNT MISMATCH: paid ${data.amount}, top-up is ${t.amount_kobo}. Not added.`);
+      return t.status;
+    }
+    return applyTopup(t.id, String(data.id));
+  }
+  if (release && ['abandoned', 'failed', 'reversed'].includes(data.status)) {
+    await query(`UPDATE gift_card_topups SET status = 'abandoned' WHERE id = $1 AND status = 'pending'`, [t.id]);
+    return 'abandoned';
+  }
+  return t.status;
+}
+
+/** Pending purchases and top-ups worth asking Paystack about (the sweeper's share). */
+export async function pendingGiftReferences({ checkAfterMin, abandonAfterMin }) {
+  return query(`
+    SELECT reference, created_at < now() - make_interval(mins => $2) AS stale FROM (
+      SELECT reference, created_at FROM gift_cards WHERE status = 'pending' AND reference IS NOT NULL
+      UNION ALL
+      SELECT reference, created_at FROM gift_card_topups WHERE status = 'pending'
+    ) p
+     WHERE created_at < now() - make_interval(mins => $1)
+     ORDER BY created_at LIMIT 100`, [checkAfterMin, abandonAfterMin]);
+}
+
+/** A card as the owner sees it, with top-ups paid after it was cancelled (owed back). */
+export function shapeCard(c, uses = [], owed = []) {
   const expired = c.status === 'active' && c.expires_at && new Date(c.expires_at) <= new Date();
   return {
     id: c.id,
@@ -180,7 +262,8 @@ export function shapeCard(c, uses = []) {
     note: c.note,
     activatedAt: c.activated_at,
     expiresAt: c.expires_at,
-    uses: uses.map(u => ({ orderReference: u.reference, amountKobo: u.amount_kobo, kind: u.kind, at: u.created_at }))
+    uses: uses.map(u => ({ orderReference: u.reference, amountKobo: u.amount_kobo, kind: u.kind, at: u.created_at })),
+    topupsToRefund: owed.map(t => ({ reference: t.reference, amountKobo: t.amount_kobo, email: t.email, at: t.paid_at }))
   };
 }
 

@@ -132,7 +132,8 @@ export function stubPaystack(one) {
     if (u.includes('/transaction/verify/')) {
       const ref = decodeURIComponent(u.split('/verify/')[1]);
       const order = await one('SELECT subtotal_kobo - discount_kobo + shipping_kobo - gift_kobo AS due FROM orders WHERE reference = $1', [ref])
-        ?? await one('SELECT amount_kobo AS due FROM gift_cards WHERE reference = $1', [ref]);
+        ?? await one('SELECT amount_kobo AS due FROM gift_cards WHERE reference = $1', [ref])
+        ?? await one('SELECT amount_kobo AS due FROM gift_card_topups WHERE reference = $1', [ref]);
       return Response.json({ status: true, data: {
         id: 99887766, reference: ref, currency: 'NGN',
         status: paystack.verify.status, amount: paystack.verify.amount ?? order?.due ?? 0 } });
