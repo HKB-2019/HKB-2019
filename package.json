@@ -37,7 +37,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
+    "@remotion/cli": "4.0.532",
     "@vitejs/plugin-react": "^6.1.1",
+    "remotion": "4.0.532",
     "vite": "^8.3.0"
   }
 }
