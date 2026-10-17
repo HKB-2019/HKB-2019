@@ -1,65 +1,31 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion } from 'framer-motion';
 import { naira } from '../lib/delivery.js';
 import { EASE_OUT, EASE_SLOW } from '../lib/motion.js';
 import maskUrl from '../assets/giftcard/mask.webp';
 import wordmarkUrl from '../assets/giftcard/wordmark.webp';
 import symbolsUrl from '../assets/giftcard/symbols.webp';
+import doodleFrontUrl from '../assets/giftcard/doodle-front.webp';
+import doodleBackUrl from '../assets/giftcard/doodle-back.webp';
 
-/* The MASQ. gift card, drawn as the physical card from the logo's own artwork
- * (src/assets/giftcard): the wordmark, a small mask and the amount on the
- * front; the symbol row, the motto and the code on the back; a faint hand-drawn
- * doodle behind both. The buyer chooses its colour, and the person given it
- * sees the same card (/gift/:code). */
+/* The MASQ. gift card, laid out exactly as the owner's chosen design: the
+ * wordmark, GIFT CARD, a small mask and the amount on the front; the symbol
+ * row, the motto, the code and the small print on the back; behind both, the
+ * design's own hand-drawn doodle (src/assets/giftcard/doodle-*.webp, lifted
+ * from it and laid on in each colour's doodle tone). The logo pieces are cut
+ * from the logo. The buyer chooses its colour, and the person given it sees
+ * the same card (/gift/:code). */
 
 /** The colours a card comes in. The names match DESIGNS in server/lib/giftcards.js. */
 export const DESIGNS = [
-  { id: 'violet', name: 'Violet', ground: '#371155' },
-  { id: 'night', name: 'Night', ground: '#0e0b14' },
-  { id: 'teal', name: 'Teal', ground: '#083f47' },
-  { id: 'clay', name: 'Clay', ground: '#6a2412' },
-  { id: 'rose', name: 'Rose', ground: '#5a0f3c' }
+  { id: 'violet', name: 'Violet', ground: '#371256', doodle: '#451a6b' },
+  { id: 'night', name: 'Night', ground: '#0e0b14', doodle: '#1f1a29' },
+  { id: 'teal', name: 'Teal', ground: '#083f47', doodle: '#13545d' },
+  { id: 'clay', name: 'Clay', ground: '#6a2412', doodle: '#80341e' },
+  { id: 'rose', name: 'Rose', ground: '#5a0f3c', doodle: '#6f1d4e' }
 ];
 export const designOf = (id) => DESIGNS.find(d => d.id === id) ?? DESIGNS[0];
 export const longDate = (iso) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-
-/* Eyes, triangles, chevrons, hatching and rings, as if painted with a dry
- * brush: drawn once, faint, behind everything. The back is the front mirrored,
- * without the eye, which would sit behind the symbol row. */
-function Doodle({ flip = false }) {
-  const brush = `brush${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
-  return (
-    <svg className="giftcard__doodle" viewBox="0 0 1000 630" preserveAspectRatio="xMidYMid slice" aria-hidden="true"
-         style={flip ? { transform: 'scaleX(-1)' } : undefined}>
-      <defs>
-        <filter id={brush} x="-5%" y="-5%" width="110%" height="110%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" />
-          <feDisplacementMap in="SourceGraphic" scale="9" />
-        </filter>
-      </defs>
-      <g fill="none" stroke="currentColor" strokeWidth="13" strokeLinecap="round" strokeLinejoin="round" filter={`url(#${brush})`}>
-        <path d="M38 64 L92 10 M70 92 L140 22 M104 118 L184 38 M140 140 L226 54" />
-        <path d="M340 40 L420 120 M420 40 L340 120 M380 30 L380 130" />
-        {!flip && <><path d="M430 182 Q500 122 570 182 Q500 242 430 182 Z" /><circle cx="500" cy="182" r="24" /></>}
-        <path d="M770 52 L815 98 L860 52 M790 92 L815 118 L840 92" />
-        <path d="M905 130 L985 50 M925 182 L1005 102 M945 234 L1015 164" />
-        <path d="M26 300 L80 342 L26 384 M76 300 L130 342 L76 384" />
-        <path d="M565 382 L642 222 L719 382 Z M612 352 L642 292 L672 352 Z" />
-        <path d="M176 456 q22 -34 44 0 t44 0 t44 0" />
-        <path d="M50 610 L120 486 L190 610" />
-        <path d="M300 618 L332 572 L364 618 L396 572 L428 618 L460 572" />
-        <path d="M640 498 L770 520 L694 618 Z" />
-        <circle cx="905" cy="548" r="58" /><circle cx="905" cy="548" r="30" />
-        <path d="M930 378 h44 M952 356 v44" />
-      </g>
-      <g fill="currentColor">
-        {!flip && <circle cx="500" cy="182" r="8" />}<circle cx="905" cy="548" r="9" />
-        <circle cx="236" cy="236" r="7" /><circle cx="262" cy="236" r="7" /><circle cx="288" cy="236" r="7" />
-        <circle cx="236" cy="262" r="7" /><circle cx="262" cy="262" r="7" /><circle cx="288" cy="262" r="7" />
-      </g>
-    </svg>
-  );
-}
 
 /**
  * The card. It turns over by a click, and once by itself when `revealed`
@@ -90,7 +56,7 @@ export default function GiftCard({ amountKobo, to, code, until, design, revealed
   ];
 
   return (
-    <div className="giftcard-wrap" style={{ '--card-ground': d.ground }}>
+    <div className="giftcard-wrap" style={{ '--card-ground': d.ground, '--card-doodle': d.doodle }}>
       <motion.div className="giftcard-tilt" style={{ rotateX, rotateY }} onPointerMove={tilt} onPointerLeave={rest} onClick={turn}>
         <motion.div
           className="giftcard-flip"
@@ -99,7 +65,7 @@ export default function GiftCard({ amountKobo, to, code, until, design, revealed
           transition={calm ? { duration: 0 } : { duration: 1.1, ease: EASE_SLOW }}
         >
           <div className="giftcard giftcard--front" data-design={d.id} aria-hidden={back}>
-            <Doodle />
+            <i className="giftcard__doodle" style={{ '--doodle': `url(${doodleFrontUrl})` }} />
             <img className="giftcard__wordmark" src={wordmarkUrl} alt="MASQ." />
             <span className="giftcard__kind">Gift card</span>
             <img className="giftcard__mask" src={maskUrl} alt="" />
@@ -117,11 +83,11 @@ export default function GiftCard({ amountKobo, to, code, until, design, revealed
             <span className="giftcard__for">{to ? `For ${to}` : 'For someone'}</span>
           </div>
           <div className="giftcard giftcard--back" aria-hidden={!back}>
-            <Doodle flip />
+            <i className="giftcard__doodle" style={{ '--doodle': `url(${doodleBackUrl})` }} />
             <img className="giftcard__symbols" src={symbolsUrl} alt="" />
             <p className="giftcard__motto">We wear identity. Unapologetically yours.</p>
             <span className={code ? 'giftcard__code' : 'giftcard__code giftcard__code--blank'}>{code ?? 'MASQ-••••-••••'}</span>
-            <span className="giftcard__small">{until ? `Use by ${until}` : 'Use at checkout · Valid 12 months'} · Pieces and delivery</span>
+            <span className="giftcard__small">Use at masq.ng · Valid 12 months · Pieces and delivery</span>
           </div>
         </motion.div>
       </motion.div>
