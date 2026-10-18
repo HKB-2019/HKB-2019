@@ -2576,6 +2576,63 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 .admin-field{ font-weight:500; letter-spacing:.08em; }
 .admin-field input, .admin-field textarea, .admin-field select{ border-radius:var(--radius); }
 
+/* ============ ONE LOOK EVERYWHERE ============ */
+/* Brought in line with the redesign across the shop, checkout, gift cards,
+   pages and the admin: small capitals are firm and evenly spaced, fields are
+   outlined boxes like the sign-up box, and every box has the same corners. */
+
+/* small capitals: labels, small headings, quiet buttons and links */
+.skip-link, .drawer__title, .drawer__row, .modal__title, .tab, .field span, .toast,
+.status__total, .status__tracking p span:first-child, .gift__label, .gift__tile--other,
+.gift__mode, .giftcard__label, .delivery__back, .line-item__remove, .welcome__skip, .empty p,
+.pdp__sizes legend, .pdp__colours legend, .pdp__more summary, .pdp__guide, .pdp__inline,
+.pdp__hint, .pdp__pictured, .pick__colour-name, .zoom__bar, .zoom__toggle,
+.discount__open, .discount__remove, .restock__open, .restock--done,
+.admin-stock__back, .admin-stock__history summary, .admin-gift__more span:first-child,
+.admin-product__nophoto, .admin-product__label, .admin-card__title, .admin-mini-table th,
+.admin-home-photo__tag, .admin-chart__title, .admin-segment button, .viz-switch button,
+.viz-bars__row--head, .preview-bar__tag, .preview-bar__actions button{
+  font-weight:600; letter-spacing:.1em;
+}
+.pdp__crumbs, .line-item__variant, .form-msg, .countdown__when{ letter-spacing:.1em; }
+.pdp__crumbs{ font-weight:500; }
+.footer__head, .link-arrow, .card__badge{ letter-spacing:.1em; }
+.card__quick{ letter-spacing:.08em; }
+/* names of pieces read the same in the bag as on their cards */
+.line-item__name, .pdp__bar-name{ font-size:12px; font-weight:500; letter-spacing:.04em; }
+/* the small violet labels over a heading: one size and spacing everywhere */
+.eyebrow{ font-size:12px; font-weight:600; letter-spacing:.24em; }
+.newsletter .eyebrow{ font-size:12px; letter-spacing:.24em; }
+.hero__copy .eyebrow{ font-weight:500; }
+@media (max-width:420px){
+  .section__title{ letter-spacing:.1em; }
+  .link-arrow{ letter-spacing:.1em; }
+}
+
+/* fields: an outlined box, as the sign-up box */
+.field span{ margin-bottom:8px; }
+.field input, .field select, .field textarea{
+  border:1px solid rgb(var(--ink-rgb) / .3); border-radius:var(--radius);
+  padding-inline:14px; background-color:transparent;
+}
+.field input, .field select{ height:48px; }
+.field textarea{ padding-block:12px; }
+.field select{ padding-right:36px; background-position:calc(100% - 20px) 21px, calc(100% - 15px) 21px; }
+.field input:focus, .field select:focus, .field textarea:focus{ border-color:var(--violet-soft); }
+.field input.is-error, .field select.is-error, .field input[aria-invalid="true"]{ border-color:var(--bad-line); }
+
+/* the same corners on every box */
+.pdp__size-row button, .pdp__save, .gift__tile, .qty, .toast, .modal__panel, .card__sizes button,
+.discount__row input, .restock__row input, .restock__row select, .admin-stock-input,
+.admin-crm__search, .admin-crm__input, .admin-row-form input, .preview-bar__actions button,
+.preview-bar__tag, .admin-table-wrap, .admin-status{
+  border-radius:var(--radius);
+}
+.qty{ overflow:hidden; }
+.admin :is(input, select, textarea):not([type=checkbox]):not([type=radio]),
+.admin-gallery__add, .admin-icon{ border-radius:var(--radius); }
+.discount__row input{ letter-spacing:.1em; }
+
 /* ============ LIGHT THEME: what stays dark ============ */
 /* The top of the home page (photo and the craft band under it) and the film
    strip are shot and designed on black, and

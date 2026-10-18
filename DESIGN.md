@@ -100,6 +100,7 @@ Panels and buttons are just off square (4px). Circles are for the round arrow bu
 - **Film strip:** People / Places / Patterns / Purpose on the left, an outlined play disc, PLAY BRAND FILM. With no film set in the admin it plays the brand film made in code (`video/`).
 - **Promises:** delivery, returns, secure payment, in the owner's words and true to the Delivery and Returns pages.
 - **Sign-up box:** an outlined email field with the violet JOIN attached, on the page and in the welcome pop-up.
+- **Fields:** every text box and menu (checkout, tracking, gift cards, admin) is an outlined box with the same corners; labels above them are small capitals, 600, .1em.
 - **Gift card:** unchanged (`src/components/GiftCard.jsx`): the owner's chosen design, five grounds, the logo's colours.
 - **Admin:** the same type, panels, chips and violet fills; its layout is unchanged.
 
