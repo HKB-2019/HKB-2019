@@ -4,8 +4,8 @@ For ChatGPT. **Seven messages, all in the same chat, in order.** Messages 1 and 
 
 | # | Makes | Attach |
 |---|---|---|
-| 1 | Tobi, the male model (test shot) | the MASQ. logo |
-| 2 | Amara, the female model (test shot) | nothing |
+| 1 | Tobi, the male model (test shot); or Dayo, Cast B | the MASQ. logo |
+| 2 | Amara, the female model (test shot); or Ifeoma, Cast B | nothing |
 | 3 | Top of the home page: both together | the logo and the old home-page image |
 | 4 | Countdown: Amara in the patterned hood | nothing |
 | 5 | Violet T-shirt product photo: Tobi | the logo |
@@ -62,6 +62,48 @@ Body: 1.80 m, a slim but healthy model build, long limbs, straight posture, shor
 
 Every image must be: a real photograph, never CGI, a 3D render or digital painting; true-to-life colour; slight film grain.
 ```
+
+## Cast B (instead of 1 and 2): Dayo and Ifeoma, light-skinned
+
+Use these two in place of 1 and 2, then send 3 to 7 with the names changed: **Tobi → Dayo**, **Amara → Ifeoma**.
+
+**1B. Create Dayo (attach the logo)**
+
+```
+I am art-directing a fashion campaign for MASQ., a Nigerian streetwear brand. We will cast two models in this chat, then photograph them. Keep each one exactly the same in every image I ask for here. First, our male model: show me one neutral head-and-shoulders test shot of him, plain grey backdrop, soft daylight, no styling.
+
+Who he is: Dayo, 27, Yoruba, from Lagos. An exceptionally handsome man, the kind of face that stops people in the street and fronts a global luxury campaign. Magnetic, confident, warm but composed.
+
+Face: strikingly handsome and well balanced: high, defined cheekbones with healthy fullness in the cheeks (not gaunt), a strong chiselled jawline, a square chin, a long neck. A straight, well-shaped nose, full defined lips, deep-set light brown eyes with thick lashes and a direct, intense gaze, thick dark well-groomed eyebrows. A small natural asymmetry so he looks real.
+
+Hair: short neat black 4C coils on top with a sharp shape-up and a low skin fade at the sides; a neatly trimmed short beard that follows his jawline, with a clean cheek line.
+
+Skin: light-skinned, a warm caramel-honey complexion with golden undertones, a soft natural glow on the cheekbones, forehead and the bridge of the nose. Healthy and even, but real: visible pores across the nose and cheeks, a few tiny natural freckles or spots, fine hairs on the forearms. No retouching, no airbrushing, no smoothing, no makeup.
+
+Body: 1.88 m, an athletic model build at a healthy weight, broad shoulders, a strong neck, long arms, straight posture, short clean fingernails.
+
+Every image must be: a real photograph, never CGI, a 3D render or digital painting; true-to-life colour; slight film grain.
+```
+
+**2B. Create Ifeoma**
+
+```
+Now our female model, in the same way: one neutral head-and-shoulders test shot, plain grey backdrop, soft daylight, no styling. Keep her exactly the same in every image from now on.
+
+Who she is: Ifeoma, 24, Igbo, from Enugu, living in Lagos. Breathtakingly beautiful: the kind of face that fronts global beauty and fashion campaigns. Poised, radiant, self-assured, with a quiet intensity.
+
+Face: exceptionally beautiful and well balanced: high sculpted cheekbones with soft, healthy fullness beneath them (not gaunt), a graceful defined jaw, a long elegant neck. A refined nose with a soft rounded tip, full, beautifully shaped lips, large wide-set almond-shaped light brown eyes with long natural lashes, strong natural arched eyebrows. A small natural asymmetry so she looks real.
+
+Hair: a short sculpted natural cut, close-cropped black 4C coils about 2 cm long with a soft taper at the sides and nape.
+
+Skin: light-skinned, a warm golden-honey complexion with peach undertones, a soft natural glow on the cheekbones, collarbones and the bridge of the nose. Healthy and luminous, but real: visible pores, a few tiny natural freckles, fine vellus hair on the cheeks and arms. Minimal makeup at most: a touch of balm on the lips, no foundation; no retouching, no airbrushing, no smoothing. Small gold stud earrings.
+
+Body: 1.80 m, a slim but healthy model build, long limbs, straight posture, short natural nails.
+
+Every image must be: a real photograph, never CGI, a 3D render or digital painting; true-to-life colour; slight film grain.
+```
+
+If beauty turns plastic, reply: *"Keep their faces and beauty exactly, but make it a real photograph: visible pores, fine hairs, natural skin texture, as if shot on film and not retouched. Less contrast and less sharpening on the faces."*
 
 ## 3. Top of the home page: both together (attach the logo and the old home-page image)
 
