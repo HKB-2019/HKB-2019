@@ -130,53 +130,65 @@ Framing: very wide landscape, about 2.3 : 1, largest size available. Her in the 
 Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, glow around her, perfect symmetry, extra fingers, logos, watermarks, any text at all.
 ```
 
-**Recreate the countdown photo with Dayo or Ifeoma.** New chat. Attach the countdown photo the site has now (`public/assets/img/countdown.webp`, or save it from the home page) and the model's test portrait. Upload the result in Admin → HOME PAGE as **Countdown**.
+**The countdown, made fresh: a new model, Kunle, in three steps.** Same method as Dayo and Ifeoma: everything is described in words and nothing old is attached, so ChatGPT draws a new picture instead of copying the old one.
 
-Dayo:
+**Step 1. Create Kunle** (new chat, attach nothing). Keep this chat: you come back to it in Step 3.
 
 ```
-Attach: the current countdown photo and Dayo's test portrait.
+I am art-directing a fashion campaign for MASQ., a Nigerian streetwear brand. We will cast one male model in this chat, then photograph him. Keep him exactly the same in every image I ask for here. First, a test shot of him: from the chest up, plain mid-grey backdrop, soft daylight from the left, a plain black crew-neck T-shirt, no styling.
 
-Recreate the attached countdown photo with a new model: the man in the attached portrait, exactly as he is (face, skin tone, hair, build). Keep everything else from the countdown photo: the same pose, the same framing, the same place and the same light.
+Pose for the test shot: his body turned three-quarters to the right, his face in near profile, chin lifted, looking up and into the distance; lips relaxed and slightly parted; thoughtful, not posing.
 
-Wardrobe: a black heavyweight hoodie with the hood up; the inside of the hood lined with a bright multicoloured African geometric pattern in violet, orange, teal, gold and pink, real woven fabric with visible threads; a small gold zip at the neck.
+Who he is: Kunle, 25, from Lagos. A strikingly handsome man with a sculptural, editorial face, the kind that fronts a global fashion campaign. Quiet, intense, self-possessed.
 
-Pose and expression: seen from the chest up, turned three-quarters to the right, in profile, looking up and into the distance; lips relaxed; thoughtful, not posing. The hood's patterned edge frames his face.
+Face: high, defined cheekbones with healthy fullness in the cheeks (not gaunt), a strong clean jawline, a long neck with a visible Adam's apple. A broad, well-shaped nose, full defined lips, deep-set dark brown eyes with thick lashes, strong straight eyebrows. A small natural asymmetry so he looks real.
 
-Place: a dark concrete underpass at night. One beam of violet light cuts diagonally across the wall behind him; a pale concrete pillar on the far right, out of focus; the rest of the picture dark, softly lit concrete with nothing in it.
+Hair: very short black 4C hair, close-cropped, about 1 cm all over, with a soft natural hairline. Clean-shaven with a faint shadow of stubble on the jaw. A small gold hoop earring in his left ear.
 
-Light: the violet beam from behind and a faint cold light from the right; half his face in shadow but still detailed: visible pores, fine hairs, natural skin texture. The pattern inside the hood catches the light.
+Skin: deep ebony-brown skin with cool undertones and a soft natural sheen on the forehead, cheekbones and the bridge of the nose. Healthy and even, but real: visible pores across the nose and cheeks, fine lines at the corners of the eyes, tiny natural marks. No retouching, no airbrushing, no smoothing, no makeup.
+
+Body: 1.86 m, a lean athletic model build at a healthy weight, broad shoulders, straight posture.
+
+Every image must be: a real photograph, never CGI, a 3D render or digital painting; true-to-life colour; slight film grain.
+```
+
+If he comes out plastic, reply: *"Keep his face exactly, but make it a real photograph: visible pores, fine hairs, natural skin texture, as if shot on film and not retouched. Less contrast and less sharpening on the face."*
+
+**Step 2. The hoodie on its own** (a separate new chat, attach nothing)
+
+```
+A product photograph of one hoodie on its own, for an online fashion shop: a heavyweight black cotton-fleece pullover hoodie with the hood up, shown in a three-quarter front view, turned slightly to the right, on an invisible (ghost) mannequin so it has a natural body shape and the hood stands open like a frame, with the inside of the hood clearly visible.
+
+The inside of the hood is lined with a bright multicoloured African geometric pattern in violet, orange, teal, gold and pink: triangles and diamonds edged in fine lines, real woven fabric with visible threads, the pattern running right to the hood's edge so a thin band of it shows from the front. A short gold metal zip at the neck, half open. Ribbed cuffs and hem, dropped shoulders, soft real folds and visible stitching, a brushed-fleece texture you can almost feel. No print, no logo, no drawcords.
+
+Background: plain charcoal grey seamless studio backdrop, a little lighter than the hoodie so its edges show. Light: one large soft light from the upper left, a soft fill from the front, so the black fleece shows its folds and the woven lining shows its colour and threads; gentle shadows, true colour. Camera: Sony A7R V, 90 mm macro lens at f/8, everything sharp. Square 1:1, the largest size available, the hoodie filling about 85% of the frame.
+
+Avoid: a flat black shape, blurry or smeared pattern, a person, a hanger, props, logos, drawcords, text, watermarks.
+```
+
+Save the hoodie photo. It also works as a product photo in the shop.
+
+**Step 3. Kunle in the hoodie, the countdown photo** (back in Kunle's chat from Step 1, attach the hoodie photo)
+
+```
+Attach: the hoodie photo.
+
+Now photograph Kunle, the same man from the test shot, exactly as he is (face, skin, hair, earring, build), for the countdown band on our home page. He wears the attached hoodie exactly as it is: the black fleece, the multicoloured woven pattern inside the hood, the gold zip at the neck. The hood is up, framing his face, the patterned lining showing all around it.
+
+Pose and expression: the same as his test shot: seen from the chest up, body turned three-quarters to the right, face in near profile, chin lifted, looking up and into the distance; lips relaxed and slightly parted; thoughtful, not posing.
+
+Place: a dark concrete underpass at night. One beam of violet light cuts diagonally across the wall behind him, low on the left; on the far right a tall pale concrete pillar, out of focus; the rest of the picture dark, softly lit concrete with stains and texture and nothing in it.
+
+Light: the violet beam from behind outlining the hood, and a faint cold light from the right; half his face in shadow but still detailed: visible pores, natural skin texture, the sheen on his cheekbone. The pattern inside the hood catches the light, glowing in violet, orange and teal.
 
 Camera: shot on a Sony A7R V with a 50 mm f/1.2 G Master lens at f/2, 1/125 s, ISO 1600; focus on his near eye. Colour like Kodak Portra 800 film pushed one stop: true skin tones, deep blacks, visible grain.
 
-Framing: very wide landscape, about 2.3 : 1, the same as the attached photo, largest size available. Him in the left third only; the middle and right of the picture dark and empty, for the countdown's numbers.
+Framing: the widest landscape you can make, largest size available. Him in the left third only, his face at the middle height of the picture, with dark space above the hood and below his chest so it can be cut to a wide strip; the middle and right of the picture dark and empty, for the countdown's numbers.
 
-Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, glow around him, a different face, extra fingers, logos, watermarks, any text at all.
+Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, glow around him, a different face, a smeared or changed pattern, extra fingers, logos, watermarks, any text at all.
 ```
 
-Ifeoma:
-
-```
-Attach: the current countdown photo and Ifeoma's test portrait.
-
-Recreate the attached countdown photo with a new model: the woman in the attached portrait, exactly as she is (face, skin tone, hair, build). Keep everything else from the countdown photo: the same pose, the same framing, the same place and the same light.
-
-Wardrobe: a black heavyweight hoodie with the hood up over her hair; the inside of the hood lined with a bright multicoloured African geometric pattern in violet, orange, teal, gold and pink, real woven fabric with visible threads; a small gold zip at the neck; small gold hoop earrings.
-
-Pose and expression: seen from the chest up, turned three-quarters to the right, in profile, looking up and into the distance; lips relaxed and slightly parted; thoughtful, not posing. The hood's patterned edge frames her face.
-
-Place: a dark concrete underpass at night. One beam of violet light cuts diagonally across the wall behind her; a pale concrete pillar on the far right, out of focus; the rest of the picture dark, softly lit concrete with nothing in it.
-
-Light: the violet beam from behind and a faint cold light from the right; half her face in shadow but still detailed: visible pores, fine hairs, natural skin texture. The pattern inside the hood catches the light.
-
-Camera: shot on a Sony A7R V with a 50 mm f/1.2 G Master lens at f/2, 1/125 s, ISO 1600; focus on her near eye. Colour like Kodak Portra 800 film pushed one stop: true skin tones, deep blacks, visible grain.
-
-Framing: very wide landscape, about 2.3 : 1, the same as the attached photo, largest size available. Her in the left third only; the middle and right of the picture dark and empty, for the countdown's numbers.
-
-Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, glow around her, a different face, extra fingers, logos, watermarks, any text at all.
-```
-
-If the face drifts, reply: *"That is not Dayo (or Ifeoma). Keep the face exactly as in the attached portrait; keep everything else."*
+If the face changes, reply: *"That is not Kunle. Keep his face exactly as in his test shot; keep everything else."* Send the picture over and it gets cut to the countdown's wide shape and put on the site, or upload it in Admin → HOME PAGE as **Countdown**.
 
 
 ## 6. Violet T-shirt: Dayo (attach the logo)
