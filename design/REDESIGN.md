@@ -65,7 +65,7 @@ owner's request the same day. Three.js stays installed, unused.
 | `category-tshirts.webp` | T-Shirts |
 | `category-headwear.webp` | Headwear |
 | `category-bags.webp` | Bags & Accessories |
-| `category-outerwear.webp` | Outerwear (Hoodies, Jackets, Layered Pieces) |
+| `category-outerwear.webp` | Outerwear (Hoodies, Jackets, Layered Pieces); first version, see the newer one below |
 | `menu-shop-dropdown.webp` | The SHOP ▾ menu, open |
 | `product-page.webp` | A product (The Face Tee) |
 
@@ -87,8 +87,13 @@ CATEGORY (T-Shirts, Headwear, Bags & Accessories, Outerwear, Accessories, each w
 photo, a one-line description and →, then "Shop All Products"); FEATURED THIS SEASON (one
 large product card); POPULAR PICKS (four small product cards with colour dots and quick add);
 and a DROP 01 Urban Rituals panel with EXPLORE THE DROP → and "WEAR IDENTITY. LIVE CULTURE."
-COLLECTIONS ▾ is expected to open the same way (its menu design not supplied yet; the
-Collections pages themselves are below).
+**The COLLECTIONS ▾ menu (open)** (`menu-collections-dropdown.webp`, supplied 18 Oct): a
+wide panel in three parts: ALL COLLECTIONS (Drop 01 Urban Rituals, Essentials, Limited
+Edition, Collaborations, Archive, each with a small photo, a line and →, the chosen one
+highlighted, then "View All Collections"); FEATURED COLLECTION (a large Drop 01 Urban
+Rituals panel with EXPLORE COLLECTION → and four small product photos under it); OTHER
+COLLECTIONS (four photo tiles: Essentials, Limited Edition, Collaborations, Archive); and
+the promises strip along its foot. Below it on the page: "Identity Lives Here".
 
 **Reassurance strip:** Fast Delivery (2–5 business days), Easy Returns (7-day return policy),
 Secure Payment (100% secure checkout): under the hero in the menu design, and above the
@@ -175,6 +180,40 @@ the admin, so each page is filled from the shop's real pieces.
   14-day returns).
 - The **"Trusted by a global community"** faces appear here too: still left out until real.
 - The many **pieces and photos** in the pictures appear once added in the admin.
+
+## More pages (supplied 18 Oct, second set)
+
+| File | Page |
+|---|---|
+| `collection-drop-01.webp` | Drop 01 — Urban Rituals, the collection page |
+| `menu-collections-dropdown.webp` | The COLLECTIONS ▾ menu, open (described above) |
+| `category-accessories.webp` | Accessories — "Details Carry Culture." |
+| `category-outerwear-v2.webp` | Outerwear, newer version — "Layer Your Identity" |
+| `category-outerwear-v2-alt.webp` | Outerwear, the same with "MASQ. Your Identity" as the title |
+
+**Drop 01 — Urban Rituals:** hero (COLLECTION, DROP 01, "Urban Rituals" in serif with
+"Rituals" in violet, "Wear Identity. Live Culture.", SHOP THE COLLECTION →); category
+panels (All, T-Shirts, Hoodies, Jackets, Bags, Headwear, Accessories); "The Collection"
+with a count and Sort by, and a product grid **without** a filter column; a two-part
+band, "Behind the Collection — More Than A Look" with EXPLORE THE STORY → beside a
+"The Lookbook — Watch the film" panel with a play button; then a closing "Drop 01 Urban
+Rituals — People. Places. Patterns. Purpose." band with SHOP THE COLLECTION →. (The
+design's button reads "SHOP THE COLLECTIAR": a typo, built as SHOP THE COLLECTION.)
+
+**Accessories:** sub-category panels with photos (All Accessories, Caps & Headwear,
+Bags, Scarves & Wraps, Lifestyle & Essentials); filters for Category, Price, Colour,
+Collection and Availability (no Size); 18 products with a NEW badge; a closing Drop 01
+band ("Accessories for everyday journeys.").
+
+**Outerwear, newer version:** replaces `category-outerwear.webp` where they differ: the
+sub-category panels carry photos, the product cards' quick add is a round bag button,
+there are page numbers, the closing Drop 01 band has no play button, and **there is no
+promises strip** above the footer. The two versions differ only in the title: "Layer
+Your Identity" or "MASQ. Your Identity". Ask the owner which; build "Layer Your
+Identity" until told.
+
+**New pieces in these pictures** (bottle, sunglasses, lanyard, socks, card wallet,
+Harrington, windbreaker, varsity, anorak, padded vest…) appear once the owner adds them.
 
 ## When it is built
 
