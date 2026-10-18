@@ -154,26 +154,28 @@ Every image must be: a real photograph, never CGI, a 3D render or digital painti
 
 If he comes out plastic, reply: *"Keep his face exactly, but make it a real photograph: visible pores, fine hairs, natural skin texture, as if shot on film and not retouched. Less contrast and less sharpening on the face."*
 
-**Step 2. The hoodie on its own** (a separate new chat, attach the MASQ. logo). The hood's lining is made only from the brand's own pieces: the row of symbols under "MASQ.", the brush shapes of the mask, and their colours.
+**Step 2. The hoodie on its own** (a separate new chat, attach the MASQ. logo). The outside of the hood is printed all over with the brand's own pieces: the row of symbols under "MASQ.", the brush shapes of the mask, and their colours. The body of the hoodie stays plain black.
 
 ```
 Attach: the MASQ. logo.
 
-A product photograph of one hoodie on its own, for an online fashion shop: a heavyweight black cotton-fleece pullover hoodie with the hood up, shown in a three-quarter front view, turned slightly to the right, on an invisible (ghost) mannequin so it has a natural body shape and the hood stands open like a frame, with the inside of the hood clearly visible.
+A product photograph of one hoodie on its own, for an online fashion shop: a heavyweight black cotton-fleece pullover hoodie with the hood up, shown in a three-quarter front view, turned slightly to the right, on an invisible (ghost) mannequin so it has a natural body shape and the hood stands up in its full shape, with the outside of the hood clearly visible.
 
-The inside of the hood is lined with an all-over pattern made only from the parts of the attached logo, on a black ground:
-1. The row of symbols under the word "MASQ.", copied exactly as clean, even line drawings: a blue diamond with a dot in its centre; a coral-red starburst whose rays end in small arrowheads; a saffron double ring; a violet starburst with arrowhead ends; a green circle crossed by a horizontal line with a small diamond in the middle. They repeat in neat rows, in the same order, with a short white vertical bar between each, exactly like the row on the logo.
+The outside of the hood is printed all over with a pattern made only from the parts of the attached logo, on a black ground:
+1. The row of symbols under the word "MASQ.", copied exactly as clean, even line drawings: a blue diamond with a dot in its centre; a coral-red starburst whose rays end in small arrowheads; a saffron double ring; a violet starburst with arrowhead ends; a green circle crossed by a horizontal line with a small diamond in the middle. They repeat in neat rows, in the same order, with a short white vertical bar between each, exactly like the row on the logo, following the curve of the hood.
 2. Between the rows, the mask's hand-painted brush shapes with rough, dry-brush edges: triangles, half-moons, ringed eyes with short rays, fields of small dots, zig-zags and short dash marks.
-Only the logo's colours: electric violet, turquoise, royal blue, coral orange, hot pink, saffron yellow, lime green and bone white. No whole masks or faces, no letters. Printed on a soft cotton lining with the weave just visible, the pattern running right to the hood's edge so a thin band of it shows from the front.
+Only the logo's colours: electric violet, turquoise, royal blue, coral orange, hot pink, saffron yellow, lime green and bone white. No whole masks or faces, no letters. A soft, flat print sunk into the fleece, the texture of the fabric showing through it, the pattern running right to the hood's edge and stopping cleanly at the seam where the hood meets the body.
 
-A short gold metal zip at the neck, half open. Ribbed cuffs and hem, dropped shoulders, soft real folds and visible stitching, a brushed-fleece texture you can almost feel. No print on the outside, no drawcords.
+The inside of the hood is plain black. The body and sleeves are plain black fleece with no print. A short gold metal zip at the neck, half open. Ribbed cuffs and hem, dropped shoulders, soft real folds and visible stitching, a brushed-fleece texture you can almost feel. No drawcords.
 
-Background: plain charcoal grey seamless studio backdrop, a little lighter than the hoodie so its edges show. Light: one large soft light from the upper left, a soft fill from the front, so the black fleece shows its folds and the lining shows its colours, symbols and brush texture; gentle shadows, true colour. Camera: Sony A7R V, 90 mm macro lens at f/8, everything sharp, every symbol crisp. Square 1:1, the largest size available, the hoodie filling about 85% of the frame.
+Background: plain charcoal grey seamless studio backdrop, a little lighter than the hoodie so its edges show. Light: one large soft light from the upper left, a soft fill from the front, so the black fleece shows its folds and the printed hood shows its colours, symbols and brush texture; gentle shadows, true colour. Camera: Sony A7R V, 90 mm macro lens at f/8, everything sharp, every symbol crisp. Square 1:1, the largest size available, the hoodie filling about 85% of the frame.
 
-Avoid: a flat black shape, a generic or kente-style pattern, changed or extra symbols, colours that are not in the logo, a whole mask or face in the lining, blurry or smeared pattern, a person, a hanger, props, logos, drawcords, text, watermarks.
+Avoid: a flat black shape, a generic or kente-style pattern, changed or extra symbols, colours that are not in the logo, a whole mask or face in the print, a patterned lining, print on the body or sleeves, a blurry or smeared pattern, a shiny plastic-looking print, a person, a hanger, props, other logos, drawcords, text, watermarks.
 ```
 
-If the symbols come out wrong, reply: *"The symbols in the lining must be exactly the ones under "MASQ." on the attached logo: the blue diamond with a dot, the coral starburst, the saffron double ring, the violet starburst, the green circle with a line and a diamond, with white bars between. Keep everything else."*
+If the symbols come out wrong, reply: *"The symbols on the hood must be exactly the ones under "MASQ." on the attached logo: the blue diamond with a dot, the coral starburst, the saffron double ring, the violet starburst, the green circle with a line and a diamond, with white bars between. Keep everything else."*
+
+To print the whole hoodie instead of only the hood, reply: *"Same hoodie, but carry the same print over the whole outside: hood, body and sleeves. Cuffs, hem and the inside of the hood stay plain black. Keep everything else."*
 
 **Or: lift the hoodie from the current countdown photo** (new chat, attach the countdown photo). Keeps today's hood pattern instead of the MASQ. symbols. ChatGPT cannot literally cut it out: the photo shows only the hood and a little of the shoulders, so it draws the rest of the hoodie to match.
 
@@ -200,13 +202,13 @@ Save the hoodie photo. It also works as a product photo in the shop.
 ```
 Attach: the hoodie photo.
 
-Now photograph Kunle, the same man from the test shot, exactly as he is (face, skin, hair, earring, build), for the countdown band on our home page. He wears the attached hoodie exactly as it is: the black fleece, the pattern of MASQ. symbols and mask brush shapes inside the hood, the gold zip at the neck. The hood is up, framing his face, the patterned lining showing all around it.
+Now photograph Kunle, the same man from the test shot, exactly as he is (face, skin, hair, earring, build), for the countdown band on our home page. He wears the attached hoodie exactly as it is: the black fleece, the print of MASQ. symbols and mask brush shapes on the outside of the hood, the plain black inside, the gold zip at the neck. The hood is up, its printed outside framing his face.
 
 Pose and expression: the same as his test shot: seen from the chest up, body turned three-quarters to the right, face in near profile, chin lifted, looking up and into the distance; lips relaxed and slightly parted; thoughtful, not posing.
 
 Place: a dark concrete underpass at night. One beam of violet light cuts diagonally across the wall behind him, low on the left; on the far right a tall pale concrete pillar, out of focus; the rest of the picture dark, softly lit concrete with stains and texture and nothing in it.
 
-Light: the violet beam from behind outlining the hood, and a faint cold light from the right; half his face in shadow but still detailed: visible pores, natural skin texture, the sheen on his cheekbone. The pattern inside the hood catches the light, its symbols and brush shapes glowing in the logo's colours against the black.
+Light: the violet beam from behind outlining the hood, and a faint cold light from the right; half his face in shadow but still detailed: visible pores, natural skin texture, the sheen on his cheekbone. The print on the hood catches the light, its symbols and brush shapes glowing in the logo's colours against the black.
 
 Camera: shot on a Sony A7R V with a 50 mm f/1.2 G Master lens at f/2, 1/125 s, ISO 1600; focus on his near eye. Colour like Kodak Portra 800 film pushed one stop: true skin tones, deep blacks, visible grain.
 
@@ -222,24 +224,24 @@ If the face changes, reply: *"That is not Kunle. Keep his face exactly as in his
 ```
 Attach: the hoodie photo.
 
-A premium fashion product photograph of Kunle, the same man from the test shot, exactly as he is (face, skin, hair, earring, build), wearing the attached hoodie exactly as it is: the black brushed fleece, the gold zip at the neck, and the lining inside the hood with the MASQ. symbols and brush shapes in the same colours, order and size. Nothing on the hoodie changed, added or redrawn.
+A premium fashion product photograph of Kunle, the same man from the test shot, exactly as he is (face, skin, hair, earring, build), wearing the attached hoodie exactly as it is: the black brushed fleece, the gold zip at the neck, and the print on the outside of the hood with the MASQ. symbols and brush shapes in the same colours, order and size. Nothing on the hoodie changed, added or redrawn.
 
-Styling: the hood up, framing his face, the lining showing all around it; the zip half open. Slim black tapered trousers that break just above the ankle, plain black leather Chelsea boots. Nothing else: no jewellery but his small gold hoop, no bag, no props.
+Styling: the hood up, its printed outside framing his face; the zip half open. Slim black tapered trousers that break just above the ankle, plain black leather Chelsea boots. Nothing else: no jewellery but his small gold hoop, no bag, no props.
 
 Pose: standing full length, body turned slightly to his right, weight on his back leg, front knee softly bent; one hand relaxed at his side, the other thumb hooked into his trouser pocket; head turned to the camera, chin level, looking straight into the lens; calm, proud, unsmiling.
 
 Set: a seamless studio backdrop in deep charcoal that curves into the floor, with a soft gradient: slightly lighter behind him, falling to near black at the edges. He casts a soft, real shadow on the floor. Nothing else in the picture.
 
-Light: a large soft key light high on the front left, angled so the fleece shows its folds and texture and the lining glows with colour; a thin strip light behind him on the right with a faint violet tint, outlining the hood, shoulder and arm; a little soft fill from the front so his face is fully clear. Deep, clean shadows, true colour, no haze.
+Light: a large soft key light high on the front left, angled so the fleece shows its folds and texture and the printed hood shows its colours; a thin strip light behind him on the right with a faint violet tint, outlining the hood, shoulder and arm; a little soft fill from the front so his face is fully clear. Deep, clean shadows, true colour, no haze.
 
-Camera: shot on a Hasselblad X2D 100C with the XCD 90 mm lens at f/8, 1/125 s, ISO 100, from chest height; sharp from the hood to the boots, every symbol in the lining crisp. Clean, rich, true-to-life colour, very fine grain.
+Camera: shot on a Hasselblad X2D 100C with the XCD 90 mm lens at f/8, 1/125 s, ISO 100, from chest height; sharp from the hood to the boots, every symbol on the hood crisp. Clean, rich, true-to-life colour, very fine grain.
 
 Framing: portrait 4:5, the largest size available. His whole body in the picture from the top of the hood to the soles of his boots, with a little space above the hood and below the boots; him in the centre.
 
-Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, glow, a different face, a changed or smeared lining, extra symbols, cropped feet or head, extra fingers, warped hands, logos in the corners, watermarks, any text.
+Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, glow, a different face, a changed or smeared print, extra symbols, cropped feet or head, extra fingers, warped hands, logos in the corners, watermarks, any text.
 ```
 
-A second view, same chat: *"Same shoot, same light and backdrop: now with the hood down, resting behind his neck so the lining shows around the collar, and him turned three-quarters to the left, looking past the lens. Keep everything else."*
+A second view, same chat: *"Same shoot, same light and backdrop: now with the hood down, resting on his shoulders behind his neck so its print shows, and him turned three-quarters to the left, looking past the lens. Keep everything else."*
 
 
 
