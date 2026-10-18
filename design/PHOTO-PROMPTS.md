@@ -130,6 +130,55 @@ Framing: very wide landscape, about 2.3 : 1, largest size available. Her in the 
 Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, glow around her, perfect symmetry, extra fingers, logos, watermarks, any text at all.
 ```
 
+**Recreate the countdown photo with Dayo or Ifeoma.** New chat. Attach the countdown photo the site has now (`public/assets/img/countdown.webp`, or save it from the home page) and the model's test portrait. Upload the result in Admin → HOME PAGE as **Countdown**.
+
+Dayo:
+
+```
+Attach: the current countdown photo and Dayo's test portrait.
+
+Recreate the attached countdown photo with a new model: the man in the attached portrait, exactly as he is (face, skin tone, hair, build). Keep everything else from the countdown photo: the same pose, the same framing, the same place and the same light.
+
+Wardrobe: a black heavyweight hoodie with the hood up; the inside of the hood lined with a bright multicoloured African geometric pattern in violet, orange, teal, gold and pink, real woven fabric with visible threads; a small gold zip at the neck.
+
+Pose and expression: seen from the chest up, turned three-quarters to the right, in profile, looking up and into the distance; lips relaxed; thoughtful, not posing. The hood's patterned edge frames his face.
+
+Place: a dark concrete underpass at night. One beam of violet light cuts diagonally across the wall behind him; a pale concrete pillar on the far right, out of focus; the rest of the picture dark, softly lit concrete with nothing in it.
+
+Light: the violet beam from behind and a faint cold light from the right; half his face in shadow but still detailed: visible pores, fine hairs, natural skin texture. The pattern inside the hood catches the light.
+
+Camera: shot on a Sony A7R V with a 50 mm f/1.2 G Master lens at f/2, 1/125 s, ISO 1600; focus on his near eye. Colour like Kodak Portra 800 film pushed one stop: true skin tones, deep blacks, visible grain.
+
+Framing: very wide landscape, about 2.3 : 1, the same as the attached photo, largest size available. Him in the left third only; the middle and right of the picture dark and empty, for the countdown's numbers.
+
+Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, glow around him, a different face, extra fingers, logos, watermarks, any text at all.
+```
+
+Ifeoma:
+
+```
+Attach: the current countdown photo and Ifeoma's test portrait.
+
+Recreate the attached countdown photo with a new model: the woman in the attached portrait, exactly as she is (face, skin tone, hair, build). Keep everything else from the countdown photo: the same pose, the same framing, the same place and the same light.
+
+Wardrobe: a black heavyweight hoodie with the hood up over her hair; the inside of the hood lined with a bright multicoloured African geometric pattern in violet, orange, teal, gold and pink, real woven fabric with visible threads; a small gold zip at the neck; small gold hoop earrings.
+
+Pose and expression: seen from the chest up, turned three-quarters to the right, in profile, looking up and into the distance; lips relaxed and slightly parted; thoughtful, not posing. The hood's patterned edge frames her face.
+
+Place: a dark concrete underpass at night. One beam of violet light cuts diagonally across the wall behind her; a pale concrete pillar on the far right, out of focus; the rest of the picture dark, softly lit concrete with nothing in it.
+
+Light: the violet beam from behind and a faint cold light from the right; half her face in shadow but still detailed: visible pores, fine hairs, natural skin texture. The pattern inside the hood catches the light.
+
+Camera: shot on a Sony A7R V with a 50 mm f/1.2 G Master lens at f/2, 1/125 s, ISO 1600; focus on her near eye. Colour like Kodak Portra 800 film pushed one stop: true skin tones, deep blacks, visible grain.
+
+Framing: very wide landscape, about 2.3 : 1, the same as the attached photo, largest size available. Her in the left third only; the middle and right of the picture dark and empty, for the countdown's numbers.
+
+Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, glow around her, a different face, extra fingers, logos, watermarks, any text at all.
+```
+
+If the face drifts, reply: *"That is not Dayo (or Ifeoma). Keep the face exactly as in the attached portrait; keep everything else."*
+
+
 ## 6. Violet T-shirt: Dayo (attach the logo)
 
 ```
@@ -556,42 +605,6 @@ Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, extra 
 Same method as the shirts: the hoodie on its own first, so the print stays sharp, then the models wearing it. The shop sells it in **Black** and **Indigo**, so there is one of each.
 
 The print is **tone-on-tone** (black on black, like the hoodie photo in the shop now): it shows only where the light catches it. If you would rather have the full-colour logo, as on the T-shirts, reply after Step 1: *"Same hoodie, but make the print full colour exactly like the attached logo, as on the T-shirts. Keep everything else."*
-
-**Recreate a photo you already have, in the hoodie.** One message each, in a new chat. It keeps the adire top-of-page photo exactly as it is and changes only the top.
-
-Dayo (attach his adire top-of-page photo and the MASQ. logo):
-
-```
-Attach: Dayo's adire photo and the MASQ. logo.
-
-Recreate the attached photo exactly, changing only what he wears on top. Keep the man exactly as he is: face, skin, hair, build, pose, hands, expression, size and position in the frame. Keep the adire cloth behind him, the light, the colour, and the 16:9 framing with the left half dark and quiet.
-
-Replace the violet T-shirt with a heavyweight black pullover hoodie: brushed cotton fleece, hood down and resting behind his neck, flat black drawcords hanging on either side of the neck, a kangaroo front pocket, ribbed cuffs and hem, dropped shoulders, real folds where his arms and body bend. Keep his black trousers.
-
-On the chest, the attached logo as a tone-on-tone print: black on black, raised, with a soft satin sheen where the light catches it. Exactly like the logo: the mask in the centre, the ring of capital letters reading "WE WEAR IDENTITY." across the top and "UNAPOLOGETICALLY YOURS" around the bottom, "MASQ." below the ring, and the five small symbols underneath. Every letter spelled correctly and sharp. Centred, about 26 cm wide, above the pocket. The drawcords hang beside the print, never across it.
-
-A real photograph with the same camera and film look as the original: natural skin texture, gentle grain. The hoodie shows its folds and fleece texture, never a flat black shape. Largest size.
-
-Avoid: changing his face, pose or position, plastic or waxy skin, a blurry or redrawn print, misspelled letters, a colourful logo, drawcords across the print, a zip, extra logos, watermarks, any text other than the print.
-```
-
-Ifeoma (attach her adire top-of-page photo and the logo):
-
-```
-Attach: Ifeoma's adire photo and the MASQ. logo.
-
-Recreate the attached photo exactly, changing only what she wears on top. Keep the woman exactly as she is: face, skin, hair, build, pose with her arms crossed, expression, size and position in the frame. Keep the adire cloth behind her, the light, the colour, and the 16:9 framing with the left half dark and quiet.
-
-Replace the pink T-shirt with a heavyweight black pullover hoodie: brushed cotton fleece, hood down and resting behind her neck, flat black drawcords hanging on either side of the neck, ribbed cuffs and hem, dropped shoulders, sleeves gathering softly at her crossed forearms, real folds where her arms and body bend. Keep her black trousers.
-
-On the chest, the attached logo as a tone-on-tone print: black on black, raised, with a soft satin sheen where the light catches it. Exactly like the logo: the mask in the centre, the ring of capital letters reading "WE WEAR IDENTITY." across the top and "UNAPOLOGETICALLY YOURS" around the bottom, "MASQ." below the ring, and the five small symbols underneath. Every letter spelled correctly and sharp. Centred, about 24 cm wide, placed high on the chest so the whole print sits above her crossed arms. The drawcords hang beside the print, never across it.
-
-A real photograph with the same camera and film look as the original: natural skin texture, gentle grain. The hoodie shows its folds and fleece texture, never a flat black shape. Largest size.
-
-Avoid: changing her face, pose or position, plastic or waxy skin, arms covering the print, a blurry or redrawn print, misspelled letters, a colourful logo, drawcords across the print, a zip, extra logos, watermarks, any text other than the print.
-```
-
-If a letter comes out blurry or wrong, reply: *"Keep everything, but make the print sharp and exactly like the attached logo, every letter correct."* For the full-colour logo instead, reply: *"Same photo, but make the print full colour exactly like the attached logo, as on the T-shirts."*
 
 **Step 1. The black hoodie** (new chat, attach the logo)
 
