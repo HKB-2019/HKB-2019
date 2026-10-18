@@ -132,6 +132,28 @@ Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, glow around her,
 
 **The countdown, made fresh: a new model, Kunle, in three steps.** Same method as Dayo and Ifeoma: everything is described in words and nothing old is attached, so ChatGPT draws a new picture instead of copying the old one.
 
+**Simplest way: put Kunle into the countdown photo as it is.** One message, in Kunle's chat (or a new one). Attach two pictures in this order: 1. the countdown photo, 2. Kunle's test shot. Everything stays (hood, pattern, place, light); only the person changes.
+
+```
+Attach: 1. the wide photo of a man in a patterned hood (image 1). 2. the portrait of a man in a black T-shirt (image 2).
+
+Edit image 1: replace the man in the hood with the man from image 2. Change nothing else.
+
+The new man must be exactly the man from image 2, recognisably the same person: his long, lean face, high cheekbones, straight strong jaw, broad nose, full lips, thin moustache and short stubble beard along the jaw and chin, close-cropped black hair with a sharp hairline, warm deep-brown skin, long neck with a visible Adam's apple, and the small gold hoop in his ear. Same age, same skin tone, same proportions. Do not blend his face with the man in image 1.
+
+Put him in the pose of image 1: seen from the chest up, turned three-quarters to the right, face in near profile, chin lifted, looking up into the distance, lips relaxed and slightly parted; thoughtful, not posing. The hood is up over his head, framing his face exactly as in image 1.
+
+Keep from image 1 exactly as they are: the black hoodie, the multicoloured pattern on the hood with every shape and colour, the gold zip at the neck, the dark concrete underpass, the violet beam across the wall, the pale pillar on the right, the dark empty middle and right of the picture, the colours, the framing, his size and position in the left third, and the very wide shape of the picture.
+
+Light him the way image 1 is lit: violet light from behind, a faint cold light from the right, half his face in shadow but still detailed. Real photographic skin, as in image 2: visible pores, stubble, fine lines, natural sheen on the cheekbone. Film grain to match image 1.
+
+Avoid: plastic or waxy skin, airbrushing, a smoothed or painted look, a face that is not the man from image 2, a changed hood or pattern, a changed background, extra fingers, text, watermarks.
+```
+
+If the face isn't him, reply: *"The face must be exactly the man from image 2. Keep everything else."* If it looks plastic, reply: *"Keep everything, but give him real photographic skin as in image 2: pores, stubble, fine lines, no smoothing. Less contrast and sharpening on the face."*
+
+Or make every part fresh, in the steps below.
+
 **Step 1. Create Kunle** (new chat, attach nothing). Keep this chat: you come back to it in Step 3.
 
 ```
