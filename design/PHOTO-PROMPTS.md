@@ -341,6 +341,110 @@ Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, glow, 
 
 If the print still softens a little in these, send the photo back with the shirt photo attached: *"Replace the print on the T-shirt with the print from the attached shirt photo, exactly and tack-sharp. Change nothing else."*
 
+## Ifeoma's own prompts (A to E, ready to copy)
+
+The same backgrounds and framing as A to E, written for her, each with her own pose. Attach her test portrait and the black (or pink) shirt photo.
+
+**A. Studio, minimal luxury (over-the-shoulder pose)**
+
+```
+Photograph the woman in the attached portrait, exactly as she is (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, same fabric, same print in the same place and size. Black tailored trousers.
+
+Pose: body turned three-quarters to her left, looking back over her right shoulder straight into the lens, one hand lightly touching the collar of the T-shirt; poised and knowing. The print still clearly visible.
+
+Background: a seamless studio backdrop in deep charcoal, almost black, lit by one soft violet glow behind her that fades to black at the edges. Nothing else: no walls, no texture, no text. Like a luxury fashion campaign.
+
+Framing (so it can fade with Dayo's photo on the website): wide landscape 16:9, largest size available. She stands in the right third of the picture, seen from the top of her head to mid-thigh, the top of her head about 12% below the top edge; the left half of the picture dark and quiet, for the website's words.
+
+Light on her: one large soft key light from the front left at head height, a soft violet rim light from behind on the right outlining her hair and shoulders; deep, natural shadows.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2.8, 1/160 s, ISO 400; focus on the near eye; the background softly out of focus. Colour like Kodak Portra 800 film: rich but true skin tones, soft contrast, gentle grain.
+
+The print must be tack-sharp and exactly as on the attached T-shirt photo: every letter of "WE WEAR IDENTITY." and "UNAPOLOGETICALLY YOURS" crisp and spelled correctly, the mask, the multicoloured "MASQ." and the five symbols clean, following the folds of the fabric.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, glow, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print.
+```
+
+**B. Brutalist architecture, Lagos at night (leaning pose)**
+
+```
+Photograph the woman in the attached portrait, exactly as she is (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, same fabric, same print in the same place and size. Black tailored trousers.
+
+Pose: leaning one shoulder lightly against a concrete column, legs crossed at the ankle, one thumb hooked in a trouser pocket, face turned to the lens; relaxed and self-assured. The print fully visible.
+
+Background: raw board-formed concrete architecture at night, in the style of Lagos modernist buildings: deep vertical concrete fins and shadowed recesses, softly out of focus. Cool dark tones with a faint violet light grazing the concrete from the right. No text, no graffiti.
+
+Framing (so it can fade with Dayo's photo on the website): wide landscape 16:9, largest size available. She stands in the right third of the picture, seen from the top of her head to mid-thigh, the top of her head about 12% below the top edge; the left half of the picture dark and quiet, for the website's words.
+
+Light on her: one large soft key light from the front left at head height, a soft violet rim light from behind on the right outlining her hair and shoulders; deep, natural shadows.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2.8, 1/160 s, ISO 400; focus on the near eye; the background softly out of focus. Colour like Kodak Portra 800 film: rich but true skin tones, soft contrast, gentle grain.
+
+The print must be tack-sharp and exactly as on the attached T-shirt photo: every letter of "WE WEAR IDENTITY." and "UNAPOLOGETICALLY YOURS" crisp and spelled correctly, the mask, the multicoloured "MASQ." and the five symbols clean, following the folds of the fabric.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, glow, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print.
+```
+
+**C. Indigo textile wall (arms-crossed pose)**
+
+```
+Photograph the woman in the attached portrait, exactly as she is (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, same fabric, same print in the same place and size. Black tailored trousers.
+
+Pose: facing the camera, arms loosely crossed low at the waist so the whole print stays visible above them, shoulders relaxed, head tilted slightly, a faint knowing half-smile.
+
+Background: a large hand-dyed indigo adire cloth hung flat behind her, deep blue-black with subtle resist-dyed geometric patterns, softly lit from the right so the folds and texture show, falling into darkness on the left. No text.
+
+Framing (so it can fade with Dayo's photo on the website): wide landscape 16:9, largest size available. She stands in the right third of the picture, seen from the top of her head to mid-thigh, the top of her head about 12% below the top edge; the left half of the picture dark and quiet, for the website's words.
+
+Light on her: one large soft key light from the front left at head height, a soft violet rim light from behind on the right outlining her hair and shoulders; deep, natural shadows.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2.8, 1/160 s, ISO 400; focus on the near eye; the background softly out of focus. Colour like Kodak Portra 800 film: rich but true skin tones, soft contrast, gentle grain.
+
+The print must be tack-sharp and exactly as on the attached T-shirt photo: every letter of "WE WEAR IDENTITY." and "UNAPOLOGETICALLY YOURS" crisp and spelled correctly, the mask, the multicoloured "MASQ." and the five symbols clean, following the folds of the fabric.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, glow, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print.
+```
+
+**D. Gallery wall with carved relief (hand-in-hair pose)**
+
+```
+Photograph the woman in the attached portrait, exactly as she is (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, same fabric, same print in the same place and size. Black tailored trousers.
+
+Pose: facing the camera, weight on one hip, one hand resting lightly on the back of her head, the other arm relaxed at her side, chin slightly down, eyes up into the lens; calm and confident. The print fully visible.
+
+Background: a dark gallery wall in charcoal lime plaster, with a large abstract hand-carved dark wood relief panel of geometric patterns behind her shoulder, lit by one narrow spotlight; everything else falls to black. Quiet and museum-like. No text.
+
+Framing (so it can fade with Dayo's photo on the website): wide landscape 16:9, largest size available. She stands in the right third of the picture, seen from the top of her head to mid-thigh, the top of her head about 12% below the top edge; the left half of the picture dark and quiet, for the website's words.
+
+Light on her: one large soft key light from the front left at head height, a soft violet rim light from behind on the right outlining her hair and shoulders; deep, natural shadows.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2.8, 1/160 s, ISO 400; focus on the near eye; the background softly out of focus. Colour like Kodak Portra 800 film: rich but true skin tones, soft contrast, gentle grain.
+
+The print must be tack-sharp and exactly as on the attached T-shirt photo: every letter of "WE WEAR IDENTITY." and "UNAPOLOGETICALLY YOURS" crisp and spelled correctly, the mask, the multicoloured "MASQ." and the five symbols clean, following the folds of the fabric.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, glow, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print.
+```
+
+**E. Night city, soft focus (mid-step pose)**
+
+```
+Photograph the woman in the attached portrait, exactly as she is (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, same fabric, same print in the same place and size. Black tailored trousers.
+
+Pose: walking slowly towards the camera mid-step across a terrace, one foot forward, arms swinging naturally, looking straight into the lens; certain and unhurried. The print fully visible.
+
+Background: Lagos at blue hour seen from a high terrace, the city lights far behind her and completely out of focus as soft bokeh, deep navy and violet tones, the left side of the sky dark. No readable signs or text.
+
+Framing (so it can fade with Dayo's photo on the website): wide landscape 16:9, largest size available. She stands in the right third of the picture, seen from the top of her head to mid-thigh, the top of her head about 12% below the top edge; the left half of the picture dark and quiet, for the website's words.
+
+Light on her: one large soft key light from the front left at head height, a soft violet rim light from behind on the right outlining her hair and shoulders; deep, natural shadows.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2.8, 1/160 s, ISO 400; focus on the near eye; the background softly out of focus. Colour like Kodak Portra 800 film: rich but true skin tones, soft contrast, gentle grain.
+
+The print must be tack-sharp and exactly as on the attached T-shirt photo: every letter of "WE WEAR IDENTITY." and "UNAPOLOGETICALLY YOURS" crisp and spelled correctly, the mask, the multicoloured "MASQ." and the five symbols clean, following the folds of the fabric.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, glow, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print.
+```
+
 ## More looks for Ifeoma (F to K)
 
 Each one different from A to E: a new setting, pose, light and mood. All keep the left half dark, so any can go at the top of the home page. Attach Ifeoma's test portrait and a shirt photo (black, violet or pink). If one is paired with Dayo's photo at the top of the page, give Dayo the same background so the fade lines up.
