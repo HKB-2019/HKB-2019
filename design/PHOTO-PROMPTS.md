@@ -12,6 +12,56 @@ If a result still looks plastic, reply: *"Make it look like an unretouched photo
 
 ---
 
+## The full-detail method: cast the person first, then shoot
+
+The most realistic results come from describing the model the way a casting director and a photographer would: who he is, his face and body in detail, his skin as a camera sees it, then the shoot itself. ChatGPT has no secret mode; detail like this is what does the work.
+
+Use it in **one ChatGPT chat**, in this order, so the same man appears in every photo.
+
+### Step 1: the casting sheet (paste first, attach the logo)
+
+> I am art-directing a fashion campaign for MASQ., a Nigerian streetwear brand. Before any photos, create our model and keep him exactly the same in every image I ask for in this chat. Show me one neutral head-and-shoulders test shot of him first, plain grey backdrop, soft daylight, no styling.
+>
+> **Who he is:** Tobi, 26, Yoruba, from Lagos. Creative, quietly confident, a little reserved with strangers. Not a catalogue model: a real person you would pass in Yaba.
+>
+> **Face:** oval face with a strong, slightly squared jaw; high cheekbones; broad nose with a soft rounded tip; full lips, the lower slightly fuller, a little darker at the edges; deep-set dark brown eyes with heavy upper lids and visible lower lashes; thick natural eyebrows, slightly uneven, the left a touch higher; small faint scar through the right eyebrow; ears slightly protruding.
+>
+> **Hair:** short natural 4C coils, about 3 cm on top, a low taper at the sides with a little regrowth, a clean but not razor-sharp hairline; light beard shadow on the jaw and upper lip, patchier on the cheeks.
+>
+> **Skin:** deep brown with warm red undertones, darker around the eyes, knuckles and elbows; visible pores across the nose and cheeks; a few small dark spots on the cheekbones; faint razor bumps under the jaw; fine hairs on the forearms; natural oil shine on the forehead and nose; small dry patches at the corners of the nose; uneven tone, as real skin is. No retouching, no airbrushing, no smoothing, no makeup.
+>
+> **Body:** 1.83 m, lean and athletic but not gym-built; long arms; visible veins on the hands; slightly rounded shoulders when relaxed; short clean fingernails.
+>
+> **Every image must be:** a real photograph, never CGI, a 3D render or digital painting; true-to-life colour; no symmetry tricks; natural asymmetry in the face; slight film grain.
+
+If the test shot looks plastic, reply: *"More real: show pores, the small spots and the beard shadow clearly. Less contrast on the face. As if shot on film and scanned, not retouched."* When he looks like a real person, move on.
+
+### Step 2: the shoot (one message per photo)
+
+> Now photograph Tobi, the same man, for the top of our home page.
+>
+> **Wardrobe:** heavyweight cotton crew-neck T-shirt in deep electric violet, washed once, with real folds, a slightly stretched collar and visible stitching. On the chest, the attached logo reproduced exactly as a screen print that follows the fabric and shows a faint crack in the ink at the folds: the multicoloured mask, the ring of white capitals reading "WE WEAR IDENTITY." over the top and "UNAPOLOGETICALLY YOURS" round the bottom, the multicoloured "MASQ." under it, and the row of five small symbols beneath. Every letter spelled correctly. Black tapered trousers.
+>
+> **Pose and expression:** standing relaxed, weight on his left leg, hands in his pockets, chin slightly raised, looking straight into the lens with a calm, proud, unsmiling expression. Seen from the top of his head to mid-thigh.
+>
+> **Place:** at night against a rough concrete wall painted with a large violet tribal eye mural, behind him on his left; to his right, "WEAR IDENTITY LIVE CULTURE" hand-painted in violet brush letters with drips and uneven paint.
+>
+> **Light:** one large soft key light from the front left at head height, a violet gelled rim light from behind on the right outlining his hair, shoulder and arm, nothing else; deep, natural shadows; light falling off across his face, not evenly lit.
+>
+> **Camera:** shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2.8, 1/160 s, ISO 400; focus on his near eye; the wall softly out of focus; shot at his chest height. Colour like Kodak Portra 800 film: rich but true skin tones, soft contrast, gentle grain.
+>
+> **Framing:** wide landscape 16:9, largest size available. Him in the right third; clear dark space above his head; the left half almost black and empty, for the website's words.
+>
+> **Avoid:** plastic or waxy skin, airbrushing, over-sharpening, HDR, glow around him, perfect symmetry, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print and the wall.
+
+For the **countdown**, the **T-shirt** and the **hoodie**, send the matching prompt below starting with *"Now photograph Tobi, the same man,"* and keep the Camera and Avoid lines from Step 2.
+
+If he drifts (a different face), reply: *"That is not Tobi. Keep his face exactly as in the test shot: the scar through the right eyebrow, the uneven brows, the beard shadow."*
+
+These are AI-made models: on the site they are campaign photos, never shown as real customers or reviews.
+
+---
+
 ## 1. Top of the home page (replaces the model in the hero)
 
 > A real, unretouched fashion campaign photograph, wide landscape 16:9, largest size available.
