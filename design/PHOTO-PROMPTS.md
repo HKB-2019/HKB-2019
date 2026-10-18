@@ -154,17 +154,23 @@ Every image must be: a real photograph, never CGI, a 3D render or digital painti
 
 If he comes out plastic, reply: *"Keep his face exactly, but make it a real photograph: visible pores, fine hairs, natural skin texture, as if shot on film and not retouched. Less contrast and less sharpening on the face."*
 
-**Step 2. The hoodie on its own** (a separate new chat). As written it takes its idea from the words only, so ChatGPT invents its own pattern for the hood. To keep the pattern from the current countdown photo, attach a close crop of just the hood fabric (no face) and add this line at the top: *"Attach: a close-up of the fabric for the hood lining. Copy this pattern and its colours exactly for the inside of the hood; take nothing else from it."*
+**Step 2. The hoodie on its own** (a separate new chat, attach the MASQ. logo). The hood's lining is a pattern made from the mask's own shapes and colours, so the hoodie belongs to the brand instead of borrowing a generic African print.
 
 ```
+Attach: the MASQ. logo.
+
 A product photograph of one hoodie on its own, for an online fashion shop: a heavyweight black cotton-fleece pullover hoodie with the hood up, shown in a three-quarter front view, turned slightly to the right, on an invisible (ghost) mannequin so it has a natural body shape and the hood stands open like a frame, with the inside of the hood clearly visible.
 
-The inside of the hood is lined with a bright multicoloured African geometric pattern in violet, orange, teal, gold and pink: triangles and diamonds edged in fine lines, real woven fabric with visible threads, the pattern running right to the hood's edge so a thin band of it shows from the front. A short gold metal zip at the neck, half open. Ribbed cuffs and hem, dropped shoulders, soft real folds and visible stitching, a brushed-fleece texture you can almost feel. No print, no logo, no drawcords.
+The inside of the hood is lined with an all-over pattern made from the attached mask: take its shapes and colours, not the face. Hand-painted brush shapes with rough, dry-brush edges, exactly in the mask's style: triangles, half-moons, round eyes drawn as a ring with short rays around them, fields of small dots, zig-zag lines, short dash marks and thin sun-ray strokes, scattered and interlocking on a black ground. Only the mask's colours: electric violet, turquoise, coral orange, hot pink, saffron yellow and bone white. No whole masks or faces, no letters. Printed on a soft cotton lining with the weave just visible, the pattern running right to the hood's edge so a thin band of it shows from the front.
 
-Background: plain charcoal grey seamless studio backdrop, a little lighter than the hoodie so its edges show. Light: one large soft light from the upper left, a soft fill from the front, so the black fleece shows its folds and the woven lining shows its colour and threads; gentle shadows, true colour. Camera: Sony A7R V, 90 mm macro lens at f/8, everything sharp. Square 1:1, the largest size available, the hoodie filling about 85% of the frame.
+A short gold metal zip at the neck, half open. Ribbed cuffs and hem, dropped shoulders, soft real folds and visible stitching, a brushed-fleece texture you can almost feel. No print on the outside, no drawcords.
 
-Avoid: a flat black shape, blurry or smeared pattern, a person, a hanger, props, logos, drawcords, text, watermarks.
+Background: plain charcoal grey seamless studio backdrop, a little lighter than the hoodie so its edges show. Light: one large soft light from the upper left, a soft fill from the front, so the black fleece shows its folds and the lining shows its colours and brush texture; gentle shadows, true colour. Camera: Sony A7R V, 90 mm macro lens at f/8, everything sharp. Square 1:1, the largest size available, the hoodie filling about 85% of the frame.
+
+Avoid: a flat black shape, a generic or kente-style pattern, colours that are not in the mask, a whole mask or face in the lining, blurry or smeared pattern, a person, a hanger, props, logos, drawcords, text, watermarks.
 ```
+
+If the pattern looks generic, reply: *"Make the lining look more like the attached mask: its rough brush strokes, triangles, ringed eyes with rays, dots and zig-zags, in only its colours. Keep everything else."*
 
 Save the hoodie photo. It also works as a product photo in the shop.
 
@@ -173,13 +179,13 @@ Save the hoodie photo. It also works as a product photo in the shop.
 ```
 Attach: the hoodie photo.
 
-Now photograph Kunle, the same man from the test shot, exactly as he is (face, skin, hair, earring, build), for the countdown band on our home page. He wears the attached hoodie exactly as it is: the black fleece, the multicoloured woven pattern inside the hood, the gold zip at the neck. The hood is up, framing his face, the patterned lining showing all around it.
+Now photograph Kunle, the same man from the test shot, exactly as he is (face, skin, hair, earring, build), for the countdown band on our home page. He wears the attached hoodie exactly as it is: the black fleece, the brush-painted mask pattern inside the hood, the gold zip at the neck. The hood is up, framing his face, the patterned lining showing all around it.
 
 Pose and expression: the same as his test shot: seen from the chest up, body turned three-quarters to the right, face in near profile, chin lifted, looking up and into the distance; lips relaxed and slightly parted; thoughtful, not posing.
 
 Place: a dark concrete underpass at night. One beam of violet light cuts diagonally across the wall behind him, low on the left; on the far right a tall pale concrete pillar, out of focus; the rest of the picture dark, softly lit concrete with stains and texture and nothing in it.
 
-Light: the violet beam from behind outlining the hood, and a faint cold light from the right; half his face in shadow but still detailed: visible pores, natural skin texture, the sheen on his cheekbone. The pattern inside the hood catches the light, glowing in violet, orange and teal.
+Light: the violet beam from behind outlining the hood, and a faint cold light from the right; half his face in shadow but still detailed: visible pores, natural skin texture, the sheen on his cheekbone. The pattern inside the hood catches the light, its violet, turquoise, coral, pink and saffron glowing against the black.
 
 Camera: shot on a Sony A7R V with a 50 mm f/1.2 G Master lens at f/2, 1/125 s, ISO 1600; focus on his near eye. Colour like Kodak Portra 800 film pushed one stop: true skin tones, deep blacks, visible grain.
 
