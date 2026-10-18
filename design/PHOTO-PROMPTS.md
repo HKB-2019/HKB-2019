@@ -11,7 +11,7 @@ For ChatGPT. **Eight messages, all in the same chat, in order**, with Dayo and I
 | 5 | Countdown: Ifeoma in the patterned hood | nothing |
 | 6 | Violet T-shirt product photo: Dayo | the logo |
 | 7 | Black T-shirt product photo: Ifeoma | the logo |
-| 8 | Hoodie product photo: Dayo | the logo |
+| 8 | Hoodie product photo: Dayo (better: see **The Ritual Hoodie** below) | the logo |
 
 Photos 3 and 4 take turns at the top of the home page: upload 3 as **Top of the page** and 4 as **Top of the page: second photo** (Admin → HOME PAGE), and choose how often they switch.
 
@@ -550,6 +550,108 @@ Framing: wide landscape 16:9, largest size available. Her in the right third, fr
 
 Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, extra fingers, warped letters, readable signs, watermarks, any text other than the print.
 ```
+
+## The Ritual Hoodie: made first, then the models in it
+
+Same method as the shirts: the hoodie on its own first, so the print stays sharp, then the models wearing it. The shop sells it in **Black** and **Indigo**, so there is one of each.
+
+The print is **tone-on-tone** (black on black, like the hoodie photo in the shop now): it shows only where the light catches it. If you would rather have the full-colour logo, as on the T-shirts, reply after Step 1: *"Same hoodie, but make the print full colour exactly like the attached logo, as on the T-shirts. Keep everything else."*
+
+**Step 1. The black hoodie** (new chat, attach the logo)
+
+```
+Attach: the MASQ. logo.
+
+A product photograph of one hoodie on its own, for an online fashion shop: a heavyweight cotton-fleece pullover hoodie in washed black, shown from the front on an invisible (ghost) mannequin so it has a natural body shape. Hood down and resting behind the neck, a lined double-layer hood, flat black drawcords with matte black metal tips hanging straight down on either side of the neck opening, a kangaroo front pocket, ribbed cuffs and hem, dropped shoulders, soft real folds and visible stitching. A brushed-fleece texture you can almost feel.
+
+On the chest, the attached logo as a tone-on-tone print: black on black, a raised high-density print with a soft satin sheen, so it shows where the light catches it. Reproduce the logo exactly: the mask in the centre, the ring of capital letters reading "WE WEAR IDENTITY." across the top and "UNAPOLOGETICALLY YOURS" around the bottom with the small dash marks at each side, "MASQ." below the ring, and the row of five small symbols underneath. Every letter spelled correctly and tack-sharp. The print is centred, about 26 cm wide, starting 10 cm below the neck opening and ending above the pocket. The drawcords hang beside the print, never across it.
+
+Background: plain charcoal grey seamless studio backdrop, a little lighter than the hoodie so its edges show. Light: one large soft light from the upper left, raking across the chest so the raised print's sheen and the fleece texture show, plus a soft fill from the front; gentle shadows, true colour. Camera: Sony A7R V, 90 mm macro lens at f/8, everything sharp, every letter of the print in focus. Square 1:1, the largest size available, the hoodie filling about 85% of the frame.
+
+Avoid: blurry or warped print, misspelled letters, a colourful logo, drawcords across the print, a zip, extra logos, a person, a hanger, props, text other than the print, watermarks.
+```
+
+**Step 1b. The indigo hoodie** (same chat)
+
+```
+Attach: the MASQ. logo.
+
+A product photograph of one hoodie on its own, for an online fashion shop: a heavyweight cotton-fleece pullover hoodie in deep indigo, a rich blue-violet, shown from the front on an invisible (ghost) mannequin so it has a natural body shape. Hood down and resting behind the neck, a lined double-layer hood, flat indigo drawcords with matte black metal tips hanging straight down on either side of the neck opening, a kangaroo front pocket, ribbed cuffs and hem, dropped shoulders, soft real folds and visible stitching. A brushed-fleece texture you can almost feel.
+
+On the chest, the attached logo as a tone-on-tone print: a slightly darker indigo on the indigo, a raised high-density print with a soft satin sheen, so it shows where the light catches it. Reproduce the logo exactly: the mask in the centre, the ring of capital letters reading "WE WEAR IDENTITY." across the top and "UNAPOLOGETICALLY YOURS" around the bottom with the small dash marks at each side, "MASQ." below the ring, and the row of five small symbols underneath. Every letter spelled correctly and tack-sharp. The print is centred, about 26 cm wide, starting 10 cm below the neck opening and ending above the pocket. The drawcords hang beside the print, never across it.
+
+Background: plain charcoal grey seamless studio backdrop. Light: one large soft light from the upper left, raking across the chest so the raised print's sheen and the fleece texture show, plus a soft fill from the front; gentle shadows, true colour, the indigo neither purple nor navy. Camera: Sony A7R V, 90 mm macro lens at f/8, everything sharp, every letter of the print in focus. Square 1:1, the largest size available, the hoodie filling about 85% of the frame.
+
+Avoid: blurry or warped print, misspelled letters, a colourful logo, drawcords across the print, a zip, extra logos, a person, a hanger, props, text other than the print, watermarks.
+```
+
+If a letter is blurred or wrong, reply: *"Keep everything, but make the print tack-sharp and exactly like the attached logo, every letter correct."*
+
+**Step 2. Dayo in the black hoodie, before the adire cloth** (attach Dayo's test portrait and the black hoodie photo). Framed like the top of the home page, so it can go there or on Instagram.
+
+```
+Attach: Dayo's test portrait and the black hoodie photo.
+
+Photograph the man in the attached portrait, exactly as he is (face, skin, hair, build), wearing the attached hoodie exactly as it is: same colour, same fleece, same print in the same place and size, hood down, drawcords hanging beside the print. Black tapered trousers.
+
+Pose: body turned a little to his right, one hand in the hoodie's front pocket, the other arm relaxed at his side; head turned back to the camera, chin level, looking straight into the lens; calm, unsmiling, quietly confident.
+
+Background: a large hand-dyed indigo adire cloth hung flat behind him, deep blue-black with subtle resist-dyed geometric patterns, softly lit from the right so the folds and texture show, falling into darkness on the left. No text.
+
+Framing (to match the home page's top photos): wide landscape 16:9, largest size available. He stands in the right third of the picture, seen from the top of the head to mid-thigh, the top of the head about 12% below the top edge; the left half of the picture dark and quiet, for the website's words.
+
+Light on him: one large soft key light from the front left at head height, angled so it rakes across the chest and the raised print catches a soft sheen; a faint violet rim light from behind on the right outlining his shoulders and the hood; deep, natural shadows. The black hoodie still shows its folds and fleece texture, never a flat black shape.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2.8, 1/160 s, ISO 400; focus on the near eye; the cloth softly out of focus. Colour like Kodak Portra 800 film: rich but true skin tones, soft contrast, gentle grain.
+
+The print must be tack-sharp and exactly as on the attached hoodie photo: every letter of "WE WEAR IDENTITY." and "UNAPOLOGETICALLY YOURS" crisp and spelled correctly, the mask, "MASQ." and the five symbols clean, following the folds of the fleece.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, drawcords across the print, HDR, glow, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print.
+```
+
+**Step 3. Ifeoma in the indigo hoodie, hood up, before the adire cloth** (attach Ifeoma's test portrait and the indigo hoodie photo). If she blends into the cloth, attach the black hoodie photo instead and change "indigo" to "black".
+
+```
+Attach: Ifeoma's test portrait and the indigo hoodie photo.
+
+Photograph the woman in the attached portrait, exactly as she is (face, skin, hair, build), wearing the attached hoodie exactly as it is: same indigo colour, same fleece, same print in the same place and size, drawcords hanging beside the print. Black tapered trousers.
+
+Pose: the hood up, resting loosely over her hair so her whole face is visible and lit; one hand raised, fingertips lightly holding the edge of the hood at her temple; the other hand in the hoodie's front pocket; shoulders square to the camera, head tilted very slightly, looking straight into the lens; calm, unsmiling, self-possessed.
+
+Background: a large hand-dyed indigo adire cloth hung flat behind her, deep blue-black with subtle resist-dyed geometric patterns, softly lit from the right so the folds and texture show, falling into darkness on the left. The hoodie's brighter blue-violet stands apart from the darker cloth. No text.
+
+Framing (to match the home page's top photos): wide landscape 16:9, largest size available. She stands in the right third of the picture, seen from the top of the head to mid-thigh, the top of the hood about 12% below the top edge; the left half of the picture dark and quiet, for the website's words.
+
+Light on her: one large soft key light from the front left at head height, reaching inside the hood so her eyes are clear, raking across the chest so the raised print catches a soft sheen; a faint violet rim light from behind on the right outlining the hood and shoulders; deep, natural shadows.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2.8, 1/160 s, ISO 400; focus on the near eye; the cloth softly out of focus. Colour like Kodak Portra 800 film: rich but true skin tones, soft contrast, gentle grain.
+
+The print must be tack-sharp and exactly as on the attached hoodie photo: every letter of "WE WEAR IDENTITY." and "UNAPOLOGETICALLY YOURS" crisp and spelled correctly, the mask, "MASQ." and the five symbols clean, following the folds of the fleece.
+
+Avoid: plastic or waxy skin, airbrushing, a face in shadow under the hood, a blurry or redrawn print, a hand or drawcord across the print, HDR, glow, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print.
+```
+
+**Step 4. The hoodie's page in the shop** (attach Dayo's test portrait and the black hoodie photo). Upload in Admin → PRODUCTS as THE RITUAL HOODIE's photo.
+
+```
+Attach: Dayo's test portrait and the black hoodie photo.
+
+Photograph the man in the attached portrait, exactly as he is (face, skin, hair, build), alone, for the hoodie's page in our online shop. He wears the attached hoodie exactly as it is: same colour, same fleece, same print in the same place and size, hood down, drawcords hanging beside the print. Black tapered trousers.
+
+Pose: standing straight, facing the camera, both hands in the hoodie's front pocket, looking just past the lens; his whole face visible, calm.
+
+Place and light: a plain charcoal-black studio backdrop. One large soft light from the upper left so the print's sheen and the fleece texture show, a faint violet rim light from behind, gentle shadows. The black hoodie still shows its folds, never a flat black shape.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/5.6, 1/160 s, ISO 100; sharp from head to hem. Clean, true-to-life colour, fine grain.
+
+Framing: portrait 4:5, largest size available, from the top of his head to mid-thigh, even space around him.
+
+The print must be tack-sharp and exactly as on the attached hoodie photo, every letter spelled correctly.
+
+Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, extra fingers, a blurry or redrawn print, drawcords across the print, props, logos in the corners, watermarks, any text other than the print.
+```
+
+For the Indigo colour, send Step 4 again with Ifeoma's portrait and the indigo hoodie photo, changing "man" to "woman" and "his" to "her".
 
 ## Quick edit of an existing photo: background only
 
