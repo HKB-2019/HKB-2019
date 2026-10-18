@@ -621,7 +621,7 @@ violet tee (`hero-design.webp`) and Ifeoma in the baby pink (`hero-design-2.webp
 each with an `@2x` copy at the original 1672 px. Both were made in ChatGPT from
 `design/PHOTO-PROMPTS.md` (AI-made models, shown as campaign photos only; each
 shirt photographed on its own first so the print stays sharp), framed alike
-before the same carved wood relief, so the fade changes only the person and the
+before the same hand-dyed indigo adire cloth, so the fade changes only the person and the
 colour. (Before them, the landing design's own hero, cleaned and enlarged with
 Real-ESRGAN, sat there.) The craft band ("Craft. Culture. Identity.") is
 the landing design's own band too (`band-design.webp`): the carved violet eyes at both
