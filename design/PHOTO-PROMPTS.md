@@ -175,6 +175,24 @@ Avoid: a flat black shape, a generic or kente-style pattern, changed or extra sy
 
 If the symbols come out wrong, reply: *"The symbols in the lining must be exactly the ones under "MASQ." on the attached logo: the blue diamond with a dot, the coral starburst, the saffron double ring, the violet starburst, the green circle with a line and a diamond, with white bars between. Keep everything else."*
 
+**Or: lift the hoodie from the current countdown photo** (new chat, attach the countdown photo). Keeps today's hood pattern instead of the MASQ. symbols. ChatGPT cannot literally cut it out: the photo shows only the hood and a little of the shoulders, so it draws the rest of the hoodie to match.
+
+```
+Attach: a photo of a model in a hooded top.
+
+Use the attached photo only as a reference for the hoodie. Do not copy the photo, the person, the background or the light. Create a brand-new premium product photograph of that hoodie on its own, with no person in it.
+
+The hoodie: a heavyweight black cotton-fleece pullover hoodie with the hood up, exactly like the one in the photo. Copy the lining inside the hood exactly: large triangle and diamond panels outlined in orange and gold, filled with turquoise, royal blue, violet and magenta, with small rings, eyes and dots inside them; the same colours, shapes and size of pattern, running right to the edge of the hood. A short gold zip at the neck, half open. Ribbed cuffs and hem, dropped shoulders, soft real folds and visible stitching, a brushed-fleece texture you can almost feel. No print on the outside, no drawcords.
+
+Shown from the front in a three-quarter view, turned slightly to the right, on an invisible (ghost) mannequin so it has a natural body shape, the hood standing open like a frame so the whole lining is clearly visible.
+
+Background: a seamless studio backdrop in deep charcoal with a soft gradient, slightly lighter behind the hoodie so its black edges show. Light: one large soft light from the upper left so the fleece shows its folds and the lining shows its true colours and fabric texture, a soft fill from the front, a thin rim light with a faint violet tint from behind on the right; gentle shadows, no glow.
+
+Camera: Hasselblad X2D 100C with the XCD 90 mm lens at f/8, everything sharp, every line of the pattern crisp. True-to-life colour, very fine grain. Square 1:1, the largest size available, the hoodie filling about 85% of the frame.
+
+Avoid: a person, a face, skin, a hanger, props, the underpass or anything from the original background, neon glow on the pattern, a blurry or smeared pattern, a flat black shape, logos, text, watermarks.
+```
+
 Save the hoodie photo. It also works as a product photo in the shop.
 
 **Step 3. Kunle in the hoodie, the countdown photo** (back in Kunle's chat from Step 1, attach the hoodie photo)
