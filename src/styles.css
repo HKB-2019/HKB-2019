@@ -542,6 +542,7 @@ html{ scrollbar-color:var(--line) var(--bg); }
 .card__fav:hover{ background:rgb(5 4 7 / .55); }
 .card__fav:active{ transform:scale(.88); }
 .card__fav.is-on{ color:var(--heart); }
+.card__fav svg path, .pdp__save svg path{ transition:fill .2s var(--ease-out); }
 .card__fav.is-on svg path{ fill:currentColor; }
 
 .card__quick{
@@ -623,6 +624,7 @@ html{ scrollbar-color:var(--line) var(--bg); }
   position:relative; overflow:hidden;
   height:clamp(200px, 21vw, 320px);
 }
+.film__media{ position:absolute; inset:0; }
 .film__bg{
   position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
   transition:transform 1.2s var(--ease-soft), filter .5s;
@@ -880,7 +882,7 @@ html{ scrollbar-color:var(--line) var(--bg); }
   padding:24px 0; border-bottom:1px solid var(--line-soft);
 }
 .line-item:last-child{ border-bottom:0; }
-.line-item__img{ width:74px; aspect-ratio:4/5; object-fit:cover; background:var(--bg-3); }
+.line-item__img{ width:74px; aspect-ratio:4/5; object-fit:cover; background:var(--bg-3); border-radius:var(--radius); }
 .line-item__name{
   margin:0; font-size:11px; font-weight:400;
   letter-spacing:.2em; text-transform:uppercase;
@@ -2170,6 +2172,10 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
   border:1px solid var(--line); transition:color .25s, border-color .25s;
 }
 .preview-bar__actions button:hover{ color:var(--ink); border-color:var(--violet-soft); }
+/* An icon or a button's words that swap (src/components/SwapIcon.jsx). */
+.swap-icon{ display:inline-flex; align-items:center; justify-content:center; gap:inherit; }
+.btn__added{ display:inline-flex; align-items:center; gap:8px; }
+.btn__added svg{ width:14px; height:14px; flex:none; }
 #main:focus{ outline:none; }
 
 /* discount code, in the bag */
@@ -2503,7 +2509,7 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 /* While the photos drift they are a little taller than their band, so no
    edge ever shows. */
 .has-drift .craft__bg{ top:-6%; bottom:-6%; }
-.has-drift .film__bg{ top:-6%; height:112%; }
+.has-drift .film__media{ top:-6%; bottom:-6%; }
 
 /* ============ COLOURS ============ */
 /* A swatch: the colour itself in a ring that shows which is chosen. Light

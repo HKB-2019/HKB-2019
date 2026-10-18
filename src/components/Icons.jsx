@@ -46,6 +46,10 @@ export const Heart = () => (
   </svg>
 );
 
+export const Check = () => (
+  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+);
+
 export const CaretLeft = () => (
   <svg viewBox="0 0 12 18" aria-hidden="true"><path d="M9.5 1 2 9l7.5 8" fill="none" stroke="currentColor" strokeWidth="1.4"/></svg>
 );

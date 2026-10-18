@@ -14,10 +14,11 @@ export default function Toasts() {
           <motion.div
             key={id}
             className={`toast${variant ? ` toast--${variant}` : ''}`}
-            initial={{ opacity: 0, y: 18, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+            // In with a settle and no bounce; out quicker and smaller than in,
+            // so leaving never draws the eye.
+            initial={{ opacity: 0, y: 14, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1, transition: { type: 'spring', duration: 0.35, bounce: 0 } }}
+            exit={{ opacity: 0, y: 6, transition: { duration: 0.18, ease: [0.2, 0, 0, 1] } }}
           >{message}</motion.div>
         ))}
       </AnimatePresence>

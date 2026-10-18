@@ -10,6 +10,7 @@ import { ChevronDown, AccountIcon, BagIcon, Heart, Sun, Moon } from './Icons.jsx
 import { useTheme } from '../lib/theme.js';
 import { EASE_OUT, UI_IN, UI_OUT } from '../lib/motion.js';
 import Wordmark from './Wordmark.jsx';
+import SwapIcon from './SwapIcon.jsx';
 
 export default function Header() {
   const { theme, toggle } = useTheme();
@@ -116,7 +117,7 @@ export default function Header() {
           {/* Light or dark. On a phone it is in the menu: the bar is full. */}
           <button className="icon-btn theme-btn" onClick={toggle}
                   aria-label={theme === 'light' ? 'Switch to the dark theme' : 'Switch to the light theme'}>
-            {theme === 'light' ? <Moon /> : <Sun />}
+            <SwapIcon swap={theme}>{theme === 'light' ? <Moon /> : <Sun />}</SwapIcon>
           </button>
 
           <button className="icon-btn saved-btn" aria-label={`Saved pieces (${wishlist.length})`} aria-haspopup="dialog"
@@ -161,7 +162,7 @@ export default function Header() {
               <a key={href} href={'/' + href} onClick={(e) => go(e, href)}>{label}</a>
             ))}
             <button type="button" className="mobile-nav__theme" onClick={toggle}>
-              {theme === 'light' ? <Moon /> : <Sun />}
+              <SwapIcon swap={theme}>{theme === 'light' ? <Moon /> : <Sun />}</SwapIcon>
               {theme === 'light' ? 'Dark theme' : 'Light theme'}
             </button>
           </motion.nav>

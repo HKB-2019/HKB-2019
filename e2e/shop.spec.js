@@ -173,7 +173,17 @@ test('the delivery form says what is missing, beside the box that is missing it'
   await expect(page.locator('#d-email-error')).toContainText('email');
   await expect(page.locator('#d-phone-error')).toContainText('phone');
   await expect(page.locator('#d-state-error')).toContainText('state');
+  await expect(page.locator('#d-email')).toBeFocused();       // the first box to fix is ready to type in
   await expect(page).toHaveURL(/\/$/, { timeout: 1000 });   // still here, not at Paystack
+});
+
+test('adding from a product page says ADDED for a moment, and the button keeps its name', async ({ page }) => {
+  await page.goto('/product/scarf');
+  const add = page.getByRole('button', { name: 'ADD TO BAG' });
+  await add.click();
+  await expect(add).toContainText('ADDED');
+  await expect(page.locator('.cart-count')).toHaveText('1');
+  await expect(add).toContainText('ADD TO BAG', { timeout: 3000 });
 });
 
 test('the country list shows only once the owner delivers abroad; then a customer abroad picks theirs', async ({ page }) => {

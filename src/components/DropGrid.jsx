@@ -10,6 +10,7 @@ import Swatches, { ColourDots } from './Swatches.jsx';
 import { ArrowShort, Arrow, Heart } from './Icons.jsx';
 
 import { EASE_OUT, EASE_IN_OUT } from '../lib/motion.js';
+import { pop } from '../lib/feel.js';
 
 /** Photos fade in once they have arrived, instead of popping in line by line. */
 export const fadeIn = {
@@ -99,7 +100,7 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
           className={`card__fav${saved ? ' is-on' : ''}`}
           aria-label={saved ? `Remove ${product.name} from saved` : `Save ${product.name}`}
           aria-pressed={saved}
-          onClick={() => toggleWish(product.id)}
+          onClick={(e) => { if (!saved) pop(e.currentTarget.firstChild); toggleWish(product.id); }}
         ><Heart /></button>
 
         <button className="card__quick" onClick={onQuickAdd}>

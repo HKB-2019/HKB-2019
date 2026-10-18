@@ -97,12 +97,13 @@ Panels and buttons are just off square (4px). Circles are for the round arrow bu
 - **Round arrow:** 34px circle, outlined; fills violet when its panel is hovered, turns a little on its own hover.
 - **Countdown:** each figure in its own panel, bold Inter, seconds in violet.
 - **Manifesto:** left-aligned on a violet band, OUR STORY → on the right (plays the brand film).
-- **Film strip:** People / Places / Patterns / Purpose on the left, an outlined play disc, PLAY BRAND FILM. With no film set in the admin it plays the brand film made in code (`video/`).
+- **Film strip:** People / Places / Patterns / Purpose on the left, an outlined play disc, PLAY BRAND FILM. Its photo sits in a frame: the frame drifts with the scroll, the photo zooms a little on hover. With no film set in the admin it plays the brand film made in code (`video/`).
 - **Promises:** delivery, returns, secure payment, in the owner's words and true to the Delivery and Returns pages.
 - **Sign-up box:** an outlined email field with the violet JOIN attached, on the page and in the welcome pop-up.
 - **Fields:** every text box and menu (checkout, tracking, gift cards, admin) is an outlined box with the same corners; labels above them are small capitals, 600, .1em.
 - **Gift card:** unchanged (`src/components/GiftCard.jsx`): the owner's chosen design, five grounds, the logo's colours.
 - **Admin:** the same type, panels, chips and violet fills; its layout is unchanged.
+- **Feedback** (`src/lib/feel.js`): only in answer to something the customer did, short, and none with reduced motion. A box that needs fixing shakes once and the first one takes the cursor; ADD TO BAG shows ✓ ADDED for a moment (its name for screen readers stays); a saved heart settles in; the sun and moon fade into each other; messages arrive with a settle and leave quicker than they came.
 
 ## Do's and Don'ts
 - Do keep violet the one interface colour; the logo's colours stay in the wordmark, the gift card and photos.

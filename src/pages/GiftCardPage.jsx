@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useHref, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { buyGiftCard, getGiftCard, openGiftCard } from '../lib/api.js';
@@ -6,6 +6,7 @@ import { naira, isEmail } from '../lib/delivery.js';
 import Card, { DesignSwatches, designOf, longDate } from '../components/GiftCard.jsx';
 import TopUp from '../components/GiftTopUp.jsx';
 import Wordmark from '../components/Wordmark.jsx';
+import { shake, shakeInvalid } from '../lib/feel.js';
 
 /* /gift-card — buy a MASQ. gift card, and (with ?reference=, where Paystack
  * sends the buyer back) see it once paid: its code, to copy or send. With
@@ -37,16 +38,19 @@ function TopUpFind() {
   const [card, setCard] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const codeBox = useRef(null);
 
   const find = async (e) => {
     e.preventDefault();
     setBusy(true); setError(null); setCard(null);
+    let problem = null;
     try {
       const c = await openGiftCard(code);
-      if (c.state === 'expired') setError('This card has run out, so money cannot be added to it.');
-      else if (c.state === 'cancelled') setError('This card has been cancelled, so money cannot be added to it.');
+      if (c.state === 'expired') problem = 'This card has run out, so money cannot be added to it.';
+      else if (c.state === 'cancelled') problem = 'This card has been cancelled, so money cannot be added to it.';
       else setCard(c);
-    } catch (err) { setError(err.message); }
+    } catch (err) { problem = err.message; }
+    if (problem) { setError(problem); shake(codeBox.current); }
     setBusy(false);
   };
 
@@ -69,7 +73,7 @@ function TopUpFind() {
         <form className="gift__find" onSubmit={find} noValidate>
           <label className="field field--tight" htmlFor="t-code">
             <span>CARD CODE</span>
-            <input id="t-code" autoCapitalize="characters" autoComplete="off" spellCheck={false} placeholder="MASQ-XXXX-XXXX"
+            <input id="t-code" ref={codeBox} autoCapitalize="characters" autoComplete="off" spellCheck={false} placeholder="MASQ-XXXX-XXXX"
                    value={code} onChange={(e) => { setCode(e.target.value); setError(null); }}
                    aria-invalid={error ? true : undefined} aria-describedby={error ? 't-code-error' : undefined} />
           </label>
@@ -110,7 +114,7 @@ function Buy() {
     if (!isEmail(form.email)) err.email = 'Enter your email, for the receipt.';
     if (form.recipientEmail.trim() && !isEmail(form.recipientEmail)) err.recipientEmail = 'That is not an email address.';
     setErrors(err);
-    if (Object.keys(err).length) return;
+    if (Object.keys(err).length) { shakeInvalid(e.currentTarget); return; }
     setBusy(true);
     try {
       const { authorizationUrl } = await buyGiftCard({

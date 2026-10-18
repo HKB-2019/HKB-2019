@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal from './Reveal.jsx';
 import { useShop, useHome } from '../store/ShopContext.jsx';
@@ -6,6 +6,7 @@ import Lines from './Lines.jsx';
 import { subscribe } from '../lib/api.js';
 import { track } from '../lib/analytics.js';
 import { markWelcome } from '../lib/welcome.js';
+import { shake } from '../lib/feel.js';
 
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
 
@@ -17,6 +18,7 @@ export function JoinForm({ id, onJoined }) {
   const [email, setEmail]   = useState('');
   const [msg, setMsg]       = useState(null);   // { text, error }
   const [busy, setBusy]     = useState(false);
+  const box = useRef(null);
 
   /* This used to show "You're in" and throw the address away. Now it is
    * stored, and the owner sees the list in the admin. */
@@ -24,6 +26,7 @@ export function JoinForm({ id, onJoined }) {
     e.preventDefault();
     if (!isEmail(email)) {
       setMsg({ text: 'PLEASE ENTER A VALID EMAIL ADDRESS', error: true });
+      shake(box.current?.form);
       return;
     }
     setBusy(true);
@@ -36,6 +39,7 @@ export function JoinForm({ id, onJoined }) {
       onJoined?.();
     } catch (err) {
       setMsg({ text: err.message.toUpperCase(), error: true });
+      shake(box.current?.form);
     } finally {
       setBusy(false);
     }
@@ -46,8 +50,8 @@ export function JoinForm({ id, onJoined }) {
       <form className="newsletter__form" onSubmit={onSubmit} noValidate>
         <label className="sr-only" htmlFor={id}>Email address</label>
         <input
-          type="email" id={id} name="email"
-          className={msg?.error ? 'is-error' : ''}
+          type="email" id={id} name="email" ref={box}
+          className={msg?.error ? 'is-error' : ''} aria-invalid={msg?.error || undefined}
           placeholder="Your email address" autoComplete="email" required
           value={email}
           onChange={(e) => { setEmail(e.target.value); if (msg?.error) setMsg(null); }}

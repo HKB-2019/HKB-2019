@@ -6,7 +6,9 @@ import ShopLayout from '../components/ShopLayout.jsx';
 import { useShop } from '../store/ShopContext.jsx';
 import { srcSet, CARD_SIZES, GALLERY_SIZES } from '../lib/media.js';
 import { useSectionLink } from '../lib/useSectionLink.js';
-import { Heart } from '../components/Icons.jsx';
+import { Heart, Check } from '../components/Icons.jsx';
+import SwapIcon from '../components/SwapIcon.jsx';
+import { pop, textIn } from '../lib/feel.js';
 import { askForRestock } from '../lib/api.js';
 import { track } from '../lib/analytics.js';
 import { isEmail } from '../lib/delivery.js';
@@ -202,7 +204,16 @@ function BuyBox({ product, colour, onColour }) {
     if (colourOut) { toast(`${colour.toUpperCase()} HAS SOLD OUT — TRY ANOTHER COLOUR`); return; }
     if (!chosen) { setAsked(true); return; }
     addToCart(product, chosen.size, colour);
+    // The button says so for a moment; its name for screen readers stays.
+    setAdded(true);
+    clearTimeout(addedTimer.current);
+    addedTimer.current = setTimeout(() => setAdded(false), 1600);
   };
+  const [added, setAdded] = useState(false);
+  const addedTimer = useRef(null);
+  useEffect(() => () => clearTimeout(addedTimer.current), []);
+  useEffect(() => { clearTimeout(addedTimer.current); setAdded(false); }, [product.id]);
+  const addedLabel = <span className="btn__added"><Check />ADDED</span>;
 
   // On a phone the buying box sits below the photo. While it is out of view a
   // bar at the foot of the screen keeps the name, price and button in reach.
@@ -269,12 +280,15 @@ function BuyBox({ product, colour, onColour }) {
       {single?.left ? <p className="pdp__hint">ONLY {single.left} LEFT</p> : null}
 
       <div className="pdp__actions" ref={actions}>
-        <button className="btn btn--solid pdp__add" onClick={add} disabled={product.soldOut || colourOut}>
-          {product.soldOut || colourOut ? 'SOLD OUT' : 'ADD TO BAG'}
+        <button className="btn btn--solid pdp__add" onClick={add} disabled={product.soldOut || colourOut}
+                aria-label={product.soldOut || colourOut ? 'SOLD OUT' : 'ADD TO BAG'}>
+          <SwapIcon swap={added} play={textIn}>
+            {product.soldOut || colourOut ? 'SOLD OUT' : added ? addedLabel : 'ADD TO BAG'}
+          </SwapIcon>
         </button>
         <button className={`pdp__save${saved ? ' is-on' : ''}`} aria-pressed={saved}
                 aria-label={saved ? `Remove ${product.name} from saved` : `Save ${product.name}`}
-                onClick={() => toggleWish(product.id)}><Heart /></button>
+                onClick={(e) => { if (!saved) pop(e.currentTarget.firstChild); toggleWish(product.id); }}><Heart /></button>
       </div>
 
       <RestockAsk product={product} colour={colour} />
@@ -290,7 +304,9 @@ function BuyBox({ product, colour, onColour }) {
         </p>
         <button type="button" tabIndex={-1} className="btn btn--solid pdp__bar-add" onClick={barAdd}
                 disabled={product.soldOut || colourOut}>
-          {product.soldOut || colourOut ? 'SOLD OUT' : chosen || sizes.length < 2 ? 'ADD TO BAG' : 'CHOOSE SIZE'}
+          <SwapIcon swap={added} play={textIn}>
+            {product.soldOut || colourOut ? 'SOLD OUT' : added ? addedLabel : chosen || sizes.length < 2 ? 'ADD TO BAG' : 'CHOOSE SIZE'}
+          </SwapIcon>
         </button>
       </div>, document.body)}
 

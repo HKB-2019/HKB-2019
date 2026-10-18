@@ -1,6 +1,7 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
+import { onSmoothScroll } from './smoothScroll.js';
 
 /* The home page's two GSAP effects. This file is fetched only by the home
  * page, after it is showing, and never on a device set to reduce motion.
@@ -33,7 +34,7 @@ export function startDrift(root) {
         scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true }
       });
     }
-    for (const [band, layer] of [['.craft', '.craft__bg'], ['.film', '.film__bg']]) {
+    for (const [band, layer] of [['.craft', '.craft__bg'], ['.film', '.film__media']]) {
       const el = root.querySelector(band);
       if (!el) continue;
       gsap.fromTo(el.querySelector(layer), { yPercent: -5 }, {
@@ -42,6 +43,10 @@ export function startDrift(root) {
       });
     }
   }, root);
+
+  // With the glide on (a mouse or trackpad), take its position every frame
+  // it moves, as GSAP advises for Lenis: the photos then never lag it.
+  const off = onSmoothScroll(ScrollTrigger.update);
 
   // Pieces load in above the bands after the page opens; measure again when
   // the page changes height so each band drifts while it is actually on screen.
@@ -53,6 +58,7 @@ export function startDrift(root) {
   resized.observe(document.body);
 
   return () => {
+    off();
     clearTimeout(timer);
     resized.disconnect();
     ctx.revert();

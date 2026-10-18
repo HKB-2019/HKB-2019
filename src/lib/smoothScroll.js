@@ -22,6 +22,13 @@ export function stopSmoothScroll() {
   lenis = null;
 }
 
+/** Told on every frame the glide moves the page (for the scroll effects in
+ *  src/lib/drift.js, so they move in step with it rather than a frame behind).
+ *  Returns how to stop being told; does nothing when there is no glide. */
+export function onSmoothScroll(fn) {
+  return lenis ? lenis.on('scroll', fn) : () => {};
+}
+
 /** While a panel is open the page behind it stays still. */
 export function holdSmoothScroll(held) {
   if (!lenis) return;

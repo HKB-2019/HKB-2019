@@ -9,16 +9,20 @@ export default function FilmStrip() {
   const words = (home.filmWords ?? '').split('\n').map(w => w.trim()).filter(Boolean);
   return (
     <section className="film" id="film">
-      {ready && (
-        <img
-          className="film__bg"
-          src={photo ? photo.img : asset('assets/img/film-still.webp')}
-          srcSet={photo ? `${photo.img} 1x, ${photo.img2x} 2x` : undefined}
-          alt=""
-          {...(photo ? {} : { width: 3800, height: 548 })}
-          loading="lazy"
-        />
-      )}
+      {/* The frame drifts as the page scrolls (src/lib/drift.js); the photo
+          in it zooms a little on hover. Two elements, so neither undoes the other. */}
+      <div className="film__media" aria-hidden="true">
+        {ready && (
+          <img
+            className="film__bg"
+            src={photo ? photo.img : asset('assets/img/film-still.webp')}
+            srcSet={photo ? `${photo.img} 1x, ${photo.img2x} 2x` : undefined}
+            alt=""
+            {...(photo ? {} : { width: 3800, height: 548 })}
+            loading="lazy"
+          />
+        )}
+      </div>
       {words.length > 0 && (
         <ul className="film__words" aria-hidden="true">
           {words.map(w => <li key={w}>{w}</li>)}

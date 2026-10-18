@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShop, useHome } from '../store/ShopContext.jsx';
@@ -11,6 +11,7 @@ import { countriesAbroad } from '../data/countries.js';
 import { Close, Heart } from './Icons.jsx';
 import { SizeButtons } from './DropGrid.jsx';
 import { useFocusTrap } from '../lib/useFocusTrap.js';
+import { shake, shakeInvalid } from '../lib/feel.js';
 import ZoomViewer from './ZoomViewer.jsx';
 import { FROM_SHOP } from '../lib/pageMorph.js';
 import { JoinForm } from './Newsletter.jsx';
@@ -143,6 +144,7 @@ function DiscountBox({ applied, onApplied }) {
   const [open, setOpen] = useState(Boolean(discountCode));
   const [typed, setTyped] = useState(discountCode);
   const [state, setState] = useState(null);     // null | 'checking' | error message
+  const box = useRef(null);
 
   // The bag changed (or the drawer reopened): ask again what the code is worth.
   const lines = cart.map(i => `${i.id}|${i.colour ?? ''}|${i.size}|${i.qty}`).join(',');
@@ -163,7 +165,7 @@ function DiscountBox({ applied, onApplied }) {
       const r = await checkDiscount(code, cart);
       setDiscountCode(r.code); onApplied(r); setState(null);
       track('discount_applied');
-    } catch (e) { setState(e.message); }
+    } catch (e) { setState(e.message); shake(box.current?.querySelector('input')); }
   };
 
   if (applied) {
@@ -181,7 +183,7 @@ function DiscountBox({ applied, onApplied }) {
   return (
     <div className="discount">
       <label className="sr-only" htmlFor="d-code">Discount code</label>
-      <div className="discount__row">
+      <div className="discount__row" ref={box}>
         <input id="d-code" autoComplete="off" autoCapitalize="characters" spellCheck="false" placeholder="DISCOUNT CODE"
                value={typed} maxLength={24}
                onChange={(e) => { setTyped(e.target.value); if (state && state !== 'checking') setState(null); }}
@@ -205,12 +207,13 @@ function GiftCardBox({ gift, onGift, usingKobo }) {
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState('');
   const [state, setState] = useState(null);     // null | 'checking' | error message
+  const box = useRef(null);
 
   const apply = async () => {
     if (!typed.trim()) return;
     setState('checking');
     try { onGift(await checkGiftCard(typed)); setState(null); }
-    catch (e) { setState(e.message); }
+    catch (e) { setState(e.message); shake(box.current?.querySelector('input')); }
   };
 
   if (gift) {
@@ -226,7 +229,7 @@ function GiftCardBox({ gift, onGift, usingKobo }) {
   return (
     <div className="discount">
       <label className="sr-only" htmlFor="d-gift">Gift card code</label>
-      <div className="discount__row">
+      <div className="discount__row" ref={box}>
         <input id="d-gift" autoComplete="off" autoCapitalize="characters" spellCheck="false" placeholder="MASQ-XXXX-XXXX"
                value={typed} maxLength={20}
                onChange={(e) => { setTyped(e.target.value); if (state && state !== 'checking') setState(null); }}
@@ -248,6 +251,7 @@ function DeliveryForm({ onBack }) {
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState(null);
+  const form = useRef(null);
 
   const zones = site?.delivery ?? [];
   const abroadOpen = zones.some(z => z.zone === 'international');
@@ -306,7 +310,7 @@ function DeliveryForm({ onBack }) {
   const onPay = async (ev) => {
     ev.preventDefault();
     if (!cart.length) return;
-    if (!validate()) return;
+    if (!validate()) { shakeInvalid(form.current); return; }
     if (!open) { setServerError('Sorry — we don’t deliver there yet.'); return; }
 
     setBusy(true); setServerError(null);
@@ -329,7 +333,7 @@ function DeliveryForm({ onBack }) {
   const err = (k) => errors[k] ? { 'aria-invalid': true, 'aria-describedby': `d-${k}-error`, className: 'is-error' } : {};
 
   return (
-    <form className="delivery" onSubmit={onPay} noValidate>
+    <form className="delivery" onSubmit={onPay} noValidate ref={form}>
       <button type="button" className="delivery__back" onClick={onBack}>← BACK TO BAG</button>
 
       <Field label="EMAIL FOR RECEIPT" id="d-email" error={errors.email}>
