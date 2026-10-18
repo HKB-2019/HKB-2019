@@ -42,11 +42,11 @@ If the test shot looks plastic, reply: *"More real: show pores, the small spots 
 >
 > **Skin:** deep ebony, a rich dark brown-black with cool undertones, with a soft natural sheen on the cheekbones, forehead and the bridge of the nose. Even and healthy, with fewer marks: no razor bumps or dry patches, but keep the visible pores and a few tiny natural spots so it still looks like real skin.
 >
-> **Face:** sharper, more sculpted bone structure: high, defined cheekbones, a clean sharp jawline, hollows under the cheekbones, a longer elegant neck. Keep his own nose and full lips. Calm, striking, slightly aloof model expression, eyes intense and direct.
+> **Face:** a well-defined, healthy face: visible high cheekbones with soft fullness in the cheeks (no hollows, not gaunt), a strong clean jawline, a long neck. Keep his own nose and full lips. Calm, striking, slightly aloof model expression, eyes intense and direct.
 >
 > **Grooming:** fresh shape-up with a crisp hairline, short neat 4C coils on top with a low skin fade at the sides, clean groomed eyebrows, a very light, even beard shadow along the jaw only.
 >
-> **Body:** slimmer and taller in frame, about 1.88 m, lean model build, long neck and straight posture.
+> **Body:** taller in frame, about 1.88 m, an athletic model build at a healthy weight, straight posture.
 >
 > Same backdrop, same light, same camera as before. Real photograph, not retouched, not CGI. Show me the new test shot.
 
