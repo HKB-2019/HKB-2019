@@ -118,7 +118,7 @@ test('the home page starts with the design’s own words', async () => {
   const { home } = await site();
   assert.equal(home.heroEyebrow, 'URBAN RITUALS');
   assert.equal(home.heroSub, 'Modern identity wear\nrooted in culture.');
-  assert.deepEqual(home.nav.collections, { label: 'ESSENTIALS', show: true });
+  assert.deepEqual(home.nav.collections, { label: 'COLLECTIONS', show: true });
   assert.deepEqual(home.images, { hero: null, band: null, film: null }, 'built-in photos until replaced');
 });
 

@@ -36,13 +36,13 @@ export default function Hero() {
       <div className="hero__media">
         {ready && (
           <motion.img
-            src={photo ? photo.img : asset('assets/img/hero-masq.webp')}
+            src={photo ? photo.img : asset('assets/img/hero-design.webp')}
             srcSet={photo
               ? `${photo.img} 1x, ${photo.img2x} 2x`
-              : `${asset('assets/img/hero-masq.webp')} 1280w, ${asset('assets/img/hero-masq@2x.webp')} 2400w`}
-            sizes={photo ? undefined : '(max-width: 900px) 280vw, 100vw'}
+              : `${asset('assets/img/hero-design.webp')} 1600w, ${asset('assets/img/hero-design@2x.webp')} 3000w`}
+            sizes={photo ? undefined : '(max-width: 900px) 250vw, 100vw'}
             alt={home.heroImageAlt}
-            {...(photo ? {} : { width: 2400, height: 1351 })}
+            {...(photo ? {} : { width: 3000, height: 1465 })}
             fetchPriority="high"
             initial={{ opacity: 0, scale: 1.08 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -51,20 +51,6 @@ export default function Hero() {
         )}
         <span className="hero__fade" />
       </div>
-
-      {/* Painted on the wall beside the model: words, not part of the photo,
-          so the owner can change them. Drawn in after the photo settles. */}
-      {ready && home.heroBrush && (
-        <motion.p
-          className="hero__brush" aria-hidden="true"
-          initial={{ opacity: 0, clipPath: 'inset(-20% 100% -20% -20%)' }}
-          animate={{ opacity: 0.92, clipPath: 'inset(-20% -20% -20% -20%)' }}
-          transition={{ duration: 1.4, delay: 1.1, ease }}
-        >
-          {home.heroBrush}
-          <svg viewBox="0 0 200 24"><path d="M4 18 C 60 8, 120 4, 196 6 M 22 22 C 80 14, 130 12, 180 13" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" /></svg>
-        </motion.p>
-      )}
 
       <div className="hero__copy" aria-busy={!ready}>
         {ready && [

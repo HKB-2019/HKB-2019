@@ -546,7 +546,7 @@ function WelcomeModal() {
   const { closeOverlay } = useShop();
   const { home, images } = useHome();
   const [joined, setJoined] = useState(false);
-  const photo = images.hero?.img ?? asset('assets/img/hero-masq.webp');
+  const photo = images.hero?.img ?? asset('assets/img/hero-design.webp');
 
   return (
     <Modal labelledBy="welcomeTitle" className="modal__panel--welcome" closeOutside={false}>

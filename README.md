@@ -601,9 +601,11 @@ that resolution. Several assets needed repair or reframing:
   graft's join is applied only where a graft actually exists: an edge with no
   margin has no join, and blurring it there smears the photograph itself.
 
-Since the October redesign the top of the home page uses the owner's approved
-photograph (`design/hero-photo-approved.webp`, enlarged and sharpened to
-`hero-masq.webp` / `hero-masq@2x.webp`), and the craft band a violet-lit version of
+Since the October redesign the top of the home page uses the hero of the owner's
+landing design itself (`design/landing-redesign.webp`): its menu, words, buttons and
+faces taken out and filled from the wall around them, then enlarged four times with
+Real-ESRGAN, to `hero-design.webp` / `hero-design@2x.webp`. The brush words stay
+painted on the wall, as designed. The craft band a violet-lit version of
 the carved relief (`band-relief.webp`, recoloured from the stone texture). The
 header and footer wordmark is cut from `design/logo.png` (`src/assets/wordmark-*.webp`;
 the light theme's copy has its cream M in ink).

@@ -3,8 +3,9 @@
 The pictures here are the owner's references.
 
 **Built so far (18 Oct):** the new look across the shop and the admin in both
-themes (stage A) and the home page (stage B): the wordmark, the hero with the
-approved photo and the brush words, the violet craft band, the countdown in panels,
+themes (stage A) and the home page (stage B): the wordmark, the hero as in the
+landing design (its own picture, cleaned of its words and enlarged; the approved
+photo is not used, at the owner's request), the violet craft band, the countdown in panels,
 product panels with round arrows, the manifesto with OUR STORY, the film strip
 playing the brand film, the Essentials as panels, the promises strip, the attached
 JOIN box, the restyled pop-up. `DESIGN.md` is rewritten to this language.
@@ -14,7 +15,7 @@ category pages and the SHOP menu (D), the new product page (E).
 | File | What it is |
 |---|---|
 | `landing-redesign.webp` | The new home page design, to follow |
-| `hero-photo-approved.webp` | The approved hero photo (1672 × 941): enlarge to about 3200 wide, sharpening only the face, hair and print; crop a tall 4:5 version for phones unless the owner sends one |
+| `hero-photo-approved.webp` | Not used: the owner chose the landing design's own hero instead (18 Oct). The approved hero photo (1672 × 941): enlarge to about 3200 wide, sharpening only the face, hair and print; crop a tall 4:5 version for phones unless the owner sends one |
 | `logo.png` | The MASQ. logo: mask, ring text, wordmark, symbol row |
 | `gift-card-design.webp` | The gift card design already built (kept as it is) |
 
@@ -50,7 +51,9 @@ owner's request the same day. Three.js stays installed, unused.
 
 ## Decided, unless the owner says otherwise
 
-- **Search and Journal**: left out for now; the menu keeps the pages that work.
+- **Menu (18 Oct, the owner's choice):** SHOP, COLLECTIONS, ABOUT, JOURNAL. Until a
+  journal exists, JOURNAL goes to the film strip; COLLECTIONS to the Essentials.
+  Search stays out for now.
 - **Collections and the other menu pages**: the owner supplied designs (below). Build
   from those; don't invent other pages.
 

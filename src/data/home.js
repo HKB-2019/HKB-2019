@@ -12,8 +12,6 @@ export const HOME_DEFAULT = {
   heroText:        'Contemporary fashion and lifestyle pieces inspired by African heritage, designed for a global generation.',
   heroButton:      'SHOP DROP 01',
   heroButton2:     'EXPLORE',
-  // Painted on the wall beside the model, in a brush hand (wide screens).
-  heroBrush:       'Wear\nidentity\nlive\nculture',
   heroImageAlt:    'Model wearing the MASQ. Face Tee in ultraviolet',
   craftTitle:      'Craft. Culture. Identity.',
   craftText:       'Each piece is designed as a modern artifact —\nwhere heritage meets contemporary expression.',
@@ -44,8 +42,8 @@ export const HOME_DEFAULT = {
   welcome:         { show: true, delay: 4 },
   nav: {
     shop:        { label: 'SHOP',        show: true },
-    collections: { label: 'ESSENTIALS',  show: true },
+    collections: { label: 'COLLECTIONS', show: true },
     about:       { label: 'ABOUT',       show: true },
-    journal:     { label: 'FILM',        show: true }
+    journal:     { label: 'JOURNAL',     show: true }
   }
 };

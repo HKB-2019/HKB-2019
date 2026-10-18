@@ -52,7 +52,7 @@ test('the size guide, low-stock note and other pieces are on the product page', 
 
 test('the menu on a product page goes back to that part of the home page', async ({ page }) => {
   await page.goto('/product/cap');
-  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'ESSENTIALS' }).click();
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'COLLECTIONS' }).click();
   await expect(page).toHaveURL(/\/#essentials$/);
   await expect(page.locator('#essentials')).toBeInViewport();
 });
@@ -187,5 +187,5 @@ test('the home page words, menu and photos are changed from the admin', async ({
   await hero.getByRole('button', { name: 'use original' }).click();
   await expect(hero.locator('.admin-home-photo__tag')).toHaveText('ORIGINAL');
   await page.goto('/');
-  await expect(page.locator('.hero__media img')).toHaveAttribute('src', '/assets/img/hero-masq.webp');
+  await expect(page.locator('.hero__media img')).toHaveAttribute('src', '/assets/img/hero-design.webp');
 });

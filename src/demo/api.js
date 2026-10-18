@@ -128,6 +128,10 @@ function load() {
         saved.giftCards = [...have, ...sampleGifts().filter(s => !have.some(g => g.code === s.code || g.id === s.id))];
         saved.giftSamples = true;
       }
+      // The menu's first names for these two, from before the redesign.
+      const nav = saved.settings?.home?.nav;
+      if (nav?.collections?.label === 'ESSENTIALS') nav.collections.label = 'COLLECTIONS';
+      if (nav?.journal?.label === 'FILM') nav.journal.label = 'JOURNAL';
       return saved;
     }
   } catch { /* fall through to the sample */ }

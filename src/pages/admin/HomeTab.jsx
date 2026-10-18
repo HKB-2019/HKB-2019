@@ -20,8 +20,8 @@ function Note({ state }) {
 /* ---------------------------------------------------------------- photos */
 
 const SLOTS = [
-  ['hero', 'Top of the page', 'assets/img/hero-masq.webp',
-    'The big photo behind MASQ. On a computer it fills the whole top of the page with the words on its left, so keep the subject to the right and the left side dark; on a phone it sits above the words.'],
+  ['hero', 'Top of the page', 'assets/img/hero-design.webp',
+    'The big photo behind MASQ. On a computer it fills the whole top of the page (a wide 2 : 1 picture) with the words on its left, so keep the subject to the right and the left side dark; on a phone it sits above the words.'],
   ['band', 'Craft band', 'assets/img/band-relief.webp',
     'The strip behind “Craft. Culture. Identity.” It is turned violet and dimmed under the words, so a carving, a texture or a detail works best. Cut to a wide 3 : 1 strip.'],
   ['film', 'Film strip', 'assets/img/film-still.webp',
@@ -86,7 +86,6 @@ const GROUPS = [
     ['heroText', 'Short text under that', 220, 2],
     ['heroButton', 'Violet button (goes to the drop)', 24, 1],
     ['heroButton2', 'Outlined button (goes to the craft band)', 24, 1],
-    ['heroBrush', 'Brush words on the wall (wide screens only)', 40, 2],
     ['heroImageAlt', 'Describe the photo (read aloud to blind visitors)', 140, 1]
   ]],
   ['Craft band', [

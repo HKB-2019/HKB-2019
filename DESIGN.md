@@ -41,9 +41,6 @@ typography:
     fontSize: "12px"
     fontWeight: 600
     letterSpacing: "0.08em"
-  brush:
-    fontFamily: "Permanent Marker"
-    fontSize: "clamp(26px, 2.5vw, 42px)"
 rounded:
   panel: "4px"
   swatch: "50%"
@@ -69,7 +66,7 @@ components:
 The source of truth is the variables at the top of `src/styles.css`; this file describes them. The owner's redesign (October 2026, pictures in `design/`, notes in `design/REDESIGN.md`) replaced the earlier quiet-gallery rules: where a rulebook in `.claude/skills/` disagrees, this file wins.
 
 ## Overview
-Streetwear lit like a night shoot: black grounds, the model and the pieces under electric violet light, a bold MASQ., and the colourful brush wordmark from the logo. Confident and cultural, still uncluttered. A light theme (warm paper, near-black ink, the same violet) carries the same language; the photo-led sections stay dark in it.
+Streetwear lit like a night shoot: black grounds, the model and the pieces under electric violet light, a bold MASQ., and the colourful brush wordmark from the logo. The top of the home page is the owner's landing design itself: the model before the violet eye wall, with the brush words on it. Confident and cultural, still uncluttered. A light theme (warm paper, near-black ink, the same violet) carries the same language; the photo-led sections stay dark in it.
 
 ## Colors
 - **Ground:** near-black steps in dark, warm paper in light. **Panels** (product cards, the Essentials, countdown figures, admin tiles) sit one step lighter, with a soft border.
@@ -82,11 +79,11 @@ Streetwear lit like a night shoot: black grounds, the model and the pieces under
 - **MASQ.** in Inter 800, tight, huge.
 - **Serif lines** in EB Garamond 400: the hero's line, the manifesto (its last word in violet, never italic), the newsletter and pop-up headings, product names on their page.
 - **Labels and menus**: Inter 500–700 capitals with modest tracking (.08–.1em); section titles bold. The craft band's title and the manifesto tag keep a wide tracking as the one ceremonial note.
-- **Brush words** ("Wear identity, live culture") in Permanent Marker, violet, rotated, painted over the hero photo on wide screens only; live text the owner edits, never baked into a photo.
+- **Brush words** ("Wear identity, live culture") are painted on the wall in the hero picture itself, as in the owner's design.
 - Body 15–16px at 400; never under 11px; inputs 16px on phones.
 
 ## Layout
-1320px measure, fluid side padding. Products sit in square panels, four across on desktop and two on phones; the Essentials five across (three, then two, as the screen narrows). The hero photo fills the top with the words on its dark left; on a phone the photo comes first and the words follow.
+1320px measure, fluid side padding. Products sit in square panels, four across on desktop and two on phones; the Essentials five across (three, then two, as the screen narrows). The hero picture fills the top at the design's own 2 : 1 shape with the words on its dark left; on a phone the picture comes first and the words follow.
 
 ## Elevation & Depth
 Depth comes from violet light: soft violet shadows under panels on hover, a violet glow on the solid button and the brush words, violet bands behind the countdown and manifesto. Menus and toasts float with a shadow. No glass panels.
@@ -109,6 +106,6 @@ Panels and buttons are just off square (4px). Circles are for the round arrow bu
 ## Do's and Don'ts
 - Do keep violet the one interface colour; the logo's colours stay in the wordmark, the gift card and photos.
 - Do show only true promises and real proof: no invented reviews, stars, customer faces or delivery times.
-- Don't put words inside photos; brush words and headlines are live text.
+- Don't put words inside photos (the hero's painted wall is the one exception, from the owner's design); headlines and buttons are live text.
 - Do keep motion slow and purposeful, and respect reduced motion.
 - Do check every change in both themes and at 360px.
