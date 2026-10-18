@@ -186,7 +186,143 @@ Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, extra fingers, w
 
 ---
 
-## Background options (edit the chosen top-of-page photos)
+## Sharp shirts first, then the models in them (recommended)
+
+The print blurs when ChatGPT draws the shirt and the person at once. So make each shirt on its own first, then put the models in it. These shirt photos also work as product photos in the shop.
+
+**Step 1. The violet shirt** (new chat, attach the logo)
+
+```
+Attach: the MASQ. logo.
+
+A product photograph of one T-shirt on its own, for an online fashion shop: a heavyweight cotton crew-neck T-shirt in deep electric violet, shown from the front on an invisible (ghost) mannequin so it has a natural body shape, with soft real folds, a ribbed collar and visible stitching. On the chest, the attached logo reproduced exactly as a crisp screen print, perfectly flat and sharp: the multicoloured mask in the centre, the ring of white capital letters reading "WE WEAR IDENTITY." across the top and "UNAPOLOGETICALLY YOURS" around the bottom with the small coloured dash marks at each side, the multicoloured "MASQ." below the ring, and the row of five small symbols underneath. Every letter spelled correctly and tack-sharp. The print is centred, about 28 cm wide, starting 9 cm below the collar.
+
+Background: plain charcoal grey seamless studio backdrop. Light: large soft light from the front, gentle shadows, true colour. Camera: Sony A7R V, 90 mm macro lens at f/8, everything sharp, every thread and letter of the print in focus. Square 1:1, the largest size available, the T-shirt filling about 85% of the frame.
+
+Avoid: blurry or warped print, misspelled letters, extra logos, a person, a hanger, props, text other than the print, watermarks.
+```
+
+**Step 2. The black shirt** (same chat)
+
+```
+Attach: the MASQ. logo.
+
+A product photograph of one T-shirt on its own, for an online fashion shop: a heavyweight cotton crew-neck T-shirt in washed black, shown from the front on an invisible (ghost) mannequin so it has a natural body shape, with soft real folds, a ribbed collar and visible stitching. On the chest, the attached logo reproduced exactly as a crisp screen print, perfectly flat and sharp: the multicoloured mask in the centre, the ring of white capital letters reading "WE WEAR IDENTITY." across the top and "UNAPOLOGETICALLY YOURS" around the bottom with the small coloured dash marks at each side, the multicoloured "MASQ." below the ring, and the row of five small symbols underneath. Every letter spelled correctly and tack-sharp. The print is centred, about 28 cm wide, starting 9 cm below the collar.
+
+Background: plain charcoal grey seamless studio backdrop. Light: large soft light from the front, gentle shadows, true colour. Camera: Sony A7R V, 90 mm macro lens at f/8, everything sharp, every thread and letter of the print in focus. Square 1:1, the largest size available, the T-shirt filling about 85% of the frame.
+
+Avoid: blurry or warped print, misspelled letters, extra logos, a person, a hanger, props, text other than the print, watermarks.
+```
+
+If a letter is blurred or wrong, reply: *"Keep everything, but make the print tack-sharp and exactly like the attached logo, every letter correct."*
+
+**Step 3. The model in the shirt, in a background.** Go back to the chat where Dayo and Ifeoma were made (so it knows them), or attach their test portraits. Each prompt below works for both: for **Dayo** attach his test portrait and the violet shirt; for **Ifeoma** attach hers and the black shirt. Try the backgrounds with Dayo first, pick one, then make Ifeoma with the same one.
+
+**A. Studio, minimal luxury**
+
+```
+Attach: the model's test portrait and the T-shirt photo.
+
+Photograph the person in the attached portrait, exactly as they are (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, same fabric, same print in the same place and size. Black tapered trousers. Pose: standing relaxed, weight on one leg, hands in the trouser pockets (or one hand in a pocket), chin slightly raised, looking straight into the lens with a calm, proud, unsmiling expression.
+
+Background: a seamless studio backdrop in deep charcoal, almost black, lit by one soft violet glow behind the model that fades to black at the edges. Nothing else: no walls, no texture, no text. Like a luxury fashion campaign.
+
+Framing (so the two top photos fade into each other on the website): wide landscape 16:9, largest size available. The model stands in the right third of the picture, seen from the top of the head to mid-thigh, the top of the head about 12% below the top edge; the left half of the picture dark and quiet, for the website's words.
+
+Light on the model: one large soft key light from the front left at head height, a soft violet rim light from behind on the right outlining the hair and shoulders; deep, natural shadows.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2.8, 1/160 s, ISO 400; focus on the near eye; the background softly out of focus. Colour like Kodak Portra 800 film: rich but true skin tones, soft contrast, gentle grain.
+
+The print must be tack-sharp and exactly as on the attached T-shirt photo: every letter of "WE WEAR IDENTITY." and "UNAPOLOGETICALLY YOURS" crisp and spelled correctly, the mask, the multicoloured "MASQ." and the five symbols clean, following the folds of the fabric.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, glow, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print.
+```
+
+**B. Brutalist architecture, Lagos at night**
+
+```
+Attach: the model's test portrait and the T-shirt photo.
+
+Photograph the person in the attached portrait, exactly as they are (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, same fabric, same print in the same place and size. Black tapered trousers. Pose: standing relaxed, weight on one leg, hands in the trouser pockets (or one hand in a pocket), chin slightly raised, looking straight into the lens with a calm, proud, unsmiling expression.
+
+Background: raw board-formed concrete architecture at night, in the style of Lagos modernist buildings: deep vertical concrete fins and shadowed recesses, softly out of focus. Cool dark tones with a faint violet light grazing the concrete from the right. No text, no graffiti.
+
+Framing (so the two top photos fade into each other on the website): wide landscape 16:9, largest size available. The model stands in the right third of the picture, seen from the top of the head to mid-thigh, the top of the head about 12% below the top edge; the left half of the picture dark and quiet, for the website's words.
+
+Light on the model: one large soft key light from the front left at head height, a soft violet rim light from behind on the right outlining the hair and shoulders; deep, natural shadows.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2.8, 1/160 s, ISO 400; focus on the near eye; the background softly out of focus. Colour like Kodak Portra 800 film: rich but true skin tones, soft contrast, gentle grain.
+
+The print must be tack-sharp and exactly as on the attached T-shirt photo: every letter of "WE WEAR IDENTITY." and "UNAPOLOGETICALLY YOURS" crisp and spelled correctly, the mask, the multicoloured "MASQ." and the five symbols clean, following the folds of the fabric.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, glow, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print.
+```
+
+**C. Indigo textile wall**
+
+```
+Attach: the model's test portrait and the T-shirt photo.
+
+Photograph the person in the attached portrait, exactly as they are (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, same fabric, same print in the same place and size. Black tapered trousers. Pose: standing relaxed, weight on one leg, hands in the trouser pockets (or one hand in a pocket), chin slightly raised, looking straight into the lens with a calm, proud, unsmiling expression.
+
+Background: a large hand-dyed indigo adire cloth hung flat behind the model, deep blue-black with subtle resist-dyed geometric patterns, softly lit from the right so the folds and texture show, falling into darkness on the left. No text.
+
+Framing (so the two top photos fade into each other on the website): wide landscape 16:9, largest size available. The model stands in the right third of the picture, seen from the top of the head to mid-thigh, the top of the head about 12% below the top edge; the left half of the picture dark and quiet, for the website's words.
+
+Light on the model: one large soft key light from the front left at head height, a soft violet rim light from behind on the right outlining the hair and shoulders; deep, natural shadows.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2.8, 1/160 s, ISO 400; focus on the near eye; the background softly out of focus. Colour like Kodak Portra 800 film: rich but true skin tones, soft contrast, gentle grain.
+
+The print must be tack-sharp and exactly as on the attached T-shirt photo: every letter of "WE WEAR IDENTITY." and "UNAPOLOGETICALLY YOURS" crisp and spelled correctly, the mask, the multicoloured "MASQ." and the five symbols clean, following the folds of the fabric.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, glow, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print.
+```
+
+**D. Gallery wall with carved relief**
+
+```
+Attach: the model's test portrait and the T-shirt photo.
+
+Photograph the person in the attached portrait, exactly as they are (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, same fabric, same print in the same place and size. Black tapered trousers. Pose: standing relaxed, weight on one leg, hands in the trouser pockets (or one hand in a pocket), chin slightly raised, looking straight into the lens with a calm, proud, unsmiling expression.
+
+Background: a dark gallery wall in charcoal lime plaster, with a large abstract hand-carved dark wood relief panel of geometric patterns behind the model's shoulder, lit by one narrow spotlight; everything else falls to black. Quiet and museum-like. No text.
+
+Framing (so the two top photos fade into each other on the website): wide landscape 16:9, largest size available. The model stands in the right third of the picture, seen from the top of the head to mid-thigh, the top of the head about 12% below the top edge; the left half of the picture dark and quiet, for the website's words.
+
+Light on the model: one large soft key light from the front left at head height, a soft violet rim light from behind on the right outlining the hair and shoulders; deep, natural shadows.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2.8, 1/160 s, ISO 400; focus on the near eye; the background softly out of focus. Colour like Kodak Portra 800 film: rich but true skin tones, soft contrast, gentle grain.
+
+The print must be tack-sharp and exactly as on the attached T-shirt photo: every letter of "WE WEAR IDENTITY." and "UNAPOLOGETICALLY YOURS" crisp and spelled correctly, the mask, the multicoloured "MASQ." and the five symbols clean, following the folds of the fabric.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, glow, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print.
+```
+
+**E. Night city, soft focus**
+
+```
+Attach: the model's test portrait and the T-shirt photo.
+
+Photograph the person in the attached portrait, exactly as they are (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, same fabric, same print in the same place and size. Black tapered trousers. Pose: standing relaxed, weight on one leg, hands in the trouser pockets (or one hand in a pocket), chin slightly raised, looking straight into the lens with a calm, proud, unsmiling expression.
+
+Background: Lagos at blue hour seen from a high terrace, the city lights far behind the model and completely out of focus as soft bokeh, deep navy and violet tones, the left side of the sky dark. No readable signs or text.
+
+Framing (so the two top photos fade into each other on the website): wide landscape 16:9, largest size available. The model stands in the right third of the picture, seen from the top of the head to mid-thigh, the top of the head about 12% below the top edge; the left half of the picture dark and quiet, for the website's words.
+
+Light on the model: one large soft key light from the front left at head height, a soft violet rim light from behind on the right outlining the hair and shoulders; deep, natural shadows.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2.8, 1/160 s, ISO 400; focus on the near eye; the background softly out of focus. Colour like Kodak Portra 800 film: rich but true skin tones, soft contrast, gentle grain.
+
+The print must be tack-sharp and exactly as on the attached T-shirt photo: every letter of "WE WEAR IDENTITY." and "UNAPOLOGETICALLY YOURS" crisp and spelled correctly, the mask, the multicoloured "MASQ." and the five symbols clean, following the folds of the fabric.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, glow, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print.
+```
+
+If the print still softens a little in these, send the photo back with the shirt photo attached: *"Replace the print on the T-shirt with the print from the attached shirt photo, exactly and tack-sharp. Change nothing else."*
+
+## Quick edit of an existing photo: background only
+
+If you would rather keep a photo you already have and only change what is behind the model:
 
 A calmer, more mature setting than the graffiti eye. Attach Dayo's top-of-page photo and send ONE option at a time (each in a fresh message), compare, then pick one. When you have picked, send the same option again with Ifeoma's photo attached, changing "Dayo" to "Ifeoma", so the pair matches.
 
