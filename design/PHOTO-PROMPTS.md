@@ -216,17 +216,17 @@ Avoid: blurry or warped print, misspelled letters, extra logos, a person, a hang
 
 If a letter is blurred or wrong, reply: *"Keep everything, but make the print tack-sharp and exactly like the attached logo, every letter correct."*
 
-**Step 2b. A baby pink shirt** (same chat, optional). The logo's ring of words is white, which barely shows on pale pink, so here it is printed in deep violet.
+**Step 2b. The baby pink shirt** (same chat, optional)
 
 ```
-A product photograph of one T-shirt on its own, for an online fashion shop: a heavyweight cotton crew-neck T-shirt in soft baby pink (a pale, dusty blush pink, about #F4C9D6, not bright or neon), shown from the front on an invisible (ghost) mannequin so it has a natural body shape, with soft real folds, a ribbed collar and visible stitching. On the chest, the attached logo reproduced exactly as a crisp screen print, perfectly flat and sharp: the multicoloured mask in the centre, the ring of capital letters reading "WE WEAR IDENTITY." across the top and "UNAPOLOGETICALLY YOURS" around the bottom printed in deep violet (#4B22C8) so they read clearly on the pink, with the small coloured dash marks at each side, the multicoloured "MASQ." below the ring, and the row of five small symbols underneath. Every letter spelled correctly and tack-sharp. The print is centred, about 28 cm wide, starting 9 cm below the collar.
+Attach: the MASQ. logo.
 
-Background: plain charcoal grey seamless studio backdrop. Light: large soft light from the front, gentle shadows, true colour, the pink kept soft and accurate, not washed out. Camera: Sony A7R V, 90 mm macro lens at f/8, everything sharp, every thread and letter of the print in focus. Square 1:1, the largest size available, the T-shirt filling about 85% of the frame.
+A product photograph of one T-shirt on its own, for an online fashion shop: a heavyweight cotton crew-neck T-shirt in soft baby pink, shown from the front on an invisible (ghost) mannequin so it has a natural body shape, with soft real folds, a ribbed collar and visible stitching. On the chest, the attached logo reproduced exactly as a crisp screen print, perfectly flat and sharp: the multicoloured mask in the centre, the ring of white capital letters reading "WE WEAR IDENTITY." across the top and "UNAPOLOGETICALLY YOURS" around the bottom with the small coloured dash marks at each side, the multicoloured "MASQ." below the ring, and the row of five small symbols underneath. Every letter spelled correctly and tack-sharp. The print is centred, about 28 cm wide, starting 9 cm below the collar.
 
-Avoid: blurry or warped print, misspelled letters, white text that disappears into the pink, neon or hot pink, extra logos, a person, a hanger, props, text other than the print, watermarks.
+Background: plain charcoal grey seamless studio backdrop. Light: large soft light from the front, gentle shadows, true colour. Camera: Sony A7R V, 90 mm macro lens at f/8, everything sharp, every thread and letter of the print in focus. Square 1:1, the largest size available, the T-shirt filling about 85% of the frame.
+
+Avoid: blurry or warped print, misspelled letters, extra logos, a person, a hanger, props, text other than the print, watermarks.
 ```
-
-To keep the ring of words white instead, replace that part with: *the ring of white capital letters reading "WE WEAR IDENTITY." across the top and "UNAPOLOGETICALLY YOURS" around the bottom, with a fine charcoal outline so they stay readable on the pink,*
 
 
 **Step 3. The model in the shirt, in a background.** Go back to the chat where Dayo and Ifeoma were made (so it knows them), or attach their test portraits. Each prompt below works for both: for **Dayo** attach his test portrait and the violet shirt; for **Ifeoma** attach hers and the black shirt. Try the backgrounds with Dayo first, pick one, then make Ifeoma with the same one.
