@@ -154,7 +154,7 @@ Every image must be: a real photograph, never CGI, a 3D render or digital painti
 
 If he comes out plastic, reply: *"Keep his face exactly, but make it a real photograph: visible pores, fine hairs, natural skin texture, as if shot on film and not retouched. Less contrast and less sharpening on the face."*
 
-**Step 2. The hoodie on its own** (a separate new chat, attach nothing)
+**Step 2. The hoodie on its own** (a separate new chat). As written it takes its idea from the words only, so ChatGPT invents its own pattern for the hood. To keep the pattern from the current countdown photo, attach a close crop of just the hood fabric (no face) and add this line at the top: *"Attach: a close-up of the fabric for the hood lining. Copy this pattern and its colours exactly for the inside of the hood; take nothing else from it."*
 
 ```
 A product photograph of one hoodie on its own, for an online fashion shop: a heavyweight black cotton-fleece pullover hoodie with the hood up, shown in a three-quarter front view, turned slightly to the right, on an invisible (ghost) mannequin so it has a natural body shape and the hood stands open like a frame, with the inside of the hood clearly visible.
