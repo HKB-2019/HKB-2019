@@ -87,7 +87,8 @@ CATEGORY (T-Shirts, Headwear, Bags & Accessories, Outerwear, Accessories, each w
 photo, a one-line description and →, then "Shop All Products"); FEATURED THIS SEASON (one
 large product card); POPULAR PICKS (four small product cards with colour dots and quick add);
 and a DROP 01 Urban Rituals panel with EXPLORE THE DROP → and "WEAR IDENTITY. LIVE CULTURE."
-COLLECTIONS ▾ is expected to open the same way (design not supplied yet).
+COLLECTIONS ▾ is expected to open the same way (its menu design not supplied yet; the
+Collections pages themselves are below).
 
 **Reassurance strip:** Fast Delivery (2–5 business days), Easy Returns (7-day return policy),
 Secure Payment (100% secure checkout): under the hero in the menu design, and above the
@@ -117,6 +118,63 @@ panel; tabs (Description, Materials, Size & Fit, Shipping, Returns) with a ticke
   appear once the owner adds them in the admin; the pages are built to hold them.
 - The **"Trusted by a global community"** faces appear on these pages too: still left out until real.
 - **"Trusted by a global community" with four faces**: left out until there are real customers to show.
+
+## Collections pages (supplied 18 Oct)
+
+| File | Page |
+|---|---|
+| `collections-all.webp` | All Collections: the index of every collection |
+| `collection-essentials.webp` | Essentials — "Everyday Expression." |
+| `collection-limited-edition.webp` | Limited Edition — "Rare drops. Distinct stories." |
+| `collection-collaborations.webp` | Collaborations — "Stronger Together." |
+| `collection-archive.webp` | Archive — "Icons Live On." |
+
+**What they share** (the category pages' layout, with a collection's own words):
+1. A hero: breadcrumbs (Home › Collections › Essentials), a violet COLLECTION label, a
+   two-line serif title with the second line or last word in violet, a short line, a
+   paragraph, one violet button (SHOP ESSENTIALS →), a model photo on the right with
+   brush words painted on the wall.
+2. A row of panels under it: on All Collections, the collections themselves (All
+   Collections, Essentials, Limited Edition, Collaborations, Archive, each with an icon
+   and a line); on a collection, its categories (All, T-Shirts, Hoodies, Jackets, Caps,
+   Bags, Accessories); the chosen one outlined in violet.
+3. On a collection: the filter column (Category with counts, Price range, Colour, Size,
+   Availability: In stock / Pre-order, Apply Filters, Reset) and the product grid
+   (count, Sort by, heart, colour dots, a round + quick-add, LIMITED EDITION badge).
+4. A story band at the foot (Essentials: "Designed For Every Day"; Limited: "More Than A
+   Collection"; Collaborations: "MASQ. × Kòlẹ́ — Tradition Meets Tomorrow" with a film;
+   Archive: "Stories That Shaped Us" with an archive film), then the promises strip and
+   our footer.
+
+**All Collections** has no filters: a grid of large collection tiles (photo, serif name,
+product count, one line, round arrow): Essentials, Drop 01 — Urban Rituals, Limited
+Edition, Collaborations, Archive, T-Shirts, Hoodies, Jackets, Caps & Headwear, Bags,
+Accessories, and a NEW "View New Arrivals" tile.
+
+**Collection specifics:**
+- **Limited Edition:** a strip of four promises under the hero (Limited quantities,
+  Fast delivery, Authenticity guaranteed, Premium packaging) and a LIMITED EDITION badge.
+- **Collaborations:** a row of partner marks (MASQ. × Artifact, × Kòlẹ́, × Lagos to the
+  World, × 042) and a Collaboration filter; product names carry the partner ("MASQ. × 042").
+- **Archive:** a row of seasons with arrows (2024 Drop 01 Urban Rituals, 2023 Essentials,
+  2022 Cultural Codes, 2021 Origins, 2020 Foundations) and a Season filter; names carry
+  the year ("Rituals Bomber (2024)").
+
+**What these need:** a Collection on each product (Essentials, Drop 01, Limited
+Edition, Collaborations, Archive), a partner name for collaborations, a season/year for
+the archive, a Limited flag, and per-collection words, photo and story band editable in
+the admin, so each page is filled from the shop's real pieces.
+
+**Ask the owner before building:**
+- **Collaborations:** are Artifact, Kòlẹ́, Lagos to the World and 042 real partners? Only
+  real ones go on the site; until then the page shows only what the owner adds.
+- **Archive seasons 2020–2023:** only seasons that really happened. The archive fills
+  from pieces the owner marks as archived.
+- **Promises:** "2–5 business days", "7-day return policy", "Authenticity guaranteed",
+  "Premium packaging" must match the shop's real terms (today: 1–3 / 3–5 working days,
+  14-day returns).
+- The **"Trusted by a global community"** faces appear here too: still left out until real.
+- The many **pieces and photos** in the pictures appear once added in the admin.
 
 ## When it is built
 
