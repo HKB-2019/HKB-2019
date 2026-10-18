@@ -46,9 +46,11 @@ function sessionSecret() {
 const EIGHT_HOURS = 8 * 60 * 60 * 1000;
 
 export function issueSession(subject = 'admin', ttlMs = EIGHT_HOURS) {
+  const now = Date.now();
   const payload = Buffer.from(JSON.stringify({
     sub: subject,
-    exp: Date.now() + ttlMs,
+    iat: now,
+    exp: now + ttlMs,
     jti: randomBytes(8).toString('hex')
   })).toString('base64url');
 
@@ -165,9 +167,37 @@ function readCookie(req, name) {
   return null;
 }
 
-/** Every admin route goes through this. No session, no data. */
-export function requireAdmin(req, res, next) {
+/* Signing out. The cookie is signed, not stored, so clearing it in one
+ * browser would leave a copy elsewhere working until it expired. Instead
+ * signing out records the moment, and any session issued before it is
+ * refused: every browser, phone and stolen copy is signed out at once. */
+const SIGNED_OUT = 'admin_signed_out_at';
+
+export async function signOutEverywhere() {
+  const { one } = await import('../db.js');
+  await one(`
+    INSERT INTO settings (key, value) VALUES ($1, $2)
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()
+  `, [SIGNED_OUT, String(Date.now())]);
+}
+
+async function signedOutAt() {
+  const { one } = await import('../db.js');
+  return Number((await one('SELECT value FROM settings WHERE key = $1', [SIGNED_OUT]))?.value ?? 0);
+}
+
+/** The session in this request's cookie, if it is valid and not signed out. */
+export async function currentSession(req) {
   const session = readSession(readCookie(req, COOKIE));
+  if (!session) return null;
+  // Sessions from before issue times were recorded: count back from expiry.
+  const issued = session.iat ?? session.exp - EIGHT_HOURS;
+  return issued > await signedOutAt() ? session : null;
+}
+
+/** Every admin route goes through this. No session, no data. */
+export async function requireAdmin(req, res, next) {
+  const session = await currentSession(req);
   if (!session) return res.status(401).json({ error: 'Not signed in.' });
   req.admin = session;
   next();

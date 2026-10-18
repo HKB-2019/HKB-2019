@@ -117,6 +117,29 @@ test('an expired session is refused', async () => {
   assert.equal(res.status, 401);
 });
 
+test('signing out ends the session everywhere, not just in this browser', async () => {
+  const phone = (await login()).cookie;
+  const laptop = (await login()).cookie;
+  assert.equal((await request('/api/admin/orders', { cookie: phone })).status, 200);
+
+  const out = await request('/api/admin/logout', { method: 'POST', cookie: laptop });
+  assert.equal(out.status, 200);
+
+  // a copy of either cookie kept after signing out is no longer accepted
+  assert.equal((await request('/api/admin/orders', { cookie: laptop })).status, 401);
+  assert.equal((await request('/api/admin/orders', { cookie: phone })).status, 401);
+
+  // and signing in again works as before
+  const again = (await login()).cookie;
+  assert.equal((await request('/api/admin/orders', { cookie: again })).status, 200);
+});
+
+test('signing out without a session signs nobody else out', async () => {
+  const { cookie } = await login();
+  await request('/api/admin/logout', { method: 'POST' });
+  assert.equal((await request('/api/admin/orders', { cookie })).status, 200);
+});
+
 test('the wrong password is refused and says nothing useful', async () => {
   const { res } = await login('not-the-password');
   assert.equal(res.status, 401);

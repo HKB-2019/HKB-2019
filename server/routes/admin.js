@@ -5,7 +5,7 @@ import { openZones, getSettings, setSetting, SETTING_KEYS, ZONE_LABELS } from '.
 import { toCsv } from '../lib/csv.js';
 import { returnToCard } from '../lib/giftcards.js';
 import {
-  verifyPassword, issueSession, requireAdmin, COOKIE,
+  verifyPassword, issueSession, requireAdmin, currentSession, signOutEverywhere, COOKIE,
   recordFailure, isLockedOut, clearFailures,
   storedPasswordHash, claimPassword, checkSetupCode
 } from '../lib/auth.js';
@@ -100,7 +100,9 @@ adminRouter.post('/admin/login', async (req, res) => {
   res.json({ ok: true });
 });
 
-adminRouter.post('/admin/logout', (_req, res) => {
+adminRouter.post('/admin/logout', async (req, res) => {
+  // Only a signed-in owner can sign everyone out; anyone may clear their own cookie.
+  if (await currentSession(req)) await signOutEverywhere();
   res.cookie(COOKIE, '', { httpOnly: true, sameSite: 'lax', maxAge: 0, path: '/' });
   res.json({ ok: true });
 });

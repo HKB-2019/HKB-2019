@@ -434,7 +434,7 @@ export default function Admin() {
                   aria-label={theme === 'light' ? 'Switch to the dark theme' : 'Switch to the light theme'}>
             {theme === 'light' ? <Moon /> : <Sun />}
           </button>
-          <button className="admin-signout"
+          <button className="admin-signout" title="Signs out every browser and phone"
                   onClick={() => adminLogout().then(() => setSignedIn(false))}>SIGN OUT</button>
         </div>
         <nav className="admin-tabs" aria-label="Admin sections">

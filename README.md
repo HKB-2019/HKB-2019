@@ -378,9 +378,14 @@ signature alike, is constant-time. Eight wrong passwords from one address locks
 that address out for fifteen minutes, and a wrong password never says which
 part was wrong.
 
+SIGN OUT signs out everywhere at once. The cookie is signed rather than stored,
+so clearing it in one browser would leave any other copy (another phone, a
+borrowed laptop, a stolen cookie) working until it expired; instead signing out
+records the moment, and every session issued before it is refused.
+
 `server/test/admin.test.js` is the proof: every admin route is checked to
-refuse a caller with no session, a forged cookie, a tampered payload and an
-expired session, and to refuse setting stock to anything that is not a whole
+refuse a caller with no session, a forged cookie, a tampered payload, an
+expired session and one from before the last sign-out, and to refuse setting stock to anything that is not a whole
 number.
 
 Behind a host's load balancer, `TRUST_PROXY=1` makes the lockout count each

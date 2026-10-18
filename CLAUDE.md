@@ -20,6 +20,13 @@ From Emil Kowalski's repo only the web skills are installed (not the Expo, Swift
 
 Impeccable is installed without its launcher (`scripts/impeccable`), which downloads and runs a binary on first use; it falls back to reading `PRODUCT.md` and `DESIGN.md` directly. Taste Skill's and UI UX Pro Max's own scripts are included (local Node and Python, no installs); Taste Skill's `assets.mjs` fetches openly licensed pictures from public archives when asked.
 
+## Project helpers
+
+- **Skills:** `checks-before-push` (the full list below, plus the secrets scan) and `publish-previews` (rebuild and republish the shop and admin previews to their existing links).
+- **Agent:** `payments-reviewer` reads changes to checkout, the Paystack webhook, orders, gift cards, discounts and the admin sign-in, and reports ways to lose money.
+- **Hooks** (`.claude/hooks/guard.mjs`, wired in `.claude/settings.json`): edits to `.env` files and `package-lock.json` are refused; editing a payment file adds a reminder of which tests cover it.
+- **Plugins:** Claude Code Setup (automation recommendations) and Claude Code Security (`/claude-security` for a full scan), both from Anthropic's official marketplace.
+
 ## Checks before pushing
 
 `npm test` (server, PGlite), `npm run test:e2e` (Playwright), and look at changes in both themes and at 360px.
