@@ -12,7 +12,7 @@ import { PAGES, PAGES_DEFAULT } from '../data/pages.js';
 import { GUIDE_CURRENCIES, DEFAULT_RATES } from '../data/currencies.js';
 import { sampleReport } from './sampleAnalytics.js';
 
-const KEY = 'masq:preview-store-6';   // a new number whenever the sample's shape changes
+const KEY = 'masq:preview-store-7';   // a new number whenever the sample's shape changes
 const ZONES = ['lagos', 'abuja', 'nigeria', 'international'];
 const ZONE_LABELS = { lagos: 'Lagos', abuja: 'Abuja (FCT)', nigeria: 'Rest of Nigeria', international: 'Outside Nigeria' };
 const STATES = [
@@ -118,15 +118,17 @@ function sampleGifts() {
   ];
 }
 
-// The sample data from before KEY's last change. Carried over once, with
-// delivery abroad switched off: the two preview links had drifted apart on it.
-const OLD_KEY = 'masq:preview-store-5';
+// The sample data from before KEY's last changes, newest first. Carried over
+// once, with delivery abroad switched off: the shop and admin previews had
+// drifted apart on it, and are now one preview.
+const OLD_KEYS = ['masq:preview-store-6', 'masq:preview-store-5'];
 
 function load() {
   try {
     let saved = JSON.parse(localStorage.getItem(KEY));
-    if (!saved) {
-      saved = JSON.parse(localStorage.getItem(OLD_KEY));
+    for (const old of OLD_KEYS) {
+      if (saved) break;
+      saved = JSON.parse(localStorage.getItem(old));
       const abroad = saved?.settings?.delivery?.international;
       if (abroad) abroad.enabled = false;
     }
@@ -155,7 +157,7 @@ function save() {
 
 export function resetPreview() {
   store = sampleStore();
-  try { [KEY, OLD_KEY].forEach(k => localStorage.removeItem(k)); } catch { /* nothing kept */ }
+  try { [KEY, ...OLD_KEYS].forEach(k => localStorage.removeItem(k)); } catch { /* nothing kept */ }
   try { ['masq:cart', 'masq:wishlist', 'masq:currency'].forEach(k => localStorage.removeItem(k)); } catch { /* ok */ }
 }
 

@@ -1,0 +1,58 @@
+<title>MASQ. Admin</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400&family=Inter:wght@400;600;800&display=swap">
+<style>
+  /* One centred notice in MASQ.'s own look: night ground, bone ink, electric violet. */
+  :root{
+    --bg:#f6f3ee; --panel:#fffdf9; --ink:#141217; --dim:#46434c; --line:#d9d4cc; --violet:#5a2be0; --violet-text:#4a22c4; --on-violet:#f4f1eb;
+    --serif:"EB Garamond", Georgia, serif;
+    --sans:Inter, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --bg:#050407; --panel:#0f0e14; --ink:#f4f1eb; --dim:#c2c0bc; --line:#2a2833; --violet:#5a2be0; --violet-text:#9d85ff; --on-violet:#f4f1eb; color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --bg:#050407; --panel:#0f0e14; --ink:#f4f1eb; --dim:#c2c0bc; --line:#2a2833; --violet:#5a2be0; --violet-text:#9d85ff; --on-violet:#f4f1eb; color-scheme:dark; }
+
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.6;
+    min-height:100%; display:grid; place-items:center;
+    padding-block:48px; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px));
+  }
+  main{
+    width:min(560px, 100%); background:var(--panel); border:1px solid var(--line); border-radius:4px;
+    padding:clamp(28px, 6vw, 48px); display:flex; flex-direction:column; gap:20px;
+  }
+  .mark{ font-weight:800; font-size:28px; letter-spacing:-.03em; margin:0; }
+  .tag{ margin:0; font-size:12px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--violet-text); }
+  h1{ margin:0; font-family:var(--serif); font-weight:400; font-size:clamp(28px, 5vw, 38px); line-height:1.12; text-wrap:balance; }
+  p{ margin:0; color:var(--dim); max-width:62ch; }
+  ol{ margin:0; padding-left:20px; color:var(--dim); display:grid; gap:6px; }
+  ol strong{ color:var(--ink); font-weight:600; }
+  .go{
+    align-self:flex-start; display:inline-flex; align-items:center; gap:10px; height:52px; padding:0 26px;
+    background:var(--violet); color:var(--on-violet); border-radius:4px; text-decoration:none;
+    font-size:13px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+  }
+  .go:hover{ filter:brightness(1.12); }
+  .go:focus-visible{ outline:2px solid var(--violet-text); outline-offset:3px; }
+  .link{ font-size:14px; word-break:break-all; color:var(--dim); user-select:all; }
+</style>
+
+<main>
+  <p class="mark">MASQ.</p>
+  <p class="tag">Preview</p>
+  <h1>The admin now lives inside the shop preview.</h1>
+  <p>
+    Shop and admin are one preview now, sharing one set of sample data, the way your real shop
+    shares one database. A setting you change shows in the shop straight away.
+  </p>
+  <a class="go" href="https://claude.ai/artifact/C7GwTxuGrFtSpHnCw5n6yF" target="_blank" rel="noopener">Open the preview <span aria-hidden="true">→</span></a>
+  <ol>
+    <li>On the bar at the foot of the shop, tap <strong>OPEN THE ADMIN</strong>.</li>
+    <li>Change what you like, for example <strong>SETTINGS</strong> → Outside Nigeria.</li>
+    <li>Tap <strong>OPEN THE SHOP</strong> on the same bar to see it in the shop.</li>
+  </ol>
+  <p class="link">https://claude.ai/artifact/C7GwTxuGrFtSpHnCw5n6yF</p>
+</main>

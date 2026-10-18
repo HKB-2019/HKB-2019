@@ -166,10 +166,12 @@ shows up in the preview the next time it is built. Output goes to
 `dist-preview/shop` and `dist-preview/admin` (the same thing, opened at the
 admin).
 
-Each published preview is its own site to the browser, so each keeps its own
-sample data: a setting changed in one link never reaches the other. The
-preview's bar says so; to test a setting, change it and open the shop from
-the same link (OPEN THE SHOP on the bar).
+Only the shop build is published, as one link holding both shop and admin
+(OPEN THE ADMIN / OPEN THE SHOP on its bar), so they share one set of sample
+data. The old admin link shows a notice pointing to it (`tools/admin-moved.html`):
+two links meant two separate sets of data, and a setting changed in one never
+showed in the other. Sample data is kept per browser, so a phone and a laptop
+each have their own.
 
 ### Tests
 
