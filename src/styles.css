@@ -1287,7 +1287,9 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 .gift__mode:hover{ color:var(--ink); }
 .gift__mode[aria-current="page"]{ color:var(--ink); border-color:var(--violet-soft); }
 .gift__find{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:end; }
-.gift__find .btn{ height:50px; padding:0 22px; }
+/* the code box and FIND CARD on one line, the same height */
+.gift__find .field{ margin-bottom:0; }
+.gift__find .btn{ height:48px; padding:0 22px; }
 .gift__found{ margin:18px 0 0; font-size:14px; color:var(--ink-dim); }
 .gift__found strong{ color:var(--ink); font-weight:400; letter-spacing:.12em; }
 .gift__topup-note{ margin:0 0 22px; padding:12px 14px; font-size:14px; line-height:1.5; border-left:1px solid var(--line); color:var(--ink-dim); }
