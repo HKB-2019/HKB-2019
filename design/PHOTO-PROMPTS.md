@@ -16,7 +16,7 @@ If a result still looks plastic, reply: *"Make it look like an unretouched photo
 
 The most realistic results come from describing the model the way a casting director and a photographer would: who he is, his face and body in detail, his skin as a camera sees it, then the shoot itself. ChatGPT has no secret mode; detail like this is what does the work.
 
-Use it in **one ChatGPT chat**, in this order, so the same man appears in every photo.
+Five messages, sent one after another in **one ChatGPT chat** so the same man appears in every photo: Step 1 creates him, Steps 2 to 5 are the four photos. (The shorter prompts further down are the older, one-off versions.)
 
 ### Step 1: the casting sheet (paste first, attach the logo)
 
@@ -54,7 +54,57 @@ If the test shot looks plastic, reply: *"More real: show pores, the small spots 
 >
 > **Avoid:** plastic or waxy skin, airbrushing, over-sharpening, HDR, glow around him, perfect symmetry, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print and the wall.
 
-For the **countdown**, the **T-shirt** and the **hoodie**, send the matching prompt below starting with *"Now photograph Tobi, the same man,"* and keep the Camera and Avoid lines from Step 2.
+### Step 3: the countdown (same chat)
+
+> Now photograph Tobi, the same man, for the countdown band on our home page.
+>
+> **Wardrobe:** a black heavyweight hoodie with the hood up; the inside of the hood lined with a bright multicoloured African geometric pattern in violet, orange, teal, gold and pink, real woven fabric with visible threads.
+>
+> **Pose and expression:** seen from the chest up, turned three-quarters to the right, in profile, looking up and into the distance; lips relaxed and slightly parted; thoughtful, not posing.
+>
+> **Place:** a dark concrete underpass at night. One beam of violet light cuts diagonally across the wall behind him; the rest of the picture is dark, softly lit concrete with stains and texture, out of focus, with nothing in it.
+>
+> **Light:** the violet beam from behind and a faint cold light from the right; half his face in shadow, still detailed; the pattern inside the hood catching the light.
+>
+> **Camera:** shot on a Sony A7R V with a 50 mm f/1.2 G Master lens at f/2, 1/125 s, ISO 1600; focus on his near eye. Colour like Kodak Portra 800 film pushed one stop: true skin tones, deep blacks, visible grain.
+>
+> **Framing:** very wide landscape, about 2.3 : 1, largest size available. Him in the left third only; the middle and right of the picture dark and empty, for the countdown's numbers.
+>
+> **Avoid:** plastic or waxy skin, airbrushing, over-sharpening, HDR, glow around him, perfect symmetry, extra fingers, logos, watermarks, any text at all.
+
+### Step 4: the T-shirt, for its product page (same chat)
+
+> Now photograph Tobi, the same man, for the T-shirt's product page in our online shop.
+>
+> **Wardrobe:** the same violet MASQ. T-shirt as before: heavyweight cotton, real folds and stitching, the attached logo printed exactly, every letter spelled correctly, the whole print visible and uncropped. Black tapered trousers.
+>
+> **Pose and expression:** standing straight, facing the camera, hands in his pockets, looking just past the lens; calm. Seen from the top of his head to mid-thigh, in the centre.
+>
+> **Place and light:** a plain charcoal-black studio backdrop. One large soft light from the upper left, a faint violet rim light from behind, gentle shadows; the print evenly lit and easy to read.
+>
+> **Camera:** shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/5.6, 1/160 s, ISO 100; sharp from head to hem. Clean, true-to-life colour, fine grain.
+>
+> **Framing:** portrait 4:5, largest size available, even space around him.
+>
+> **Avoid:** plastic or waxy skin, airbrushing, over-sharpening, HDR, extra fingers, warped letters, props, logos in the corners, watermarks, any text other than the print.
+
+For the **black T-shirt**, send the same message with "violet" changed to "washed black".
+
+### Step 5: the hoodie, for its product page (same chat)
+
+> Now photograph Tobi, the same man, for the hoodie's product page in our online shop.
+>
+> **Wardrobe:** a heavyweight black hoodie, hood down, real brushed-fleece texture, ribbed cuffs and hem, black drawcords. On the chest, the attached logo as a tone-on-tone black print with a slight sheen, so it shows in the light without colour. Black tapered trousers.
+>
+> **Pose and expression:** standing straight, facing the camera, one hand in the hoodie's front pocket, looking just past the lens; his whole face visible, calm.
+>
+> **Place and light:** a plain charcoal-black studio backdrop. One large soft light from the upper left so the print's sheen shows, a faint violet rim light from behind, gentle shadows.
+>
+> **Camera:** shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/5.6, 1/160 s, ISO 100; sharp from head to hem. Clean, true-to-life colour, fine grain.
+>
+> **Framing:** portrait 4:5, largest size available, even space around him.
+>
+> **Avoid:** plastic or waxy skin, airbrushing, over-sharpening, HDR, extra fingers, warped print, props, logos in the corners, watermarks, any text.
 
 If he drifts (a different face), reply: *"That is not Tobi. Keep his face exactly as in the test shot: the scar through the right eyebrow, the uneven brows, the beard shadow."*
 
