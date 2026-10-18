@@ -331,6 +331,14 @@ The print must be tack-sharp and exactly as on the attached T-shirt photo: every
 Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, glow, extra fingers, warped letters, logos in the corners, watermarks, any text other than the print.
 ```
 
+**Poses for Ifeoma.** So she does not mirror Dayo, replace the "Pose:" line in A to E with one of these when making her photo (everything else stays the same, so the pair still lines up):
+
+1. Over the shoulder: *Pose: body turned three-quarters to her left, looking back over her right shoulder straight into the lens, one hand lightly touching the collar of the T-shirt; poised and knowing. The print still clearly visible.*
+2. Hand in the hair: *Pose: facing the camera, weight on one hip, one hand resting lightly on the back of her head, the other arm relaxed at her side, chin slightly down, eyes up into the lens; calm and confident.*
+3. Arms crossed, low: *Pose: facing the camera, arms loosely crossed low at the waist so the whole print stays visible above them, shoulders relaxed, head tilted slightly, a faint knowing half-smile.*
+4. Mid-step: *Pose: walking slowly towards the camera mid-step, one foot forward, arms swinging naturally, looking straight into the lens; certain and unhurried.*
+5. Leaning (best with B, C or D): *Pose: leaning one shoulder lightly against the background wall, legs crossed at the ankle, one thumb hooked in a trouser pocket, face turned to the lens; relaxed and self-assured.*
+
 If the print still softens a little in these, send the photo back with the shirt photo attached: *"Replace the print on the T-shirt with the print from the attached shirt photo, exactly and tack-sharp. Change nothing else."*
 
 ## More looks for Ifeoma (F to K)
