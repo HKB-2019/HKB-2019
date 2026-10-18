@@ -1,6 +1,6 @@
 # Prompts for new model photos
 
-For ChatGPT (or any image tool). Each prompt makes one photo on its own, never a whole page design: the model then fills the whole picture, which is what gives real detail in the face and the print.
+For ChatGPT. **Five messages, Steps 1 to 5 below, all in the same chat, in order.** Step 1 creates the model; Steps 2 to 5 are the four photos for the site. Each photo is asked for on its own, never as a whole page design, so the model fills the picture and the face and print keep their detail.
 
 **Every time:**
 - Attach the MASQ. logo (the circular mask with "WE WEAR IDENTITY. · UNAPOLOGETICALLY YOURS") so the print is copied, not invented.
@@ -16,9 +16,9 @@ If a result still looks plastic, reply: *"Make it look like an unretouched photo
 
 The most realistic results come from describing the model the way a casting director and a photographer would: who he is, his face and body in detail, his skin as a camera sees it, then the shoot itself. ChatGPT has no secret mode; detail like this is what does the work.
 
-Five messages, sent one after another in **one ChatGPT chat** so the same man appears in every photo: Step 1 creates him, Steps 2 to 5 are the four photos. (The shorter prompts further down are the older, one-off versions.)
+Five messages, sent one after another in **one ChatGPT chat** so the same man appears in every photo: Step 1 creates him, Steps 2 to 5 are the four photos.
 
-### Step 1: the casting sheet (paste first, attach the logo)
+### Step 1: create the model (paste first, attach the logo)
 
 > I am art-directing a fashion campaign for MASQ., a Nigerian streetwear brand. Before any photos, create our model and keep him exactly the same in every image I ask for in this chat. Show me one neutral head-and-shoulders test shot of him first, plain grey backdrop, soft daylight, no styling.
 >
@@ -36,7 +36,7 @@ Five messages, sent one after another in **one ChatGPT chat** so the same man ap
 
 If the test shot looks plastic, reply: *"More real: show pores, the small spots and the beard shadow clearly. Less contrast on the face. As if shot on film and scanned, not retouched."* When he looks like a real person, move on.
 
-### Step 2: the shoot (one message per photo)
+### Step 2: the top of the home page (same chat)
 
 > Now photograph Tobi, the same man, for the top of our home page.
 >
@@ -109,66 +109,6 @@ For the **black T-shirt**, send the same message with "violet" changed to "washe
 If he drifts (a different face), reply: *"That is not Tobi. Keep his face exactly as in the test shot: the scar through the right eyebrow, the uneven brows, the beard shadow."*
 
 These are AI-made models: on the site they are campaign photos, never shown as real customers or reviews.
-
----
-
-## 1. Top of the home page (replaces the model in the hero)
-
-> A real, unretouched fashion campaign photograph, wide landscape 16:9, largest size available.
->
-> **Person:** a Nigerian man in his mid-20s, dark brown skin, short natural coily hair, light beard shadow. Calm, proud expression, chin slightly raised, looking straight into the camera. Seen from the top of his head to mid-thigh, standing relaxed, hands in the pockets of black trousers.
->
-> **Skin:** real skin as a camera records it: visible pores, fine hairs, small natural marks, slight unevenness in tone, a little natural shine on the forehead and nose. No retouching, no airbrushing, no smoothing, no over-sharpening, not CGI, not a 3D render.
->
-> **T-shirt:** heavyweight cotton crew-neck in deep electric violet, with real fabric texture, soft natural folds and visible stitching at the collar and sleeves. On the chest, the attached logo reproduced exactly as a flat screen print that follows the fabric: the multicoloured mask in the centre, the ring of white capitals reading "WE WEAR IDENTITY." over the top and "UNAPOLOGETICALLY YOURS" round the bottom, the multicoloured "MASQ." under it and the row of five small symbols beneath. Every letter spelled correctly.
->
-> **Place:** in front of a dark concrete wall painted with a large violet tribal eye mural, behind him and to his left. On the wall to his right, "WEAR IDENTITY LIVE CULTURE" hand-painted in violet brush letters.
->
-> **Light:** low-key and moody. A soft light from the front left shows his face and the print clearly; a violet rim light from behind on the right outlines his hair, shoulder and arm; deep shadows elsewhere.
->
-> **Framing:** him in the right third of the picture, clear dark space above his head (about 12% of the height), and the left half almost black and empty, for the website's words.
->
-> **Camera:** real photograph, full-frame camera, 85mm lens at f/2.8, focus on the eyes, true-to-life colour, slight natural film grain.
->
-> No other text, no logos in the corners, no website parts, no watermark.
-
-## 2. The countdown (replaces the hooded profile)
-
-> A real, unretouched night street-fashion photograph, very wide landscape (about 2.3 : 1), largest size available.
->
-> **Person:** a Nigerian man in his 20s, dark brown skin, seen from the chest up on the left of the picture, in profile turned three-quarters to the right, looking up and into the distance. He wears the hood up of a black hoodie whose hood is lined with a bright multicoloured African geometric pattern (violet, orange, teal, gold, pink).
->
-> **Skin:** visible pores, fine hairs, natural highlights on the cheekbone and lips, slight unevenness. No retouching, no airbrushing, no smoothing, not CGI.
->
-> **Place:** a dark concrete underpass at night. A single beam of violet light cuts diagonally across the wall behind him; the right side of the picture is dark, softly lit concrete, out of focus, with nothing in it.
->
-> **Light:** the violet beam and a faint cold light from the right; his face half in shadow, still detailed.
->
-> **Framing:** him in the left third only; the middle and right of the picture stay dark and empty for the countdown's numbers.
->
-> **Camera:** real photograph, full-frame camera, 50mm lens at f/2, true-to-life colour, slight film grain. No text anywhere.
-
-## 3. The T-shirt on a model (product page)
-
-> A real, unretouched studio photograph for an online fashion shop, portrait 4:5, largest size available.
->
-> **Person:** a Nigerian man in his mid-20s, dark brown skin, short natural hair, standing straight, hands in the pockets of black trousers, looking past the camera. From the top of his head to mid-thigh, in the centre.
->
-> **Skin:** visible pores, fine hairs, small natural marks. No retouching, no smoothing, not CGI.
->
-> **T-shirt:** the same violet MASQ. tee as the attached logo: heavyweight cotton, real folds and stitching, the logo printed exactly and spelled correctly, fully visible and uncropped.
->
-> **Place and light:** a plain charcoal-black studio backdrop. One large soft light from the upper left, a faint violet rim light from behind, gentle shadows; the print evenly lit and easy to read.
->
-> **Camera:** real photograph, full-frame camera, 85mm lens at f/5.6, sharp from head to hem, true-to-life colour.
->
-> No text other than the print, no props.
-
-For the **black tee**, change "violet" to "washed black" and keep everything else.
-
-## 4. The hoodie (product page)
-
-> Same as prompt 3, with: a heavyweight black hoodie, hood down, real brushed-fleece texture and ribbed cuffs, black drawcords. On the chest the attached logo as a tone-on-tone black print with a slight shine, so it reads in the light without colour. Show his whole face, not cropped at the nose.
 
 ---
 
