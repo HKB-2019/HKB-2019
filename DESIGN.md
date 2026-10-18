@@ -73,7 +73,7 @@ Streetwear lit like a night shoot: black grounds, the model and the pieces under
 - **Ink:** bone white in dark, near-black in light, with dim and faint steps (all at least 4.5:1).
 - **Accent:** electric violet for solid buttons, the bag count, chosen chips, the round arrow on hover; violet light (dark) / violet ink (light) for labels, links, the coloured word in a headline and the brush words.
 - **The logo's colours** appear only in the wordmark (header, footer, admin), on the gift card and in photographs. Product colours live only in swatches and photos.
-- **Stay dark in both themes:** the hero (and the menu over it), the craft band, the film strip, the full-screen photo view, the gift card stage.
+- **Stay dark in both themes:** the hero (and the menu over it), the craft band (exactly as in the landing design, its own picture: don't restyle it), the countdown, the film strip, the full-screen photo view, the gift card stage.
 
 ## Typography
 - **MASQ.** in Inter 800, tight, huge.

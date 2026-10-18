@@ -605,8 +605,10 @@ Since the October redesign the top of the home page uses the hero of the owner's
 landing design itself (`design/landing-redesign.webp`): its menu, words, buttons and
 faces taken out and filled from the wall around them, then enlarged four times with
 Real-ESRGAN, to `hero-design.webp` / `hero-design@2x.webp`. The brush words stay
-painted on the wall, as designed. The craft band a violet-lit version of
-the carved relief (`band-relief.webp`, recoloured from the stone texture). The
+painted on the wall, as designed. The craft band ("Craft. Culture. Identity.") is
+the landing design's own band too (`band-design.webp`): the carved violet eyes at both
+ends, its words taken out and enlarged four times the same way, with the design's mask
+emblem cut out and sharpened (`src/assets/craft-emblem.webp`). The
 header and footer wordmark is cut from `design/logo.png` (`src/assets/wordmark-*.webp`;
 the light theme's copy has its cream M in ink).
 

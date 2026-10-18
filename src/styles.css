@@ -441,39 +441,43 @@ html{ scrollbar-color:var(--line) var(--bg); }
 .hero__actions .btn{ min-width:190px; }
 
 /* ============ CRAFT BAND ============ */
-/* A short band: carved violet relief at both ends, the words in the dark middle. */
+/* As in the owner's landing design: carved violet eyes at both ends (the
+   design's own picture, its words taken out), the mask emblem, the title in
+   wide-spaced capitals and two serif lines in the dark middle. */
 .craft{
   position:relative; overflow:hidden;
-  padding:clamp(36px,3.6vw,52px) 0 clamp(38px,3.8vw,54px);
-  border-block:1px solid rgb(var(--violet-rgb) / .35);
+  min-height:clamp(170px, 12.9vw, 250px);
+  display:flex; align-items:center;
+  padding:clamp(14px,1.2vw,22px) 0;
+  border-block:1px solid rgb(var(--violet-rgb) / .45);
 }
 .craft__bg{ position:absolute; inset:0; }
 .craft__bg img{
-  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
-  filter:grayscale(1) brightness(1.1) contrast(1.1);
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 50%;
 }
-/* any photo takes the violet (the built-in relief is violet already); the
-   middle falls to black under the words */
-.craft__bg::before{
-  content:''; position:absolute; inset:0; z-index:1;
-  background:#5a2be0; mix-blend-mode:color;
-}
-.craft__bg::after{
-  content:''; position:absolute; inset:0; z-index:2;
-  background:radial-gradient(34% 120% at 50% 50%, rgb(var(--bg-rgb) / .96) 40%, rgb(var(--bg-rgb) / .55) 70%, rgb(var(--bg-rgb) / 0) 100%);
+/* the owner's own photo is dimmed under the words; the design's is dark there already */
+.craft--own .craft__bg::after{
+  content:''; position:absolute; inset:0;
+  background:rgb(var(--bg-rgb) / var(--band-wash));
 }
 .craft__inner{
-  position:relative; z-index:3; text-align:center;
+  position:relative; width:100%; text-align:center;
   max-width:var(--maxw); margin:0 auto; padding-inline:var(--pad);
 }
-.craft__mark{ width:26px; height:36px; margin:0 auto 18px; color:var(--ink); opacity:.9; }
+.craft__emblem{ display:block; width:auto; height:clamp(30px,2.8vw,42px); margin:0 auto clamp(10px,.9vw,14px); }
 .craft__title{
-  margin:0; font-size:clamp(14px,1.5vw,18px); font-weight:500;
-  letter-spacing:.42em; text-transform:uppercase; margin-right:-.42em;
+  margin:0; font-size:clamp(13px,1.25vw,18px); font-weight:500;
+  letter-spacing:.42em; margin-right:-.42em; text-transform:uppercase; color:#f4f1eb;
 }
 .craft__text{
-  margin:20px auto 0; max-width:48ch;
-  font-family:var(--serif); font-size:17px; line-height:1.6; color:var(--ink-dim);
+  margin:clamp(8px,.8vw,12px) auto 0; max-width:48ch;
+  font-family:var(--serif); font-size:clamp(15px,1.2vw,17px); line-height:1.35; color:#c9c4d6;
+}
+@media (max-width:900px){
+  /* too narrow for both ends: one carving behind the words, dimmed */
+  .craft{ padding:34px 0 36px; }
+  .craft__bg img{ object-position:0% 50%; }
+  .craft__bg::after{ content:''; position:absolute; inset:0; background:rgb(5 4 7 / .62); }
 }
 
 /* ============ SECTIONS ============ */
@@ -1079,7 +1083,6 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
      band below shows and is then pushed away. */
   .hero__copy[aria-busy="true"]{ min-height:290px; }
   .hero__title{ margin-top:12px; }
-  .craft__bg::after{ background:radial-gradient(90% 110% at 50% 50%, rgb(var(--bg-rgb) / .9) 30%, rgb(var(--bg-rgb) / .55) 75%, rgb(var(--bg-rgb) / .25) 100%); }
 
   .grid{ grid-template-columns:repeat(2, 1fr); }
   .manifesto__inner{ grid-template-columns:1fr; }

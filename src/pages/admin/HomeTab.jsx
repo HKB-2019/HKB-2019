@@ -22,8 +22,8 @@ function Note({ state }) {
 const SLOTS = [
   ['hero', 'Top of the page', 'assets/img/hero-design.webp',
     'The big photo behind MASQ. On a computer it fills the whole top of the page (a wide 2 : 1 picture) with the words on its left, so keep the subject to the right and the left side dark; on a phone it sits above the words.'],
-  ['band', 'Craft band', 'assets/img/band-relief.webp',
-    'The strip behind “Craft. Culture. Identity.” It is turned violet and dimmed under the words, so a carving, a texture or a detail works best. Cut to a wide 3 : 1 strip.'],
+  ['band', 'Craft band', 'assets/img/band-design.webp',
+    'The strip behind “Craft. Culture. Identity.” Your photo is dimmed under the words, so a carving, a texture or a detail works best. Cut to a wide 3 : 1 strip.'],
   ['countdown', 'Countdown', 'assets/img/countdown.webp',
     'Behind the countdown, shown while a piece waits for its drop time. The numbers sit on its right, so keep the subject on the left. Cut to a wide 2.3 : 1 picture.'],
   ['film', 'Film strip', 'assets/img/film-still.webp',

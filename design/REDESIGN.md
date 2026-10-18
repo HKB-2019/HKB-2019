@@ -5,7 +5,7 @@ The pictures here are the owner's references.
 **Built so far (18 Oct):** the new look across the shop and the admin in both
 themes (stage A) and the home page (stage B): the wordmark, the hero as in the
 landing design (its own picture, cleaned of its words and enlarged; the approved
-photo is not used, at the owner's request), the violet craft band, the countdown in panels,
+photo is not used, at the owner's request), the craft band as designed, the countdown in panels,
 product panels with round arrows, the manifesto with OUR STORY, the film strip
 playing the brand film, the Essentials as panels, the promises strip, the attached
 JOIN box, the restyled pop-up. `DESIGN.md` is rewritten to this language.
@@ -26,7 +26,9 @@ category pages and the SHOP menu (D), the new product page (E).
 - **Hero:** a big bold MASQ. title, serif subtitle, short body text, two buttons
   (SHOP DROP 01 → solid violet, EXPLORE → outline), the approved photo on the right,
   and "WEAR IDENTITY LIVE CULTURE" as live text in a brush style (not baked into the photo).
-- **Craft band:** shorter, carved violet relief art on both sides, a small emblem.
+- **Craft band:** exactly as in the landing design (the owner, 18 Oct: "don't change
+  that part"): the design's own band picture, carved violet eyes at both ends, its mask
+  emblem, the spaced title and two serif lines.
 - **Product cards:** each in its own panel; name, price below, colour dots, round → button.
 - **Manifesto:** left-aligned, "symbols." in violet (not italic), OUR STORY → on the right.
 - **Film band:** outlined play button, PLAY BRAND FILM, "People / Places / Patterns / Purpose" on the left.
