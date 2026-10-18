@@ -617,11 +617,12 @@ that resolution. Several assets needed repair or reframing:
   margin has no join, and blurring it there smears the photograph itself.
 
 The top of the home page is two campaign photos that take turns: Dayo in the
-violet tee (`hero-design.webp`) and Ifeoma in the black (`hero-design-2.webp`),
+violet tee (`hero-design.webp`) and Ifeoma in the baby pink (`hero-design-2.webp`),
 each with an `@2x` copy at the original 1672 px. Both were made in ChatGPT from
-`design/PHOTO-PROMPTS.md` (AI-made models, shown as campaign photos only), framed
-alike before the same eye mural and brush words, so the fade changes only the
-person. (Before them, the landing design's own hero, cleaned and enlarged with
+`design/PHOTO-PROMPTS.md` (AI-made models, shown as campaign photos only; each
+shirt photographed on its own first so the print stays sharp), framed alike
+before the same carved wood relief, so the fade changes only the person and the
+colour. (Before them, the landing design's own hero, cleaned and enlarged with
 Real-ESRGAN, sat there.) The craft band ("Craft. Culture. Identity.") is
 the landing design's own band too (`band-design.webp`): the carved violet eyes at both
 ends, its words taken out and enlarged four times the same way, with the design's mask
