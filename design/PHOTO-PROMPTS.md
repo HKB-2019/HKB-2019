@@ -36,6 +36,22 @@ Five messages, sent one after another in **one ChatGPT chat** so the same man ap
 
 If the test shot looks plastic, reply: *"More real: show pores, the small spots and the beard shadow clearly. Less contrast on the face. As if shot on film and scanned, not retouched."* When he looks like a real person, move on.
 
+**Optional: refine him into a fashion model** (reply in the same chat if the test shot is real but too ordinary):
+
+> Good, keep this level of realism: the pores, natural skin texture and film-like look. Now refine Tobi into a high-fashion model, the kind you would see in a Lagos Fashion Week or Arise campaign:
+>
+> **Skin:** deep ebony, a rich dark brown-black with cool undertones, with a soft natural sheen on the cheekbones, forehead and the bridge of the nose. Even and healthy, with fewer marks: no razor bumps or dry patches, but keep the visible pores and a few tiny natural spots so it still looks like real skin.
+>
+> **Face:** sharper, more sculpted bone structure: high, defined cheekbones, a clean sharp jawline, hollows under the cheekbones, a longer elegant neck. Keep his own nose and full lips. Calm, striking, slightly aloof model expression, eyes intense and direct.
+>
+> **Grooming:** fresh shape-up with a crisp hairline, short neat 4C coils on top with a low skin fade at the sides, clean groomed eyebrows, a very light, even beard shadow along the jaw only.
+>
+> **Body:** slimmer and taller in frame, about 1.88 m, lean model build, long neck and straight posture.
+>
+> Same backdrop, same light, same camera as before. Real photograph, not retouched, not CGI. Show me the new test shot.
+
+If that comes out too glossy, reply: *"Keep the new look but less polished: more visible pores and natural texture, as if shot on film and not retouched."*
+
 ### Step 2: the top of the home page (same chat)
 
 > Now photograph Tobi, the same man, for the top of our home page.
@@ -106,7 +122,7 @@ For the **black T-shirt**, send the same message with "violet" changed to "washe
 >
 > **Avoid:** plastic or waxy skin, airbrushing, over-sharpening, HDR, extra fingers, warped print, props, logos in the corners, watermarks, any text.
 
-If he drifts (a different face), reply: *"That is not Tobi. Keep his face exactly as in the test shot: the scar through the right eyebrow, the uneven brows, the beard shadow."*
+If he drifts (a different face), reply: *"That is not Tobi. Keep his face exactly as in the last test shot you made."*
 
 These are AI-made models: on the site they are campaign photos, never shown as real customers or reviews.
 
