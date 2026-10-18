@@ -119,7 +119,7 @@ test('the home page starts with the design’s own words', async () => {
   assert.equal(home.heroEyebrow, 'URBAN RITUALS');
   assert.equal(home.heroSub, 'Modern identity wear\nrooted in culture.');
   assert.deepEqual(home.nav.collections, { label: 'COLLECTIONS', show: true });
-  assert.deepEqual(home.images, { hero: null, band: null, film: null }, 'built-in photos until replaced');
+  assert.deepEqual(home.images, { hero: null, band: null, countdown: null, film: null }, 'built-in photos until replaced');
 });
 
 test('the home page words and menu can be changed, and a hidden menu item says so', async () => {
@@ -206,7 +206,7 @@ test('only the three home photo places exist, and each takes only a real photo',
   const mixed = await shop.request('/api/admin/home/image/film', { method: 'POST', cookie,
     json: { image: b64(PHOTO.webp), image2x: b64(PHOTO.png) } });
   assert.equal(mixed.status, 400);
-  assert.deepEqual((await site()).home.images, { hero: null, band: null, film: null });
+  assert.deepEqual((await site()).home.images, { hero: null, band: null, countdown: null, film: null });
 });
 
 test('the home photo setting cannot be written through the ordinary settings door', async () => {

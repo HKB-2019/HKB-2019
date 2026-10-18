@@ -6,7 +6,7 @@ import { asset, pageHref, NEW_TAB } from '../../lib/media.js';
 import { NAV } from '../../data/home.js';
 import { preparePhoto, HOME } from './photo.js';
 
-/* The home page: its three wide photos, every line of words on it, and the
+/* The home page: its four wide photos, every line of words on it, and the
  * menu. Each photo saves the moment it is chosen; the words save together
  * with one button, so a half-typed headline is never live. */
 
@@ -24,6 +24,8 @@ const SLOTS = [
     'The big photo behind MASQ. On a computer it fills the whole top of the page (a wide 2 : 1 picture) with the words on its left, so keep the subject to the right and the left side dark; on a phone it sits above the words.'],
   ['band', 'Craft band', 'assets/img/band-relief.webp',
     'The strip behind “Craft. Culture. Identity.” It is turned violet and dimmed under the words, so a carving, a texture or a detail works best. Cut to a wide 3 : 1 strip.'],
+  ['countdown', 'Countdown', 'assets/img/countdown.webp',
+    'Behind the countdown, shown while a piece waits for its drop time. The numbers sit on its right, so keep the subject on the left. Cut to a wide 2.3 : 1 picture.'],
   ['film', 'Film strip', 'assets/img/film-still.webp',
     'The strip with the PLAY BRAND FILM button. Cut to a wide 3 : 1 strip.']
 ];

@@ -90,7 +90,7 @@ function sampleStore() {
       home: structuredClone(HOME_DEFAULT),
       rates: { ...DEFAULT_RATES }
     },
-    homeImages: { hero: null, band: null, film: null },
+    homeImages: { hero: null, band: null, countdown: null, film: null },
     giftCards: sampleGifts(),
     giftSamples: true,
     customers: {

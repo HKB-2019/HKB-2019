@@ -101,6 +101,7 @@ test('a piece with a drop time stays hidden, the home page counts down, and it a
   await page.goto('/');
   await expect(page.locator('.countdown')).toBeVisible();
   await expect(page.locator('.countdown')).toContainText('The next drop');
+  await expect(page.locator('.countdown__clock small')).toHaveText(['DAYS', 'HOURS', 'MINUTES', 'SECONDS']);
   await expect(card(page, 'THE FACE TEE')).toHaveCount(0);
 
   // When the clock runs out the page fetches the catalogue again by itself.

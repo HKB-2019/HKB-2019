@@ -19,6 +19,7 @@ export const PRODUCT = { ratio: 5 / 6, widths: [700, 1400] };
 export const HOME = {
   hero: { ratio: null, widths: [900, 1800] },
   band: { ratio: 3, widths: [1600, 3000] },
+  countdown: { ratio: 2.3, widths: [1600, 3000] },
   film: { ratio: 3, widths: [1600, 3000] }
 };
 

@@ -13,7 +13,7 @@
   src:url('./assets/fonts/ebgaramond-latin-400.woff2') format('woff2');
   font-weight:400; font-style:normal; font-display:swap;
 }
-/* The bold, only for the amount on a gift card (fetched only there). */
+/* The bold, for the amount on a gift card and the countdown figures (fetched only there). */
 @font-face{
   font-family:'EB Garamond';
   src:url('./assets/fonts/ebgaramond-latin-700.woff2') format('woff2');
@@ -2100,6 +2100,7 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 .admin-home-photo__frame img{ display:block; width:100%; aspect-ratio:4/3; object-fit:cover; }
 .admin-home-photo--band .admin-home-photo__frame img,
 .admin-home-photo--film .admin-home-photo__frame img{ aspect-ratio:3/1; }
+.admin-home-photo--countdown .admin-home-photo__frame img{ aspect-ratio:2.3/1; }
 .admin-home-photo__tag{
   position:absolute; left:8px; top:8px; padding:3px 7px; font-size:11px; letter-spacing:.16em;
   background:rgb(var(--bg-rgb) / .8); color:var(--ink-dim);
@@ -2213,36 +2214,61 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 .restock__row input:focus, .restock__row select:focus{ outline:none; border-color:var(--violet-soft); }
 .restock__row .btn{ flex:none; }
 
-/* drop countdown, on the home page: each figure in its own panel on a band
-   of violet light, in the bold of the MASQ. title */
+/* drop countdown, on the home page: as designed, a hooded portrait on the
+   left of a concrete wall in violet light, the four figures in panels on the
+   right, the date under them and the button to join the list */
 .countdown{
-  border-block:1px solid var(--band-line);
-  background:
-    radial-gradient(50% 120% at 50% 100%, rgb(var(--violet-rgb) / .26), rgb(var(--violet-rgb) / 0) 70%),
-    var(--indigo-band);
+  position:relative; overflow:hidden; isolation:isolate;
+  background:#050407; color-scheme:dark;
+  border-block:1px solid rgb(var(--violet-rgb) / .35);
+}
+.countdown__media{ position:absolute; inset:0; z-index:-1; }
+.countdown__media img{ width:100%; height:100%; object-fit:cover; object-position:0% 30%; }
+.countdown__media::after{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg, rgb(5 4 7 / 0) 30%, rgb(5 4 7 / .35) 55%, rgb(5 4 7 / .25) 100%);
 }
 .countdown__inner{
-  max-width:var(--maxw); margin:0 auto; padding:clamp(40px,5vw,64px) var(--pad);
-  display:grid; justify-items:center; gap:20px; text-align:center;
+  max-width:var(--maxw); margin:0 auto; padding:clamp(48px,5.4vw,78px) var(--pad);
+  min-height:clamp(420px, 42.8vw, 640px);
+  display:flex; align-items:center; justify-content:flex-end;
 }
-.countdown__inner .eyebrow{ margin:0; font-weight:600; }
-.countdown__clock{ margin:0; display:flex; gap:clamp(8px,1.4vw,16px); }
+.countdown__body{
+  width:min(780px, 60%); display:grid; justify-items:center; gap:clamp(18px,2vw,26px); text-align:center;
+}
+/* "I D E N T I T Y": wide-spaced violet capitals over a short violet rule */
+.countdown__title{
+  margin:0; display:grid; justify-items:center; gap:14px;
+  font-size:15px; font-weight:500; letter-spacing:.6em; margin-right:-.6em; text-transform:uppercase;
+  color:var(--violet-soft);
+}
+.countdown__title::after{ content:''; width:56px; height:2px; background:var(--violet-soft); margin-right:.6em; }
+.countdown__clock{ margin:0; display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:clamp(8px,1.2vw,14px); width:100%; }
 .countdown__clock span{
   display:grid; gap:10px; justify-items:center; align-content:center;
-  min-width:clamp(68px,9vw,112px); padding:clamp(14px,1.8vw,22px) 8px clamp(12px,1.5vw,18px);
-  background:var(--panel); border:1px solid var(--line-soft); border-radius:var(--radius);
-  box-shadow:0 18px 40px -26px rgb(var(--violet-rgb) / .8);
+  min-height:clamp(104px, 11vw, 150px); padding:12px 6px;
+  background:rgb(8 7 12 / .86); border:1px solid rgb(244 241 235 / .14); border-radius:var(--radius);
+  box-shadow:0 18px 40px -24px rgb(0 0 0 / .9);
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
 }
 .countdown__clock b{
-  font-weight:800; font-size:clamp(34px,5.2vw,62px); line-height:1; letter-spacing:-.02em;
-  font-variant-numeric:tabular-nums; color:var(--ink);
+  font-family:var(--serif); font-weight:700; font-size:clamp(40px,4.4vw,64px); line-height:1;
+  font-variant-numeric:tabular-nums lining-nums; color:#f4f1eb;
 }
-.countdown__clock span:last-child b{ color:var(--violet-soft); }
-.countdown__clock small{ font-size:11px; font-weight:600; letter-spacing:.24em; color:var(--ink-faint); }
-.countdown__when{ margin:0; font-size:12px; font-weight:500; letter-spacing:.14em; color:var(--ink-dim); text-transform:uppercase; }
+.countdown__clock small{ font-size:12px; font-weight:500; letter-spacing:.1em; color:#f4f1eb; }
+.countdown__when{ margin:0; font-size:clamp(16px,1.4vw,19px); letter-spacing:0; color:#f4f1eb; }
+.countdown__when span{ white-space:nowrap; }
+@media (max-width:900px){
+  /* the portrait on top, the countdown under it */
+  .countdown__media{ position:relative; inset:auto; height:clamp(240px, 62vw, 420px); }
+  .countdown__media img{ object-position:10% 18%; }
+  .countdown__media::after{ background:linear-gradient(to bottom, rgb(5 4 7 / 0) 55%, #050407 100%); }
+  .countdown__inner{ min-height:0; padding-top:8px; justify-content:center; }
+  .countdown__body{ width:100%; }
+}
 @media (max-width:420px){
-  .countdown__clock span{ min-width:0; flex:1; padding-inline:4px; }
-  .countdown__clock{ width:100%; }
+  .countdown__clock span{ min-height:92px; }
+  .countdown__clock small{ font-size:11px; letter-spacing:.06em; }
 }
 
 /* admin: order row actions */
@@ -2594,7 +2620,7 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 .viz-bars__row--head, .preview-bar__tag, .preview-bar__actions button{
   font-weight:600; letter-spacing:.1em;
 }
-.pdp__crumbs, .line-item__variant, .form-msg, .countdown__when{ letter-spacing:.1em; }
+.pdp__crumbs, .line-item__variant, .form-msg{ letter-spacing:.1em; }
 .pdp__crumbs{ font-weight:500; }
 .footer__head, .link-arrow, .card__badge{ letter-spacing:.1em; }
 .card__quick{ letter-spacing:.08em; }
@@ -2638,7 +2664,7 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
    strip are shot and designed on black, and
    look the same in both themes: inside them the dark palette applies.
    So does the menu while it sits over the top photo. */
-:root[data-theme="light"] :is(.hero, .craft, .film, .header--over-dark, .pdp__pictured, .zoom, .gift-stage){
+:root[data-theme="light"] :is(.hero, .craft, .countdown, .film, .header--over-dark, .pdp__pictured, .zoom, .gift-stage){
   color-scheme:dark;
   --bg: #050407; --bg-2: #09080d; --bg-3: #0d0c12; --panel: #0f0e14;
   --ink: #f4f1eb; --ink-dim: #c2c0bc; --ink-faint: #8a8790;

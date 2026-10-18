@@ -274,11 +274,11 @@ export const NIGERIAN_STATES = [
 
 /* ------------------------------------------------- home page photos */
 
-/* The three wide photos on the home page. Kept apart from the `home` text so
+/* The four wide photos on the home page. Kept apart from the `home` text so
  * that they can only be set by uploading — a settings save cannot point them
  * at some other image, such as a product's, which replacing would delete. */
 
-export const HOME_SLOTS = ['hero', 'band', 'film'];
+export const HOME_SLOTS = ['hero', 'band', 'countdown', 'film'];
 
 export async function getHomeImages() {
   const row = await one("SELECT value FROM settings WHERE key = 'home_images'");
