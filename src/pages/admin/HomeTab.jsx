@@ -22,8 +22,8 @@ function Note({ state }) {
 const SLOTS = [
   ['hero', 'Top of the page', 'assets/img/hero-design.webp',
     'The big photo behind MASQ. On a computer it fills the whole top of the page (a wide 2 : 1 picture) with the words on its left, so keep the subject to the right and the left side dark; on a phone it sits above the words.'],
-  ['hero2', 'Top of the page: second photo (optional)', null,
-    'Add one and the two take turns at the top of the page, fading slowly from one to the other. Frame it like the first (subject on the right, left side dark) so the fade lines up. Remove it to show the first photo only.'],
+  ['hero2', 'Top of the page: second photo', 'assets/img/hero-design-2.webp',
+    'Takes turns with the first photo, fading slowly from one to the other (choose how often below, or never). Frame it like the first (subject on the right, left side dark) so the fade lines up.'],
   ['band', 'Craft band', 'assets/img/band-design.webp',
     'The strip behind “Craft. Culture. Identity.” Your photo is dimmed under the words, so a carving, a texture or a detail works best. Cut to a wide 3 : 1 strip.'],
   ['countdown', 'Countdown', 'assets/img/countdown.webp',
@@ -306,7 +306,7 @@ export default function HomeTab() {
           <div key={slot}>
             <PhotoSlot slot={slot} title={title} builtIn={builtIn} help={help}
                        current={images[slot]} onChanged={loadImages} />
-            {slot === 'hero2' && images.hero2 && heroSwitch && <HeroSwitch value={heroSwitch} onSaved={setHeroSwitch} />}
+            {slot === 'hero2' && heroSwitch && <HeroSwitch value={heroSwitch} onSaved={setHeroSwitch} />}
           </div>
         ))}
       </div>

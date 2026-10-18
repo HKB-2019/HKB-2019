@@ -186,6 +186,41 @@ Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, extra fingers, w
 
 ---
 
+## Background options (edit the chosen top-of-page photos)
+
+A calmer, more mature setting than the graffiti eye. Attach Dayo's top-of-page photo and send ONE option at a time (each in a fresh message), compare, then pick one. When you have picked, send the same option again with Ifeoma's photo attached, changing "Dayo" to "Ifeoma", so the pair matches.
+
+Every option starts with this line:
+
+```
+Edit the attached photo. Keep Dayo exactly as he is: face, skin, pose, T-shirt and print, trousers, size and position in the frame, and the light on him. Change only the background. Keep the left half of the picture dark and quiet for the website's words. Real photograph, true-to-life colour, 16:9, largest size.
+```
+
+**A. Studio, minimal luxury**
+```
+Background: a seamless studio backdrop in deep charcoal, almost black, lit by one soft violet glow from behind him that fades to black at the edges. Nothing else: no walls, no texture, no text. Like a luxury fashion campaign.
+```
+
+**B. Brutalist architecture, Lagos at night**
+```
+Background: raw board-formed concrete architecture at night, in the style of Lagos modernist buildings: deep vertical concrete fins and shadowed recesses, softly out of focus. Cool dark tones with a faint violet light grazing the concrete from the right. No text, no graffiti.
+```
+
+**C. Indigo textile wall**
+```
+Background: a large hand-dyed indigo adire cloth hung flat behind him, deep blue-black with subtle resist-dyed geometric patterns, softly lit from the right so the folds and texture show, falling into darkness on the left. No text.
+```
+
+**D. Gallery wall with carved relief**
+```
+Background: a dark gallery wall in charcoal lime plaster, with a large abstract hand-carved dark wood relief panel of geometric patterns behind his shoulder, lit by one narrow spotlight; everything else falls to black. Quiet and museum-like. No text.
+```
+
+**E. Night city, soft focus**
+```
+Background: Lagos at blue hour seen from a high terrace, the city lights far behind him and completely out of focus as soft bokeh, deep navy and violet tones, the left side of the sky dark. No readable signs or text.
+```
+
 ## The first cast, kept for reference: Tobi and Amara
 
 Deep ebony skin. To use them instead, send these as messages 1 and 2 and change the names in 3 to 8.

@@ -616,11 +616,13 @@ that resolution. Several assets needed repair or reframing:
   graft's join is applied only where a graft actually exists: an edge with no
   margin has no join, and blurring it there smears the photograph itself.
 
-Since the October redesign the top of the home page uses the hero of the owner's
-landing design itself (`design/landing-redesign.webp`): its menu, words, buttons and
-faces taken out and filled from the wall around them, then enlarged four times with
-Real-ESRGAN, to `hero-design.webp` / `hero-design@2x.webp`. The brush words stay
-painted on the wall, as designed. The craft band ("Craft. Culture. Identity.") is
+The top of the home page is two campaign photos that take turns: Dayo in the
+violet tee (`hero-design.webp`) and Ifeoma in the black (`hero-design-2.webp`),
+each with an `@2x` copy at the original 1672 px. Both were made in ChatGPT from
+`design/PHOTO-PROMPTS.md` (AI-made models, shown as campaign photos only), framed
+alike before the same eye mural and brush words, so the fade changes only the
+person. (Before them, the landing design's own hero, cleaned and enlarged with
+Real-ESRGAN, sat there.) The craft band ("Craft. Culture. Identity.") is
 the landing design's own band too (`band-design.webp`): the carved violet eyes at both
 ends, its words taken out and enlarged four times the same way, with the design's mask
 emblem cut out and sharpened (`src/assets/craft-emblem.webp`). The

@@ -160,16 +160,21 @@ test('a device set to reduce motion gets the shop without the extra movement', a
 });
 
 test('a second top photo takes turns with the first, as often as the owner chooses', async ({ page }) => {
+  // Out of the box: the design's two photos take turns.
+  await page.goto('/');
+  await expect(page.locator('.hero__shot img').nth(1)).toHaveAttribute('src', '/assets/img/hero-design-2.webp');
+
   await signIn(page);
   await page.goto('/admin#home');
   const second = page.locator('.admin-home-photo--hero2');
-  await expect(second.locator('.admin-home-photo__tag')).toHaveText('NONE');
-  await second.getByLabel('Photo for Top of the page: second photo (optional)').setInputFiles(PHOTO);
+  await expect(second.locator('.admin-home-photo__tag')).toHaveText('ORIGINAL');
+  await second.getByLabel('Photo for Top of the page: second photo').setInputFiles(PHOTO);
   await expect(second.locator('.admin-home-photo__tag')).toHaveText('YOUR PHOTO');
   await page.getByLabel('The two top photos switch').selectOption('5');
   await expect(page.locator('.admin-hero-switch .admin-note--ok')).toBeVisible();
 
   await page.goto('/');
+  await expect(page.locator('.hero__shot img').nth(1)).toHaveAttribute('src', /^\/api\/images\/\d+$/);
   const shots = page.locator('.hero__shot');
   await expect(shots).toHaveCount(2);
   await expect(shots.nth(0)).toHaveClass(/is-on/);
@@ -204,13 +209,13 @@ test('the home page words, menu and photos are changed from the admin', async ({
   await expect(page.locator('#drop .section__title')).toHaveText('Drop 02 — Night Rituals');
   const nav = page.getByRole('navigation', { name: 'Primary' });
   await expect(nav.getByRole('link')).toHaveText(['SHOP', 'LOOKBOOK', 'ABOUT']);
-  await expect(page.locator('.hero__media img')).toHaveAttribute('src', /^\/api\/images\/\d+$/);
-  expect(await page.locator('.hero__media img').evaluate(img => img.decode().then(() => img.naturalWidth))).toBeGreaterThan(0);
+  await expect(page.locator('.hero__media img').first()).toHaveAttribute('src', /^\/api\/images\/\d+$/);
+  expect(await page.locator('.hero__media img').first().evaluate(img => img.decode().then(() => img.naturalWidth))).toBeGreaterThan(0);
 
   // And back to the design's own photo.
   await page.goto('/admin#home');
   await hero.getByRole('button', { name: 'use original' }).click();
   await expect(hero.locator('.admin-home-photo__tag')).toHaveText('ORIGINAL');
   await page.goto('/');
-  await expect(page.locator('.hero__media img')).toHaveAttribute('src', '/assets/img/hero-design.webp');
+  await expect(page.locator('.hero__media img').first()).toHaveAttribute('src', '/assets/img/hero-design.webp');
 });
