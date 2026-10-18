@@ -557,6 +557,42 @@ Same method as the shirts: the hoodie on its own first, so the print stays sharp
 
 The print is **tone-on-tone** (black on black, like the hoodie photo in the shop now): it shows only where the light catches it. If you would rather have the full-colour logo, as on the T-shirts, reply after Step 1: *"Same hoodie, but make the print full colour exactly like the attached logo, as on the T-shirts. Keep everything else."*
 
+**Recreate a photo you already have, in the hoodie.** One message each, in a new chat. It keeps the adire top-of-page photo exactly as it is and changes only the top.
+
+Dayo (attach his adire top-of-page photo and the MASQ. logo):
+
+```
+Attach: Dayo's adire photo and the MASQ. logo.
+
+Recreate the attached photo exactly, changing only what he wears on top. Keep the man exactly as he is: face, skin, hair, build, pose, hands, expression, size and position in the frame. Keep the adire cloth behind him, the light, the colour, and the 16:9 framing with the left half dark and quiet.
+
+Replace the violet T-shirt with a heavyweight black pullover hoodie: brushed cotton fleece, hood down and resting behind his neck, flat black drawcords hanging on either side of the neck, a kangaroo front pocket, ribbed cuffs and hem, dropped shoulders, real folds where his arms and body bend. Keep his black trousers.
+
+On the chest, the attached logo as a tone-on-tone print: black on black, raised, with a soft satin sheen where the light catches it. Exactly like the logo: the mask in the centre, the ring of capital letters reading "WE WEAR IDENTITY." across the top and "UNAPOLOGETICALLY YOURS" around the bottom, "MASQ." below the ring, and the five small symbols underneath. Every letter spelled correctly and sharp. Centred, about 26 cm wide, above the pocket. The drawcords hang beside the print, never across it.
+
+A real photograph with the same camera and film look as the original: natural skin texture, gentle grain. The hoodie shows its folds and fleece texture, never a flat black shape. Largest size.
+
+Avoid: changing his face, pose or position, plastic or waxy skin, a blurry or redrawn print, misspelled letters, a colourful logo, drawcords across the print, a zip, extra logos, watermarks, any text other than the print.
+```
+
+Ifeoma (attach her adire top-of-page photo and the logo):
+
+```
+Attach: Ifeoma's adire photo and the MASQ. logo.
+
+Recreate the attached photo exactly, changing only what she wears on top. Keep the woman exactly as she is: face, skin, hair, build, pose with her arms crossed, expression, size and position in the frame. Keep the adire cloth behind her, the light, the colour, and the 16:9 framing with the left half dark and quiet.
+
+Replace the pink T-shirt with a heavyweight black pullover hoodie: brushed cotton fleece, hood down and resting behind her neck, flat black drawcords hanging on either side of the neck, ribbed cuffs and hem, dropped shoulders, sleeves gathering softly at her crossed forearms, real folds where her arms and body bend. Keep her black trousers.
+
+On the chest, the attached logo as a tone-on-tone print: black on black, raised, with a soft satin sheen where the light catches it. Exactly like the logo: the mask in the centre, the ring of capital letters reading "WE WEAR IDENTITY." across the top and "UNAPOLOGETICALLY YOURS" around the bottom, "MASQ." below the ring, and the five small symbols underneath. Every letter spelled correctly and sharp. Centred, about 24 cm wide, placed high on the chest so the whole print sits above her crossed arms. The drawcords hang beside the print, never across it.
+
+A real photograph with the same camera and film look as the original: natural skin texture, gentle grain. The hoodie shows its folds and fleece texture, never a flat black shape. Largest size.
+
+Avoid: changing her face, pose or position, plastic or waxy skin, arms covering the print, a blurry or redrawn print, misspelled letters, a colourful logo, drawcords across the print, a zip, extra logos, watermarks, any text other than the print.
+```
+
+If a letter comes out blurry or wrong, reply: *"Keep everything, but make the print sharp and exactly like the attached logo, every letter correct."* For the full-colour logo instead, reply: *"Same photo, but make the print full colour exactly like the attached logo, as on the T-shirts."*
+
 **Step 1. The black hoodie** (new chat, attach the logo)
 
 ```
