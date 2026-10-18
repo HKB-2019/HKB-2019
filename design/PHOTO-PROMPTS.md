@@ -333,6 +333,112 @@ Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, glow, 
 
 If the print still softens a little in these, send the photo back with the shirt photo attached: *"Replace the print on the T-shirt with the print from the attached shirt photo, exactly and tack-sharp. Change nothing else."*
 
+## More looks for Ifeoma (F to K)
+
+Each one different from A to E: a new setting, pose, light and mood. All keep the left half dark, so any can go at the top of the home page. Attach Ifeoma's test portrait and a shirt photo (black, violet or pink). If one is paired with Dayo's photo at the top of the page, give Dayo the same background so the fade lines up.
+
+**F. Velvet curtain, theatre spotlight**
+
+```
+Photograph the woman in the attached portrait, exactly as she is (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, fabric and print in the same place and size, every letter tack-sharp and spelled correctly. Black tailored wide-leg trousers.
+
+Pose: a three-quarter turn to her left, looking back over her right shoulder straight into the lens, one hand lightly touching the collar of the T-shirt; poised, a hint of a smile in the eyes only.
+
+Background: heavy deep-plum velvet stage curtains in soft vertical folds, falling into darkness on the left. Light: one warm hard spotlight from above front-right making a soft pool of light on her, the curtain folds catching a faint violet edge light. Theatrical, elegant, quiet.
+
+Camera: Hasselblad X2D, 90 mm lens at f/2.5, focus on her near eye. Colour like Kodak Portra 400: warm, true skin tones, gentle grain.
+
+Framing: wide landscape 16:9, largest size available. Her in the right third, from the top of her head to mid-thigh; the left half dark and quiet for the website's words.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, extra fingers, warped letters, watermarks, any text other than the print.
+```
+
+**G. Palm-leaf shadows at sunset**
+
+```
+Photograph the woman in the attached portrait, exactly as she is (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, fabric and print in the same place and size, every letter tack-sharp and spelled correctly. High-waisted black trousers.
+
+Pose: standing side-on to the camera, body turned right, face turned to the lens, chin lifted, both hands in her pockets; relaxed and self-assured.
+
+Background: a smooth rendered wall in deep burnt terracotta, with sharp shadows of palm leaves cast across it and across her by a low golden sun from the right; the left part of the wall falling into deep shadow. Warm, quiet, unmistakably West African late afternoon.
+
+Camera: Leica SL2, 75 mm lens at f/2, focus on her near eye. Colour like Kodak Ektar 100: rich warm colour, fine grain, true skin.
+
+Framing: wide landscape 16:9, largest size available. Her in the right third, from the top of her head to mid-thigh; the left half in deep shadow for the website's words.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, the palm shadows hiding the print, HDR, extra fingers, warped letters, watermarks, any text other than the print.
+```
+
+**H. Night rain, violet reflections**
+
+```
+Photograph the woman in the attached portrait, exactly as she is (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, fabric and print in the same place and size, every letter tack-sharp and spelled correctly. An open oversized black trench coat over the T-shirt so the print stays fully visible. Black trousers.
+
+Pose: walking slowly towards the camera mid-step, looking straight into the lens, calm and certain, one hand holding the coat open at her side.
+
+Background: a quiet city street at night after rain, wet tarmac reflecting soft violet and warm amber lights far behind her, completely out of focus as bokeh; fine drizzle visible in the light. The left side dark.
+
+Light: a soft key light from front left, a violet rim light from behind; the wet ground glowing faintly.
+
+Camera: Sony A1, 85 mm f/1.2 lens at f/1.8, 1/250 s, focus on her near eye. Cinematic colour, deep blacks, gentle grain.
+
+Framing: wide landscape 16:9, largest size available. Her in the right third, from the top of her head to the knees; the left half dark for the website's words.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, the coat covering the print, HDR, extra fingers, warped letters, readable signs, watermarks, any text other than the print.
+```
+
+**I. Flowing silk, studio motion**
+
+```
+Photograph the woman in the attached portrait, exactly as she is (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, fabric and print in the same place and size, every letter tack-sharp and spelled correctly. Black trousers.
+
+Pose: standing tall, facing the camera, arms relaxed, head turned slightly to her left with eyes on the lens; serene and strong.
+
+Background: pure black studio. Behind her, a long length of sheer violet silk caught mid-air by a fan, sweeping in a wide arc from behind her shoulders out to the right, glowing where the light passes through it. Nothing else.
+
+Light: one large soft light from front left on her; a strip light behind the silk making it glow. The print evenly lit and easy to read.
+
+Camera: Phase One XF IQ4, 110 mm lens at f/4, 1/1000 s so the silk is crisp, focus on her near eye. Clean, rich colour, fine grain.
+
+Framing: wide landscape 16:9, largest size available. Her in the right third, from the top of her head to mid-thigh; the left half black for the website's words, the silk not crossing into it.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, silk covering the print, HDR, extra fingers, warped letters, watermarks, any text other than the print.
+```
+
+**J. Chiaroscuro, seated**
+
+```
+Photograph the woman in the attached portrait, exactly as she is (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, fabric and print in the same place and size, every letter tack-sharp and spelled correctly. Black trousers, simple black leather sandals.
+
+Pose: sitting on a plain black wooden cube, leaning forward slightly with forearms resting on her knees, hands loosely clasped, looking straight into the lens; still, direct, powerful.
+
+Background: deep black, nothing visible. Light: a single hard light from high left, like a Renaissance painting: strong light on her face, the print and her arms, everything else falling to black; a faint violet rim on her right shoulder.
+
+Camera: Fujifilm GFX 100 II, 80 mm lens at f/4, focus on her eyes. Rich contrast, true skin tones, film-like grain.
+
+Framing: wide landscape 16:9, largest size available. Her in the right third, her whole seated figure in frame; the left half black for the website's words.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, the print hidden by her arms, HDR, extra fingers, warped letters, watermarks, any text other than the print.
+```
+
+**K. Rooftop at blue hour**
+
+```
+Photograph the woman in the attached portrait, exactly as she is (face, skin, hair, build), wearing the attached T-shirt exactly as it is: same colour, fabric and print in the same place and size, every letter tack-sharp and spelled correctly. Black tailored trousers.
+
+Pose: leaning back lightly against a low concrete parapet, elbows resting on it, one knee slightly bent, looking into the lens with a calm, confident half-smile.
+
+Background: an empty rooftop at blue hour, a deep blue-violet sky fading to near-black on the left, a few distant towers and the glow of a city far below, out of focus. Minimal and grown-up.
+
+Light: soft daylight from the fading sky, plus one small warm light from front left on her face and the print.
+
+Camera: Canon EOS R5, 50 mm f/1.2 lens at f/2, focus on her near eye. Colour like Fujifilm Pro 400H: soft, cool shadows, true warm skin.
+
+Framing: wide landscape 16:9, largest size available. Her in the right third, from the top of her head to the knees; the left half dark sky for the website's words.
+
+Avoid: plastic or waxy skin, airbrushing, a blurry or redrawn print, HDR, extra fingers, warped letters, readable signs, watermarks, any text other than the print.
+```
+
 ## Quick edit of an existing photo: background only
 
 If you would rather keep a photo you already have and only change what is behind the model:
