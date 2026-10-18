@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { adminSettings, adminSaveSetting } from '../../lib/api.js';
 
 /* The shop's settings, one section each, each saved on its own — a mistake
@@ -41,24 +41,50 @@ function Note({ state }) {
   if (!state) return null;
   if (state === 'saving') return <span className="admin-note">saving…</span>;
   if (state === 'saved') return <span className="admin-note admin-note--ok">saved</span>;
+  if (state === 'unsaved') return <span className="admin-note">not saved yet</span>;
   return <span className="admin-note admin-note--bad" role="alert">{state}</span>;
 }
 
 /* ------------------------------------------------------------ delivery */
 
+const feeText = (kobo) => (kobo === null ? '' : String(kobo / 100));
+const wholeNaira = (text) => text.replace(/[₦,\s]/g, '');
+
 function Delivery({ value, onSaved }) {
   const [rows, setRows] = useState(() => Object.fromEntries(ZONES.map(([z]) => [z, {
-    enabled: value[z].enabled,
-    fee: value[z].feeKobo === null ? '' : String(value[z].feeKobo / 100)
+    enabled: value[z].enabled, fee: feeText(value[z].feeKobo)
   }])));
-  const [state, save] = useSave('delivery', onSaved);
+  // What the shop is using now: a switch changes it at once, so it is the
+  // base each switch saves on top of (fees typed but not saved stay out).
+  const saved = useRef(value);
+  const [state, save] = useSave('delivery', (clean) => { saved.current = clean; onSaved?.(clean); });
   const [rowsError, setRowsError] = useState(null);
+
+  /* A switch works the moment it is flipped, as switches do on a phone:
+   * switching an area off closes it to customers at once. Switching one on
+   * needs its fee first, so with no fee it asks for one and waits for SAVE. */
+  const flip = (z, label, on) => {
+    setRows(r => ({ ...r, [z]: { ...r[z], enabled: on } }));
+    const raw = wholeNaira(rows[z].fee);
+    if (on && !/^\d+$/.test(raw)) {
+      setRowsError(`${label}: type its fee in whole naira, then press SAVE DELIVERY. Customers cannot choose it until then.`);
+      setTimeout(() => document.getElementById(`fee-${z}`)?.focus(), 0);
+      return;
+    }
+    setRowsError(null);
+    const feeKobo = /^\d+$/.test(raw) ? Number(raw) * 100 : saved.current[z].feeKobo;
+    save({ ...saved.current, [z]: { enabled: on, feeKobo } });
+  };
+
+  // Fees typed but not yet saved: said beside the button, so they are not lost by leaving.
+  const unsaved = ZONES.some(([z]) => wholeNaira(rows[z].fee) !== feeText(saved.current[z].feeKobo)
+    || rows[z].enabled !== saved.current[z].enabled);
 
   const submit = (e) => {
     e.preventDefault();
     const out = {};
     for (const [z, label] of ZONES) {
-      const raw = rows[z].fee.replace(/[₦,\s]/g, '');
+      const raw = wholeNaira(rows[z].fee);
       if (rows[z].enabled && !/^\d+$/.test(raw)) {
         // Said here, without a round trip, and the box that needs fixing is focused.
         setRowsError(`${label}: type the fee in whole naira, e.g. 2500.`);
@@ -78,6 +104,7 @@ function Delivery({ value, onSaved }) {
       <p className="admin-help">
         Switch on the places you deliver to and set a fee for each. The fee is added to the order
         before the customer pays. <strong>Checkout stays closed until at least one is switched on.</strong>
+        {' '}A switch works the moment you flip it; a changed fee when you press SAVE DELIVERY.
       </p>
       <table className="admin-mini-table">
         <thead><tr><th>Area</th><th>Deliver here</th><th>Fee (₦)</th></tr></thead>
@@ -88,7 +115,7 @@ function Delivery({ value, onSaved }) {
               <td>
                 <label className="admin-toggle">
                   <input type="checkbox" checked={rows[z].enabled} aria-label={`Deliver to ${label}`}
-                         onChange={(e) => setRows(r => ({ ...r, [z]: { ...r[z], enabled: e.target.checked } }))} />
+                         onChange={(e) => flip(z, label, e.target.checked)} />
                   <span className="admin-toggle__box" aria-hidden="true" />
                 </label>
               </td>
@@ -105,7 +132,7 @@ function Delivery({ value, onSaved }) {
       {!anyOn && <p className="admin-alert admin-alert--inline">Checkout is closed: no area is switched on.</p>}
       <div className="admin-card__foot">
         <button className="admin-action admin-action--primary">SAVE DELIVERY</button>
-        <Note state={rowsError ?? state} />
+        <Note state={rowsError ?? state ?? (unsaved ? 'unsaved' : null)} />
       </div>
     </form>
   );

@@ -109,6 +109,38 @@ test('a delivery fee left blank is pointed out, not saved', async ({ page }) => 
   await expect(page.getByLabel('Delivery fee for Outside Nigeria')).toBeFocused();
 });
 
+test('a delivery switch works the moment it is flipped, with no SAVE needed', async ({ page }) => {
+  await signIn(page);
+  await page.goto('/admin#settings');
+  const abroad = page.getByLabel('Deliver to Outside Nigeria');
+  const toCheckout = async () => {
+    await page.goto('/product/scarf');
+    await page.getByRole('button', { name: 'ADD TO BAG' }).click();
+    await page.locator('.cart-btn').click();
+    await page.getByRole('button', { name: 'CHECKOUT' }).click();
+  };
+
+  // On, with its fee typed first: the switch alone opens it.
+  await page.getByLabel('Delivery fee for Outside Nigeria').fill('40000');
+  await abroad.check({ force: true });
+  await expect(page.locator('.admin-card').first().locator('.admin-note--ok')).toBeVisible();
+  await toCheckout();
+  await expect(page.locator('#d-country')).toBeVisible();
+
+  // Off, and straight to the shop without pressing anything else.
+  await page.goto('/admin#settings');
+  await expect(abroad).toBeChecked();
+  await abroad.uncheck({ force: true });
+  await expect(page.locator('.admin-card').first().locator('.admin-note--ok')).toBeVisible();
+  await toCheckout();
+  await expect(page.locator('#d-country')).toHaveCount(0);
+  await expect(page.locator('select#d-state')).toBeVisible();
+
+  // And it stays off when the admin is opened again.
+  await page.goto('/admin#settings');
+  await expect(abroad).not.toBeChecked();
+});
+
 test('the orders spreadsheet downloads', async ({ page }) => {
   await signIn(page);
   await page.request.post('/api/checkout', { data: {

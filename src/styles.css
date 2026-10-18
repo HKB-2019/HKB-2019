@@ -1876,7 +1876,10 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 .admin-card form{ display:grid; gap:14px; }
 .admin-card__title{ margin:0; font-size:11px; letter-spacing:.2em; text-transform:uppercase; font-weight:400; }
 .admin-card__part{ padding-top:18px; border-top:1px solid var(--line-soft); }
-.admin-card__foot{ display:flex; align-items:center; gap:6px; }
+.admin-card__foot{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+/* A sentence of advice reads as a sentence: plain spacing, and on a narrow
+   screen it takes its own line under the button instead of a thin column. */
+.admin-card__foot .admin-note--bad{ flex:1 1 240px; letter-spacing:0; line-height:1.45; }
 .admin-card .admin-help{ margin:0; }
 .admin-mini-table{ border-collapse:collapse; width:min(520px, 100%); font-size:15px; }
 .admin-mini-table th{

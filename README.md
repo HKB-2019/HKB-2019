@@ -214,7 +214,10 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   delivery. It stays closed until at least one area has a fee. While delivery
   abroad is off (Settings → Outside Nigeria), there is no country to choose:
   the address is in Nigeria, with its states as a list. Once it is on, a
-  COUNTRY list appears: Nigeria first, every other country below.
+  COUNTRY list appears: Nigeria first, every other country below. Each area's
+  switch takes effect the moment it is flipped (one with no fee yet asks for
+  it first); a changed fee is kept when SAVE DELIVERY is pressed, and the card
+  says "not saved yet" until then.
   Abroad, the form also asks for a **postcode / ZIP** (optional — many
   countries have none; never asked for in Nigeria). It shows on the order in
   the admin and has its own column in the orders spreadsheet, for the courier.
