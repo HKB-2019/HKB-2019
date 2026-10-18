@@ -1,7 +1,15 @@
 # The redesign, agreed with the owner (17 Oct)
 
-Not built yet; to be built in the next session. The pictures here are the
-owner's references.
+The pictures here are the owner's references.
+
+**Built so far (18 Oct):** the new look across the shop and the admin in both
+themes (stage A) and the home page (stage B): the wordmark, the hero with the
+approved photo and the brush words, the violet craft band, the countdown in panels,
+product panels with round arrows, the manifesto with OUR STORY, the film strip
+playing the brand film, the Essentials as panels, the promises strip, the attached
+JOIN box, the restyled pop-up. `DESIGN.md` is rewritten to this language.
+**Still to build:** categories, collections and product details (C), the Shop and
+category pages and the SHOP menu (D), the new product page (E).
 
 | File | What it is |
 |---|---|

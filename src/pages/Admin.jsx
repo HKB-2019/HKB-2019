@@ -14,6 +14,7 @@ import HomeTab from './admin/HomeTab.jsx';
 import SalesTab from './admin/SalesTab.jsx';
 import StockTab from './admin/StockTab.jsx';
 import CustomersTab from './admin/CustomersTab.jsx';
+import Wordmark from '../components/Wordmark.jsx';
 
 // Charts and maps load only when the tab is opened — never for shoppers.
 const VisitorsTab = lazy(() => import('./admin/visitors/VisitorsTab.jsx'));
@@ -427,7 +428,7 @@ export default function Admin() {
     <div className="admin">
       <header className="admin-header">
         <div className="admin-header__inner">
-          <a href={pageHref('/')} className="logo" aria-label="MASQ. — back to the shop">MASQ<span>.</span></a>
+          <a href={pageHref('/')} className="logo"><Wordmark alt="MASQ. — back to the shop" /></a>
           <span className="admin-badge">ADMIN</span>
           <button className="icon-btn admin-theme" onClick={toggle}
                   aria-label={theme === 'light' ? 'Switch to the dark theme' : 'Switch to the light theme'}>

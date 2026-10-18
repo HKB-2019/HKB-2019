@@ -8,6 +8,7 @@ import Manifesto from '../components/Manifesto.jsx';
 import FilmStrip from '../components/FilmStrip.jsx';
 import Essentials from '../components/Essentials.jsx';
 import Newsletter from '../components/Newsletter.jsx';
+import Perks from '../components/Perks.jsx';
 import DropCountdown from '../components/DropCountdown.jsx';
 import { useShop, useHome } from '../store/ShopContext.jsx';
 import { scrollToId } from '../lib/scroll.js';
@@ -105,6 +106,7 @@ export default function Storefront() {
       <Manifesto />
       <FilmStrip />
       <Essentials />
+      <Perks />
       <Newsletter />
     </ShopLayout>
   );

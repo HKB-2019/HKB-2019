@@ -87,8 +87,9 @@ properties under `:root` in `styles.css`.
 | Countdown | When a piece has a drop time, the home page counts down to it, and the piece appears by itself at that moment |
 | Person icon | Track an order by its reference |
 | Currency `NGN` | Shows prices in USD/GBP/EUR as a guide; the bag says payment is in naira |
-| `PLAY FILM` | Plays the film linked in the admin, or says it is coming |
-| Essentials carousel | Arrows, dots, drag-to-scroll, arrow keys; a slide's name adds it, or asks for a size |
+| `PLAY BRAND FILM`, `OUR STORY →` | Plays the film linked in the admin; with none linked, the brand film made in code (`public/assets/video/brand-film.mp4`, see *Videos*) |
+| The Essentials | Panels five across (three, then two, on smaller screens): arrows, drag-to-scroll, arrow keys; a panel's name adds it, or asks for a size; the photo and the round arrow open the piece |
+| Promises strip | Delivery, returns and secure payment above the sign-up, in the owner's words (*Home page → Words → Promises*), kept to the Delivery and Returns pages |
 | Newsletter `JOIN` | Adds the address to the list the owner sees in the admin |
 | Welcome pop-up | A first-time visitor to the home page is offered the mailing list in a pop-up beside the hero photo, a few seconds after landing (the owner sets the words, the wait — at once to a minute — or switches it off, under *Home page → Words*). Once per visitor: noted in the browser when it opens; asked again after 30 days if closed, never once joined (from it or from the form at the foot of the page). Only the visitor closes it — ×, NO THANKS or Escape; a tap on the page around it does nothing, since it arrives unasked and a tap meant for the page would close it unseen. Never over another panel, and never on a product page, where people came to buy. Joining from it lands on the same list as the form below |
 | Footer | Three short groups. **Shop**: the drop, the Essentials, about MASQ., saved pieces — from a product page these go back to that part of the home page. **Help**: size guide, delivery, returns, FAQ, track an order, contact. **The small print**: terms of sale, privacy. Pages are as written in the admin and open in a panel that scrolls on a small phone |
@@ -522,8 +523,7 @@ redefines them under `:root[data-theme="light"]`. Text colours are at least
 (`rgb(var(--ink-rgb) / .2)`), so they follow too. Some parts look the same in
 both themes, because they are shot and designed on black: the top of the home
 page (the photo, and the menu while it sits over it), the "Craft. Culture.
-Identity." band, the film strip, the Essentials carousel, the full-screen
-photo view and the "Shown in …" label. Inside them the dark palette applies
+Identity." band, the film strip, the full-screen photo view and the "Shown in …" label. Inside them the dark palette applies
 (`:is(.hero, .craft, …)` at the end of `src/styles.css`). The admin's
 charts have their own colours per theme, each checked with the dataviz
 validator against that theme's card background.
@@ -601,7 +601,14 @@ that resolution. Several assets needed repair or reframing:
   graft's join is applied only where a graft actually exists: an edge with no
   margin has no join, and blurring it there smears the photograph itself.
 
-`tools/build-assets.py` regenerates everything in `public/assets/img/` from
+Since the October redesign the top of the home page uses the owner's approved
+photograph (`design/hero-photo-approved.webp`, enlarged and sharpened to
+`hero-masq.webp` / `hero-masq@2x.webp`), and the craft band a violet-lit version of
+the carved relief (`band-relief.webp`, recoloured from the stone texture). The
+header and footer wordmark is cut from `design/logo.png` (`src/assets/wordmark-*.webp`;
+the light theme's copy has its cream M in ink).
+
+`tools/build-assets.py` regenerates the rest of `public/assets/img/` from
 the mockup (`python3 tools/build-assets.py path/to/mockup.webp`, needs Pillow
 and numpy). It is a build tool, not part of the site — replace the files with
 real product photography when it is available.
@@ -616,5 +623,10 @@ logo, the product photos and the approved hero photo (sharpened copies in
 (`python3 video/score.py` writes a WAV; it is kept as `video/public/audio/score.mp3`),
 so the owner holds it outright. `npm run video` renders the film to
 `out/brand-film.mp4` (in a sandbox without a downloadable Chrome, add
-`--browser-executable=<path to Chrome>`). Remotion is free for individuals and small
+`--browser-executable=<path to Chrome>`). The shop plays a web copy,
+`public/assets/video/brand-film.mp4` (1600 wide, about 5 MB), made from that render
+with `npx remotion ffmpeg -i out/brand-film.mp4 -vf scale=1600:-2:flags=lanczos
+-c:v libx264 -crf 21 -preset slow -pix_fmt yuv420p -c:a aac -b:a 160k -movflags +faststart
+public/assets/video/brand-film.mp4`; it is fetched only when someone presses play.
+Remotion is free for individuals and small
 companies; larger companies need its paid company licence.

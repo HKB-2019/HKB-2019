@@ -546,7 +546,7 @@ function WelcomeModal() {
   const { closeOverlay } = useShop();
   const { home, images } = useHome();
   const [joined, setJoined] = useState(false);
-  const photo = images.hero?.img ?? asset('assets/img/hero-model.webp');
+  const photo = images.hero?.img ?? asset('assets/img/hero-masq.webp');
 
   return (
     <Modal labelledBy="welcomeTitle" className="modal__panel--welcome" closeOutside={false}>
@@ -612,15 +612,19 @@ function TrackOrderModal() {
  * it plays the film the owner links in the admin, or says plainly that it is
  * coming. The YouTube id reaching this page has already been reduced to its
  * 11 safe characters by the server. */
+/* The brand film made in code (video/, rendered with Remotion), played when
+ * the owner has not set a film of their own in the admin. */
+const BRAND_FILM = 'assets/video/brand-film.mp4';
+
 function FilmModal() {
   const { site } = useShop();
-  const film = site?.film;
-  useEffect(() => { if (film) track('film_play'); }, [film]);
+  const film = site?.film ?? { kind: 'mp4', url: asset(BRAND_FILM) };
+  useEffect(() => { track('film_play'); }, []);
 
   return (
     <Modal label="MASQ. film" wide>
       <div className="film-frame">
-        {film?.kind === 'youtube' ? (
+        {film.kind === 'youtube' ? (
           <div className="film-frame__video">
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${film.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
@@ -630,21 +634,14 @@ function FilmModal() {
               referrerPolicy="strict-origin-when-cross-origin"
             />
           </div>
-        ) : film?.kind === 'mp4' ? (
+        ) : (
           <div className="film-frame__video">
             <video src={film.url} controls autoPlay playsInline />
           </div>
-        ) : (
-          <img src={site?.home?.images?.film?.img ?? asset('assets/img/film-still.webp')} alt="" aria-hidden="true" />
         )}
         <div className="film-frame__body">
           <p className="eyebrow">URBAN RITUALS — THE FILM</p>
-          <p className="film-frame__title">
-            {film ? 'A study of mask, movement and memory.' : 'The film is coming soon.'}
-          </p>
-          {!film && (
-            <p className="modal__text modal__text--sm">Join the list at the foot of the page to see it first.</p>
-          )}
+          <p className="film-frame__title">A study of mask, movement and memory.</p>
         </div>
       </div>
     </Modal>

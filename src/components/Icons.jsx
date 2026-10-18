@@ -20,6 +20,11 @@ export const Arrow = () => (
   <svg viewBox="0 0 22 8" aria-hidden="true"><path d="M0 4h20M16.5 .8 20.2 4l-3.7 3.2" fill="none" stroke="currentColor" strokeWidth="1.1"/></svg>
 );
 
+/* The short, heavier arrow on buttons and the round "go to the piece" buttons. */
+export const ArrowShort = ({ className }) => (
+  <svg className={className} viewBox="0 0 16 10" aria-hidden="true"><path d="M0 5h14.5M10.5 1 14.5 5l-4 4" fill="none" stroke="currentColor" strokeWidth="1.6"/></svg>
+);
+
 export const Close = () => (
   <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 1l14 14M15 1 1 15" stroke="currentColor" strokeWidth="1.3"/></svg>
 );

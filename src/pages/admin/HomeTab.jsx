@@ -20,12 +20,12 @@ function Note({ state }) {
 /* ---------------------------------------------------------------- photos */
 
 const SLOTS = [
-  ['hero', 'Top of the page', 'assets/img/hero-model.webp',
-    'The big photo beside MASQ. On a computer it fills a tall frame on the right; on a phone, a wide one above the words — so keep the subject in the middle.'],
-  ['band', 'Craft band', 'assets/img/band-texture.webp',
-    'The dark strip behind “Craft. Culture. Identity.” It is dimmed under the words, so a texture or a detail works best. Cut to a wide 3 : 1 strip.'],
+  ['hero', 'Top of the page', 'assets/img/hero-masq.webp',
+    'The big photo behind MASQ. On a computer it fills the whole top of the page with the words on its left, so keep the subject to the right and the left side dark; on a phone it sits above the words.'],
+  ['band', 'Craft band', 'assets/img/band-relief.webp',
+    'The strip behind “Craft. Culture. Identity.” It is turned violet and dimmed under the words, so a carving, a texture or a detail works best. Cut to a wide 3 : 1 strip.'],
   ['film', 'Film strip', 'assets/img/film-still.webp',
-    'The strip with the PLAY FILM button, and the picture shown before the film starts. Cut to a wide 3 : 1 strip.']
+    'The strip with the PLAY BRAND FILM button. Cut to a wide 3 : 1 strip.']
 ];
 
 function PhotoSlot({ slot, title, builtIn, help, current, onChanged }) {
@@ -83,7 +83,10 @@ const GROUPS = [
   ['Top of the page', [
     ['heroEyebrow', 'Small line above MASQ.', 40, 1],
     ['heroSub', 'Line under MASQ.', 120, 2],
-    ['heroButton', 'Button', 24, 1],
+    ['heroText', 'Short text under that', 220, 2],
+    ['heroButton', 'Violet button (goes to the drop)', 24, 1],
+    ['heroButton2', 'Outlined button (goes to the craft band)', 24, 1],
+    ['heroBrush', 'Brush words on the wall (wide screens only)', 40, 2],
     ['heroImageAlt', 'Describe the photo (read aloud to blind visitors)', 140, 1]
   ]],
   ['Craft band', [
@@ -92,15 +95,27 @@ const GROUPS = [
   ]],
   ['Products', [
     ['dropTitle', 'Heading over the product grid', 60, 1],
-    ['essentialsTitle', 'Heading over the carousel', 40, 1]
+    ['essentialsTitle', 'Heading over the Essentials', 40, 1]
   ]],
   ['Manifesto', [
     ['manifestoLine1', 'First line', 60, 1],
     ['manifestoLine2', 'Second line', 60, 1],
-    ['manifestoTag', 'Small line under it', 80, 1]
+    ['manifestoTag', 'Small line under it', 80, 1],
+    ['manifestoMore', 'Link on the right (plays the brand film)', 24, 1]
+  ]],
+  ['Film strip', [
+    ['filmWords', 'Words beside the play button, one to a line', 80, 4]
   ]],
   ['Drop countdown', [
     ['countdownTitle', 'Small line over the countdown (shown while a piece has a drop time to come)', 40, 1]
+  ]],
+  ['Promises', [
+    ['perk1Title', 'First: heading', 40, 1],
+    ['perk1Text', 'First: line', 80, 1],
+    ['perk2Title', 'Second: heading', 40, 1],
+    ['perk2Text', 'Second: line', 80, 1],
+    ['perk3Title', 'Third: heading', 40, 1],
+    ['perk3Text', 'Third: line', 80, 1]
   ]],
   ['Mailing list', [
     ['newsletterTitle', 'Heading', 60, 1],
@@ -118,7 +133,7 @@ const WELCOME_DELAYS = [0, 2, 4, 8, 15, 30, 60];
 
 const MENU_HELP = {
   shop: 'goes to the product grid',
-  collections: 'goes to the Essentials carousel',
+  collections: 'goes to the Essentials',
   about: 'goes to the craft band',
   journal: 'goes to the film strip'
 };

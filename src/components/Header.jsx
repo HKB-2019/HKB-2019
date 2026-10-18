@@ -9,6 +9,7 @@ import { jumpToTop } from '../lib/smoothScroll.js';
 import { ChevronDown, AccountIcon, BagIcon, Heart, Sun, Moon } from './Icons.jsx';
 import { useTheme } from '../lib/theme.js';
 import { EASE_OUT, UI_IN, UI_OUT } from '../lib/motion.js';
+import Wordmark from './Wordmark.jsx';
 
 export default function Header() {
   const { theme, toggle } = useTheme();
@@ -74,8 +75,8 @@ export default function Header() {
         </button>
 
         {pathname === '/'
-          ? <a href="#top" className="logo" onClick={(e) => go(e, '#top')}>MASQ<span>.</span></a>
-          : <Link to="/" className="logo" aria-label="MASQ. home" onClick={jumpToTop}>MASQ<span>.</span></Link>}
+          ? <a href="#top" className="logo" onClick={(e) => go(e, '#top')}><Wordmark /></a>
+          : <Link to="/" className="logo" onClick={jumpToTop}><Wordmark alt="MASQ. home" /></Link>}
 
         <nav className="nav" aria-label="Primary">
           {LINKS.map(({ href, label }) => (

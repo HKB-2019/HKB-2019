@@ -5,6 +5,7 @@ import { openGiftCard, getTopup } from '../lib/api.js';
 import { naira } from '../lib/delivery.js';
 import Card, { longDate } from '../components/GiftCard.jsx';
 import TopUp from '../components/GiftTopUp.jsx';
+import Wordmark from '../components/Wordmark.jsx';
 
 /* /gift/:code — the card as the person given it sees it, from the link the
  * buyer sends: the same colour, their name and the message on it, then the
@@ -147,7 +148,7 @@ export default function GiftCardOpen() {
   return (
     <div className="status gift-page">
       <header className="status__bar">
-        <Link to="/" className="logo">MASQ<span>.</span></Link>
+        <Link to="/" className="logo"><Wordmark /></Link>
       </header>
       <motion.main className="gift-page__main" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
         <Opened code={code} topupReference={/^gtop-/.test(reference) ? reference : ''} />

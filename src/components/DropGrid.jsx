@@ -7,7 +7,7 @@ import { scrollToId } from '../lib/scroll.js';
 import { useGlideToProduct, FROM_SHOP } from '../lib/pageMorph.js';
 import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel, photoFor } from '../lib/colours.js';
 import Swatches, { ColourDots } from './Swatches.jsx';
-import { Arrow, Heart } from './Icons.jsx';
+import { ArrowShort, Arrow, Heart } from './Icons.jsx';
 
 import { EASE_OUT, EASE_IN_OUT } from '../lib/motion.js';
 
@@ -112,12 +112,18 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
       </div>
 
       <div className="card__meta">
-        <h3 className="card__name"><Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)}>{product.name}</Link></h3>
-        <p className={`card__price${product.soldOut ? ' card__sold' : ''}`}>
-          {product.soldOut ? 'SOLD OUT' : format(product.price)}
-        </p>
+        <div className="card__text">
+          <h3 className="card__name"><Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)}>{product.name}</Link></h3>
+          <p className={`card__price${product.soldOut ? ' card__sold' : ''}`}>
+            {product.soldOut ? 'SOLD OUT' : format(product.price)}
+          </p>
+          <ColourDots product={product} />
+        </div>
+        {/* The same way in as the name, for a thumb: kept out of the tab
+            order and from screen readers so the piece is not announced twice. */}
+        <Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)} className="round-arrow"
+              tabIndex={-1} aria-hidden="true"><ArrowShort /></Link>
       </div>
-      <ColourDots product={product} />
     </motion.article>
   );
 }
@@ -126,8 +132,12 @@ function Placeholder() {
   return (
     <article className="card card--placeholder" aria-hidden="true">
       <div className="card__media" />
-      <p className="card__name">&nbsp;</p>
-      <p className="card__price">&nbsp;</p>
+      <div className="card__meta">
+        <div className="card__text">
+          <p className="card__name">&nbsp;</p>
+          <p className="card__price">&nbsp;</p>
+        </div>
+      </div>
     </article>
   );
 }

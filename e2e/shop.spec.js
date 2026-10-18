@@ -288,7 +288,15 @@ test('footer pages, links and the film come from the admin', async ({ page }) =>
   await expect(page.locator('.modal__text--pre')).toHaveText('hello@masq.ng\n+234 803 000 1111');
   await page.keyboard.press('Escape');
 
-  await expect(page.locator('.film__label')).toHaveText('FILM — COMING SOON');
+  // With no film of the owner's set, the brand film made for the shop plays.
+  await expect(page.locator('.film__label')).toHaveText('PLAY BRAND FILM');
+  await page.locator('.film__play').click();
+  await expect(page.locator('.film-frame video')).toHaveAttribute('src', '/assets/video/brand-film.mp4');
+  await page.keyboard.press('Escape');
+
+  // The promises above the sign-up keep to the Delivery and Returns pages.
+  await expect(page.locator('.perks')).toContainText('Lagos & Abuja in 1–3 working days');
+  await expect(page.locator('.perks')).toContainText('within 14 days');
 });
 
 test('the footer is grouped, and every link in it goes somewhere', async ({ page }) => {

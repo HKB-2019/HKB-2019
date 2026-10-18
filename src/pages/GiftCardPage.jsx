@@ -5,6 +5,7 @@ import { buyGiftCard, getGiftCard, openGiftCard } from '../lib/api.js';
 import { naira, isEmail } from '../lib/delivery.js';
 import Card, { DesignSwatches, designOf, longDate } from '../components/GiftCard.jsx';
 import TopUp from '../components/GiftTopUp.jsx';
+import Wordmark from '../components/Wordmark.jsx';
 
 /* /gift-card — buy a MASQ. gift card, and (with ?reference=, where Paystack
  * sends the buyer back) see it once paid: its code, to copy or send. With
@@ -298,7 +299,7 @@ export default function GiftCardPage() {
   return (
     <div className="status gift-page">
       <header className="status__bar">
-        <Link to="/" className="logo">MASQ<span>.</span></Link>
+        <Link to="/" className="logo"><Wordmark /></Link>
       </header>
       <motion.main className="gift-page__main" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
         {reference ? <Bought reference={reference} /> : params.has('topup') ? <TopUpFind /> : <Buy />}

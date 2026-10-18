@@ -3,9 +3,10 @@ import { asset } from '../lib/media.js';
 import { Play } from './Icons.jsx';
 
 export default function FilmStrip() {
-  const { openOverlay, site } = useShop();
-  const { images, ready } = useHome();
+  const { openOverlay } = useShop();
+  const { home, images, ready } = useHome();
   const photo = images.film;
+  const words = (home.filmWords ?? '').split('\n').map(w => w.trim()).filter(Boolean);
   return (
     <section className="film" id="film">
       {ready && (
@@ -18,9 +19,14 @@ export default function FilmStrip() {
           loading="lazy"
         />
       )}
+      {words.length > 0 && (
+        <ul className="film__words" aria-hidden="true">
+          {words.map(w => <li key={w}>{w}</li>)}
+        </ul>
+      )}
       <button className="film__play" aria-haspopup="dialog" onClick={() => openOverlay('film')}>
         <span className="film__disc" aria-hidden="true"><Play /></span>
-        <span className="film__label">{site && !site.film ? 'FILM — COMING SOON' : 'PLAY FILM'}</span>
+        <span className="film__label">PLAY BRAND FILM</span>
       </button>
     </section>
   );

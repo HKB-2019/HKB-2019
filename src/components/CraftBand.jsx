@@ -11,8 +11,11 @@ export default function CraftBand() {
     <section className="craft" id="craft">
       <div className="craft__bg" aria-hidden="true">
         {ready && (
-          <img src={photo ? photo.img : asset('assets/img/band-texture.webp')}
-               srcSet={photo ? `${photo.img} 1x, ${photo.img2x} 2x` : undefined} alt="" />
+          <img src={photo ? photo.img : asset('assets/img/band-relief.webp')}
+               srcSet={photo
+                 ? `${photo.img} 1x, ${photo.img2x} 2x`
+                 : `${asset('assets/img/band-relief.webp')} 1700w, ${asset('assets/img/band-relief@2x.webp')} 3400w`}
+               sizes={photo ? undefined : '100vw'} alt="" />
         )}
       </div>
       <Reveal className="craft__inner">

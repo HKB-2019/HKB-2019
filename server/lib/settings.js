@@ -138,9 +138,13 @@ export { NAV };
 
 /** [max length, may it span lines?] for each piece of text. */
 export const HOME_FIELDS = {
-  heroEyebrow: [40, false], heroSub: [120, true], heroButton: [24, false], heroImageAlt: [140, false],
+  heroEyebrow: [40, false], heroSub: [120, true], heroText: [220, true], heroButton: [24, false],
+  heroButton2: [24, false], heroBrush: [40, true], heroImageAlt: [140, false],
   craftTitle: [60, false], craftText: [240, true], dropTitle: [60, false],
-  manifestoLine1: [60, false], manifestoLine2: [60, false], manifestoTag: [80, false],
+  manifestoLine1: [60, false], manifestoLine2: [60, false], manifestoTag: [80, false], manifestoMore: [24, false],
+  filmWords: [80, true],
+  perk1Title: [40, false], perk1Text: [80, false], perk2Title: [40, false], perk2Text: [80, false],
+  perk3Title: [40, false], perk3Text: [80, false],
   essentialsTitle: [40, false], newsletterTitle: [60, false], newsletterNote: [200, true],
   countdownTitle: [40, false], welcomeTitle: [60, false], welcomeNote: [200, true]
 };

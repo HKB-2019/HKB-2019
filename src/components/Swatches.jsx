@@ -46,8 +46,7 @@ export function ColourDots({ product }) {
       <span className="card__dots" aria-hidden="true">
         {product.colours.map(c => <i key={c.name} style={{ '--swatch': c.hex }} />)}
       </span>
-      <span className="sr-only">Comes in </span>
-      {n} colour{n === 1 ? '' : 's'}
+      <span className="sr-only">Comes in {n} colour{n === 1 ? '' : 's'}</span>
     </p>
   );
 }

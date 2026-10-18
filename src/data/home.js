@@ -9,7 +9,11 @@ export const NAV_TARGETS = { shop: '#drop', collections: '#essentials', about: '
 export const HOME_DEFAULT = {
   heroEyebrow:     'URBAN RITUALS',
   heroSub:         'Modern identity wear\nrooted in culture.',
+  heroText:        'Contemporary fashion and lifestyle pieces inspired by African heritage, designed for a global generation.',
   heroButton:      'SHOP DROP 01',
+  heroButton2:     'EXPLORE',
+  // Painted on the wall beside the model, in a brush hand (wide screens).
+  heroBrush:       'Wear\nidentity\nlive\nculture',
   heroImageAlt:    'Model wearing the MASQ. Face Tee in ultraviolet',
   craftTitle:      'Craft. Culture. Identity.',
   craftText:       'Each piece is designed as a modern artifact —\nwhere heritage meets contemporary expression.',
@@ -17,7 +21,18 @@ export const HOME_DEFAULT = {
   manifestoLine1:  'We don’t make clothes.',
   manifestoLine2:  'We create symbols.',
   manifestoTag:    'MASQ IS A LANGUAGE — WORN, NOT SPOKEN.',
+  manifestoMore:   'OUR STORY',
+  // Beside the play button on the film strip, one word to a line.
+  filmWords:       'People\nPlaces\nPatterns\nPurpose',
   essentialsTitle: 'The Essentials',
+  // The three promises above the sign-up: kept to the shop's real terms
+  // (the Delivery and Returns pages).
+  perk1Title:      'Delivery across Nigeria',
+  perk1Text:       'Lagos & Abuja in 1–3 working days',
+  perk2Title:      'Easy returns',
+  perk2Text:       'Unworn pieces, within 14 days',
+  perk3Title:      'Secure payment',
+  perk3Text:       'Card, bank or transfer, through Paystack',
   newsletterTitle: 'Enter the world of MASQ.',
   newsletterNote:  'First access to every drop, and the story behind each mask. Nothing else.',
   // Over the countdown, while pieces are waiting for their drop time.

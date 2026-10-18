@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { scrollToId } from '../lib/scroll.js';
 import { asset } from '../lib/media.js';
 import { useHome } from '../store/ShopContext.jsx';
+import { ArrowShort } from './Icons.jsx';
 import Lines from './Lines.jsx';
 
 import { EASE_SLOW as ease } from '../lib/motion.js';
@@ -35,18 +36,35 @@ export default function Hero() {
       <div className="hero__media">
         {ready && (
           <motion.img
-            src={photo ? photo.img : asset('assets/img/hero-model.webp')}
-            srcSet={photo ? `${photo.img} 1x, ${photo.img2x} 2x` : undefined}
+            src={photo ? photo.img : asset('assets/img/hero-masq.webp')}
+            srcSet={photo
+              ? `${photo.img} 1x, ${photo.img2x} 2x`
+              : `${asset('assets/img/hero-masq.webp')} 1280w, ${asset('assets/img/hero-masq@2x.webp')} 2400w`}
+            sizes={photo ? undefined : '(max-width: 900px) 280vw, 100vw'}
             alt={home.heroImageAlt}
-            {...(photo ? {} : { width: 2530, height: 2337 })}
+            {...(photo ? {} : { width: 2400, height: 1351 })}
             fetchPriority="high"
-            initial={{ opacity: 0, scale: 1.1 }}
+            initial={{ opacity: 0, scale: 1.08 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 2.2, ease }}
           />
         )}
         <span className="hero__fade" />
       </div>
+
+      {/* Painted on the wall beside the model: words, not part of the photo,
+          so the owner can change them. Drawn in after the photo settles. */}
+      {ready && home.heroBrush && (
+        <motion.p
+          className="hero__brush" aria-hidden="true"
+          initial={{ opacity: 0, clipPath: 'inset(-20% 100% -20% -20%)' }}
+          animate={{ opacity: 0.92, clipPath: 'inset(-20% -20% -20% -20%)' }}
+          transition={{ duration: 1.4, delay: 1.1, ease }}
+        >
+          {home.heroBrush}
+          <svg viewBox="0 0 200 24"><path d="M4 18 C 60 8, 120 4, 196 6 M 22 22 C 80 14, 130 12, 180 13" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" /></svg>
+        </motion.p>
+      )}
 
       <div className="hero__copy" aria-busy={!ready}>
         {ready && [
@@ -55,11 +73,16 @@ export default function Hero() {
           // the title animation splits them up and puts them back.
           <h1 className="hero__title" key="t" ref={title} dangerouslySetInnerHTML={{ __html: 'MASQ<span>.</span>' }} />,
           <p className="hero__sub" key="s"><Lines text={home.heroSub} /></p>,
+          home.heroText && <p className="hero__text" key="x">{home.heroText}</p>,
           <div className="hero__actions" key="a">
-            <a href="#drop" className="btn btn--solid" onClick={(e) => go(e, '#drop')}>{home.heroButton}</a>
-            <a href="#craft" className="btn btn--ghost" onClick={(e) => go(e, '#craft')}>EXPLORE</a>
+            <a href="#drop" className="btn btn--solid" onClick={(e) => go(e, '#drop')}>
+              {home.heroButton} <ArrowShort className="btn__arrow" />
+            </a>
+            <a href="#craft" className="btn btn--ghost" onClick={(e) => go(e, '#craft')}>
+              {home.heroButton2} <ArrowShort className="btn__arrow" />
+            </a>
           </div>
-        ].map((child, i) => (
+        ].filter(Boolean).map((child, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 18 }}
@@ -68,18 +91,6 @@ export default function Hero() {
           >{child}</motion.div>
         ))}
       </div>
-
-      <motion.a
-        className="hero__cue" href="#craft"
-        aria-label="Scroll to the collection"
-        onClick={(e) => go(e, '#craft')}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.4, delay: 1.4 }}
-      >
-        <span>SCROLL</span>
-        <i aria-hidden="true" />
-      </motion.a>
     </section>
   );
 }

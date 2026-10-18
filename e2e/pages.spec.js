@@ -164,7 +164,7 @@ test('the home page words, menu and photos are changed from the admin', async ({
   await page.goto('/admin#home');
   await page.getByLabel('Small line above MASQ.').fill('DROP 02');
   await page.getByLabel('Heading over the product grid').fill('Drop 02 — Night Rituals');
-  await page.getByLabel('Menu item that goes to the Essentials carousel').fill('lookbook');
+  await page.getByLabel('Menu item that goes to the Essentials').fill('lookbook');
   const journal = page.locator('.admin-menu-row', { has: page.getByLabel('Menu item that goes to the film strip') });
   await journal.locator('.admin-toggle').click();
   await page.getByRole('button', { name: 'SAVE WORDS' }).click();
@@ -187,5 +187,5 @@ test('the home page words, menu and photos are changed from the admin', async ({
   await hero.getByRole('button', { name: 'use original' }).click();
   await expect(hero.locator('.admin-home-photo__tag')).toHaveText('ORIGINAL');
   await page.goto('/');
-  await expect(page.locator('.hero__media img')).toHaveAttribute('src', '/assets/img/hero-model.webp');
+  await expect(page.locator('.hero__media img')).toHaveAttribute('src', '/assets/img/hero-masq.webp');
 });

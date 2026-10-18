@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useShop, useHome } from '../store/ShopContext.jsx';
 import { scrollToId } from '../lib/scroll.js';
+import { ArrowShort } from './Icons.jsx';
 
 const pad = (n) => String(n).padStart(2, '0');
 
@@ -46,8 +47,8 @@ export default function DropCountdown() {
           ))}
         </p>
         <p className="countdown__when">{when} · Lagos time</p>
-        <a href="#list" className="btn btn--ghost" onClick={(e) => { e.preventDefault(); scrollToId('.newsletter'); }}>
-          JOIN THE LIST TO HEAR FIRST
+        <a href="#list" className="btn btn--solid" onClick={(e) => { e.preventDefault(); scrollToId('.newsletter'); }}>
+          JOIN THE LIST TO HEAR FIRST <ArrowShort className="btn__arrow" />
         </a>
       </div>
     </section>

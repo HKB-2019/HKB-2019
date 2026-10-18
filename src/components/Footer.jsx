@@ -3,6 +3,7 @@ import { useShop, useHome } from '../store/ShopContext.jsx';
 import { useSectionLink } from '../lib/useSectionLink.js';
 import { Instagram, TikTok, XIcon } from './Icons.jsx';
 import Lines from './Lines.jsx';
+import Wordmark from './Wordmark.jsx';
 
 /* The footer, in groups a shopper scans for: the shop itself, help with an
  * order, and the small print. Pages open in a panel; shop links go to their
@@ -36,7 +37,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer__inner">
         <div className="footer__brand">
-          <a href="/#top" className="footer__logo" onClick={(e) => { e.preventDefault(); goTo('#top'); }}>MASQ<span>.</span></a>
+          <a href="/#top" className="footer__logo" onClick={(e) => { e.preventDefault(); goTo('#top'); }}><Wordmark /></a>
           <p className="footer__tagline"><Lines text={home.heroSub} /></p>
           {social.length > 0 && (
             <div className="footer__social">

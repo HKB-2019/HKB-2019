@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useShop, useHome } from '../store/ShopContext.jsx';
 import { srcSet, SLIDE_SIZES } from '../lib/media.js';
 import { expandDropGrid, SizeButtons, fadeIn } from './DropGrid.jsx';
-import { Arrow, CaretLeft, CaretRight } from './Icons.jsx';
+import { Arrow, ArrowShort, CaretLeft, CaretRight } from './Icons.jsx';
 import { useGlideToProduct, FROM_SHOP } from '../lib/pageMorph.js';
 import { hasColours, onlyChoice, firstColour, photoFor } from '../lib/colours.js';
 
@@ -179,13 +179,18 @@ export default function Essentials() {
                   </Link>
                 )}
                 <div className="slide__meta">
-                  <button className="slide__name" onClick={onPick}
-                          aria-label={p.soldOut ? `${p.name}, sold out` : only ? `Add ${p.name} to bag` : hasColours(p) ? `Choose a colour and size of ${p.name}` : `Choose a size of ${p.name}`}>
-                    {p.name}
-                  </button>
-                  <span className={`slide__price${p.soldOut ? ' card__sold' : ''}`}>
-                    {p.soldOut ? 'SOLD OUT' : format(p.price)}
-                  </span>
+                  <div className="slide__text">
+                    <button className="slide__name" onClick={onPick}
+                            aria-label={p.soldOut ? `${p.name}, sold out` : only ? `Add ${p.name} to bag` : hasColours(p) ? `Choose a colour and size of ${p.name}` : `Choose a size of ${p.name}`}>
+                      {p.name}
+                    </button>
+                    <span className={`slide__price${p.soldOut ? ' card__sold' : ''}`}>
+                      {p.soldOut ? 'SOLD OUT' : format(p.price)}
+                    </span>
+                  </div>
+                  {/* to the piece, like the photo: one tab stop is enough */}
+                  <Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)} className="round-arrow" draggable="false"
+                        tabIndex={-1} aria-hidden="true"><ArrowShort /></Link>
                 </div>
                 {!only && (
                   <div className={`card__sizes slide__sizes${hasColours(p) ? ' card__sizes--colours' : ''}`} inert={picking !== p.id}>

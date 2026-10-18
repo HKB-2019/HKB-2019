@@ -3,6 +3,7 @@ import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getOrder } from '../lib/api.js';
 import { useShop } from '../store/ShopContext.jsx';
+import Wordmark from '../components/Wordmark.jsx';
 
 /* Where Paystack sends the customer back to. Paystack appends both `trxref`
  * and `reference`; they carry the same value, so either will do.
@@ -82,7 +83,7 @@ export default function OrderStatus() {
   return (
     <div className="status">
       <header className="status__bar">
-        <Link to="/" className="logo">MASQ<span>.</span></Link>
+        <Link to="/" className="logo"><Wordmark /></Link>
       </header>
 
       <motion.main
