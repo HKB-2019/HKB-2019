@@ -43,6 +43,21 @@ function PretendPayment() {
 
 export const previewRoutes = [<Route key="pay" path="/pay" element={<PretendPayment />} />];
 
+/* At checkout, which way this link's own "Outside Nigeria" switch is set.
+   Each preview link keeps its own sample data, so a change made in the
+   other link never shows here: this says so where the effect is seen. */
+export function PreviewDeliveryNote({ abroadOpen }) {
+  const navigate = useNavigate();
+  const { closeOverlay } = useShop();
+  return (
+    <p className="preview-note">
+      <strong>Preview:</strong> delivery outside Nigeria is <strong>{abroadOpen ? 'on' : 'off'}</strong> in
+      this link’s sample data{abroadOpen ? ', so the country list shows' : ', so there is no country list'}.
+      {' '}Change it in <button type="button" onClick={() => { closeOverlay(); navigate('/admin'); }}>this link’s admin</button>, under SETTINGS.
+    </p>
+  );
+}
+
 export function PreviewBanner() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -78,7 +93,7 @@ export function PreviewBanner() {
     <aside className="preview-bar" aria-label="About this preview" ref={bar}>
       <span className="preview-bar__tag">PREVIEW</span>
       <span className="preview-bar__text">
-        Sample data in your browser. Nothing is charged or sent.
+        Sample data kept in this link only. Nothing is charged or sent.
         {import.meta.env.VITE_DEMO_BUILT && <> <span className="preview-bar__built">Updated {import.meta.env.VITE_DEMO_BUILT}</span></>}
       </span>
       <span className="preview-bar__actions">

@@ -5,7 +5,7 @@ description: Rebuild the two MASQ. preview pages (the shop and the admin, runnin
 
 # Publish the previews
 
-The previews are the real shop and admin built against `src/demo/api.js` (no server, data kept in the browser's localStorage under `masq:preview-store-5`), published as two claude.ai artifacts. Always update the existing links; never publish new ones.
+The previews are the real shop and admin built against `src/demo/api.js` (no server, data kept in the browser's localStorage under `masq:preview-store-N`, the `KEY` in `src/demo/api.js`), published as two claude.ai artifacts. Always update the existing links; never publish new ones.
 
 | Preview | Link | Built page |
 |---|---|---|

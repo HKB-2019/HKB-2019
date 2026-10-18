@@ -166,6 +166,11 @@ shows up in the preview the next time it is built. Output goes to
 `dist-preview/shop` and `dist-preview/admin` (the same thing, opened at the
 admin).
 
+Each published preview is its own site to the browser, so each keeps its own
+sample data: a setting changed in one link never reaches the other. Checkout
+in the preview says how this link's delivery abroad is set, so the country
+list (or its absence) is never a mystery.
+
 ### Tests
 
 `npm test` runs the API tests (133) against an in-memory Postgres. To run the

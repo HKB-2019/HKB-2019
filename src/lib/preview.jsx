@@ -2,3 +2,4 @@
  * the preview build (vite.demo.config.js) swaps in src/demo/preview.jsx. */
 export const previewRoutes = [];
 export function PreviewBanner() { return null; }
+export function PreviewDeliveryNote() { return null; }
