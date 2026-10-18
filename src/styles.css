@@ -2170,13 +2170,6 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
   border:1px solid var(--line); transition:color .25s, border-color .25s;
 }
 .preview-bar__actions button:hover{ color:var(--ink); border-color:var(--violet-soft); }
-/* At checkout in the preview only: how this link's delivery abroad is set. */
-.preview-note{
-  margin:0 0 16px; padding:10px 12px; font-size:13px; line-height:1.5; color:var(--ink-dim);
-  border:1px dashed var(--violet-soft); border-radius:var(--radius);
-}
-.preview-note strong{ color:var(--ink); font-weight:600; }
-.preview-note button{ display:inline; padding:0; min-height:0; font:inherit; letter-spacing:0; color:var(--violet-soft); text-decoration:underline; text-underline-offset:3px; }
 #main:focus{ outline:none; }
 
 /* discount code, in the bag */

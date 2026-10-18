@@ -167,9 +167,9 @@ shows up in the preview the next time it is built. Output goes to
 admin).
 
 Each published preview is its own site to the browser, so each keeps its own
-sample data: a setting changed in one link never reaches the other. Checkout
-in the preview says how this link's delivery abroad is set, so the country
-list (or its absence) is never a mystery.
+sample data: a setting changed in one link never reaches the other. The
+preview's bar says so; to test a setting, change it and open the shop from
+the same link (OPEN THE SHOP on the bar).
 
 ### Tests
 

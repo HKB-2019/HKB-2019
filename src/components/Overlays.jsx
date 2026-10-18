@@ -11,7 +11,6 @@ import { countriesAbroad } from '../data/countries.js';
 import { Close, Heart } from './Icons.jsx';
 import { SizeButtons } from './DropGrid.jsx';
 import { useFocusTrap } from '../lib/useFocusTrap.js';
-import { PreviewDeliveryNote } from '../lib/preview.jsx';
 import ZoomViewer from './ZoomViewer.jsx';
 import { FROM_SHOP } from '../lib/pageMorph.js';
 import { JoinForm } from './Newsletter.jsx';
@@ -344,8 +343,6 @@ function DeliveryForm({ onBack }) {
         <input id="d-phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="0803 123 4567"
                value={d.phone} onChange={set('phone')} {...err('phone')} />
       </Field>
-
-      <PreviewDeliveryNote abroadOpen={abroadOpen} />
 
       {/* Only when the owner delivers abroad (Settings → Outside Nigeria):
           Nigeria first, every other country below it. Otherwise there is no
