@@ -17,7 +17,7 @@ productsRouter.get('/products', async (_req, res) => {
  * the home page's words and photos, footer pages, social links, the film,
  * and where delivery is open. */
 productsRouter.get('/site', async (_req, res) => {
-  const { pages, social, film, home, rates } = await getSettings(['pages', 'social', 'film', 'home', 'rates']);
+  const { pages, social, film, home, rates, heroSwitch } = await getSettings(['pages', 'social', 'film', 'home', 'rates', 'heroSwitch']);
   // The next drop: the soonest time a piece set to go on sale has not reached.
   const next = await one(`
     SELECT MIN(available_at) AS at, COUNT(*) AS pieces FROM products
@@ -31,7 +31,9 @@ productsRouter.get('/site', async (_req, res) => {
     home: {
       ...home,
       images: Object.fromEntries(Object.entries(ids).map(([slot, id]) =>
-        [slot, id ? { img: `/api/images/${id}`, img2x: `/api/images/${id}/2x` } : null]))
+        [slot, id ? { img: `/api/images/${id}`, img2x: `/api/images/${id}/2x` } : null])),
+      // Seconds between the two top photos; 0 shows the first only.
+      heroEvery: heroSwitch.every
     },
     pages,
     social,

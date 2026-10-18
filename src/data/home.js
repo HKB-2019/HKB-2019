@@ -13,6 +13,7 @@ export const HOME_DEFAULT = {
   heroButton:      'SHOP DROP 01',
   heroButton2:     'EXPLORE',
   heroImageAlt:    'Model wearing the MASQ. Face Tee in ultraviolet',
+  heroImageAlt2:   'Model wearing the MASQ. Face Tee in black',
   craftTitle:      'Craft. Culture. Identity.',
   craftText:       'Each piece is designed as a modern artifact —\nwhere heritage meets contemporary expression.',
   dropTitle:       'Drop 01 — Urban Rituals',

@@ -6,7 +6,7 @@ import { asset, pageHref, NEW_TAB } from '../../lib/media.js';
 import { NAV } from '../../data/home.js';
 import { preparePhoto, HOME } from './photo.js';
 
-/* The home page: its four wide photos, every line of words on it, and the
+/* The home page: its wide photos, every line of words on it, and the
  * menu. Each photo saves the moment it is chosen; the words save together
  * with one button, so a half-typed headline is never live. */
 
@@ -22,6 +22,8 @@ function Note({ state }) {
 const SLOTS = [
   ['hero', 'Top of the page', 'assets/img/hero-design.webp',
     'The big photo behind MASQ. On a computer it fills the whole top of the page (a wide 2 : 1 picture) with the words on its left, so keep the subject to the right and the left side dark; on a phone it sits above the words.'],
+  ['hero2', 'Top of the page: second photo (optional)', null,
+    'Add one and the two take turns at the top of the page, fading slowly from one to the other. Frame it like the first (subject on the right, left side dark) so the fade lines up. Remove it to show the first photo only.'],
   ['band', 'Craft band', 'assets/img/band-design.webp',
     'The strip behind “Craft. Culture. Identity.” Your photo is dimmed under the words, so a carving, a texture or a detail works best. Cut to a wide 3 : 1 strip.'],
   ['countdown', 'Countdown', 'assets/img/countdown.webp',
@@ -29,6 +31,34 @@ const SLOTS = [
   ['film', 'Film strip', 'assets/img/film-still.webp',
     'The strip with the PLAY BRAND FILM button. Cut to a wide 3 : 1 strip.']
 ];
+
+/* How often the two top photos take turns; matches the server's list. */
+const HERO_SWITCH_SECONDS = [5, 8, 12, 20, 0];
+
+/* Saved the moment it is changed, like the photos beside it. */
+function HeroSwitch({ value, onSaved }) {
+  const [state, setState] = useState(null);
+  const change = async (e) => {
+    const every = Number(e.target.value);
+    setState('saving');
+    try {
+      onSaved(await adminSaveSetting('heroSwitch', { every }));
+      setState('saved');
+      setTimeout(() => setState(s => (s === 'saved' ? null : s)), 1600);
+    } catch (err) { setState(err.message); }
+  };
+  return (
+    <div className="admin-menu-row admin-hero-switch">
+      <label className="admin-field">
+        <span>The two top photos switch</span>
+        <select value={value.every} onChange={change}>
+          {HERO_SWITCH_SECONDS.map(s => <option key={s} value={s}>{s ? `every ${s} seconds` : 'never (first photo only)'}</option>)}
+        </select>
+      </label>
+      <Note state={state} />
+    </div>
+  );
+}
 
 function PhotoSlot({ slot, title, builtIn, help, current, onChanged }) {
   const fileRef = useRef(null);
@@ -57,16 +87,22 @@ function PhotoSlot({ slot, title, builtIn, help, current, onChanged }) {
   return (
     <div className={`admin-home-photo admin-home-photo--${slot}`}>
       <div className="admin-home-photo__frame">
-        <img src={current?.img ?? asset(builtIn)} alt="" />
-        <span className="admin-home-photo__tag">{current ? 'YOUR PHOTO' : 'ORIGINAL'}</span>
+        {current || builtIn
+          ? <img src={current?.img ?? asset(builtIn)} alt="" />
+          : <span className="admin-home-photo__empty">No photo yet</span>}
+        <span className="admin-home-photo__tag">{current ? 'YOUR PHOTO' : builtIn ? 'ORIGINAL' : 'NONE'}</span>
       </div>
       <div className="admin-home-photo__body">
         <h4 className="admin-home-photo__title">{title}</h4>
         <p className="admin-help">{help}</p>
         <div className="admin-product__photo-actions">
-          <button type="button" className="admin-action" onClick={() => fileRef.current?.click()}>CHANGE PHOTO</button>
+          <button type="button" className="admin-action" onClick={() => fileRef.current?.click()}>
+            {current || builtIn ? 'CHANGE PHOTO' : 'ADD PHOTO'}
+          </button>
           {current && (
-            <button type="button" className="admin-link" onClick={() => run(() => adminRemoveHomeImage(slot))}>use original</button>
+            <button type="button" className="admin-link" onClick={() => run(() => adminRemoveHomeImage(slot))}>
+              {builtIn ? 'use original' : 'remove'}
+            </button>
           )}
           <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp,image/heic"
                  aria-label={`Photo for ${title}`} onChange={onFile} />
@@ -88,7 +124,8 @@ const GROUPS = [
     ['heroText', 'Short text under that', 220, 2],
     ['heroButton', 'Violet button (goes to the drop)', 24, 1],
     ['heroButton2', 'Outlined button (goes to the craft band)', 24, 1],
-    ['heroImageAlt', 'Describe the photo (read aloud to blind visitors)', 140, 1]
+    ['heroImageAlt', 'Describe the photo (read aloud to blind visitors)', 140, 1],
+    ['heroImageAlt2', 'Describe the second photo, if there is one', 140, 1]
   ]],
   ['Craft band', [
     ['craftTitle', 'Heading', 60, 1],
@@ -243,13 +280,14 @@ function Words({ value, onSaved }) {
 export default function HomeTab() {
   const [home, setHome] = useState(null);
   const [images, setImages] = useState(null);
+  const [heroSwitch, setHeroSwitch] = useState(null);
   const [error, setError] = useState(null);
 
   const loadImages = async () => {
     try { setImages((await getSite()).home.images); } catch (err) { setError(err.message); }
   };
   useEffect(() => {
-    adminSettings().then(s => setHome(s.home)).catch(err => setError(err.message));
+    adminSettings().then(s => { setHome(s.home); setHeroSwitch(s.heroSwitch ?? { every: 8 }); }).catch(err => setError(err.message));
     loadImages();
   }, []);
 
@@ -265,8 +303,11 @@ export default function HomeTab() {
         <h3 className="admin-card__title">Photos</h3>
         <p className="admin-help">Any phone photo works: it is turned the right way up and shrunk before it uploads. Changes show on the shop at once.</p>
         {!images ? <p className="admin-empty">Loading…</p> : SLOTS.map(([slot, title, builtIn, help]) => (
-          <PhotoSlot key={slot} slot={slot} title={title} builtIn={builtIn} help={help}
-                     current={images[slot]} onChanged={loadImages} />
+          <div key={slot}>
+            <PhotoSlot slot={slot} title={title} builtIn={builtIn} help={help}
+                       current={images[slot]} onChanged={loadImages} />
+            {slot === 'hero2' && images.hero2 && heroSwitch && <HeroSwitch value={heroSwitch} onSaved={setHeroSwitch} />}
+          </div>
         ))}
       </div>
 

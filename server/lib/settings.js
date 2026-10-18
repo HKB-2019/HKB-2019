@@ -139,7 +139,7 @@ export { NAV };
 /** [max length, may it span lines?] for each piece of text. */
 export const HOME_FIELDS = {
   heroEyebrow: [40, false], heroSub: [120, true], heroText: [220, true], heroButton: [24, false],
-  heroButton2: [24, false], heroImageAlt: [140, false],
+  heroButton2: [24, false], heroImageAlt: [140, false], heroImageAlt2: [140, false],
   craftTitle: [60, false], craftText: [240, true], dropTitle: [60, false],
   manifestoLine1: [60, false], manifestoLine2: [60, false], manifestoTag: [80, false], manifestoMore: [24, false],
   filmWords: [80, true],
@@ -182,6 +182,21 @@ function validHome(value) {
   return out;
 }
 
+/* ------------------------------------------------- top photo switching */
+
+/* With a second photo at the top of the home page, the two fade into each
+ * other every so many seconds; 0 keeps the first one only. */
+export const HERO_SWITCH_SECONDS = [0, 5, 8, 12, 20];
+const HERO_SWITCH_DEFAULT = { every: 8 };
+
+function validHeroSwitch(value) {
+  const every = value?.every;
+  if (!HERO_SWITCH_SECONDS.includes(every)) {
+    throw bad(`Top photos: switch every ${HERO_SWITCH_SECONDS.filter(Boolean).join(', ')} seconds, or not at all.`);
+  }
+  return { every };
+}
+
 /* ---------------------------------------------------------- price guide */
 
 /* Naira for one dollar, pound and euro: only for showing prices as a guide.
@@ -205,7 +220,8 @@ const SPEC = {
   social:   { fallback: SOCIAL_DEFAULT,   validate: validSocial },
   film:     { fallback: { url: '', kind: null, youtubeId: null }, validate: validFilm },
   home:     { fallback: HOME_DEFAULT,      validate: validHome },
-  rates:    { fallback: DEFAULT_RATES,     validate: validRates }
+  rates:    { fallback: DEFAULT_RATES,     validate: validRates },
+  heroSwitch: { fallback: HERO_SWITCH_DEFAULT, validate: validHeroSwitch }
 };
 
 export const SETTING_KEYS = Object.keys(SPEC);
@@ -274,11 +290,12 @@ export const NIGERIAN_STATES = [
 
 /* ------------------------------------------------- home page photos */
 
-/* The four wide photos on the home page. Kept apart from the `home` text so
+/* The wide photos on the home page (hero2 is the optional second photo at
+ * the top, which takes turns with the first). Kept apart from the `home` text so
  * that they can only be set by uploading — a settings save cannot point them
  * at some other image, such as a product's, which replacing would delete. */
 
-export const HOME_SLOTS = ['hero', 'band', 'countdown', 'film'];
+export const HOME_SLOTS = ['hero', 'hero2', 'band', 'countdown', 'film'];
 
 export async function getHomeImages() {
   const row = await one("SELECT value FROM settings WHERE key = 'home_images'");

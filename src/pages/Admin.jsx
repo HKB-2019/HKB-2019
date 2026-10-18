@@ -31,6 +31,12 @@ const TABS = [
   ['settings', 'SETTINGS']
 ];
 
+const tabHash = (t) => (import.meta.env.VITE_DEMO ? `#/admin?tab=${t}` : `#${t}`);
+const tabFromHash = () => {
+  const h = window.location.hash;
+  return import.meta.env.VITE_DEMO ? new URLSearchParams(h.split('?')[1] ?? '').get('tab') : h.slice(1);
+};
+
 const ZONE_LABELS = { lagos: 'Lagos', abuja: 'Abuja', nigeria: 'rest of Nigeria', international: 'abroad' };
 
 const naira = (kobo) => '₦' + (kobo / 100).toLocaleString('en-NG');
@@ -405,9 +411,11 @@ export default function Admin() {
   // Tabs switch without a reload; the address keeps the tab, so a refresh or
   // a bookmark lands where the owner was.
   // Follows the address too — typing #settings, or Back after a tab change.
+  // (In the preview the page's own address lives after the #, so the tab
+  // rides along as #/admin?tab=settings rather than replacing it.)
   useEffect(() => {
     const follow = () => {
-      const fromHash = window.location.hash.slice(1);
+      const fromHash = tabFromHash();
       if (TABS.some(([t]) => t === fromHash)) setTab(fromHash);
     };
     follow();
@@ -416,7 +424,7 @@ export default function Admin() {
   }, []);
   const goTo = (t) => {
     setTab(t);
-    if (window.location.hash !== `#${t}`) history.pushState(null, '', `#${t}`);
+    if (window.location.hash !== tabHash(t)) history.pushState(null, '', tabHash(t));
     if (t === 'orders' || t === 'stock') load().catch(() => {});
   };
 

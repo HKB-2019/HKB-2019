@@ -1,5 +1,5 @@
-import { useLayoutEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { scrollToId } from '../lib/scroll.js';
 import { asset } from '../lib/media.js';
 import { useHome } from '../store/ShopContext.jsx';
@@ -13,6 +13,21 @@ export default function Hero() {
   const go = (e, href) => { e.preventDefault(); scrollToId(href); };
   // The owner's photo once it is known to be there; the design's otherwise.
   const photo = images.hero;
+
+  // A second photo, if the owner added one, takes turns with the first: a
+  // slow cross-fade every few seconds (Admin → HOME), paused while the tab
+  // is hidden, and never on a device set to reduce motion.
+  const second = images.hero2;
+  const every = home.heroEvery ?? 8;
+  const calm = useReducedMotion();
+  const turns = Boolean(second) && every > 0 && !calm;
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    setShown(0);
+    if (!turns) return;
+    const id = setInterval(() => { if (!document.hidden) setShown(n => 1 - n); }, every * 1000);
+    return () => clearInterval(id);
+  }, [turns, every]);
 
   // The letters of the title rise into place (src/lib/drift.js). Hidden until
   // that code arrives, so they do not show and then jump; shown anyway if it
@@ -35,19 +50,27 @@ export default function Hero() {
     <section className="hero">
       <div className="hero__media">
         {ready && (
-          <motion.img
-            src={photo ? photo.img : asset('assets/img/hero-design.webp')}
-            srcSet={photo
-              ? `${photo.img} 1x, ${photo.img2x} 2x`
-              : `${asset('assets/img/hero-design.webp')} 1600w, ${asset('assets/img/hero-design@2x.webp')} 3000w`}
-            sizes={photo ? undefined : '(max-width: 900px) 250vw, 100vw'}
-            alt={home.heroImageAlt}
-            {...(photo ? {} : { width: 3000, height: 1465 })}
-            fetchPriority="high"
-            initial={{ opacity: 0, scale: 1.08 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 2.2, ease }}
-          />
+          <div className={`hero__shot${shown === 0 ? ' is-on' : ''}`} aria-hidden={shown !== 0 || undefined}>
+            <motion.img
+              src={photo ? photo.img : asset('assets/img/hero-design.webp')}
+              srcSet={photo
+                ? `${photo.img} 1x, ${photo.img2x} 2x`
+                : `${asset('assets/img/hero-design.webp')} 1600w, ${asset('assets/img/hero-design@2x.webp')} 3000w`}
+              sizes={photo ? undefined : '(max-width: 900px) 250vw, 100vw'}
+              alt={home.heroImageAlt}
+              {...(photo ? {} : { width: 3000, height: 1465 })}
+              fetchPriority="high"
+              initial={{ opacity: 0, scale: 1.08 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 2.2, ease }}
+            />
+          </div>
+        )}
+        {ready && turns && (
+          <div className={`hero__shot${shown === 1 ? ' is-on' : ''}`} aria-hidden={shown !== 1 || undefined}>
+            <img src={second.img} srcSet={`${second.img} 1x, ${second.img2x} 2x`}
+                 alt={home.heroImageAlt2 ?? home.heroImageAlt} fetchPriority="low" decoding="async" />
+          </div>
         )}
         <span className="hero__fade" />
       </div>

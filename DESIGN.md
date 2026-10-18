@@ -83,7 +83,7 @@ Streetwear lit like a night shoot: black grounds, the model and the pieces under
 - Body 15–16px at 400; never under 11px; inputs 16px on phones.
 
 ## Layout
-1320px measure, fluid side padding. Products sit in square panels, four across on desktop and two on phones; the Essentials five across (three, then two, as the screen narrows). The hero picture fills the top at the design's own 2 : 1 shape with the words on its dark left; on a phone the picture comes first and the words follow.
+1320px measure, fluid side padding. Products sit in square panels, four across on desktop and two on phones; the Essentials five across (three, then two, as the screen narrows). The hero picture fills the top at the design's own 2 : 1 shape with the words on its dark left; on a phone the picture comes first and the words follow. With a second photo set, the two take turns in a slow cross-fade (1.8s), framed alike so only the person changes.
 
 ## Elevation & Depth
 Depth comes from violet light: soft violet shadows under panels on hover, a violet glow on the solid button and the brush words, violet bands behind the countdown and manifesto. Menus and toasts float with a shadow. No glass panels.

@@ -13,6 +13,11 @@ import { GUIDE_CURRENCIES, DEFAULT_RATES } from '../data/currencies.js';
 import { sampleReport } from './sampleAnalytics.js';
 
 const KEY = 'masq:preview-store-7';   // a new number whenever the sample's shape changes
+// The sample data from before KEY's last changes, newest first. Carried over
+// once, with delivery abroad switched off: the shop and admin previews had
+// drifted apart on it, and are now one preview. Declared up here, before the
+// store loads: read any later, it does not exist yet and every load fails.
+const OLD_KEYS = ['masq:preview-store-6', 'masq:preview-store-5'];
 const ZONES = ['lagos', 'abuja', 'nigeria', 'international'];
 const ZONE_LABELS = { lagos: 'Lagos', abuja: 'Abuja (FCT)', nigeria: 'Rest of Nigeria', international: 'Outside Nigeria' };
 const STATES = [
@@ -88,9 +93,10 @@ function sampleStore() {
       social: { instagram: '', tiktok: '', x: '' },
       film: { url: '', kind: null, youtubeId: null },
       home: structuredClone(HOME_DEFAULT),
-      rates: { ...DEFAULT_RATES }
+      rates: { ...DEFAULT_RATES },
+      heroSwitch: { every: 8 }
     },
-    homeImages: { hero: null, band: null, countdown: null, film: null },
+    homeImages: { hero: null, hero2: null, band: null, countdown: null, film: null },
     giftCards: sampleGifts(),
     giftSamples: true,
     customers: {
@@ -117,11 +123,6 @@ function sampleGifts() {
       uses: [{ orderReference: 'MASQ-1042', amountKobo: -3650000, kind: 'spend', at: ago(24 * 6) }] }
   ];
 }
-
-// The sample data from before KEY's last changes, newest first. Carried over
-// once, with delivery abroad switched off: the shop and admin previews had
-// drifted apart on it, and are now one preview.
-const OLD_KEYS = ['masq:preview-store-6', 'masq:preview-store-5'];
 
 function load() {
   try {
@@ -226,7 +227,8 @@ const withHomeDefaults = (home) => ({ ...structuredClone(HOME_DEFAULT), ...home 
 export const getSite = () => settle({
   home: {
     ...withHomeDefaults(store.settings.home),
-    images: Object.fromEntries(Object.entries(store.homeImages).map(([k, v]) => [k, v ? { img: v.img, img2x: v.img2x } : null]))
+    images: Object.fromEntries(Object.entries(store.homeImages).map(([k, v]) => [k, v ? { img: v.img, img2x: v.img2x } : null])),
+    heroEvery: (store.settings.heroSwitch ?? { every: 8 }).every
   },
   pages: store.settings.pages,
   social: store.settings.social,
@@ -778,7 +780,7 @@ export const adminRemoveHomeImage = (slot) =>
 
 /* --------------------------------------------- admin: settings, list */
 
-export const adminSettings = () => settle({ ...store.settings, home: withHomeDefaults(store.settings.home) });
+export const adminSettings = () => settle({ heroSwitch: { every: 8 }, ...store.settings, home: withHomeDefaults(store.settings.home) });
 
 export const adminSaveSetting = (key, value) => attempt(() => {
   let clean = value;
@@ -797,6 +799,9 @@ export const adminSaveSetting = (key, value) => attempt(() => {
     for (const [k, v] of Object.entries(value)) {
       if (v && !/^https:\/\//.test(v)) throw new Error(`${k}: use a link that starts with https://`);
     }
+  } else if (key === 'heroSwitch') {
+    if (![0, 5, 8, 12, 20].includes(value?.every)) throw new Error('Top photos: switch every 5, 8, 12, 20 seconds, or not at all.');
+    clean = { every: value.every };
   } else if (key === 'film') {
     const url = String(value.url ?? '').trim();
     const yt = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);

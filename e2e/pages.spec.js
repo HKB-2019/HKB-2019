@@ -159,6 +159,31 @@ test('a device set to reduce motion gets the shop without the extra movement', a
   await calm.close();
 });
 
+test('a second top photo takes turns with the first, as often as the owner chooses', async ({ page }) => {
+  await signIn(page);
+  await page.goto('/admin#home');
+  const second = page.locator('.admin-home-photo--hero2');
+  await expect(second.locator('.admin-home-photo__tag')).toHaveText('NONE');
+  await second.getByLabel('Photo for Top of the page: second photo (optional)').setInputFiles(PHOTO);
+  await expect(second.locator('.admin-home-photo__tag')).toHaveText('YOUR PHOTO');
+  await page.getByLabel('The two top photos switch').selectOption('5');
+  await expect(page.locator('.admin-hero-switch .admin-note--ok')).toBeVisible();
+
+  await page.goto('/');
+  const shots = page.locator('.hero__shot');
+  await expect(shots).toHaveCount(2);
+  await expect(shots.nth(0)).toHaveClass(/is-on/);
+  await expect(shots.nth(1)).toHaveClass(/is-on/, { timeout: 8000 });     // after 5 seconds, the second
+  await expect(shots.nth(0)).not.toHaveClass(/is-on/);
+
+  // Never switching: the first photo only.
+  await page.goto('/admin#home');
+  await page.getByLabel('The two top photos switch').selectOption('0');
+  await expect(page.locator('.admin-hero-switch .admin-note--ok')).toBeVisible();
+  await page.goto('/');
+  await expect(page.locator('.hero__media img')).toHaveCount(1);
+});
+
 test('the home page words, menu and photos are changed from the admin', async ({ page }) => {
   await signIn(page);
   await page.goto('/admin#home');

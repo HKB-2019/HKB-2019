@@ -119,7 +119,7 @@ test('the home page starts with the design’s own words', async () => {
   assert.equal(home.heroEyebrow, 'URBAN RITUALS');
   assert.equal(home.heroSub, 'Modern identity wear\nrooted in culture.');
   assert.deepEqual(home.nav.collections, { label: 'COLLECTIONS', show: true });
-  assert.deepEqual(home.images, { hero: null, band: null, countdown: null, film: null }, 'built-in photos until replaced');
+  assert.deepEqual(home.images, { hero: null, hero2: null, band: null, countdown: null, film: null }, 'built-in photos until replaced');
 });
 
 test('the home page words and menu can be changed, and a hidden menu item says so', async () => {
@@ -198,7 +198,7 @@ test('a home photo can be replaced, replaced again, and put back', async () => {
   assert.equal(await imageCount(), before);
 });
 
-test('only the three home photo places exist, and each takes only a real photo', async () => {
+test('only the home photo places exist, and each takes only a real photo', async () => {
   const wrong = await shop.request('/api/admin/home/image/logo', { method: 'POST', cookie, json: photo() });
   assert.equal(wrong.status, 404);
   const svg = await shop.request('/api/admin/home/image/band', { method: 'POST', cookie, json: photo(PHOTO.svg) });
@@ -206,7 +206,30 @@ test('only the three home photo places exist, and each takes only a real photo',
   const mixed = await shop.request('/api/admin/home/image/film', { method: 'POST', cookie,
     json: { image: b64(PHOTO.webp), image2x: b64(PHOTO.png) } });
   assert.equal(mixed.status, 400);
-  assert.deepEqual((await site()).home.images, { hero: null, band: null, countdown: null, film: null });
+  assert.deepEqual((await site()).home.images, { hero: null, hero2: null, band: null, countdown: null, film: null });
+});
+
+test('a second top photo can be added, and how often the two switch is checked', async () => {
+  assert.equal((await site()).home.heroEvery, 8, 'every 8 seconds unless changed');
+
+  const up = await shop.request('/api/admin/home/image/hero2', { method: 'POST', cookie, json: photo() });
+  assert.equal(up.status, 200);
+  const { home } = await site();
+  assert.equal(home.images.hero, null, 'the first stays the design’s own');
+  assert.match(home.images.hero2.img, /^\/api\/images\/\d+$/);
+
+  for (const every of [0, 5, 20]) {
+    assert.equal((await api('/settings/heroSwitch', 'PUT', { every })).status, 200);
+    assert.equal((await site()).home.heroEvery, every);
+  }
+  for (const every of [1, 3.5, '8', -8, null]) {
+    const res = await api('/settings/heroSwitch', 'PUT', { every });
+    assert.equal(res.status, 400, `every: ${JSON.stringify(every)}`);
+    assert.match(res.body.error, /switch every/);
+  }
+
+  assert.equal((await api('/home/image/hero2', 'DELETE')).status, 200);
+  assert.equal((await site()).home.images.hero2, null);
 });
 
 test('the home photo setting cannot be written through the ordinary settings door', async () => {
