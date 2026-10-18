@@ -199,6 +199,31 @@ Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, glow around him,
 
 If the face changes, reply: *"That is not Kunle. Keep his face exactly as in his test shot; keep everything else."* Send the picture over and it gets cut to the countdown's wide shape and put on the site, or upload it in Admin → HOME PAGE as **Countdown**.
 
+**Step 4. Premium product shoot: Kunle in the hoodie, head to toe** (back in Kunle's chat, attach the hoodie photo). For the hoodie's page in the shop.
+
+```
+Attach: the hoodie photo.
+
+A premium fashion product photograph of Kunle, the same man from the test shot, exactly as he is (face, skin, hair, earring, build), wearing the attached hoodie exactly as it is: the black brushed fleece, the gold zip at the neck, and the lining inside the hood with the MASQ. symbols and brush shapes in the same colours, order and size. Nothing on the hoodie changed, added or redrawn.
+
+Styling: the hood up, framing his face, the lining showing all around it; the zip half open. Slim black tapered trousers that break just above the ankle, plain black leather Chelsea boots. Nothing else: no jewellery but his small gold hoop, no bag, no props.
+
+Pose: standing full length, body turned slightly to his right, weight on his back leg, front knee softly bent; one hand relaxed at his side, the other thumb hooked into his trouser pocket; head turned to the camera, chin level, looking straight into the lens; calm, proud, unsmiling.
+
+Set: a seamless studio backdrop in deep charcoal that curves into the floor, with a soft gradient: slightly lighter behind him, falling to near black at the edges. He casts a soft, real shadow on the floor. Nothing else in the picture.
+
+Light: a large soft key light high on the front left, angled so the fleece shows its folds and texture and the lining glows with colour; a thin strip light behind him on the right with a faint violet tint, outlining the hood, shoulder and arm; a little soft fill from the front so his face is fully clear. Deep, clean shadows, true colour, no haze.
+
+Camera: shot on a Hasselblad X2D 100C with the XCD 90 mm lens at f/8, 1/125 s, ISO 100, from chest height; sharp from the hood to the boots, every symbol in the lining crisp. Clean, rich, true-to-life colour, very fine grain.
+
+Framing: portrait 4:5, the largest size available. His whole body in the picture from the top of the hood to the soles of his boots, with a little space above the hood and below the boots; him in the centre.
+
+Avoid: plastic or waxy skin, airbrushing, over-sharpening, HDR, glow, a different face, a changed or smeared lining, extra symbols, cropped feet or head, extra fingers, warped hands, logos in the corners, watermarks, any text.
+```
+
+A second view, same chat: *"Same shoot, same light and backdrop: now with the hood down, resting behind his neck so the lining shows around the collar, and him turned three-quarters to the left, looking past the lens. Keep everything else."*
+
+
 
 ## 6. Violet T-shirt: Dayo (attach the logo)
 
