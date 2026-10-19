@@ -159,20 +159,28 @@ Message 1 (attach the current countdown photo):
 ```
 Attach: a wide photo of a young man in a patterned hood (the reference).
 
-I am art-directing a fashion campaign for MASQ., a Nigerian streetwear brand. The attached photo is only a reference for who our model is; it is low quality and over-processed. Do not copy or edit it. Cast this same man again, upgraded to the standard of a global luxury campaign, and show me one test shot of him: from the chest up, plain mid-grey backdrop, soft daylight from the left, a plain black crew-neck T-shirt, no hood, no styling.
+I am art-directing a fashion campaign for MASQ., a Nigerian streetwear brand. We will cast one male model in this chat. The attached photo is only a reference for who he is: it is dark, low quality and over-processed, and most of his face is in shadow. Do not copy or edit it. Cast this same man again, upgraded to the standard of a global luxury campaign, and show me one test shot of him alone: a head-and-shoulders portrait, his whole face in clear, even light, plain mid-grey backdrop, soft daylight from the left, a plain black crew-neck T-shirt, no hood, no styling. Keep him exactly the same in every image I ask for here.
 
-Pose for the test shot: his body turned three-quarters to the right, face in near profile, chin lifted, looking up and into the distance; lips relaxed and slightly parted; thoughtful, not posing.
+Pose: facing the camera, shoulders square, head very slightly turned to his right, chin level, looking straight into the lens; calm, composed, unsmiling.
 
 Who he is: Emeka, 23, from Lagos: the same man as in the reference, recognisably him, at his very best. A striking, sculptural face that fronts a fashion campaign. Quiet, intense, self-possessed.
 
-Face (as in the reference): very full, defined lips with a natural rosy-brown tone; a broad nose with a rounded tip; high cheekbones with healthy fullness beneath them (not gaunt); a strong rounded chin and clean jawline; dark almond-shaped eyes with thick lashes; a long slim neck. A light shadow of stubble on the chin. A small gold hoop earring. A small natural asymmetry so he looks real.
+Face (as in the reference): very full, defined lips with a natural rosy-brown tone; a broad nose with a rounded tip; high cheekbones with healthy fullness beneath them (not gaunt); a strong rounded chin and clean jawline; dark almond-shaped eyes with thick lashes; strong natural eyebrows; a long slim neck. A light shadow of stubble on the chin. A small gold hoop earring. A small natural asymmetry so he looks real.
 
 Hair: very short black 4C hair, close-cropped, with a soft natural hairline.
 
 Skin: deep ebony-brown skin with cool undertones and a soft natural sheen on the forehead, cheekbones and the bridge of the nose. Healthy and even, but real: visible pores, fine hairs, tiny natural marks. No retouching, no airbrushing, no smoothing, no makeup.
 
+Body: 1.85 m, a lean athletic model build at a healthy weight, broad shoulders, straight posture.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/4, 1/160 s, ISO 200; focus on his eyes. Colour like Kodak Portra 400 film: true skin tones, soft contrast, fine grain. Portrait 4:5, the largest size available.
+
 Every image must be: a real photograph, never CGI, a 3D render or digital painting; true-to-life colour; slight film grain.
+
+Avoid: plastic or waxy skin, airbrushing, smoothing, HDR, over-sharpening, a face in shadow, a different face, the hood, the underpass, any text, watermarks.
 ```
+
+For his profile, as in the countdown, reply: *"Same man, same light and backdrop: now turned three-quarters to the right, face in near profile, chin lifted, looking up into the distance, lips slightly parted."*
 
 Message 2 (same chat, attach nothing):
 
