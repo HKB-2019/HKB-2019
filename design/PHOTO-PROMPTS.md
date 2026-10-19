@@ -152,6 +152,32 @@ Avoid: plastic or waxy skin, airbrushing, a smoothed or painted look, a face tha
 
 If the face isn't him, reply: *"The face must be exactly the man from image 2. Keep everything else."* If it looks plastic, reply: *"Keep everything, but give him real photographic skin as in image 2: pores, stubble, fine lines, no smoothing. Less contrast and sharpening on the face."*
 
+**Upgrade the countdown photo to the same standard as the top photos** (new chat). Attach two pictures in this order: 1. the countdown photo with Kunle in it, 2. Kunle's test shot. It asks for a new photograph of the same scene, not a touch-up, so the smudges and the over-processed look don't carry over.
+
+```
+Attach: 1. a wide photo of a man in a patterned hood in an underpass (image 1). 2. a studio portrait of the same man (image 2).
+
+Re-shoot image 1 as a brand-new, high-end fashion campaign photograph, at the standard of a global luxury brand. Do not edit or trace image 1: use it only as the plan for the scene, the pose and the hoodie, and photograph it again from scratch, cleaner, sharper and more real.
+
+The man: exactly the man in image 2, recognisably the same person: long, lean face, high cheekbones, straight strong jaw, broad nose, full lips, thin moustache and short stubble along the jaw and chin, warm deep-brown skin, long neck, small gold hoop earring. His skin is real and unretouched: visible pores, stubble, fine lines, a soft natural sheen on the cheekbone and the bridge of the nose.
+
+Wardrobe: the hoodie from image 1, exactly: heavyweight black fleece, hood up, a gold zip at the neck, and the hood covered in its multicoloured pattern of triangle and diamond panels outlined in orange and gold, filled with turquoise, royal blue, violet and magenta, with small rings and dots inside. The pattern is real printed fabric with visible weave, true colours, not neon, not glowing.
+
+Pose and expression: seen from the chest up, body turned three-quarters to the right, face in near profile, chin lifted, looking up and into the distance; lips relaxed and slightly parted; calm, thoughtful, not posing. The hood frames his face; his eye, cheekbone and jaw clearly visible.
+
+Place: a real board-formed concrete underpass at night, Lagos modernist architecture. One clean beam of violet light cuts diagonally across the wall behind him, low on the left. On the far right a tall concrete pillar, softly out of focus but with real texture. The middle and right of the picture are deep, quiet darkness with faint concrete texture: no haze, no smudges, no grey patches, no fog.
+
+Light: a soft key light from the front left, low and warm, so his face reads clearly with half of it falling into gentle shadow; the violet beam from behind as a rim on the hood and shoulder; a faint cold light from the right. Deep blacks that still hold detail, nothing crushed, nothing blown out.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2, 1/125 s, ISO 1600; focus on his near eye; the background falling off softly. Colour like Kodak Portra 800 film pushed one stop: rich but true skin tones, soft contrast, fine natural grain.
+
+Framing: the widest landscape you can make, largest size available. Him in the left third only, his face at the middle height of the picture, with dark space above the hood and below his chest so it can be cut to a wide strip; the middle and right of the picture dark and empty, for the countdown's numbers.
+
+Avoid: plastic or waxy skin, airbrushing, smoothing, HDR, over-sharpening, halos around him, neon or glowing pattern, haze or grey smudges in the background, a face that is not the man in image 2, a changed hood pattern, extra fingers, logos, watermarks, any text.
+```
+
+If it comes back looking like the old photo, reply: *"This is too close to image 1. Photograph it fresh: real skin, true colour, clean dark background with no haze. Keep his face and the hood pattern."*
+
 Or make every part fresh, in the steps below.
 
 **Step 1. Create Kunle** (new chat, attach nothing). Keep this chat: you come back to it in Step 3.
