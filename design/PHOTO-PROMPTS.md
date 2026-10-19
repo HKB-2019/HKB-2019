@@ -152,6 +152,70 @@ Avoid: plastic or waxy skin, airbrushing, a smoothed or painted look, a face tha
 
 If the face isn't him, reply: *"The face must be exactly the man from image 2. Keep everything else."* If it looks plastic, reply: *"Keep everything, but give him real photographic skin as in image 2: pores, stubble, fine lines, no smoothing. Less contrast and sharpening on the face."*
 
+**Upgrade the original countdown model, Emeka, to the top photos' standard** (two messages, one new chat). Same method as Dayo and Ifeoma: first a clean test shot of him, then the countdown photographed fresh with him in it.
+
+Message 1 (attach the current countdown photo):
+
+```
+Attach: a wide photo of a young man in a patterned hood (the reference).
+
+I am art-directing a fashion campaign for MASQ., a Nigerian streetwear brand. The attached photo is only a reference for who our model is; it is low quality and over-processed. Do not copy or edit it. Cast this same man again, upgraded to the standard of a global luxury campaign, and show me one test shot of him: from the chest up, plain mid-grey backdrop, soft daylight from the left, a plain black crew-neck T-shirt, no hood, no styling.
+
+Pose for the test shot: his body turned three-quarters to the right, face in near profile, chin lifted, looking up and into the distance; lips relaxed and slightly parted; thoughtful, not posing.
+
+Who he is: Emeka, 23, from Lagos: the same man as in the reference, recognisably him, at his very best. A striking, sculptural face that fronts a fashion campaign. Quiet, intense, self-possessed.
+
+Face (as in the reference): very full, defined lips with a natural rosy-brown tone; a broad nose with a rounded tip; high cheekbones with healthy fullness beneath them (not gaunt); a strong rounded chin and clean jawline; dark almond-shaped eyes with thick lashes; a long slim neck. A light shadow of stubble on the chin. A small gold hoop earring. A small natural asymmetry so he looks real.
+
+Hair: very short black 4C hair, close-cropped, with a soft natural hairline.
+
+Skin: deep ebony-brown skin with cool undertones and a soft natural sheen on the forehead, cheekbones and the bridge of the nose. Healthy and even, but real: visible pores, fine hairs, tiny natural marks. No retouching, no airbrushing, no smoothing, no makeup.
+
+Every image must be: a real photograph, never CGI, a 3D render or digital painting; true-to-life colour; slight film grain.
+```
+
+Message 2 (same chat, attach nothing):
+
+```
+Now photograph Emeka, exactly as in his test shot (face, skin, earring, build), for the countdown band on our home page.
+
+Wardrobe: a heavyweight black fleece hoodie with the hood up, framing his face; a gold zip at the neck. The hood is covered in a multicoloured pattern like the reference: triangle and diamond panels outlined in orange and gold, filled with turquoise, royal blue, violet and magenta, with small rings and dots inside. Real printed fabric with visible weave, true colours, not neon, not glowing.
+
+Pose and expression: the same as his test shot: seen from the chest up, body turned three-quarters to the right, face in near profile, chin lifted, looking up and into the distance; lips relaxed and slightly parted; calm, thoughtful. His eye, cheekbone, lips and jaw clearly visible inside the hood.
+
+Place: a real board-formed concrete underpass at night, Lagos modernist architecture. One clean beam of violet light cuts diagonally across the wall behind him, low on the left. On the far right a tall concrete pillar, softly out of focus but with real texture. The middle and right of the picture are deep, quiet darkness with faint concrete texture: no haze, no smudges, no grey patches, no fog.
+
+Light: a soft key light from the front left, low and warm, so his face reads clearly with half of it falling into gentle shadow; the violet beam from behind as a rim on the hood and shoulder; a faint cold light from the right. Deep blacks that still hold detail, nothing crushed, nothing blown out.
+
+Camera: shot on a Sony A7R V with an 85 mm f/1.4 G Master lens at f/2, 1/125 s, ISO 1600; focus on his near eye; the background falling off softly. Colour like Kodak Portra 800 film pushed one stop: rich but true skin tones, soft contrast, fine natural grain.
+
+Framing: the widest landscape you can make, largest size available. Him in the left third only, his face at the middle height of the picture, with dark space above the hood and below his chest so it can be cut to a wide strip; the middle and right of the picture dark and empty, for the countdown's numbers.
+
+Avoid: plastic or waxy skin, airbrushing, smoothing, HDR, over-sharpening, halos around him, a face hidden in shadow, neon or glowing pattern, haze or grey smudges in the background, a different face, extra fingers, logos, watermarks, any text.
+```
+
+If he comes out plastic, reply: *"Keep his face exactly, but make it a real photograph: visible pores, fine hairs, natural skin texture, as if shot on film and not retouched. Less contrast and less sharpening on the face."* If it looks like the old photo, reply: *"Too close to the reference. Photograph it fresh: real skin, true colour, clean dark background with no haze. Keep his face and the hood pattern."*
+
+**Simplest way: put Kunle into the countdown photo as it is.** One message, in Kunle's chat (or a new one). Attach two pictures in this order: 1. the countdown photo, 2. Kunle's test shot. Everything stays (hood, pattern, place, light); only the person changes.
+
+```
+Attach: 1. the wide photo of a man in a patterned hood (image 1). 2. the portrait of a man in a black T-shirt (image 2).
+
+Edit image 1: replace the man in the hood with the man from image 2. Change nothing else.
+
+The new man must be exactly the man from image 2, recognisably the same person: his long, lean face, high cheekbones, straight strong jaw, broad nose, full lips, thin moustache and short stubble beard along the jaw and chin, close-cropped black hair with a sharp hairline, warm deep-brown skin, long neck with a visible Adam's apple, and the small gold hoop in his ear. Same age, same skin tone, same proportions. Do not blend his face with the man in image 1.
+
+Put him in the pose of image 1: seen from the chest up, turned three-quarters to the right, face in near profile, chin lifted, looking up into the distance, lips relaxed and slightly parted; thoughtful, not posing. The hood is up over his head, framing his face exactly as in image 1.
+
+Keep from image 1 exactly as they are: the black hoodie, the multicoloured pattern on the hood with every shape and colour, the gold zip at the neck, the dark concrete underpass, the violet beam across the wall, the pale pillar on the right, the dark empty middle and right of the picture, the colours, the framing, his size and position in the left third, and the very wide shape of the picture.
+
+Light him the way image 1 is lit: violet light from behind, a faint cold light from the right, half his face in shadow but still detailed. Real photographic skin, as in image 2: visible pores, stubble, fine lines, natural sheen on the cheekbone. Film grain to match image 1.
+
+Avoid: plastic or waxy skin, airbrushing, a smoothed or painted look, a face that is not the man from image 2, a changed hood or pattern, a changed background, extra fingers, text, watermarks.
+```
+
+If the face isn't him, reply: *"The face must be exactly the man from image 2. Keep everything else."* If it looks plastic, reply: *"Keep everything, but give him real photographic skin as in image 2: pores, stubble, fine lines, no smoothing. Less contrast and sharpening on the face."*
+
 **Upgrade the countdown photo to the same standard as the top photos** (new chat). Attach two pictures in this order: 1. the countdown photo with Kunle in it, 2. Kunle's test shot. It asks for a new photograph of the same scene, not a touch-up, so the smudges and the over-processed look don't carry over.
 
 ```
