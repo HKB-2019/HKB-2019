@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getOrder } from '../lib/api.js';
 import { useShop } from '../store/ShopContext.jsx';
 import Wordmark from '../components/Wordmark.jsx';
 import StateMark from '../components/StateMark.jsx';
-import doodleOk from '../assets/states/doodle-ok.webp';
-import doodleBad from '../assets/states/doodle-bad.webp';
+import StateArt, { useBadShake } from '../components/StateArt.jsx';
+import { Copy, Check } from '../components/Icons.jsx';
+import { gsap } from 'gsap';
 
 /* Where Paystack sends the customer back to. Paystack appends both `trxref`
  * and `reference`; they carry the same value, so either will do.
@@ -80,10 +81,14 @@ export default function OrderStatus() {
     : order?.status === 'paid' && order.sentAt ? 'sent'
     : (order?.status ?? 'pending');
   const copy = COPY[status] ?? COPY.pending;
-  // The owner's success and error panels: a green tick once the money is in,
-  // a red cross when it did not go through, neither while it is being checked.
+  // The owner's panels: green once the money is in, red when it did not go
+  // through, amber while it is being checked (or a refund is owed), blue once
+  // refunded. Brush strokes on the green and red ones only.
   const tone = error || ['failed', 'abandoned', 'unpaid'].includes(status) ? 'bad'
-    : ['paid', 'sent'].includes(status) ? 'ok' : null;
+    : ['paid', 'sent'].includes(status) ? 'ok'
+    : status === 'refunded' ? 'info'
+    : status === 'refund_due' ? 'warn' : 'wait';
+  const shakeIt = useBadShake(tone);
 
   if (isGift) return <Navigate to={`/gift-card?reference=${encodeURIComponent(reference)}`} replace />;
 
@@ -94,91 +99,156 @@ export default function OrderStatus() {
       </header>
 
       <motion.main
-        className={`status__panel${tone ? ` status__panel--${tone}` : ''}`}
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        className={`status__panel status__panel--${tone}`}
+        initial={{ opacity: 0, y: 14, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
       >
-        <StateMark tone={tone} size="lg" />
-        {error ? (
-          <>
-            <p className="eyebrow">Order</p>
-            <h1 className="status__title">We could not find that order</h1>
-            <p className="status__note">
-              {/not found|no order reference/i.test(error)
-                ? 'Check the link in the receipt Paystack emailed you, or use “Track an order” with the reference that starts masq-.'
-                : error}
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="eyebrow">Your order</p>
-            <h1 className="status__title">{copy.title}</h1>
-            <p className="status__note">{copy.note}</p>
-            <p className="status__ref">{reference}</p>
-
-            {status === 'sent' && (order.courier || order.tracking) && (
-              <div className="status__tracking">
-                {order.courier && <p><span>Courier</span><span>{order.courier}</span></p>}
-                {order.tracking && <p><span>Tracking number</span><span className="status__track-no">{order.tracking}</span></p>}
-              </div>
-            )}
-
-            {status === 'pending' && !error && <div className="status__wait" aria-hidden="true" />}
-
-            {order && (
+        <StateArt tone={tone} />
+        <motion.div className="status__inner" {...shakeIt}>
+          <div className="status__head">
+            <StateMark tone={tone} size="lg" burst={tone === 'ok'} delay={0.15} />
+            {error ? (
               <>
-                <ul className="status__items">
-                  {order.items.map((i, n) => (
-                    <li key={n}>
-                      <span>{i.qty}× {i.name} <em>{i.colour ? `${i.colour}, ${i.size}` : i.size}</em></span>
-                      <span className="num">{naira(i.unitPriceKobo * i.qty)}</span>
-                    </li>
-                  ))}
-                </ul>
-                {order.discountKobo > 0 && (
-                  <p className="status__line status__line--discount">
-                    <span>Discount{order.discountCode ? ` (${order.discountCode})` : ''}</span>
-                    <span className="num">−{naira(order.discountKobo)}</span>
-                  </p>
-                )}
-                {order.shippingKobo > 0 && (
-                  <p className="status__line">
-                    <span>Delivery{order.deliveryTo ? ` to ${order.deliveryTo}` : ''}</span>
-                    <span className="num">{naira(order.shippingKobo)}</span>
-                  </p>
-                )}
-                <p className="status__total">
-                  <span>Total</span><span className="num">{naira(order.totalKobo ?? order.subtotalKobo)}</span>
-                </p>
-                {order.giftKobo > 0 && (
-                  <>
-                    <p className="status__line status__line--discount">
-                      <span>Paid by gift card</span><span className="num">−{naira(order.giftKobo)}</span>
-                    </p>
-                    <p className="status__line">
-                      <span>Paid by card</span><span className="num">{naira(order.paidByCardKobo)}</span>
-                    </p>
-                  </>
-                )}
-                <p className="status__email">
-                  {['paid', 'refunded'].includes(order.status) ? 'Receipt to' : 'Order for'} {order.email}
+                <h1 className="status__title">We could not find that order</h1>
+                <p className="status__note">
+                  {/not found|no order reference/i.test(error)
+                    ? 'Check the link in the receipt Paystack emailed you, or use “Track an order” with the reference that starts masq-.'
+                    : error}
                 </p>
               </>
+            ) : (
+              <>
+                <h1 className="status__title">{copy.title}</h1>
+                <p className="status__note">{copy.note}</p>
+              </>
             )}
-          </>
-        )}
+          </div>
 
-        {tone === 'bad' && !error ? (
-          <>
-            <Link className="btn btn--contrast btn--block status__retry" to="/?bag=open">TRY AGAIN</Link>
-            <Link className="status__back" to="/">Back to the shop</Link>
-          </>
-        ) : (
-          <Link className="btn btn--solid btn--block" to="/">BACK TO THE SHOP</Link>
-        )}
-        {tone && <img className="state-panel__doodle" src={tone === 'ok' ? doodleOk : doodleBad} alt="" aria-hidden="true" />}
+          {!error && (
+            <>
+              {(status === 'paid' || status === 'sent') && <OrderSteps at={status === 'sent' ? 2 : 1} />}
+              <Reference value={reference} />
+
+              {status === 'sent' && (order.courier || order.tracking) && (
+                <div className="status__tracking">
+                  {order.courier && <p><span>Courier</span><span>{order.courier}</span></p>}
+                  {order.tracking && <p><span>Tracking number</span><span className="status__track-no">{order.tracking}</span></p>}
+                </div>
+              )}
+
+              {status === 'pending' && <div className="status__wait" aria-hidden="true" />}
+
+              {order && (
+                <>
+                  <ul className="status__items">
+                    {order.items.map((i, n) => (
+                      <li key={n}>
+                        <span>{i.qty}× {i.name} <em>{i.colour ? `${i.colour}, ${i.size}` : i.size}</em></span>
+                        <span className="num">{naira(i.unitPriceKobo * i.qty)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {order.discountKobo > 0 && (
+                    <p className="status__line status__line--discount">
+                      <span>Discount{order.discountCode ? ` (${order.discountCode})` : ''}</span>
+                      <span className="num">−{naira(order.discountKobo)}</span>
+                    </p>
+                  )}
+                  {order.shippingKobo > 0 && (
+                    <p className="status__line">
+                      <span>Delivery{order.deliveryTo ? ` to ${order.deliveryTo}` : ''}</span>
+                      <span className="num">{naira(order.shippingKobo)}</span>
+                    </p>
+                  )}
+                  <p className="status__total">
+                    <span>Total</span><span className="num">{naira(order.totalKobo ?? order.subtotalKobo)}</span>
+                  </p>
+                  {order.giftKobo > 0 && (
+                    <>
+                      <p className="status__line status__line--discount">
+                        <span>Paid by gift card</span><span className="num">−{naira(order.giftKobo)}</span>
+                      </p>
+                      <p className="status__line">
+                        <span>Paid by card</span><span className="num">{naira(order.paidByCardKobo)}</span>
+                      </p>
+                    </>
+                  )}
+                  <p className="status__email">
+                    {['paid', 'refunded'].includes(order.status) ? 'Receipt to' : 'Order for'} {order.email}
+                  </p>
+                </>
+              )}
+            </>
+          )}
+
+          {tone === 'bad' && !error ? (
+            <>
+              <Link className="btn btn--danger btn--block status__retry" to="/?bag=open">TRY AGAIN</Link>
+              <Link className="btn btn--ghost btn--block" to="/">BACK TO THE SHOP</Link>
+            </>
+          ) : (
+            <Link className="btn btn--contrast btn--block" to="/">{tone === 'ok' ? 'CONTINUE SHOPPING' : 'BACK TO THE SHOP'}</Link>
+          )}
+        </motion.div>
       </motion.main>
+    </div>
+  );
+}
+
+/* Where a paid order has got to: paid, being prepared, on its way. The line
+ * between the steps fills to where the order is, after the panel lands (GSAP:
+ * the dots arrive in turn, then the line runs). Already there with reduced
+ * motion. */
+const STEPS = ['Paid', 'Being prepared', 'On its way'];
+
+function OrderSteps({ at }) {
+  const ref = useRef(null);
+  const reach = at / (STEPS.length - 1);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.timeline({ delay: 0.55 })
+        .from(el.querySelectorAll('.steps__dot'), { scale: 0.3, opacity: 0, duration: 0.35, stagger: 0.12, ease: 'back.out(1.6)' })
+        .from(el.querySelectorAll('.steps__label'), { y: 6, opacity: 0, duration: 0.3, stagger: 0.12, ease: 'power3.out' }, '<0.05')
+        .fromTo(el.querySelector('.steps__fill'), { scaleX: 0 }, { scaleX: reach, duration: 0.8, ease: 'power2.inOut' }, '-=0.15');
+    });
+    return () => mm.revert();
+  }, [reach]);
+
+  return (
+    <ol className="steps" ref={ref} aria-label="Where your order is">
+      <span className="steps__track" aria-hidden="true"><span className="steps__fill" style={{ transform: `scaleX(${reach})` }} /></span>
+      {STEPS.map((label, i) => {
+        const state = i < at || (i === at && at === STEPS.length - 1) ? 'done' : i === at ? 'now' : 'next';
+        return (
+          <li key={label} className={`steps__step is-${state}`} aria-current={state === 'now' ? 'step' : undefined}>
+            <span className="steps__dot">{state === 'done' && <Check />}</span>
+            <span className="steps__label">{label}</span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/* The order reference, with a button that copies it (and says so). */
+function Reference({ value }) {
+  const [copied, setCopied] = useState(false);
+  const copyIt = async () => {
+    try { await navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1800); }
+    catch { setCopied(false); }
+  };
+  return (
+    <div className="status__refbox">
+      <span className="status__reflabel">Order reference</span>
+      <span className="status__ref">{value}</span>
+      <button type="button" className={`status__copy${copied ? ' is-done' : ''}`} onClick={copyIt}
+              aria-label={copied ? 'Copied' : 'Copy the order reference'}>
+        {copied ? <Check /> : <Copy />}<span aria-live="polite">{copied ? 'Copied' : ''}</span>
+      </button>
     </div>
   );
 }

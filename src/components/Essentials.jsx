@@ -134,7 +134,7 @@ export default function Essentials() {
         <span className="section__rule" aria-hidden="true" />
         <button className="link-arrow" onClick={() => {
           expandDropGrid();
-          toast({ tone: 'ok', title: 'Accessories added to the grid' });
+          toast({ tone: 'info', title: 'Accessories added to the grid' });
         }}>
           <span>SHOP ACCESSORIES</span>
           <Arrow />

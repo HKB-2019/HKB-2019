@@ -8,9 +8,9 @@ import { asset } from '../lib/media.js';
 import { track, visitId } from '../lib/analytics.js';
 import { zoneFor, naira, isEmail, isPhone } from '../lib/delivery.js';
 import { countriesAbroad } from '../data/countries.js';
-import { Close, Heart, ArrowShort } from './Icons.jsx';
+import { Close, Heart, ArrowShort, BagIcon } from './Icons.jsx';
 import StateMark from './StateMark.jsx';
-import doodleOk from '../assets/states/doodle-ok.webp';
+import StateArt from './StateArt.jsx';
 import { SizeButtons } from './DropGrid.jsx';
 import { useFocusTrap } from '../lib/useFocusTrap.js';
 import { shake, shakeInvalid } from '../lib/feel.js';
@@ -51,12 +51,30 @@ function Drawer({ label, title, count, children, foot }) {
 /* ------------------------------------------------------------------ the bag */
 
 /** The empty-state button: back to the drop grid, from whichever page. */
-function ShopButton() {
+function ShopButton({ label }) {
   const { closeOverlay } = useShop();
   const { home } = useHome();
   const goTo = useSectionLink();
   return (
-    <button className="btn btn--ghost" onClick={() => { closeOverlay(); goTo('#drop'); }}>{home.heroButton}</button>
+    <button className="btn btn--contrast" onClick={() => { closeOverlay(); goTo('#drop'); }}>
+      {label ?? home.heroButton} <ArrowShort className="btn__arrow" />
+    </button>
+  );
+}
+
+/* The owner's empty states: an outline icon that settles in, a title, a line
+ * and the way back to the pieces. */
+function EmptyState({ icon, title, text, button }) {
+  return (
+    <motion.div className="empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: UI_IN, ease: EASE_OUT }}>
+      <motion.span className="empty__icon" aria-hidden="true"
+                   initial={{ scale: 0.7, rotate: -8, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                   transition={{ duration: 0.5, delay: 0.08, ease: EASE_OUT }}>{icon}</motion.span>
+      <h3 className="empty__title">{title}</h3>
+      <p className="empty__text">{text}</p>
+      <ShopButton label={button} />
+    </motion.div>
   );
 }
 
@@ -71,10 +89,8 @@ function BagLines() {
   const { cart, changeQty, removeItem, format } = useShop();
   if (cart.length === 0) {
     return (
-      <div className="empty">
-        <p>YOUR BAG IS EMPTY</p>
-        <ShopButton />
-      </div>
+      <EmptyState icon={<BagIcon />} title="Your bag is waiting for something special"
+                  text="Looks like you haven’t added anything yet." button="START SHOPPING" />
     );
   }
   return (
@@ -175,7 +191,8 @@ function DiscountBox({ applied, onApplied }) {
   if (applied) {
     return (
       <div className="discount discount--on">
-        <span><strong>{applied.code}</strong> · {applied.label}</span>
+        <StateMark tone="ok" />
+        <span><strong>{applied.code}</strong> applied · {applied.label}</span>
         <button type="button" className="discount__remove"
                 onClick={() => { setDiscountCode(''); setTyped(''); onApplied(null); setState(null); }}>REMOVE</button>
       </div>
@@ -224,6 +241,7 @@ function GiftCardBox({ gift, onGift, usingKobo }) {
     const left = gift.balanceKobo - usingKobo;
     return (
       <div className="discount discount--on">
+        <StateMark tone="ok" />
         <span><strong>{gift.code}</strong> · {left > 0 ? `${naira(left)} left on it after this` : `pays ${naira(usingKobo)}`}</span>
         <button type="button" className="discount__remove" onClick={() => { onGift(null); setTyped(''); }}>REMOVE</button>
       </div>
@@ -250,7 +268,7 @@ function GiftCardBox({ gift, onGift, usingKobo }) {
 }
 
 function DeliveryForm({ onBack }) {
-  const { cart, cartSubtotal, delivery, setDelivery, site, toast, discountCode, closeOverlay } = useShop();
+  const { cart, cartSubtotal, delivery, setDelivery, site, discountCode, closeOverlay } = useShop();
   const [applied, setApplied] = useState(null);
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
@@ -332,8 +350,8 @@ function DeliveryForm({ onBack }) {
       window.location.href = authorizationUrl;   // hand off to Paystack
     } catch (err) {
       setBusy(false);
-      setServerError(err.message);
-      toast({ tone: 'bad', title: 'Payment couldn’t start', body: 'Please check your connection and try again.' });
+      // Said once, under the button they pressed (not again in a message card).
+      setServerError(err.message || 'Payment couldn’t start. Please check your connection and try again.');
     }
   };
 
@@ -436,6 +454,7 @@ function DeliveryForm({ onBack }) {
       </div>
 
       <button type="submit" className="btn btn--solid btn--block" disabled={busy || !cart.length}>
+        {busy && <span className="spinner" aria-hidden="true" />}
         {busy ? (due === 0 ? 'PLACING YOUR ORDER…' : 'TAKING YOU TO PAYSTACK…') : due === 0 && giftKobo > 0 ? 'PLACE ORDER' : `PAY ${naira(due)}`}
       </button>
       <p className="drawer__note drawer__note--center">Secure payment by Paystack. We never see your card.</p>
@@ -495,10 +514,8 @@ function SavedDrawer() {
   return (
     <Drawer label="Saved" title="SAVED" count={items.length}>
       {catalogueStatus === 'ready' && items.length === 0 ? (
-        <div className="empty">
-          <p>NOTHING SAVED YET</p>
-          <ShopButton />
-        </div>
+        <EmptyState icon={<Heart />} title="Nothing saved yet"
+                    text="Tap the heart on any piece to keep it here for later." button="EXPLORE THE DROP" />
       ) : items.map(p => (
         <article className="line-item saved-item" key={p.id}>
           {p.img ? <img className="line-item__img" src={p.img} alt={p.name} /> : <span className="line-item__img" />}
@@ -553,23 +570,28 @@ function Modal({ label, labelledBy, wide, className = '', closeOutside = true, c
 
 /* The owner's success panel: a piece has gone in the bag from its own page.
  * The way on is the bag; carrying on shopping is the quiet second choice. */
-function AddedModal({ name, what, img }) {
+function AddedModal({ name, what, img, colour, size, price, qty }) {
   const { openOverlay, closeOverlay } = useShop();
   return (
     <Modal labelledBy="addedTitle" className="modal__panel--state modal__panel--ok">
+      <StateArt tone="ok" />
       <div className="state-panel">
-        <StateMark tone="ok" size="lg" />
+        <StateMark tone="ok" size="lg" burst />
         <h2 className="state-panel__title" id="addedTitle">Added to your bag</h2>
-        <div className="state-panel__piece">
+        <p className="state-panel__note">{name} is in your bag.</p>
+        <div className="state-card state-card--piece">
           {img && <img src={img} alt="" />}
-          <p><span>{name}</span><span>{what}</span></p>
+          <div className="state-card__piece">
+            <p className="state-card__name">{name}</p>
+            <p className="state-card__meta">{colour ? <>Colour: {colour}<span aria-hidden="true"> · </span></> : null}Size: {size ?? what}</p>
+            <p className="state-card__price">{price}{qty > 1 && <span> · {qty} in your bag</span>}</p>
+          </div>
         </div>
         <button type="button" className="btn btn--contrast btn--block" onClick={() => openOverlay('cart')}>
           VIEW BAG <ArrowShort className="btn__arrow" />
         </button>
-        <button type="button" className="state-panel__link" onClick={closeOverlay}>Continue shopping</button>
+        <button type="button" className="btn btn--ghost btn--block state-panel__second" onClick={closeOverlay}>CONTINUE SHOPPING</button>
       </div>
-      <img className="state-panel__doodle" src={doodleOk} alt="" aria-hidden="true" />
     </Modal>
   );
 }

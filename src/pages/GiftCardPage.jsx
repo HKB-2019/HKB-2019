@@ -81,7 +81,7 @@ function TopUpFind() {
                    className={error ? 'is-error' : card ? 'is-valid' : undefined}
                    aria-invalid={error ? true : undefined} aria-describedby={error ? 't-code-error' : undefined} />
           </label>
-          <button type="submit" className="btn btn--ghost" disabled={busy || !code.trim()}>{busy ? 'FINDING…' : 'FIND CARD'}</button>
+          <button type="submit" className="btn btn--ghost" disabled={busy || !code.trim()}>{busy && <span className="spinner" aria-hidden="true" />}{busy ? 'FINDING…' : 'FIND CARD'}</button>
         </form>
         {error && <small className="field__error" id="t-code-error" role="alert">{error}</small>}
         {card && (
@@ -204,6 +204,7 @@ function Buy() {
         </fieldset>
 
         <button type="submit" className="btn btn--solid btn--block" disabled={busy}>
+          {busy && <span className="spinner" aria-hidden="true" />}
           {busy ? 'TAKING YOU TO PAYSTACK…' : amount ? `PAY ${naira(amount * 100)}` : 'PAY'}
         </button>
         <p className="drawer__note drawer__note--center">Secure payment by Paystack. The code shows here as soon as it is paid.</p>
@@ -263,14 +264,14 @@ function Bought({ reference }) {
     const unpaid = card.status === 'abandoned' || card.payment === 'not_completed';
     return (
       <div className="gift gift--note">
-        {unpaid && <StateMark tone="bad" size="lg" />}
+        <StateMark tone={unpaid ? 'bad' : 'wait'} size="lg" />
         <p className="eyebrow">Gift card</p>
         <h1 className="gift__title">{unpaid ? 'Payment not completed' : 'Confirming your payment'}</h1>
         <p className="gift__intro">{unpaid
           ? 'Nothing was taken. You can try again whenever you like.'
           : 'This usually takes a few seconds. The code appears here as soon as the payment is confirmed.'}</p>
         {!unpaid && <div className="status__wait" aria-hidden="true" />}
-        {unpaid && <Link className="btn btn--contrast btn--block" to="/gift-card">TRY AGAIN</Link>}
+        {unpaid && <Link className="btn btn--danger btn--block" to="/gift-card">TRY AGAIN</Link>}
       </div>
     );
   }
@@ -287,7 +288,7 @@ function Bought({ reference }) {
         <Card amountKobo={card.amountKobo} to={card.recipientName} code={card.code} until={longDate(card.expiresAt)} design={card.design} revealed={revealed} />
       </div>
       <div className="gift__form">
-        <StateMark tone="ok" size="lg" />
+        <StateMark tone="ok" size="lg" burst delay={0.5} />
         <p className="eyebrow">Gift card</p>
         <h1 className="gift__title">Your gift card is ready</h1>
         <p className="gift__intro">

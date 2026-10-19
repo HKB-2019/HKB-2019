@@ -72,6 +72,7 @@ export default function TopUp({ code, balanceKobo, startOpen = false }) {
         </label>
       </fieldset>
       <button type="submit" className="btn btn--solid btn--block" disabled={busy}>
+        {busy && <span className="spinner" aria-hidden="true" />}
         {busy ? 'TAKING YOU TO PAYSTACK…' : amount ? `ADD ${naira(amount * 100)}` : 'ADD MONEY'}
       </button>
       <p className="drawer__note drawer__note--center">

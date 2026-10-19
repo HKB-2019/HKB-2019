@@ -56,6 +56,10 @@
   /* the owner's success and error colours: a clear green, a clear red */
   --ok:            #3ccf74;
   --ok-rgb:        60 207 116;
+  --amber:         #f5a524;
+  --amber-rgb:     245 165 36;
+  --info:          #3d8bff;
+  --info-rgb:      61 139 255;
   --bad-rgb:       240 80 63;
   --bad:           #f0503f;
   --bad-line:      #f0503f;
@@ -127,6 +131,10 @@
   --warn:          #74540b;
   --ok:            #17803f;
   --ok-rgb:        23 128 63;
+  --amber:         #9a5b00;
+  --amber-rgb:     176 108 0;
+  --info:          #1d5fd1;
+  --info-rgb:      29 95 209;
   --bad-rgb:       196 46 30;
   --bad:           #c42e1e;
   --bad-line:      #c42e1e;
@@ -374,6 +382,11 @@ html{ scrollbar-color:var(--line) var(--bg); }
 
 /* The owner's success and error panels: a plain light button on dark (dark on light). */
 .btn--contrast{ background:var(--ink); color:var(--bg); border-radius:10px; font-size:13px; }
+/* The owner's error panels: the way to try again, in red. */
+.btn--danger{ background:var(--bad); color:#fff; border-radius:10px; font-size:13px; }
+.btn--danger::before{ background:rgb(0 0 0 / .14); }
+.btn--danger:hover::before{ transform:scaleY(1); }
+.btn--danger:hover{ box-shadow:0 10px 30px -12px rgb(var(--bad-rgb) / .9); }
 .btn--contrast::before{ background:rgb(var(--bg-rgb) / .12); }
 .btn--contrast:hover::before{ transform:scaleY(1); }
 
@@ -927,11 +940,11 @@ html{ scrollbar-color:var(--line) var(--bg); }
 }
 .line-item__remove:hover{ color:var(--ink); border-bottom-color:var(--ink-faint); }
 
-.empty{ padding:76px 0; text-align:center; }
-.empty p{
-  margin:0 0 28px; font-size:11px; letter-spacing:.2em;
-  text-transform:uppercase; color:var(--ink-faint);
-}
+.empty{ padding:64px 8px; text-align:center; display:flex; flex-direction:column; align-items:center; }
+.empty__icon{ display:grid; place-items:center; width:64px; height:64px; margin-bottom:18px; color:var(--ink); }
+.empty__icon svg{ width:44px; height:44px; }
+.empty__title{ margin:0 0 8px; font-size:18px; font-weight:600; letter-spacing:-.01em; text-wrap:balance; }
+.empty__text{ margin:0 0 24px; font-size:14px; line-height:1.55; color:var(--ink-dim); max-width:30ch; }
 
 /* Centred when it fits; when a page is longer than the screen (Terms and
    Privacy on a phone) the panel scrolls, top to bottom, inside the overlay —
@@ -948,34 +961,43 @@ html{ scrollbar-color:var(--line) var(--bg); }
 .modal__panel--film{ max-width:940px; padding:0; overflow:hidden; }
 .modal__close{ position:absolute; top:16px; right:16px; z-index:4; }
 
-/* The owner's success panel ("added to your bag"). */
+/* The owner's big panels: added to bag (here), and the same look on the
+   order page and gift card results. Tinted by tone, a soft glow, the brush
+   strokes down both edges (StateArt.jsx), the ringed mark with its strokes. */
 .modal__panel--state{
   --tone-rgb:var(--ok-rgb);
-  width:min(440px, 100%); max-width:440px; overflow:hidden; isolation:isolate;
-  padding:52px 36px 34px; text-align:center;
-  border:1px solid rgb(var(--tone-rgb) / .32);
-  background:linear-gradient(155deg, rgb(var(--tone-rgb) / .16), transparent 55%), var(--raised);
+  width:min(460px, 100%); max-width:460px; overflow:hidden; isolation:isolate;
+  padding:52px clamp(46px, 12%, 64px) 34px; text-align:center;
+  border:1px solid rgb(var(--tone-rgb) / .34);
+  background:radial-gradient(120% 70% at 50% 0%, rgb(var(--tone-rgb) / .18), transparent 60%), var(--raised);
+  box-shadow:0 0 50px -16px rgb(var(--tone-rgb) / .45), 0 30px 80px var(--shadow);
 }
-.modal__panel.modal__panel--state{ border-radius:16px; }
+.modal__panel.modal__panel--state{ border-radius:18px; }
 .state-panel{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; }
 .state-panel__title{
-  margin:22px 0 14px; font-family:var(--sans); font-weight:700;
+  margin:22px 0 8px; font-family:var(--sans); font-weight:700;
   font-size:clamp(24px,5vw,30px); line-height:1.15; letter-spacing:-.02em; text-wrap:balance;
 }
-.state-panel__piece{ display:flex; align-items:center; gap:12px; margin:0 0 26px; text-align:left; }
-.state-panel__piece img{ width:48px; height:48px; border-radius:8px; object-fit:cover; outline:1px solid rgb(var(--ink-rgb) / .08); outline-offset:-1px; }
-.state-panel__piece p{ margin:0; display:flex; flex-direction:column; gap:2px; }
-.state-panel__piece span:first-child{ font-size:13px; font-weight:600; letter-spacing:.06em; }
-.state-panel__piece span + span{ font-size:14px; color:var(--ink-dim); }
-.state-panel__link{
-  margin-top:8px; min-height:48px; padding:0 16px;
-  font-size:15px; color:var(--ink-dim); transition:color .2s var(--ease);
+.state-panel__note{ margin:0 0 20px; font-size:15px; line-height:1.55; color:var(--ink-dim); text-wrap:balance; }
+.state-panel__second{ margin-top:10px; }
+/* the piece, in a quiet card */
+.state-card{
+  width:100%; display:flex; align-items:center; gap:14px; margin:0 0 22px; padding:12px;
+  border:1px solid rgb(var(--ink-rgb) / .12); border-radius:12px; background:rgb(var(--bg-rgb) / .45); text-align:left;
 }
-.state-panel__link:hover{ color:var(--ink); }
-.state-panel__doodle{
-  position:absolute; right:0; bottom:0; z-index:0; width:clamp(78px,24%,112px); height:auto;
-  pointer-events:none; user-select:none;
+.state-card img{ width:64px; height:64px; flex:none; border-radius:8px; object-fit:cover; outline:1px solid rgb(var(--ink-rgb) / .08); outline-offset:-1px; }
+.state-card__piece{ min-width:0; }
+.state-card__piece p{ margin:0; }
+.state-card__name{ font-size:13px; font-weight:600; letter-spacing:.06em; }
+.state-card__meta{ margin-top:3px !important; font-size:13px; color:var(--ink-dim); }
+.state-card__price{ margin-top:4px !important; font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; }
+.state-card__price span{ font-weight:400; font-size:13px; color:var(--ink-dim); }
+/* the brush strokes down both edges */
+.state-art{
+  position:absolute; bottom:0; z-index:0; height:auto; pointer-events:none; user-select:none;
 }
+.state-art--l{ left:0; width:clamp(34px, 10%, 50px); }
+.state-art--r{ right:0; width:clamp(34px, 10%, 50px); }
 .modal__title{
   margin:0 0 18px; font-size:11px; font-weight:400;
   letter-spacing:.26em; text-transform:uppercase;
@@ -1079,38 +1101,60 @@ html{ scrollbar-color:var(--line) var(--bg); }
 }
 
 /* ============ TOASTS ============ */
-/* The owner's message cards: ringed tick or cross, the piece's photo when
-   there is one, title and line, a close button, and the time left as a thin
-   bar along the foot in the message's colour. */
+/* The owner's message cards (Toasts.jsx): from the top right on a computer,
+   420px at most; across the top on a phone. Each tone tints its card and
+   glows faintly; the MASQ. stripe sits before the close button; a bar along
+   the foot runs down the time left. */
 .toast-wrap{
-  position:fixed; left:50%; bottom:calc(28px + var(--preview-bar-h, 0px)); z-index:120;
-  transform:translateX(-50%);
-  width:min(460px, calc(100vw - 32px));
+  position:fixed; z-index:120; top:calc(var(--header-h) + 14px); right:24px;
+  width:min(420px, calc(100vw - 32px));
   display:flex; flex-direction:column; gap:10px; align-items:stretch;
   pointer-events:none;
 }
+/* With the bag open (it fills the right-hand side), next to it instead of over it. */
+body:has(.drawer) .toast-wrap{ right:calc(min(430px, 100%) + 20px); }
+@media (max-width:900px){ body:has(.drawer) .toast-wrap{ right:16px; } }
+@media (max-width:640px){ .toast-wrap{ top:calc(var(--header-h-sm, 64px) + 8px); right:16px; left:16px; width:auto; } }
 .toast{
-  --tone:var(--violet-soft);
+  --tone-rgb:var(--ink-rgb); --tone:var(--ink-faint);
   position:relative; overflow:hidden; pointer-events:auto;
-  display:flex; align-items:center; gap:14px;
-  padding:14px 8px 16px 16px; border-radius:12px;
-  background:var(--raised); border:1px solid var(--line);
-  box-shadow:0 18px 50px var(--shadow);
+  display:flex; align-items:center; gap:14px; min-height:72px;
+  padding:14px 6px 16px 16px; border-radius:12px;
+  background:linear-gradient(100deg, rgb(var(--tone-rgb) / .14), rgb(var(--tone-rgb) / .03) 62%), var(--raised);
+  border:1px solid rgb(var(--tone-rgb) / .38);
+  box-shadow:0 0 22px -6px rgb(var(--tone-rgb) / .35), 0 18px 44px var(--shadow);
   color:var(--ink); text-align:left;
 }
-.toast--ok{ --tone:var(--ok); }
-.toast--bad{ --tone:var(--bad); }
-.toast__img{ width:52px; height:52px; flex:none; border-radius:8px; object-fit:cover; background:var(--bg-2); outline:1px solid rgb(var(--ink-rgb) / .08); outline-offset:-1px; }
+.toast:not([class*="toast--"]){ --tone-rgb:var(--ink-rgb); border-color:var(--line); box-shadow:0 18px 44px var(--shadow); background:var(--raised); }
+.toast--ok{ --tone-rgb:var(--ok-rgb); --tone:var(--ok); }
+.toast--bad{ --tone-rgb:var(--bad-rgb); --tone:var(--bad); }
+.toast--warn{ --tone-rgb:var(--amber-rgb); --tone:var(--amber); }
+.toast--info{ --tone-rgb:var(--info-rgb); --tone:var(--info); }
+.toast__img{ width:48px; height:48px; flex:none; border-radius:8px; object-fit:cover; background:var(--bg-2); outline:1px solid rgb(var(--ink-rgb) / .08); outline-offset:-1px; }
 .toast__text{ flex:1; min-width:0; }
 .toast__title{ margin:0; font-size:15px; font-weight:600; line-height:1.35; letter-spacing:-.005em; }
-.toast__body{ margin:3px 0 0; font-size:14px; line-height:1.45; color:var(--ink-dim); overflow-wrap:anywhere; }
+.toast__body{ margin:3px 0 0; font-size:13.5px; line-height:1.45; color:var(--ink-dim); overflow-wrap:anywhere; }
+.toast__action{
+  flex:none; height:36px; padding:0 14px; border-radius:8px;
+  border:1px solid rgb(var(--ink-rgb) / .35); color:var(--ink);
+  font-size:13px; font-weight:600; white-space:nowrap;
+  transition:background-color .2s var(--ease), border-color .2s var(--ease), transform .16s var(--ease-out);
+}
+.toast__action:hover{ background:rgb(var(--ink-rgb) / .08); border-color:rgb(var(--ink-rgb) / .6); }
+.toast__action--under{ height:32px; margin-top:8px; padding:0 12px; }
+.toast__action:active{ transform:scale(.96); }
+.toast__action:focus-visible, .toast__close:focus-visible{ outline:2px solid var(--violet-soft); outline-offset:2px; }
+/* the MASQ. stripe: violet, orange, gold, with a hairline after it */
+.toast__stripe{ flex:none; display:flex; flex-direction:column; gap:2px; padding-right:8px; border-right:1px solid rgb(var(--ink-rgb) / .14); align-self:center; }
+.toast__stripe i{ display:block; width:3px; height:7px; border-radius:1px; background:#7a3cff; }
+.toast__stripe i:nth-child(2){ background:#ff6a1f; }
+.toast__stripe i:nth-child(3){ background:#ffb31a; }
 .toast__close{
-  flex:none; width:40px; height:40px; display:grid; place-items:center;
+  flex:none; width:40px; height:40px; display:grid; place-items:center; margin-left:-6px;
   color:var(--ink-faint); border-radius:8px; transition:color .2s var(--ease), background-color .2s var(--ease);
 }
 .toast__close svg{ width:14px; height:14px; }
 .toast__close:hover{ color:var(--ink); background:rgb(var(--ink-rgb) / .06); }
-.toast__close:focus-visible{ outline:2px solid var(--violet-soft); outline-offset:-2px; }
 .toast__time{
   position:absolute; left:0; right:0; bottom:0; height:3px;
   background:linear-gradient(90deg, var(--tone) 60%, transparent);
@@ -1119,31 +1163,34 @@ html{ scrollbar-color:var(--line) var(--bg); }
 .toast.is-held .toast__time{ animation-play-state:paused; }
 @keyframes toast-time{ from{ transform:scaleX(1); } to{ transform:scaleX(0); } }
 @media (max-width:420px){
-  .toast{ gap:12px; padding-left:14px; }
+  .toast{ gap:11px; padding-left:13px; }
   .toast .state-mark{ width:32px; height:32px; }
-  .toast__img{ width:44px; height:44px; }
+  .toast__img{ width:42px; height:42px; }
   .toast__title{ font-size:14px; }
   .toast__body{ font-size:13px; }
+  .toast__action{ padding:0 11px; }
 }
 
-/* The ringed tick or cross. */
-.state-mark{
-  flex:none; display:inline-grid; place-items:center;
-  width:36px; height:36px; border-radius:50%;
-  border:1.6px solid currentColor;
-}
-.state-mark svg{ width:16px; height:16px; }
+/* The ringed mark (StateMark.jsx): drawn as an outline that inks itself in. */
+.state-mark{ position:relative; flex:none; display:inline-grid; place-items:center; width:38px; height:38px; }
+.state-mark svg{ width:100%; height:100%; overflow:visible; }
 .state-mark--ok{ color:var(--ok); }
 .state-mark--bad{ color:var(--bad); }
-.state-mark--bad svg{ width:13px; height:13px; }
-.state-mark--lg{ width:76px; height:76px; border-width:2px; }
-.state-mark--lg svg{ width:34px; height:34px; }
-.state-mark--lg.state-mark--bad svg{ width:28px; height:28px; }
-/* With the bag or a panel open, its foot holds the total and the button:
-   messages come in at the top instead of over them. Above the phone bar on
-   a product page. */
-body.is-locked .toast-wrap{ bottom:auto; top:calc(var(--header-h) + 14px); }
-body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
+.state-mark--warn, .state-mark--wait{ color:var(--amber); }
+.state-mark--info{ color:var(--info); }
+.state-mark--lg{ width:84px; height:84px; filter:drop-shadow(0 0 14px rgb(var(--tone-rgb, var(--ok-rgb)) / .35)); }
+.state-mark--lg.state-mark--ok{ --tone-rgb:var(--ok-rgb); }
+.state-mark--lg.state-mark--bad{ --tone-rgb:var(--bad-rgb); }
+.state-mark--lg:is(.state-mark--warn, .state-mark--wait){ --tone-rgb:var(--amber-rgb); }
+.state-mark--lg.state-mark--info{ --tone-rgb:var(--info-rgb); }
+/* the short brand strokes either side of a big mark */
+.state-mark__ray{
+  position:absolute; top:50%; width:18px; height:3px; margin-top:calc(var(--y) - 1.5px); border-radius:2px;
+  background:var(--ray);
+}
+.state-mark__ray--l{ right:calc(100% + 12px); }
+.state-mark__ray--r{ left:calc(100% + 12px); }
+
 /* ============ RESPONSIVE ============ */
 @media (max-width:1100px){
   .slide{ flex:0 0 calc((100% - 2 * var(--gap)) / 3); }
@@ -2012,25 +2059,62 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
   .admin-new{ grid-template-columns:1fr; margin-left:0; }
   .admin-card{ padding:18px; }
 }
-.status__retry{ margin:0 0 6px; }
-.status__back{
-  display:flex; align-items:center; justify-content:center; min-height:48px;
-  font-size:15px; color:var(--ink-dim); transition:color .2s var(--ease);
-}
-.status__back:hover{ color:var(--ink); }
-/* Paid, or not: the owner's tinted panels with the brush strokes in a corner. */
-.status__panel--ok, .status__panel--bad{
-  --tone-rgb:var(--ok-rgb);
+.status__retry{ margin:6px 0 10px; }
+/* The order page as one of the owner's panels, in the tone of where the
+   order is: green paid, red not paid, amber being checked, blue refunded. */
+.status__panel[class*="status__panel--"]{
+  --tone-rgb:var(--amber-rgb);
   position:relative; overflow:hidden; isolation:isolate;
-  margin-block:clamp(24px,6vh,64px); padding:clamp(40px,6vw,56px) clamp(22px,5vw,44px) clamp(56px,8vw,72px);
-  border:1px solid rgb(var(--tone-rgb) / .32); border-radius:16px;
-  background:linear-gradient(155deg, rgb(var(--tone-rgb) / .16), transparent 55%), var(--raised);
+  margin-block:clamp(24px,6vh,64px); padding:clamp(40px,6vw,56px) clamp(46px,9vw,64px) clamp(40px,6vw,52px);
+  border:1px solid rgb(var(--tone-rgb) / .32); border-radius:18px;
+  background:radial-gradient(120% 50% at 50% 0%, rgb(var(--tone-rgb) / .17), transparent 60%), var(--raised);
+  box-shadow:0 0 60px -20px rgb(var(--tone-rgb) / .45);
 }
-.status__panel--bad{ --tone-rgb:var(--bad-rgb); }
-.status__panel .state-mark{ display:grid; margin:0 0 24px; }
+.status__panel--ok{ --tone-rgb:var(--ok-rgb) !important; }
+.status__panel--bad{ --tone-rgb:var(--bad-rgb) !important; }
+.status__panel--info{ --tone-rgb:var(--info-rgb) !important; }
+.status__inner{ position:relative; z-index:1; }
+.status__head{ display:flex; flex-direction:column; align-items:center; text-align:center; }
+.status__head .status__title{ margin:20px 0 10px; font-family:var(--sans); font-weight:700; font-size:clamp(26px,4.6vw,34px); letter-spacing:-.02em; }
+.status__head .status__note{ margin-bottom:26px; text-wrap:balance; }
 @media (max-width:560px){
-  .status__panel--ok, .status__panel--bad{ margin-inline:16px; width:auto; }
+  .status__panel[class*="status__panel--"]{ margin-inline:16px; width:auto; padding-inline:26px; }
 }
+/* the order reference, with its copy button */
+.status__refbox{
+  display:grid; grid-template-columns:1fr auto; align-items:center; gap:2px 12px;
+  margin:0 0 22px; padding:12px 8px 12px 16px;
+  border:1px solid rgb(var(--ink-rgb) / .12); border-radius:12px; background:rgb(var(--bg-rgb) / .45);
+}
+.status__reflabel{ grid-column:1; font-size:12px; color:var(--ink-faint); }
+.status__refbox .status__ref{ grid-column:1; margin:0; word-break:break-all; color:var(--ink); }
+.status__copy{
+  grid-column:2; grid-row:1 / span 2; display:inline-flex; align-items:center; gap:6px;
+  min-height:40px; padding:0 10px; border-radius:8px; color:var(--ink-dim); font-size:13px;
+  transition:color .2s var(--ease), background-color .2s var(--ease);
+}
+.status__copy svg{ width:16px; height:16px; }
+.status__copy:hover{ color:var(--ink); background:rgb(var(--ink-rgb) / .06); }
+.status__copy.is-done{ color:var(--ok); }
+/* paid → being prepared → on its way (OrderSteps, filled by GSAP) */
+.steps{ position:relative; list-style:none; display:grid; grid-template-columns:repeat(3, 1fr); margin:0 0 24px; padding:0; }
+.steps__track{ position:absolute; top:13px; left:16.66%; right:16.66%; height:2px; background:rgb(var(--ink-rgb) / .14); border-radius:2px; }
+.steps__fill{ position:absolute; inset:0; background:var(--ok); transform-origin:left; border-radius:2px; }
+.steps__step{ position:relative; display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; }
+.steps__dot{
+  width:28px; height:28px; border-radius:50%; display:grid; place-items:center;
+  background:var(--raised); border:2px solid rgb(var(--ink-rgb) / .25); color:#050407;
+}
+.steps__dot svg{ width:14px; height:14px; }
+.steps__step.is-done .steps__dot{ background:var(--ok); border-color:var(--ok); }
+.steps__step.is-now .steps__dot{ border-color:var(--ok); box-shadow:0 0 0 5px rgb(var(--ok-rgb) / .16); }
+.steps__step.is-now .steps__dot::after{ content:''; width:8px; height:8px; border-radius:50%; background:var(--ok); }
+.steps__label{ font-size:13px; color:var(--ink-dim); }
+.steps__step.is-now .steps__label, .steps__step.is-done .steps__label{ color:var(--ink); }
+@media (prefers-reduced-motion: no-preference){
+  .steps__step.is-now .steps__dot{ animation:step-now 2.4s ease-in-out infinite; }
+}
+@keyframes step-now{ 50%{ box-shadow:0 0 0 9px rgb(var(--ok-rgb) / .06); } }
 
 /* ============ PRODUCT PAGES ============ */
 /* Cards' and the Essentials' photos open the product page. */
@@ -2758,7 +2842,7 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 /* small capitals: labels, small headings, quiet buttons and links */
 .skip-link, .drawer__title, .drawer__row, .modal__title, .tab, .field span,
 .status__total, .status__tracking p span:first-child, .gift__label, .gift__tile--other,
-.gift__mode, .giftcard__label, .delivery__back, .line-item__remove, .welcome__skip, .empty p,
+.gift__mode, .giftcard__label, .delivery__back, .line-item__remove, .welcome__skip,
 .pdp__sizes legend, .pdp__colours legend, .pdp__more summary, .pdp__guide, .pdp__inline,
 .pdp__hint, .pdp__pictured, .pick__colour-name, .zoom__bar, .zoom__toggle,
 .discount__open, .discount__remove, .restock__open, .restock--done,
@@ -2886,3 +2970,44 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 /* the room kept for a note that appears when a box is left (FieldNote) */
 .field__note-room{ display:block; margin-top:7px; height:1.5em; font-size:13px; }
 .field__error, .field__ok{ line-height:1.5; }
+
+/* ============ BANNERS, SPINNERS, APPLIED CODES ============ */
+/* A problem that needs attention and must not disappear: the owner's banner. */
+.banner{
+  --tone-rgb:var(--bad-rgb);
+  display:flex; align-items:center; gap:14px; margin:8px 0 24px; padding:16px 16px 16px 18px;
+  border:1px solid rgb(var(--tone-rgb) / .4); border-radius:12px;
+  background:linear-gradient(100deg, rgb(var(--tone-rgb) / .16), rgb(var(--tone-rgb) / .04) 65%), var(--raised);
+  box-shadow:0 0 30px -10px rgb(var(--tone-rgb) / .4);
+}
+.banner__text{ flex:1; min-width:0; }
+.banner__title{ margin:0; font-size:15px; font-weight:600; }
+.banner__body{ margin:3px 0 0; font-size:14px; color:var(--ink-dim); }
+.banner__action{ height:42px; padding:0 18px; flex:none; }
+@media (max-width:560px){ .banner{ flex-wrap:wrap; } .banner__action{ width:100%; } }
+
+/* A ring that turns while something is under way (inside a busy button). */
+.spinner{
+  width:16px; height:16px; flex:none; border-radius:50%;
+  border:2px solid currentColor; border-right-color:transparent; opacity:.85;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce){ .spinner{ animation-duration:2.4s; } }
+
+/* A code that worked: green, with the tick drawing in. */
+.discount--on{ display:flex; align-items:center; gap:10px; color:var(--ok); border:1px solid rgb(var(--ok-rgb) / .45); border-radius:10px; background:rgb(var(--ok-rgb) / .07); }
+.discount--on .state-mark{ width:24px; height:24px; }
+.discount--on > span{ flex:1; min-width:0; }
+
+/* The field marks arrive rather than appear: the tick or cross grows into the
+   box, the line under it slides down into place. */
+@media (prefers-reduced-motion: no-preference){
+  :is(.field, .newsletter__form, .restock__row, .discount__row) input:is(.is-valid, .is-error, [aria-invalid="true"]){
+    animation:field-mark .32s var(--ease-out) both;
+  }
+  .field__error, .field__ok, .form-msg.is-error, .form-msg.is-ok, .restock--done{ animation:note-in .26s var(--ease-out) both; }
+  .discount--on{ animation:note-in .3s var(--ease-out) both; }
+}
+@keyframes field-mark{ from{ background-size:4px 4px; } 60%{ background-size:21px 21px; } to{ background-size:18px 18px; } }
+@keyframes note-in{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:none; } }

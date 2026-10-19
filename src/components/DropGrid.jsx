@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import StateMark from './StateMark.jsx';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useShop, useHome } from '../store/ShopContext.jsx';
@@ -161,7 +162,7 @@ export default function DropGrid() {
   const list = showAll ? inDrop : inDrop.filter(p => p.featured);
 
   const onViewAll = () => {
-    if (!showAll) toast(`Showing all ${inDrop.length} pieces`);
+    if (!showAll) toast({ tone: 'info', title: `Showing all ${inDrop.length} pieces` });
     setShowAll(v => !v);
   };
 
@@ -182,9 +183,13 @@ export default function DropGrid() {
       </div>
 
       {catalogueStatus === 'error' ? (
-        <div className="shop-error" role="alert">
-          <p>The collection could not be loaded.</p>
-          <button className="btn btn--ghost" onClick={loadCatalogue}>TRY AGAIN</button>
+        <div className="banner banner--bad" role="alert">
+          <StateMark tone="bad" />
+          <div className="banner__text">
+            <p className="banner__title">The collection could not be loaded</p>
+            <p className="banner__body">There’s a problem with the connection. Please try again.</p>
+          </div>
+          <button className="btn btn--danger banner__action" onClick={loadCatalogue}>TRY AGAIN</button>
         </div>
       ) : catalogueStatus !== 'ready' ? (
         <div className="grid" aria-busy="true" aria-label="Loading the collection">

@@ -66,7 +66,7 @@ export function JoinForm({ id, onJoined }) {
           }}
         />
         <button type="submit" className="btn btn--solid btn--join" disabled={busy}>
-          {busy ? 'JOINING…' : 'JOIN'}
+          {busy && <span className="spinner" aria-hidden="true" />}{busy ? 'JOINING…' : 'JOIN'}
         </button>
       </form>
 

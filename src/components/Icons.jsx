@@ -25,6 +25,10 @@ export const ArrowShort = ({ className }) => (
   <svg className={className} viewBox="0 0 16 10" aria-hidden="true"><path d="M0 5h14.5M10.5 1 14.5 5l-4 4" fill="none" stroke="currentColor" strokeWidth="1.6"/></svg>
 );
 
+export const Copy = () => (
+  <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.6" fill="none" stroke="currentColor" strokeWidth="1.3"/><path d="M3.5 10.5h-.3A1.2 1.2 0 0 1 2 9.3V3.2C2 2.5 2.5 2 3.2 2h6.1c.7 0 1.2.5 1.2 1.2v.3" fill="none" stroke="currentColor" strokeWidth="1.3"/></svg>
+);
+
 export const Close = () => (
   <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 1l14 14M15 1 1 15" stroke="currentColor" strokeWidth="1.3"/></svg>
 );

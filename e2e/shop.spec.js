@@ -148,7 +148,7 @@ test('the bag stops at what is left', async ({ page }) => {
   await plus.click();
   await plus.click();
   await expect(page.locator('.qty span')).toHaveText('2');
-  await expect(page.locator('.toast').last()).toContainText('Only 2 left');
+  await expect(page.locator('.toast').first()).toContainText('Only 2 left');
 });
 
 test('checkout stays closed until delivery is priced', async ({ page, shop }) => {

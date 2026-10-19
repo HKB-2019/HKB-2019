@@ -4,54 +4,81 @@ import { useShop } from '../store/ShopContext.jsx';
 import { Close } from './Icons.jsx';
 import StateMark from './StateMark.jsx';
 
-/* The owner's design for messages: a dark card with a ringed tick (it
- * worked) or cross (it did not), the piece's photo when there is one, a title
- * and a line, a close button, and a thin bar along the foot that runs down
- * the time it has left. Resting the pointer on one, or tabbing into it, holds
- * the clock; the bar holds with it. */
+/* The owner's message cards. One card in four tones (ok, bad, warn, info, or
+ * none for plain news): the ringed mark drawing itself in, the piece's photo
+ * when there is one, a title and a line, an optional action (Undo, View bag),
+ * the MASQ. stripe, a close button, and a bar along the foot running down the
+ * time it has left. They arrive from the top right (from the top on a phone),
+ * newest first; resting the pointer on one, or tabbing into it, holds its
+ * clock. A card with no time (`ms: null`, "You're offline") stays until the
+ * thing it is about is over. */
 
-function Toast({ t, onDone }) {
+const EASE = [0.23, 1, 0.32, 1];
+
+function Toast({ t, onDone, phone }) {
   const [held, setHeld] = useState(false);
   const left = useRef(t.ms);
   useEffect(() => {
-    if (held) return;
+    if (held || !t.ms) return;
     const from = Date.now();
     const timer = setTimeout(onDone, left.current);
     return () => { clearTimeout(timer); left.current -= Date.now() - from; };
-  }, [held, onDone]);
+  }, [held, onDone, t.ms]);
 
+  const action = t.action && (
+    <button type="button" className={`toast__action${t.img ? ' toast__action--under' : ''}`} onClick={() => { t.action.onClick(); onDone(); }}>
+      {t.action.label}
+    </button>
+  );
   const hold = () => setHeld(true);
   const go = () => setHeld(false);
+  const from = phone ? { y: -18 } : { x: 36 };
   return (
     <motion.div
-      className={`toast${t.tone ? ` toast--${t.tone}` : ''}${t.img ? ' toast--photo' : ''}${held ? ' is-held' : ''}`}
+      className={`toast${t.tone ? ` toast--${t.tone}` : ''}${held ? ' is-held' : ''}`}
       role={t.tone === 'bad' ? 'alert' : undefined}
       onPointerEnter={hold} onPointerLeave={go} onFocus={hold} onBlur={go}
       layout="position"
-      // In with a settle and no bounce; out quicker and smaller than in,
-      // so leaving never draws the eye.
-      initial={{ opacity: 0, y: 14, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1, transition: { type: 'spring', duration: 0.35, bounce: 0 } }}
-      exit={{ opacity: 0, y: 6, transition: { duration: 0.18, ease: [0.2, 0, 0, 1] } }}
+      // In: slides from its edge and settles, no bounce (300ms). Out: quicker
+      // and shorter, so leaving never draws the eye (200ms).
+      initial={{ opacity: 0, scale: 0.98, ...from }}
+      animate={{ opacity: 1, x: 0, y: 0, scale: 1, transition: { duration: 0.3, ease: EASE } }}
+      exit={{ opacity: 0, ...(phone ? { y: -10 } : { x: 24 }), transition: { duration: 0.2, ease: EASE } }}
     >
-      <StateMark tone={t.tone} />
+      <StateMark tone={t.tone} delay={0.08} />
       {t.img && <img className="toast__img" src={t.img} alt="" />}
       <div className="toast__text">
         <p className="toast__title">{t.title}</p>
         {t.body && <p className="toast__body">{t.body}</p>}
+        {/* With a photo as well there is no room beside the words: under them. */}
+        {t.action && t.img && action}
       </div>
+      {t.action && !t.img && action}
+      <span className="toast__stripe" aria-hidden="true"><i /><i /><i /></span>
       <button type="button" className="toast__close" aria-label="Close message" onClick={onDone}><Close /></button>
-      <span className="toast__time" style={{ animationDuration: `${t.ms}ms` }} aria-hidden="true" />
+      {t.ms ? <span className="toast__time" style={{ animationDuration: `${t.ms}ms` }} aria-hidden="true" /> : null}
     </motion.div>
   );
 }
 
+function usePhone() {
+  const [phone, setPhone] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches);
+  useEffect(() => {
+    const m = window.matchMedia('(max-width: 640px)');
+    const on = () => setPhone(m.matches);
+    m.addEventListener('change', on);
+    return () => m.removeEventListener('change', on);
+  }, []);
+  return phone;
+}
+
 export default function Toasts() {
   const { toasts, dismissToast } = useShop();
+  const phone = usePhone();
   return (
     <div className="toast-wrap" aria-live="polite" aria-atomic="false">
       <AnimatePresence initial={false}>
-        {toasts.map(t => <ToastSlot key={t.id} t={t} dismiss={dismissToast} />)}
+        {[...toasts].reverse().map(t => <ToastSlot key={t.id} t={t} dismiss={dismissToast} phone={phone} />)}
       </AnimatePresence>
     </div>
   );
@@ -59,8 +86,7 @@ export default function Toasts() {
 
 // Keeps `onDone` the same across renders, so a toast's clock is not restarted
 // every time another arrives.
-function ToastSlot({ t, dismiss }) {
+function ToastSlot({ t, dismiss, phone }) {
   const done = useRef(() => dismiss(t.id));
-  return <Toast t={t} onDone={done.current} />;
+  return <Toast t={t} onDone={done.current} phone={phone} />;
 }
-

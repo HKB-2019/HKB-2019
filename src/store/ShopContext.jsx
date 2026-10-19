@@ -92,16 +92,28 @@ export function ShopProvider({ children }) {
 
   /* ------------------------------------------------------------ toasts */
 
-  /* A toast is { title, body?, img?, tone? }: tone 'ok' (it worked), 'bad'
-   * (it did not) or none (news). A plain string is a title. Each stays for
-   * its own time, longer for a problem, and can be closed sooner (Toasts.jsx
-   * keeps the clock, and holds it while the pointer rests on one). */
+  /* A toast is { title, body?, img?, tone?, action?, ms?, key? }. tone: 'ok'
+   * (it worked), 'bad' (it did not), 'warn' (worth a look), 'info' (news), or
+   * none. action: { label, onClick }, a button on the card (Undo, View bag).
+   * ms: how long it stays, longer for a problem; null keeps it until it is
+   * dismissed. key: a new one with the same key replaces the old. A plain
+   * string is a title. At most three at once. */
   const toast = useCallback((message, tone) => {
     const t = typeof message === 'string' ? { title: message, tone } : message;
     const id = ++toastId.current;
-    setToasts(list => [...list.slice(-2), { id, ms: t.tone === 'bad' ? 6000 : 4200, ...t }]);
+    const ms = t.ms === null ? null : t.ms ?? (t.tone === 'bad' ? 6000 : t.action ? 6000 : 4500);
+    setToasts(list => [...list.filter(x => !t.key || x.key !== t.key).slice(-2), { ...t, id, ms }]);
   }, []);
   const dismissToast = useCallback((id) => setToasts(list => list.filter(x => x.id !== id)), []);
+
+  /* Offline: said once, and kept until the connection is back. */
+  useEffect(() => {
+    const off = () => toast({ key: 'net', tone: 'bad', title: 'You’re offline', body: 'Please check your internet connection and try again.', ms: null });
+    const on = () => toast({ key: 'net', tone: 'ok', title: 'Back online', body: 'You’re connected again.' });
+    window.addEventListener('offline', off);
+    window.addEventListener('online', on);
+    return () => { window.removeEventListener('offline', off); window.removeEventListener('online', on); };
+  }, [toast]);
 
   /* --------------------------------------------------------- catalogue */
 
@@ -153,7 +165,7 @@ export function ShopProvider({ children }) {
       next.push(updated);
     }
     if (changed) setCart(next);
-    notes.slice(0, 3).forEach(n => toast({ title: 'Your bag has been updated', body: n }));
+    notes.slice(0, 3).forEach(n => toast({ tone: 'warn', title: 'Your bag has been updated', body: n }));
   }, [status, products, cart, format, toast]);
 
   const productById = useCallback((id) => products.find(p => p.id === id), [products]);
@@ -164,7 +176,7 @@ export function ShopProvider({ children }) {
    * saying-so to the caller (the product page shows its own panel). */
   const addToCart = useCallback((product, size, colour = '', { quiet = false } = {}) => {
     const p = products.find(x => x.id === product.id) ?? product;
-    if (hasColours(p) && !colour) { toast({ tone: 'bad', title: 'Choose a colour first' }); return; }
+    if (hasColours(p) && !colour) { toast({ tone: 'warn', title: 'Choose a colour first' }); return; }
     const what = optionLabel(colour, size);
     const max = maxFor(p, size, colour);
     if (max === 0) { toast({ tone: 'bad', title: 'Sold out', body: `${p.name} (${what}) has sold out.`, img: photoFor(p, colour).img }); return; }
@@ -173,18 +185,18 @@ export function ShopProvider({ children }) {
     const existing = cart.find(i => i.key === key);
     if (existing && existing.qty >= max) {
       toast(max < MAX_PER_LINE
-        ? { tone: 'bad', title: `Only ${max} left in ${what}`, body: 'They are all in your bag already.' }
-        : { tone: 'bad', title: `Up to ${MAX_PER_LINE} per order` });
+        ? { tone: 'warn', title: `Only ${max} left in ${what}`, body: 'They are all in your bag already.' }
+        : { tone: 'warn', title: `Up to ${MAX_PER_LINE} per order` });
       return;
     }
     const { img } = photoFor(p, colour);
     setCart(items => existing
       ? items.map(i => i.key === key ? { ...i, qty: i.qty + 1 } : i)
       : [...items, { key, id: p.id, name: p.name, price: p.price, img, colour, size, qty: 1 }]);
-    if (!quiet) toast({ tone: 'ok', title: 'Added to bag', body: `${p.name} · ${what}`, img });
+    if (!quiet) toast({ tone: 'ok', title: 'Added to bag', body: `${p.name} · ${what}`, img, action: { label: 'View bag', onClick: () => setOverlay('cart') } });
     track('add_to_cart', { productId: p.id, size, valueKobo: p.priceKobo });
-    return { name: p.name, what, img };
-  }, [products, cart, toast]);
+    return { name: p.name, what, img, colour, size, price: format(p.price), qty: existing ? existing.qty + 1 : 1 };
+  }, [products, cart, toast, format]);
 
   const changeQty = useCallback((key, delta) => {
     const line = cart.find(i => i.key === key);
@@ -192,7 +204,7 @@ export function ShopProvider({ children }) {
     if (delta > 0) {
       const max = maxFor(products.find(p => p.id === line.id), line.size, line.colour ?? '');
       if (line.qty + delta > max) {
-        toast({ tone: 'bad', title: max === 0 ? 'Sold out' : max < MAX_PER_LINE ? `Only ${max} left` : `Up to ${MAX_PER_LINE} per order` });
+        toast(max === 0 ? { tone: 'bad', title: 'Sold out' } : { tone: 'warn', title: max < MAX_PER_LINE ? `Only ${max} left` : `Up to ${MAX_PER_LINE} per order` });
         return;
       }
     }
@@ -201,16 +213,30 @@ export function ShopProvider({ children }) {
       .filter(i => i.qty > 0));
   }, [cart, products, toast]);
 
+  /* Taken out at once, with Undo on the message to put it back where it was
+   * (rather than an "Are you sure?" before every removal). */
   const removeItem = useCallback((key) => {
+    const at = cart.findIndex(i => i.key === key);
+    if (at < 0) return;
+    const line = cart[at];
     setCart(items => items.filter(i => i.key !== key));
-    toast('Removed from your bag');
-  }, [toast]);
+    toast({
+      title: 'Removed from your bag', body: `${line.name} · ${optionLabel(line.colour ?? '', line.size)}`, img: line.img,
+      action: { label: 'Undo', onClick: () => setCart(items => items.some(i => i.key === key) ? items
+        : [...items.slice(0, at), line, ...items.slice(at)]) }
+    });
+  }, [cart, toast]);
 
   const toggleWish = useCallback((id) => {
     const on = wishlist.includes(id);
     setWishlist(list => on ? list.filter(w => w !== id) : [...list, id]);
-    toast(on ? 'Removed from saved' : { tone: 'ok', title: 'Saved to your list' });
-  }, [wishlist, toast]);
+    const p = products.find(x => x.id === id);
+    toast(on
+      ? { title: 'Removed from saved', body: p?.name, img: p?.img,
+          action: { label: 'Undo', onClick: () => setWishlist(list => list.includes(id) ? list : [...list, id]) } }
+      : { tone: 'ok', title: 'Saved to your list', body: p?.name, img: p?.img,
+          action: { label: 'View saved', onClick: () => setOverlay('saved') } });
+  }, [wishlist, products, toast]);
 
   /* Emptied once an order is confirmed paid — the bag has become an order,
      and leaving it in localStorage invites a second, accidental purchase. */
