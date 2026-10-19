@@ -52,7 +52,8 @@ const wholeNaira = (text) => text.replace(/[₦,\s]/g, '');
 
 function Delivery({ value, onSaved }) {
   const [rows, setRows] = useState(() => Object.fromEntries(ZONES.map(([z]) => [z, {
-    enabled: value[z].enabled, fee: feeText(value[z].feeKobo)
+    enabled: value[z].enabled, fee: feeText(value[z].feeKobo),
+    min: value[z].days ? String(value[z].days.min) : '', max: value[z].days ? String(value[z].days.max) : ''
   }])));
   // What the shop is using now: a switch changes it at once, so it is the
   // base each switch saves on top of (fees typed but not saved stay out).
@@ -73,7 +74,7 @@ function Delivery({ value, onSaved }) {
     }
     setRowsError(null);
     const feeKobo = /^\d+$/.test(raw) ? Number(raw) * 100 : saved.current[z].feeKobo;
-    save({ ...saved.current, [z]: { enabled: on, feeKobo } });
+    save({ ...saved.current, [z]: { ...saved.current[z], enabled: on, feeKobo } });
   };
 
   // Fees typed but not yet saved: said beside the button, so they are not lost by leaving.
@@ -91,7 +92,15 @@ function Delivery({ value, onSaved }) {
         document.getElementById(`fee-${z}`)?.focus();
         return;
       }
-      out[z] = { enabled: rows[z].enabled, feeKobo: /^\d+$/.test(raw) ? Number(raw) * 100 : null };
+      // Delivery time: both boxes or neither; one alone is a half-said promise.
+      const { min, max } = rows[z];
+      if ((min.trim() === '') !== (max.trim() === '') || (min.trim() && (!/^\d+$/.test(min.trim()) || !/^\d+$/.test(max.trim())))) {
+        setRowsError(`${label}: type the delivery time as two whole numbers of days, e.g. 1 to 3, or leave both empty.`);
+        document.getElementById(`days-${z}`)?.focus();
+        return;
+      }
+      out[z] = { enabled: rows[z].enabled, feeKobo: /^\d+$/.test(raw) ? Number(raw) * 100 : null,
+                 days: min.trim() ? { min: Number(min), max: Number(max) } : null };
     }
     setRowsError(null);
     save(out);
@@ -105,9 +114,11 @@ function Delivery({ value, onSaved }) {
         Switch on the places you deliver to and set a fee for each. The fee is added to the order
         before the customer pays. <strong>Checkout stays closed until at least one is switched on.</strong>
         {' '}A switch works the moment you flip it; a changed fee when you press SAVE DELIVERY.
+        {' '}<strong>Days</strong> is how long delivery takes after payment; the order page turns it into an
+        estimated date. Leave it empty to show no estimate.
       </p>
       <table className="admin-mini-table">
-        <thead><tr><th>Area</th><th>Deliver here</th><th>Fee (₦)</th></tr></thead>
+        <thead><tr><th>Area</th><th>Deliver here</th><th>Fee (₦)</th><th>Days</th></tr></thead>
         <tbody>
           {ZONES.map(([z, label]) => (
             <tr key={z}>
@@ -124,6 +135,15 @@ function Delivery({ value, onSaved }) {
                        aria-label={`Delivery fee for ${label}`} placeholder={rows[z].enabled ? '0' : '—'}
                        value={rows[z].fee}
                        onChange={(e) => setRows(r => ({ ...r, [z]: { ...r[z], fee: e.target.value } }))} />
+              </td>
+              <td className="admin-days">
+                <input id={`days-${z}`} className="admin-stock-input admin-days__input" inputMode="numeric" placeholder="—"
+                       aria-label={`Fewest days to deliver to ${label}`} value={rows[z].min}
+                       onChange={(e) => setRows(r => ({ ...r, [z]: { ...r[z], min: e.target.value } }))} />
+                <span aria-hidden="true">to</span>
+                <input className="admin-stock-input admin-days__input" inputMode="numeric" placeholder="—"
+                       aria-label={`Most days to deliver to ${label}`} value={rows[z].max}
+                       onChange={(e) => setRows(r => ({ ...r, [z]: { ...r[z], max: e.target.value } }))} />
               </td>
             </tr>
           ))}
@@ -216,6 +236,127 @@ function Links({ social, film, onSaved }) {
   );
 }
 
+/* ------------------------------------------------------- free delivery */
+
+function FreeDelivery({ value }) {
+  const [on, setOn] = useState(value.enabled);
+  const [over, setOver] = useState(value.overKobo ? String(value.overKobo / 100) : '');
+  const [state, save] = useSave('freeDelivery');
+  const [rowError, setRowError] = useState(null);
+  const submit = (e, enabled = on) => {
+    e?.preventDefault();
+    const raw = wholeNaira(over);
+    if (enabled && !/^\d+$/.test(raw)) { setRowError('Type the amount in whole naira, e.g. 50000.'); document.getElementById('free-over')?.focus(); return; }
+    setRowError(null);
+    save({ enabled, overKobo: /^\d+$/.test(raw) ? Number(raw) * 100 : null });
+  };
+  return (
+    <form className="admin-card" onSubmit={submit}>
+      <h3 className="admin-card__title">Free delivery</h3>
+      <p className="admin-help">
+        Delivery is free when the pieces in an order (after any discount) come to this much or more. The bag
+        shows customers how close they are, and says so when they reach it.
+      </p>
+      <div className="admin-row-form">
+        <label className="admin-toggle">
+          <input type="checkbox" checked={on} aria-label="Free delivery"
+                 onChange={(e) => { setOn(e.target.checked); submit(null, e.target.checked); }} />
+          <span className="admin-toggle__box" aria-hidden="true" /> Free delivery
+        </label>
+        <label className="admin-field">
+          <span>Over (₦)</span>
+          <input id="free-over" className="admin-stock-input admin-fee-input" inputMode="numeric" placeholder="50000"
+                 value={over} onChange={(e) => setOver(e.target.value)} />
+        </label>
+      </div>
+      <div className="admin-card__foot">
+        <button className="admin-action admin-action--primary">SAVE FREE DELIVERY</button>
+        <Note state={rowError ?? state} />
+      </div>
+    </form>
+  );
+}
+
+/* ------------------------------------------------------- announcement */
+
+const TONES = [['info', 'News (blue)'], ['ok', 'Good news (green)'], ['warn', 'Heads up (amber)']];
+
+function Announcement({ value }) {
+  const [a, setA] = useState(value);
+  const [state, save] = useSave('announcement', (clean) => setA(clean));
+  const set = (k) => (e) => setA(x => ({ ...x, [k]: e.target.value }));
+  return (
+    <form className="admin-card" onSubmit={(e) => { e.preventDefault(); save(a); }}>
+      <h3 className="admin-card__title">Announcement</h3>
+      <p className="admin-help">A line across the top of every shop page, e.g. “Free shipping this week”. Customers can close it.</p>
+      <label className="admin-toggle">
+        <input type="checkbox" checked={a.on} aria-label="Show the announcement"
+               onChange={(e) => { const next = { ...a, on: e.target.checked }; setA(next); save(next); }} />
+        <span className="admin-toggle__box" aria-hidden="true" /> Show it on the shop
+      </label>
+      <label className="admin-field admin-field--wide">
+        <span>Title <em>up to 60 characters</em></span>
+        <input maxLength={60} value={a.title} onChange={set('title')} placeholder="Free shipping this week" />
+      </label>
+      <label className="admin-field admin-field--wide">
+        <span>Line under it <em>optional, up to 140</em></span>
+        <input maxLength={140} value={a.text} onChange={set('text')} placeholder="Enjoy free shipping on all orders over ₦50,000." />
+      </label>
+      <label className="admin-field">
+        <span>Colour</span>
+        <select value={a.tone} onChange={set('tone')}>{TONES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+      </label>
+      <div className="admin-card__foot">
+        <button className="admin-action admin-action--primary">SAVE ANNOUNCEMENT</button>
+        <Note state={state} />
+      </div>
+    </form>
+  );
+}
+
+/* --------------------------------------------------------- maintenance */
+
+function Maintenance({ value }) {
+  const [m, setM] = useState({ ...value, minutes: value.minutes ? String(value.minutes) : '' });
+  const [state, save] = useSave('maintenance');
+  const [rowError, setRowError] = useState(null);
+  const send = (next) => {
+    const raw = String(next.minutes).trim();
+    if (raw && !/^\d+$/.test(raw)) { setRowError('Expected time: whole minutes, e.g. 30, or leave it empty.'); return; }
+    setRowError(null);
+    save({ on: next.on, message: next.message, minutes: raw ? Number(raw) : null });
+  };
+  return (
+    <form className="admin-card" onSubmit={(e) => { e.preventDefault(); send(m); }}>
+      <h3 className="admin-card__title">Maintenance</h3>
+      <p className="admin-help">
+        Closes the shop while you work on it: customers see “We’ll be back soon”, and no payments are taken.
+        <strong> You still see the shop while you are signed in here.</strong>
+      </p>
+      <label className="admin-toggle">
+        <input type="checkbox" checked={m.on} aria-label="Close the shop for maintenance"
+               onChange={(e) => { const next = { ...m, on: e.target.checked }; setM(next); send(next); }} />
+        <span className="admin-toggle__box" aria-hidden="true" /> Close the shop for maintenance
+      </label>
+      <label className="admin-field admin-field--wide">
+        <span>Message <em>optional</em></span>
+        <input maxLength={200} value={m.message} onChange={(e) => setM(x => ({ ...x, message: e.target.value }))}
+               placeholder="We’re doing some upgrades to bring you a better shopping experience." />
+      </label>
+      <label className="admin-field">
+        <span>Back in about <em>minutes, optional</em></span>
+        <input className="admin-stock-input admin-fee-input" inputMode="numeric" value={m.minutes}
+               onChange={(e) => setM(x => ({ ...x, minutes: e.target.value }))} placeholder="30" />
+      </label>
+      {m.on && <p className="admin-alert admin-alert--inline">The shop is closed to customers.</p>}
+      <div className="admin-card__foot">
+        <button className="admin-action admin-action--primary">SAVE MAINTENANCE</button>
+        <Note state={rowError ?? state} />
+      </div>
+    </form>
+  );
+}
+
 /* ------------------------------------------------------------------ tab */
 
 /* --------------------------------------------------------- price guide */
@@ -283,6 +424,9 @@ export default function SettingsTab({ onSummaryChange }) {
     <section className="admin-section admin-settings">
       <div className="admin-section__head"><h2 className="admin-h2">Settings</h2></div>
       <Delivery value={settings.delivery} onSaved={onSummaryChange} />
+      <FreeDelivery value={settings.freeDelivery} />
+      <Announcement value={settings.announcement} />
+      <Maintenance value={settings.maintenance} />
       <Pages value={settings.pages} />
       <Links social={settings.social} film={settings.film} />
       <Rates value={settings.rates} />

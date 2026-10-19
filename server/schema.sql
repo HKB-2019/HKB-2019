@@ -187,6 +187,9 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS refunded_at   TIMESTAMPTZ;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS session_id    TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS channel       TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS campaign      TEXT;
+-- How it was paid, as the customer would recognise it ("Visa •••• 4242",
+-- "Bank transfer", "Gift card"): the card's brand and last four only.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method TEXT;
 
 -- `refunded` came later: the owner returned the money from Paystack's
 -- dashboard and marked it here. Older databases have the status check

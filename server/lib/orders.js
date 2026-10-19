@@ -48,7 +48,28 @@ export async function releaseStock(reference, status) {
  * `refund_due`: the money is real, the piece is gone, and the one thing that
  * must not happen is a silent charge with nothing behind it.
  */
-async function confirmPayment(orderId, paystackId) {
+/**
+ * How a payment was made, as the customer would recognise it: "Visa •••• 4242",
+ * "Bank transfer", "USSD". Paystack's own account of it, never the browser's;
+ * only a card's brand and last four digits, which receipts show anyway.
+ */
+export function describePayment(data) {
+  const a = data?.authorization ?? {};
+  const channel = String(data?.channel ?? a.channel ?? '').toLowerCase();
+  const clean = (v) => String(v ?? '').replace(/[^\p{L}\p{N} .&'-]/gu, '').trim().slice(0, 30);
+  if (channel === 'card') {
+    const brand = clean(a.card_type || a.brand || 'Card');
+    const nice = brand ? brand[0].toUpperCase() + brand.slice(1).toLowerCase() : 'Card';
+    return /^\d{4}$/.test(String(a.last4 ?? '')) ? `${nice} •••• ${a.last4}` : nice;
+  }
+  const names = { bank: 'Bank account', bank_transfer: 'Bank transfer', ussd: 'USSD', qr: 'QR code',
+                  mobile_money: 'Mobile money', eft: 'EFT', apple_pay: 'Apple Pay', opay: 'OPay' };
+  const name = names[channel] ?? (channel ? clean(channel.replace(/_/g, ' ')) : '');
+  const bank = clean(a.bank);
+  return name ? (bank && channel !== 'card' ? `${name} · ${bank}` : name) : null;
+}
+
+async function confirmPayment(orderId, paystackId, method = null) {
   return transaction(async (tx) => {
     // Locked, so the webhook and the sweeper cannot both do this at once.
     const order = await tx.one('SELECT id, status, discount_code, gift_card_id, gift_kobo FROM orders WHERE id = $1 FOR UPDATE', [orderId]);
@@ -73,8 +94,8 @@ async function confirmPayment(orderId, paystackId) {
       if (!retaken) {
         await tx.query('ROLLBACK TO SAVEPOINT retake');
         await tx.query(
-          `UPDATE orders SET status = 'refund_due', paystack_id = $1, paid_at = now() WHERE id = $2`,
-          [paystackId, orderId]);
+          `UPDATE orders SET status = 'refund_due', paystack_id = $1, paid_at = now(), payment_method = $3 WHERE id = $2`,
+          [paystackId, orderId, method]);
         console.error(`[orders] order ${orderId} PAID AFTER ITS STOCK WAS SOLD — refund due`);
         return 'refund_due';
       }
@@ -83,8 +104,8 @@ async function confirmPayment(orderId, paystackId) {
     }
 
     await tx.query(
-      `UPDATE orders SET status = 'paid', paystack_id = $1, paid_at = now() WHERE id = $2`,
-      [paystackId, orderId]);
+      `UPDATE orders SET status = 'paid', paystack_id = $1, paid_at = now(), payment_method = $3 WHERE id = $2`,
+      [paystackId, orderId, method]);
     return 'paid';
   });
 }
@@ -131,7 +152,7 @@ export async function reconcile(reference, { release = false, giveUp = false, on
         `order is ${due} kobo. Not marking paid.`);
       return order.status;
     }
-    return confirmPayment(order.id, String(data.id));
+    return confirmPayment(order.id, String(data.id), describePayment(data));
   }
 
   if (release && order.status === 'pending' &&

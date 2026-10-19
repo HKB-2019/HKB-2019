@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { one } from '../db.js';
 import { loadProducts } from '../lib/catalogue.js';
 import { getSettings, getHomeImages, openZones, NIGERIAN_STATES } from '../lib/settings.js';
+import { currentSession } from '../lib/auth.js';
 
 export const productsRouter = Router();
 
@@ -16,8 +17,9 @@ productsRouter.get('/products', async (_req, res) => {
 /* GET /api/site — everything else the public pages need from the admin:
  * the home page's words and photos, footer pages, social links, the film,
  * and where delivery is open. */
-productsRouter.get('/site', async (_req, res) => {
-  const { pages, social, film, home, rates, heroSwitch } = await getSettings(['pages', 'social', 'film', 'home', 'rates', 'heroSwitch']);
+productsRouter.get('/site', async (req, res) => {
+  const { pages, social, film, home, rates, heroSwitch, freeDelivery, maintenance, announcement } =
+    await getSettings(['pages', 'social', 'film', 'home', 'rates', 'heroSwitch', 'freeDelivery', 'maintenance', 'announcement']);
   // The next drop: the soonest time a piece set to go on sale has not reached.
   const next = await one(`
     SELECT MIN(available_at) AS at, COUNT(*) AS pieces FROM products
@@ -41,6 +43,14 @@ productsRouter.get('/site', async (_req, res) => {
     delivery: await openZones(),
     rates,
     nextDrop: next?.at ? { at: new Date(next.at).toISOString(), pieces: next.pieces } : null,
+    // Free delivery from this much in pieces (after any discount), when on.
+    freeDelivery: freeDelivery.enabled ? { overKobo: freeDelivery.overKobo } : null,
+    // Closed for maintenance: the shop shows "We'll be back soon". The owner,
+    // signed in to the admin, still sees the shop (and a note saying so).
+    maintenance: maintenance.on
+      ? { message: maintenance.message, minutes: maintenance.minutes, ownerView: Boolean(await currentSession(req)) }
+      : null,
+    announcement: announcement.on ? { tone: announcement.tone, title: announcement.title, text: announcement.text } : null,
     states: NIGERIAN_STATES
   });
 });

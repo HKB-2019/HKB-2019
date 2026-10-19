@@ -136,7 +136,10 @@ export function stubPaystack(one) {
         ?? await one('SELECT amount_kobo AS due FROM gift_card_topups WHERE reference = $1', [ref]);
       return Response.json({ status: true, data: {
         id: 99887766, reference: ref, currency: 'NGN',
-        status: paystack.verify.status, amount: paystack.verify.amount ?? order?.due ?? 0 } });
+        status: paystack.verify.status, amount: paystack.verify.amount ?? order?.due ?? 0,
+        channel: paystack.verify.channel ?? 'card',
+        gateway_response: paystack.verify.gateway ?? (paystack.verify.status === 'success' ? 'Approved' : 'Declined'),
+        authorization: paystack.verify.authorization ?? { card_type: 'visa ', last4: '4081', bank: 'TEST BANK', channel: 'card' } } });
     }
     return Response.json({});
   };

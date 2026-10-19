@@ -29,7 +29,18 @@ export const ZONE_LABELS = {
 /* Every zone starts switched off, with no fee. Delivery prices are the owner's
  * decision, and a default of ₦0 would quietly give delivery away — so checkout
  * stays closed until at least one zone has been set. */
-const DELIVERY_DEFAULT = Object.fromEntries(ZONES.map(z => [z, { enabled: false, feeKobo: null }]));
+const DELIVERY_DEFAULT = Object.fromEntries(ZONES.map(z => [z, { enabled: false, feeKobo: null, days: null }]));
+
+/* How long delivery takes to a zone, in days from payment: a range the
+ * order page turns into an estimated date. Optional; none means no estimate. */
+function validDays(days, zone) {
+  if (days === null || days === undefined) return null;
+  const { min, max } = days;
+  if (!Number.isInteger(min) || !Number.isInteger(max) || min < 0 || max > 60 || min > max) {
+    throw bad(`${ZONE_LABELS[zone]}: delivery time is whole days, from 0 to 60, the first no more than the second.`);
+  }
+  return { min, max };
+}
 
 function validDelivery(value) {
   if (!value || typeof value !== 'object') throw bad('Delivery settings are missing.');
@@ -45,7 +56,7 @@ function validDelivery(value) {
     } else if (fee !== null && fee !== undefined && (!Number.isInteger(fee) || fee < 0 || fee > MAX_FEE_KOBO)) {
       throw bad(`${ZONE_LABELS[zone]}: that fee is not a whole number of naira.`);
     }
-    out[zone] = { enabled, feeKobo: Number.isInteger(fee) ? fee : null };
+    out[zone] = { enabled, feeKobo: Number.isInteger(fee) ? fee : null, days: validDays(z.days, zone) };
   }
   return out;
 }
@@ -212,6 +223,49 @@ function validRates(value) {
   return out;
 }
 
+/* ------------------------------------------------- free delivery, notices */
+
+/* Free delivery on an order whose pieces (after any discount) come to this
+ * much or more. Off by default: giving delivery away is the owner's call. */
+const FREE_DELIVERY_DEFAULT = { enabled: false, overKobo: null };
+function validFreeDelivery(value) {
+  if (!value || typeof value !== 'object') throw bad('Free delivery settings are missing.');
+  const enabled = value.enabled === true;
+  const over = value.overKobo;
+  if (enabled && (!Number.isInteger(over) || over < 100_00 || over > 1_000_000_00)) {
+    throw bad('Free delivery: set an amount from ₦100 to ₦1,000,000.');
+  }
+  return { enabled, overKobo: Number.isInteger(over) && over >= 0 && over <= 1_000_000_00 ? over : null };
+}
+
+/* Maintenance: the shop shows "We'll be back soon" and takes no payments. */
+const MAINTENANCE_DEFAULT = { on: false, message: '', minutes: null };
+function validMaintenance(value) {
+  if (!value || typeof value !== 'object') throw bad('Maintenance settings are missing.');
+  const message = String(value.message ?? '').trim();
+  if (message.length > 200) throw bad('Maintenance: the message is 200 characters at most.');
+  const m = value.minutes;
+  if (m !== null && m !== undefined && (!Number.isInteger(m) || m < 1 || m > 7 * 24 * 60)) {
+    throw bad('Maintenance: the expected time is whole minutes, up to a week.');
+  }
+  return { on: value.on === true, message, minutes: Number.isInteger(m) ? m : null };
+}
+
+/* A line across the top of the shop: news, an offer, a warning. */
+const ANNOUNCE_TONES = ['info', 'ok', 'warn'];
+const ANNOUNCEMENT_DEFAULT = { on: false, tone: 'info', title: '', text: '' };
+function validAnnouncement(value) {
+  if (!value || typeof value !== 'object') throw bad('Announcement settings are missing.');
+  const tone = ANNOUNCE_TONES.includes(value.tone) ? value.tone : 'info';
+  const title = String(value.title ?? '').trim();
+  const text = String(value.text ?? '').trim();
+  if (title.length > 60) throw bad('Announcement: the title is 60 characters at most.');
+  if (text.length > 140) throw bad('Announcement: the line under it is 140 characters at most.');
+  const on = value.on === true;
+  if (on && !title) throw bad('Announcement: give it a title before switching it on.');
+  return { on, tone, title, text };
+}
+
 /* -------------------------------------------------------------- store */
 
 const SPEC = {
@@ -221,7 +275,10 @@ const SPEC = {
   film:     { fallback: { url: '', kind: null, youtubeId: null }, validate: validFilm },
   home:     { fallback: HOME_DEFAULT,      validate: validHome },
   rates:    { fallback: DEFAULT_RATES,     validate: validRates },
-  heroSwitch: { fallback: HERO_SWITCH_DEFAULT, validate: validHeroSwitch }
+  heroSwitch: { fallback: HERO_SWITCH_DEFAULT, validate: validHeroSwitch },
+  freeDelivery: { fallback: FREE_DELIVERY_DEFAULT, validate: validFreeDelivery },
+  maintenance:  { fallback: MAINTENANCE_DEFAULT,  validate: validMaintenance },
+  announcement: { fallback: ANNOUNCEMENT_DEFAULT, validate: validAnnouncement }
 };
 
 export const SETTING_KEYS = Object.keys(SPEC);
@@ -263,7 +320,24 @@ export async function setSetting(key, value) {
 /** The zones open for delivery, with their fees. Empty means checkout is closed. */
 export async function openZones() {
   const d = await getSetting('delivery');
-  return ZONES.filter(z => d[z].enabled).map(z => ({ zone: z, label: ZONE_LABELS[z], feeKobo: d[z].feeKobo }));
+  return ZONES.filter(z => d[z].enabled).map(z => ({ zone: z, label: ZONE_LABELS[z], feeKobo: d[z].feeKobo, days: d[z].days ?? null }));
+}
+
+/**
+ * The delivery fee for an order whose pieces, after any discount, come to
+ * `itemsKobo`: the zone's fee, or nothing once free delivery applies.
+ */
+export function deliveryFee(zone, itemsKobo, freeDelivery) {
+  if (freeDelivery?.enabled && Number.isInteger(freeDelivery.overKobo) && itemsKobo >= freeDelivery.overKobo) return 0;
+  return zone.feeKobo;
+}
+
+/** The answer to a payment asked for while the shop is closed for maintenance. */
+export async function closedForMaintenance(res) {
+  const m = await getSetting('maintenance');
+  if (!m.on) return false;
+  res.status(503).json({ error: 'We’re doing some upgrades, so payments are paused for now. Please try again soon.', code: 'maintenance' });
+  return true;
 }
 
 /**

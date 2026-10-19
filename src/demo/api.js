@@ -86,8 +86,8 @@ function sampleStore() {
     ],
     settings: {
       delivery: {
-        lagos: { enabled: true, feeKobo: 250000 }, abuja: { enabled: true, feeKobo: 350000 },
-        nigeria: { enabled: true, feeKobo: 500000 }, international: { enabled: false, feeKobo: null }
+        lagos: { enabled: true, feeKobo: 250000, days: { min: 1, max: 2 } }, abuja: { enabled: true, feeKobo: 350000, days: { min: 2, max: 3 } },
+        nigeria: { enabled: true, feeKobo: 500000, days: { min: 3, max: 5 } }, international: { enabled: false, feeKobo: null, days: null }
       },
       pages: { ...PAGES_DEFAULT },
       social: { instagram: '', tiktok: '', x: '' },
@@ -239,12 +239,29 @@ export const getSite = () => settle({
   nextDrop: (() => {
     const next = store.products.filter(p => !p.hidden && waiting(p)).map(p => p.availableAt).sort()[0];
     return next ? { at: next, pieces: store.products.filter(p => !p.hidden && p.availableAt === next).length } : null;
-  })()
+  })(),
+  freeDelivery: setting('freeDelivery').enabled ? { overKobo: setting('freeDelivery').overKobo } : null,
+  maintenance: setting('maintenance').on
+    ? { message: setting('maintenance').message, minutes: setting('maintenance').minutes, ownerView: signedIn } : null,
+  announcement: setting('announcement').on
+    ? { tone: setting('announcement').tone, title: setting('announcement').title, text: setting('announcement').text } : null
 }, 120);
+
+/* Settings added after a preview's sample data was made: their defaults. */
+const SETTING_DEFAULTS = {
+  freeDelivery: { enabled: false, overKobo: null },
+  maintenance: { on: false, message: '', minutes: null },
+  announcement: { on: false, tone: 'info', title: '', text: '' }
+};
+const setting = (key) => store.settings[key] ?? structuredClone(SETTING_DEFAULTS[key]);
+const feeFor = (zone, itemsKobo) => {
+  const f = setting('freeDelivery');
+  return f.enabled && itemsKobo >= f.overKobo ? 0 : zone.feeKobo;
+};
 
 function openZones() {
   return ZONES.filter(z => store.settings.delivery[z].enabled)
-    .map(z => ({ zone: z, label: ZONE_LABELS[z], feeKobo: store.settings.delivery[z].feeKobo }));
+    .map(z => ({ zone: z, label: ZONE_LABELS[z], feeKobo: store.settings.delivery[z].feeKobo, days: store.settings.delivery[z].days ?? null }));
 }
 
 /* ----------------------------------------------------------- checkout */
@@ -302,6 +319,7 @@ export function askForRestock(productId, size, email, colour = '') {
 }
 
 export async function startCheckout({ email, name, phone, address, newsletter }, items, discountCode, _session, giftCode) {
+  if (setting('maintenance').on) return fail('We’re doing some upgrades, so payments are paused for now. Please try again soon.', 503);
   const zone = openZones().find(z => z.zone === zoneFor(address));
   if (!zone) return fail('Sorry — we don’t deliver there yet.');
   // As the server: a postcode only abroad, tidied; none kept for Nigeria.
@@ -332,14 +350,15 @@ export async function startCheckout({ email, name, phone, address, newsletter },
   if (discount) discount.c.uses += 1;
   const reference = 'masq-' + hex(24);
   const itemsKobo = lines.reduce((n, [, l]) => n + l.unitPriceKobo * l.qty, 0);
-  const totalKobo = itemsKobo - (discount?.result.discountKobo ?? 0) + zone.feeKobo;
+  const shippingKobo = feeFor(zone, itemsKobo - (discount?.result.discountKobo ?? 0));
+  const totalKobo = itemsKobo - (discount?.result.discountKobo ?? 0) + shippingKobo;
   const giftKobo = card ? Math.min(card.balanceKobo, totalKobo) : 0;
   const paidInFull = giftKobo > 0 && giftKobo === totalKobo;
   if (card) { card.balanceKobo -= giftKobo; card.uses.push({ orderReference: reference, amountKobo: -giftKobo, kind: 'spend', at: new Date().toISOString() }); }
   store.orders.unshift({
     reference, email: email.trim().toLowerCase(), name, phone, address, zone: zone.zone, status: paidInFull ? 'paid' : 'pending',
-    fulfilledAt: null, items: lines.map(([, l]) => l), shippingKobo: zone.feeKobo, createdAt: new Date().toISOString(),
-    paidAt: paidInFull ? new Date().toISOString() : null,
+    fulfilledAt: null, items: lines.map(([, l]) => l), shippingKobo, createdAt: new Date().toISOString(),
+    paidAt: paidInFull ? new Date().toISOString() : null, paymentMethod: paidInFull ? 'Gift card' : null,
     discountCode: discount?.result.code ?? null, discountKobo: discount?.result.discountKobo ?? 0,
     giftCode: card?.code ?? null, giftKobo
   });
@@ -350,8 +369,10 @@ export async function startCheckout({ email, name, phone, address, newsletter },
   return settle({ reference, authorizationUrl: `#/pay?reference=${reference}` }, 500);
 }
 
-/** The pretend payment page's two buttons. */
-export function finishPayment(reference, paid) {
+/** The pretend payment page's buttons: 'card' or 'transfer' (paid that way),
+ *  'declined' (the bank said no), or false (cancelled). */
+export function finishPayment(reference, outcome) {
+  const paid = outcome === 'card' || outcome === 'transfer' || outcome === true;
   const t = topups().find(x => x.reference === reference);
   if (t) {
     if (t.status !== 'pending') return;
@@ -376,9 +397,13 @@ export function finishPayment(reference, paid) {
   }
   const o = store.orders.find(x => x.reference === reference);
   if (!o || o.status !== 'pending') return;
-  if (paid) { o.status = 'paid'; o.paidAt = new Date().toISOString(); }
-  else {
-    o.status = 'abandoned';
+  if (paid) {
+    o.status = 'paid'; o.paidAt = new Date().toISOString();
+    const how = outcome === 'transfer' ? 'Bank transfer · Wema Bank' : 'Visa •••• 4081';
+    o.paymentMethod = o.giftKobo ? `${how} + gift card` : how;
+  } else {
+    o.status = outcome === 'declined' ? 'failed' : 'abandoned';
+    o.failureReason = outcome === 'declined' ? 'Insufficient Funds' : null;
     for (const l of o.items) {
       const v = store.products.find(p => p.name === l.name)?.sizes.find(s => s.colour === (l.colour ?? '') && s.size === l.size);
       if (v) v.stock += l.qty;
@@ -418,7 +443,16 @@ export function getOrder(reference) {
     courier: o.status === 'paid' && o.fulfilledAt ? o.courier ?? null : null,
     tracking: o.status === 'paid' && o.fulfilledAt ? o.tracking ?? null : null,
     refundedAt: o.refundedAt ?? null,
-    paidAt: o.paidAt, createdAt: o.createdAt, items: o.items
+    paidAt: o.paidAt, createdAt: o.createdAt, items: o.items,
+    paymentMethod: ['paid', 'refunded', 'refund_due'].includes(o.status) ? o.paymentMethod ?? 'Visa •••• 4081' : null,
+    failureReason: o.status === 'failed' ? o.failureReason ?? null : null,
+    itemCount: o.items.reduce((n, i) => n + i.qty, 0),
+    deliveryEstimate: (() => {
+      const days = o.status === 'paid' && !o.fulfilledAt && o.paidAt && store.settings.delivery[o.zone]?.days;
+      if (!days) return null;
+      const day = (n) => new Date(new Date(o.paidAt).getTime() + n * 86_400_000).toISOString().slice(0, 10);
+      return { from: day(days.min), to: day(days.max) };
+    })()
   });
 }
 
@@ -780,7 +814,7 @@ export const adminRemoveHomeImage = (slot) =>
 
 /* --------------------------------------------- admin: settings, list */
 
-export const adminSettings = () => settle({ heroSwitch: { every: 8 }, ...store.settings, home: withHomeDefaults(store.settings.home) });
+export const adminSettings = () => settle({ heroSwitch: { every: 8 }, ...structuredClone(SETTING_DEFAULTS), ...store.settings, home: withHomeDefaults(store.settings.home) });
 
 export const adminSaveSetting = (key, value) => attempt(() => {
   let clean = value;
@@ -790,7 +824,27 @@ export const adminSaveSetting = (key, value) => attempt(() => {
       if (v.enabled && !(Number.isInteger(v.feeKobo) && v.feeKobo >= 0 && v.feeKobo <= 10_000_000)) {
         throw new Error(`${ZONE_LABELS[z]}: set a delivery fee between ₦0 and ₦100,000.`);
       }
+      const d = v.days;
+      if (d && !(Number.isInteger(d.min) && Number.isInteger(d.max) && d.min >= 0 && d.max <= 60 && d.min <= d.max)) {
+        throw new Error(`${ZONE_LABELS[z]}: delivery time is whole days, from 0 to 60, the first no more than the second.`);
+      }
     }
+  } else if (key === 'freeDelivery') {
+    const over = value.overKobo;
+    if (value.enabled && !(Number.isInteger(over) && over >= 100_00 && over <= 1_000_000_00)) throw new Error('Free delivery: set an amount from ₦100 to ₦1,000,000.');
+    clean = { enabled: value.enabled === true, overKobo: Number.isInteger(over) ? over : null };
+  } else if (key === 'maintenance') {
+    const message = String(value.message ?? '').trim();
+    if (message.length > 200) throw new Error('Maintenance: the message is 200 characters at most.');
+    const m = value.minutes;
+    if (m !== null && m !== undefined && !(Number.isInteger(m) && m >= 1 && m <= 10080)) throw new Error('Maintenance: the expected time is whole minutes, up to a week.');
+    clean = { on: value.on === true, message, minutes: Number.isInteger(m) ? m : null };
+  } else if (key === 'announcement') {
+    const title = String(value.title ?? '').trim(), text = String(value.text ?? '').trim();
+    if (title.length > 60) throw new Error('Announcement: the title is 60 characters at most.');
+    if (text.length > 140) throw new Error('Announcement: the line under it is 140 characters at most.');
+    if (value.on && !title) throw new Error('Announcement: give it a title before switching it on.');
+    clean = { on: value.on === true, tone: ['info', 'ok', 'warn'].includes(value.tone) ? value.tone : 'info', title, text };
   } else if (key === 'pages') {
     clean = Object.fromEntries(PAGES.map(k => [k, tidy(value[k] ?? PAGES_DEFAULT[k])]));
     const empty = PAGES.find(k => !clean[k]);

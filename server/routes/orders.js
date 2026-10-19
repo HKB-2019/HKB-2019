@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { one, query } from '../db.js';
 import { reconcile } from '../lib/orders.js';
 import { paystackConfigured } from '../lib/paystack.js';
+import { getSetting } from '../lib/settings.js';
 
 export const ordersRouter = Router();
 
@@ -18,7 +19,8 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
 
   const load = () => one(`
     SELECT id, reference, email, status, subtotal_kobo, shipping_kobo, discount_code, discount_kobo, gift_kobo,
-           currency, address, paid_at, fulfilled_at, courier, tracking, refunded_at, created_at
+           currency, address, paid_at, fulfilled_at, courier, tracking, refunded_at, created_at,
+           payment_method, delivery_zone
       FROM orders WHERE reference = $1
   `, [reference]);
 
@@ -30,9 +32,10 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
   // tell someone who cancelled on Paystack that nothing was taken, instead of
   // "still confirming" about a payment that is not coming.
   let paystackStatus = null;
+  let gatewaySaid = null;
 
   if (['pending', 'abandoned', 'failed'].includes(order.status) && paystackConfigured()) {
-    const status = await reconcile(reference, { onVerify: (d) => { paystackStatus = d.status; } });
+    const status = await reconcile(reference, { onVerify: (d) => { paystackStatus = d.status; gatewaySaid = d.gateway_response; } });
     // ↑ never releases stock from here
     if (status !== order.status) order = await load();
   }
@@ -45,6 +48,18 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
   // customer to recognise their order and no more: part of the email, the
   // town it is going to, never the phone number or the street.
   const addr = order.address ?? null;
+  const notPaid = ['failed', 'abandoned'].includes(order.status) || ['abandoned', 'failed'].includes(paystackStatus);
+  // When to expect it: the zone's delivery time from the day it was paid,
+  // while it is paid and not yet sent.
+  let deliveryEstimate = null;
+  if (order.status === 'paid' && !order.fulfilled_at && order.paid_at && order.delivery_zone) {
+    const days = (await getSetting('delivery'))[order.delivery_zone]?.days;
+    if (days) {
+      const day = (n) => new Date(new Date(order.paid_at).getTime() + n * 86_400_000).toISOString().slice(0, 10);
+      deliveryEstimate = { from: day(days.min), to: day(days.max) };
+    }
+  }
+  const card = order.payment_method;
   res.set('Cache-Control', 'no-store');
   res.json({
     reference: order.reference,
@@ -71,6 +86,13 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
     currency: order.currency,
     paidAt: order.paid_at,
     createdAt: order.created_at,
+    // How it was paid, once it was: "Visa •••• 4242", "Bank transfer", "Gift card".
+    paymentMethod: card && order.gift_kobo > 0 && card !== 'Gift card' ? `${card} + gift card` : card,
+    // Why it did not go through, in the bank's words ("Insufficient Funds"), when it did not.
+    failureReason: notPaid && gatewaySaid && !/^approved|successful/i.test(gatewaySaid)
+      ? String(gatewaySaid).replace(/[^\p{L}\p{N} .,'-]/gu, '').slice(0, 80) : null,
+    deliveryEstimate,
+    itemCount: items.reduce((n, i) => n + i.qty, 0),
     items: items.map(i => ({
       name: i.name, colour: i.colour || null, size: i.size, qty: i.qty, unitPriceKobo: i.unit_price_kobo
     }))

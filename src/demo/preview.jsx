@@ -31,10 +31,12 @@ function PretendPayment() {
           Here nothing is charged: choose what happens.
         </p>
         {due && (
-          <>
-            <button className="btn btn--solid btn--block" onClick={() => done(true)}>PAY (PRETEND)</button>
-            <button className="btn btn--ghost btn--block" style={{ marginTop: 10 }} onClick={() => done(false)}>CANCEL PAYMENT</button>
-          </>
+          <div className="pretend-pay">
+            <button className="btn btn--solid btn--block" onClick={() => done('card')}>PAY BY CARD (PRETEND)</button>
+            <button className="btn btn--ghost btn--block" onClick={() => done('transfer')}>PAY BY BANK TRANSFER (PRETEND)</button>
+            <button className="btn btn--ghost btn--block" onClick={() => done('declined')}>CARD DECLINED (PRETEND)</button>
+            <button className="btn btn--ghost btn--block" onClick={() => done(false)}>CANCEL PAYMENT</button>
+          </div>
         )}
       </main>
     </div>

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { one, query } from '../db.js';
 import { initializeTransaction, paystackConfigured } from '../lib/paystack.js';
 import { rateLimit } from '../lib/limits.js';
+import { closedForMaintenance } from '../lib/settings.js';
 import {
   checkAmount, newCode, newGiftReference, isGiftReference, reconcileGift, usableCard, giftNaira,
   cleanGiftCode, cleanDesign, cardToTopUp, newTopupReference, isTopupReference
@@ -35,6 +36,7 @@ function callbackUrl(path = '/gift-card') {
 giftCardsRouter.post('/gift-cards', giftBuyLimit, async (req, res) => {
   const b = req.body ?? {};
   if (!paystackConfigured()) return res.status(503).json({ error: 'Gift cards are not on sale yet. Please try again soon.' });
+  if (await closedForMaintenance(res)) return;
   let amount;
   try { amount = checkAmount(b.amountKobo); } catch (err) { return res.status(400).json({ error: err.message }); }
   if (!isEmail(b.email)) return res.status(400).json({ error: 'Please enter your email, for the receipt.' });
@@ -147,6 +149,7 @@ giftCardsRouter.post('/gift-cards/open', giftCheckLimit, async (req, res) => {
 giftCardsRouter.post('/gift-cards/topups', giftBuyLimit, async (req, res) => {
   const b = req.body ?? {};
   if (!paystackConfigured()) return res.status(503).json({ error: 'Adding money to cards is not open yet. Please try again soon.' });
+  if (await closedForMaintenance(res)) return;
   if (!isEmail(b.email)) return res.status(400).json({ error: 'Please enter your email, for the receipt.' });
   const card = await cardToTopUp(b.code, b.amountKobo);
 

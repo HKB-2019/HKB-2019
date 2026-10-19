@@ -3,7 +3,7 @@ import { transaction, one as oneRow, query } from '../db.js';
 import { assertKobo } from '../lib/money.js';
 import { initializeTransaction, newReference } from '../lib/paystack.js';
 import { releaseStock } from '../lib/orders.js';
-import { openZones, zoneFor, NIGERIAN_STATES, ZONE_LABELS } from '../lib/settings.js';
+import { openZones, zoneFor, NIGERIAN_STATES, ZONE_LABELS, getSetting, deliveryFee, closedForMaintenance } from '../lib/settings.js';
 import { rateLimit } from '../lib/limits.js';
 import { onSale } from '../lib/catalogue.js';
 import { applyCode } from '../lib/discounts.js';
@@ -111,9 +111,12 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
     return res.status(400).json({ error: 'Too many lines in one order.' });
   }
 
+  if (await closedForMaintenance(res)) return;
+
   // Delivery prices are the owner's decision. Until one is set, the shop can
   // take nothing — a default of ₦0 would give delivery away.
   const zones = await openZones();
+  const freeDelivery = await getSetting('freeDelivery');
   if (!zones.length) {
     return res.status(503).json({
       error: 'Checkout is not open yet. Please try again soon.',
@@ -210,7 +213,8 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
         : null;
       const discountKobo = discount?.discountKobo ?? 0;
 
-      const shipping = zone.feeKobo;
+      // Free once the pieces (after the discount) reach the owner's amount.
+      const shipping = deliveryFee(zone, subtotal - discountKobo, freeDelivery);
       try { assertKobo(subtotal - discountKobo + shipping, 'order total'); }
       catch {
         throw fail(400, 'That is over ₦1,000,000 for one checkout. Please split it into two orders.');
@@ -236,9 +240,9 @@ checkoutRouter.post('/checkout', checkoutLimit, async (req, res) => {
         INSERT INTO orders (reference, customer_id, email, status, subtotal_kobo, shipping_kobo,
                             currency, customer_name, phone, address, delivery_zone,
                             discount_code, discount_kobo, session_id, channel, campaign,
-                            gift_card_id, gift_kobo, paid_at)
+                            gift_card_id, gift_kobo, paid_at, payment_method)
         VALUES ($1, $2, $3, $15, $4, $5, 'NGN', $6, $7, $8, $9, $10, $11, $12, $13, $14, $16, $17,
-                CASE WHEN $15 = 'paid' THEN now() END)
+                CASE WHEN $15 = 'paid' THEN now() END, CASE WHEN $15 = 'paid' THEN 'Gift card' END)
         RETURNING id
       `, [reference, customer.id, normalisedEmail, subtotal, shipping,
           who.name, who.phone, JSON.stringify(who.address), who.zone,
