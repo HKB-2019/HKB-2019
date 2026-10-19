@@ -122,13 +122,14 @@ function CurrencyNote({ itemsNaira }) {
   );
 }
 
-function Field({ label, id, error, ok, hint, children }) {
+function Field({ label, id, error, ok, reserve = false, hint, children }) {
   return (
     <label className="field field--tight" htmlFor={id}>
       <span>{label}{hint && <em className="field__hint"> · {hint}</em>}</span>
       {children}
       {error && <small className="field__error" id={`${id}-error`}>{error}</small>}
       {!error && ok && <small className="field__ok">{ok}</small>}
+      {!error && !ok && reserve && <small className="field__note-room" aria-hidden="true" />}
     </label>
   );
 }
@@ -343,7 +344,7 @@ function DeliveryForm({ onBack }) {
       <button type="button" className="delivery__back" onClick={onBack}>← BACK TO BAG</button>
 
       <Field label="EMAIL FOR RECEIPT" id="d-email" error={errors.email}
-             ok={emailSeen && isEmail(d.email) ? 'Looks good!' : null}>
+             ok={emailSeen && isEmail(d.email) ? 'Looks good!' : null} reserve>
         <input id="d-email" type="email" autoComplete="email" inputMode="email"
                value={d.email} onChange={set('email')}
                onBlur={() => {
@@ -637,7 +638,7 @@ function TrackOrderModal() {
         <label className="field" htmlFor="track-ref">
           <span>ORDER REFERENCE</span>
           <input id="track-ref" autoComplete="off" spellCheck="false" placeholder="masq-…"
-                 className={error ? 'is-error' : ''}
+                 className={error ? 'is-error' : ''} aria-invalid={error ? true : undefined}
                  value={ref} onChange={(e) => { setRef(e.target.value); setError(null); }} />
         </label>
         <button type="submit" className="btn btn--solid btn--block">SEE MY ORDER</button>

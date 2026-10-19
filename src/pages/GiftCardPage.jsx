@@ -7,6 +7,9 @@ import Card, { DesignSwatches, designOf, longDate } from '../components/GiftCard
 import TopUp from '../components/GiftTopUp.jsx';
 import Wordmark from '../components/Wordmark.jsx';
 import { shake, shakeInvalid } from '../lib/feel.js';
+import { useEmailCheck, EMAIL_OK, EMAIL_BAD } from '../lib/useEmailCheck.js';
+import FieldNote from '../components/FieldNote.jsx';
+import StateMark from '../components/StateMark.jsx';
 
 /* /gift-card — buy a MASQ. gift card, and (with ?reference=, where Paystack
  * sends the buyer back) see it once paid: its code, to copy or send. With
@@ -75,6 +78,7 @@ function TopUpFind() {
             <span>CARD CODE</span>
             <input id="t-code" ref={codeBox} autoCapitalize="characters" autoComplete="off" spellCheck={false} placeholder="MASQ-XXXX-XXXX"
                    value={code} onChange={(e) => { setCode(e.target.value); setError(null); }}
+                   className={error ? 'is-error' : card ? 'is-valid' : undefined}
                    aria-invalid={error ? true : undefined} aria-describedby={error ? 't-code-error' : undefined} />
           </label>
           <button type="submit" className="btn btn--ghost" disabled={busy || !code.trim()}>{busy ? 'FINDING…' : 'FIND CARD'}</button>
@@ -111,8 +115,8 @@ function Buy() {
     e.preventDefault();
     const err = {};
     if (!amount) err.amount = `Choose an amount from ${naira(MIN * 100)} to ${naira(MAX * 100)}, in whole naira.`;
-    if (!isEmail(form.email)) err.email = 'Enter your email, for the receipt.';
-    if (form.recipientEmail.trim() && !isEmail(form.recipientEmail)) err.recipientEmail = 'That is not an email address.';
+    if (!isEmail(form.email)) err.email = form.email.trim() ? EMAIL_BAD : 'Enter your email, for the receipt.';
+    if (form.recipientEmail.trim() && !isEmail(form.recipientEmail)) err.recipientEmail = EMAIL_BAD;
     setErrors(err);
     if (Object.keys(err).length) { shakeInvalid(e.currentTarget); return; }
     setBusy(true);
@@ -125,6 +129,13 @@ function Buy() {
     } catch (e2) { setServerError(e2.message); setBusy(false); }
   };
   const fieldErr = (k) => errors[k] ? { 'aria-invalid': true, 'aria-describedby': `g-${k}-error` } : {};
+  // The two email boxes say at once whether the address looks right.
+  const mine = useEmailCheck(form.email);
+  const theirs = useEmailCheck(form.recipientEmail);
+  const emailBox = (k, check) => errors[k] ? { ...check.input, ...fieldErr(k), className: 'is-error' } : check.input;
+  const emailNote = (k, check) => (
+    <FieldNote id={`g-${k}-error`} error={errors[k] ?? (check.state === 'bad' ? EMAIL_BAD : null)} ok={check.state === 'ok' ? EMAIL_OK : null} reserve />
+  );
 
   return (
     <div className="gift">
@@ -174,8 +185,8 @@ function Buy() {
           </label>
           <label className="field field--tight" htmlFor="g-their-email">
             <span>THEIR EMAIL<em className="field__hint"> · optional</em></span>
-            <input id="g-their-email" type="email" inputMode="email" value={form.recipientEmail} onChange={set('recipientEmail')} {...fieldErr('recipientEmail')} />
-            {errors.recipientEmail && <small className="field__error" id="g-recipientEmail-error">{errors.recipientEmail}</small>}
+            <input id="g-their-email" type="email" inputMode="email" value={form.recipientEmail} onChange={set('recipientEmail')} {...emailBox('recipientEmail', theirs)} />
+            {emailNote('recipientEmail', theirs)}
           </label>
           <label className="field field--tight" htmlFor="g-message">
             <span>A MESSAGE<em className="field__hint"> · optional</em></span>
@@ -187,8 +198,8 @@ function Buy() {
           <legend className="gift__label">From you</legend>
           <label className="field field--tight" htmlFor="g-email">
             <span>YOUR EMAIL<em className="field__hint"> · for the receipt</em></span>
-            <input id="g-email" type="email" autoComplete="email" inputMode="email" value={form.email} onChange={set('email')} {...fieldErr('email')} />
-            {errors.email && <small className="field__error" id="g-email-error">{errors.email}</small>}
+            <input id="g-email" type="email" autoComplete="email" inputMode="email" value={form.email} onChange={set('email')} {...emailBox('email', mine)} />
+            {emailNote('email', mine)}
           </label>
         </fieldset>
 
@@ -239,6 +250,7 @@ function Bought({ reference }) {
   if (error) {
     return (
       <div className="gift gift--note">
+        <StateMark tone="bad" size="lg" />
         <p className="eyebrow">Gift card</p>
         <h1 className="gift__title">We could not find that gift card</h1>
         <p className="gift__intro">Check the link in your receipt.</p>
@@ -251,13 +263,14 @@ function Bought({ reference }) {
     const unpaid = card.status === 'abandoned' || card.payment === 'not_completed';
     return (
       <div className="gift gift--note">
+        {unpaid && <StateMark tone="bad" size="lg" />}
         <p className="eyebrow">Gift card</p>
         <h1 className="gift__title">{unpaid ? 'Payment not completed' : 'Confirming your payment'}</h1>
         <p className="gift__intro">{unpaid
           ? 'Nothing was taken. You can try again whenever you like.'
           : 'This usually takes a few seconds. The code appears here as soon as the payment is confirmed.'}</p>
         {!unpaid && <div className="status__wait" aria-hidden="true" />}
-        {unpaid && <Link className="btn btn--ghost btn--block" to="/gift-card">TRY AGAIN</Link>}
+        {unpaid && <Link className="btn btn--contrast btn--block" to="/gift-card">TRY AGAIN</Link>}
       </div>
     );
   }
@@ -274,6 +287,7 @@ function Bought({ reference }) {
         <Card amountKobo={card.amountKobo} to={card.recipientName} code={card.code} until={longDate(card.expiresAt)} design={card.design} revealed={revealed} />
       </div>
       <div className="gift__form">
+        <StateMark tone="ok" size="lg" />
         <p className="eyebrow">Gift card</p>
         <h1 className="gift__title">Your gift card is ready</h1>
         <p className="gift__intro">

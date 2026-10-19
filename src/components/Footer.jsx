@@ -4,6 +4,7 @@ import { useSectionLink } from '../lib/useSectionLink.js';
 import { Instagram, TikTok, XIcon } from './Icons.jsx';
 import Lines from './Lines.jsx';
 import Wordmark from './Wordmark.jsx';
+import { JoinForm } from './Newsletter.jsx';
 
 /* The footer, in groups a shopper scans for: the shop itself, help with an
  * order, and the small print. Pages open in a panel; shop links go to their
@@ -16,7 +17,7 @@ const SOCIAL = [
 ];
 
 export default function Footer() {
-  const { openOverlay, site } = useShop();
+  const { openOverlay, site, toast } = useShop();
   const { home } = useHome();
   const goTo = useSectionLink();
   // Only links the owner has set in the admin. An icon that goes nowhere is
@@ -39,6 +40,14 @@ export default function Footer() {
         <div className="footer__brand">
           <a href="/#top" className="footer__logo" onClick={(e) => { e.preventDefault(); goTo('#top'); }}><Wordmark /></a>
           <p className="footer__tagline"><Lines text={home.heroSub} /></p>
+          {/* The mailing list on every page, with the owner's email checks:
+              "Looks good!" or "Please enter a valid email address." */}
+          <div className="footer__join">
+            <h2 className="footer__head" id="footer-join">Join the list</h2>
+            <p className="footer__join-note">New drops and restocks, before anyone else.</p>
+            <JoinForm id="footer-email"
+                      onJoined={() => toast({ tone: 'ok', title: 'You’re on the list', body: 'Welcome to the world of MASQ.' })} />
+          </div>
           {social.length > 0 && (
             <div className="footer__social">
               {social.map(([key, label, Icon]) => (

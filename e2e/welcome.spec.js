@@ -21,7 +21,7 @@ test('a first-time visitor is offered the list once, can join from it, and is no
 
   await dialog.getByLabel('Email address').fill('ada@example.com');
   await dialog.getByRole('button', { name: 'JOIN' }).click();
-  await expect(dialog.getByRole('status')).toHaveText('YOU’RE IN. WATCH YOUR INBOX FOR DROP 02.');
+  await expect(dialog.getByRole('status')).toHaveText('You’re in. Watch your inbox for Drop 02.');
   await dialog.getByRole('button', { name: 'CONTINUE TO THE SHOP' }).click();
   await expect(dialog).toHaveCount(0);
 

@@ -25,7 +25,7 @@ test('the owner adds colours, and a customer buys the one they pick', async ({ p
   await page.getByRole('button', { name: 'TELL ME WHEN IT’S BACK' }).click();
   await page.fill('#restock-email', 'kemi@example.com');
   await page.getByRole('button', { name: 'NOTIFY ME' }).click();
-  await expect(page.getByRole('status')).toHaveText('WE’LL LET YOU KNOW WHEN INDIGO, ONE SIZE IS BACK.');
+  await expect(page.locator('.restock--done')).toHaveText('You’re on the list. We’ll let you know when Indigo, ONE SIZE is back.');
 
   await setStock(page, 'scarf', 'ONE SIZE', 4, 'Indigo');
 

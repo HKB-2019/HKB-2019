@@ -844,7 +844,7 @@ html{ scrollbar-color:var(--line) var(--bg); }
 .footer__base span{ white-space:nowrap; } /* a narrow screen breaks the line at the dot */
 
 @media (max-width:900px){
-  .footer__inner{ grid-template-columns:1fr; }
+  .footer__inner{ grid-template-columns:minmax(0,1fr); }
 }
 @media (max-width:640px){
   .footer__cols{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:30px 20px; }
@@ -1832,7 +1832,7 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 /* The owner's field states: a green line and tick once an answer is right,
    a red line and cross when it is not, with a line of words beneath. */
 .field input.is-valid, .newsletter__form input.is-valid{ border-color:var(--ok); }
-.field input.is-valid, .field input[aria-invalid="true"],
+.field input.is-valid, .field input[aria-invalid="true"], .field input.is-error,
 .newsletter__form input.is-valid, .newsletter__form input.is-error{
   padding-right:34px; background-repeat:no-repeat; background-size:18px 18px;
   background-position:right 6px center;
@@ -1841,13 +1841,13 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 .field input.is-valid, .newsletter__form input.is-valid{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%233ccf74'/%3E%3Cpath d='M5 9.4l2.6 2.5L13 6.4' fill='none' stroke='%23050407' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
-.field input[aria-invalid="true"], .newsletter__form input.is-error{
+.field input[aria-invalid="true"], .field input.is-error, .newsletter__form input.is-error{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%23f0503f'/%3E%3Cpath d='M6 6l6 6M12 6l-6 6' stroke='%23050407' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 :root[data-theme="light"] .field input.is-valid, :root[data-theme="light"] .newsletter__form input.is-valid{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%2317803f'/%3E%3Cpath d='M5 9.4l2.6 2.5L13 6.4' fill='none' stroke='%23fbf9f6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
-:root[data-theme="light"] .field input[aria-invalid="true"], :root[data-theme="light"] .newsletter__form input.is-error{
+:root[data-theme="light"] .field input[aria-invalid="true"], :root[data-theme="light"] .field input.is-error, :root[data-theme="light"] .newsletter__form input.is-error{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%23c42e1e'/%3E%3Cpath d='M6 6l6 6M12 6l-6 6' stroke='%23fbf9f6' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 .field__ok{ display:block; margin-top:7px; font-size:13px; color:var(--ok); }
@@ -2827,3 +2827,62 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 
 /* Form boxes at 16px: smaller makes a phone zoom the page when one is tapped. */
 @media (max-width:900px){ input:not([type=checkbox]):not([type=radio]):not([type=color]), select, textarea{ font-size:16px !important; } }
+
+/* ============ SUCCESS AND ERROR, EVERYWHERE ============ */
+/* The owner's design carried to every form in the shop and the admin: a line
+   that needs fixing is red with a ringed cross, a line that is right (or a
+   thing done) is green with a ringed tick. The mark is drawn in the line's
+   own colour, so it suits both themes. */
+.field__error, .field__ok, .form-msg.is-error, .form-msg.is-ok,
+.restock--done, .pdp__hint.is-error, .admin-note--ok, .admin-note--bad{ --mark:none; }
+.field__error::before, .field__ok::before, .form-msg.is-error::before, .form-msg.is-ok::before,
+.restock--done::before, .pdp__hint.is-error::before, .admin-note--ok::before, .admin-note--bad::before{
+  content:''; display:inline-block; width:1.15em; height:1.15em; margin-right:.5em; vertical-align:-.22em;
+  background-color:currentColor;
+  -webkit-mask:var(--mark) center / contain no-repeat; mask:var(--mark) center / contain no-repeat;
+}
+.field__ok, .form-msg.is-ok, .restock--done, .admin-note--ok{
+  --mark:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='none' stroke='black' stroke-width='1.5'/%3E%3Cpath d='M4.8 8.3l2.2 2.2 4.2-4.6' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.field__error, .form-msg.is-error, .pdp__hint.is-error, .admin-note--bad{
+  --mark:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='none' stroke='black' stroke-width='1.5'/%3E%3Cpath d='M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.admin-note--ok, .restock--done{ color:var(--ok); }
+.restock--done{ font-size:14px; font-weight:500; letter-spacing:0; line-height:1.5; }
+
+/* boxes beyond the delivery form: the sign-up row, back-in-stock, codes, cards */
+.restock__row input.is-valid, .gift__find input.is-valid{ border-color:var(--ok); }
+.restock__row input[aria-invalid="true"], .discount__row input[aria-invalid="true"]{ border-color:var(--bad-line); }
+:is(.restock__row, .discount__row) input:is(.is-valid, [aria-invalid="true"]){
+  padding-right:36px; background-repeat:no-repeat; background-size:18px 18px; background-position:right 10px center;
+}
+.restock__row input.is-valid{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%233ccf74'/%3E%3Cpath d='M5 9.4l2.6 2.5L13 6.4' fill='none' stroke='%23050407' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+:is(.restock__row, .discount__row) input[aria-invalid="true"]{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%23f0503f'/%3E%3Cpath d='M6 6l6 6M12 6l-6 6' stroke='%23050407' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+:root[data-theme="light"] .restock__row input.is-valid{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%2317803f'/%3E%3Cpath d='M5 9.4l2.6 2.5L13 6.4' fill='none' stroke='%23fbf9f6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+:root[data-theme="light"] :is(.restock__row, .discount__row) input[aria-invalid="true"]{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%23c42e1e'/%3E%3Cpath d='M6 6l6 6M12 6l-6 6' stroke='%23fbf9f6' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+/* the gift card's own pages: the mark above the heading */
+.gift__form > .state-mark, .gift--note > .state-mark{ display:grid; margin:0 0 22px; }
+
+/* the footer's sign-up box */
+.footer__brand{ min-width:0; }
+.footer__join{ margin-top:14px; width:min(420px, 100%); min-width:0; }
+.footer__join .footer__head{ margin:0 0 6px; }
+.footer__join-note{ margin:0; font-size:14px; color:var(--ink-dim); }
+.footer__join .newsletter__form{ width:100%; margin:14px 0 0; justify-content:flex-start; }
+.footer__join .newsletter__form input{ height:48px; }
+.footer__join .newsletter__form .btn{ height:48px; padding:0 22px; }
+.footer__join .form-msg-wrap{ min-height:26px; }
+.footer__join .form-msg{ margin-top:10px; text-align:left; }
+/* messages in the owner's sentence case, not small capitals */
+.form-msg.is-error, .form-msg.is-ok{ text-transform:none; letter-spacing:0; font-size:14px; font-weight:400; line-height:1.5; }
+/* the room kept for a note that appears when a box is left (FieldNote) */
+.field__note-room{ display:block; margin-top:7px; height:1.5em; font-size:13px; }
+.field__error, .field__ok{ line-height:1.5; }

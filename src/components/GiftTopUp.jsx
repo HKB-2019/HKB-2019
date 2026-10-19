@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { topUpGiftCard } from '../lib/api.js';
 import { naira, isEmail } from '../lib/delivery.js';
+import { useEmailCheck, EMAIL_OK, EMAIL_BAD } from '../lib/useEmailCheck.js';
+import FieldNote from './FieldNote.jsx';
 
 /* Adding money to a gift card that works (a top-up): on the card's own page
  * (/gift/:code) and under "Top up a card" on /gift-card. Paid on Paystack as
@@ -22,12 +24,13 @@ export default function TopUp({ code, balanceKobo, startOpen = false }) {
   const otherNaira = Number(other.replace(/[,\s₦]/g, ''));
   const amount = choice === 'other' ? (Number.isInteger(otherNaira) && otherNaira >= MIN && otherNaira <= MAX ? otherNaira : null) : choice;
   const room = MAX * 100 - balanceKobo;
+  const check = useEmailCheck(email);
 
   const pay = async (e) => {
     e.preventDefault();
     if (!amount) return setError(`Choose an amount from ${naira(MIN * 100)} to ${naira(MAX * 100)}, in whole naira.`);
     if (amount * 100 > room) return setError(`A card holds up to ${naira(MAX * 100)}. You can add up to ${naira(Math.floor(room / 100_00) * 100_00)} to this one.`);
-    if (!isEmail(email)) return setError('Enter your email, for the receipt.');
+    if (!isEmail(email)) return setError(email.trim() ? EMAIL_BAD : 'Enter your email, for the receipt.');
     setBusy(true); setError(null);
     try {
       const { authorizationUrl } = await topUpGiftCard({ code, amountKobo: amount * 100, email: email.trim() });
@@ -64,7 +67,8 @@ export default function TopUp({ code, balanceKobo, startOpen = false }) {
         <label className="field field--tight" htmlFor="t-email">
           <span>YOUR EMAIL<em className="field__hint"> · for the receipt</em></span>
           <input id="t-email" type="email" autoComplete="email" inputMode="email" value={email}
-                 onChange={(e) => { setEmail(e.target.value); setError(null); }} />
+                 onChange={(e) => { setEmail(e.target.value); setError(null); }} {...check.input} />
+          <FieldNote error={check.state === 'bad' ? EMAIL_BAD : null} ok={check.state === 'ok' ? EMAIL_OK : null} reserve />
         </label>
       </fieldset>
       <button type="submit" className="btn btn--solid btn--block" disabled={busy}>

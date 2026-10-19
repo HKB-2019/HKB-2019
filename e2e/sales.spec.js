@@ -77,9 +77,9 @@ test('a refund is recorded from the orders list, and puts the stock back', async
 test('a customer asks to hear when a sold-out size is back, and the owner sees it', async ({ page }) => {
   await page.goto('/product/phone');
   await page.getByRole('button', { name: 'TELL ME WHEN IT’S BACK' }).click();
-  await page.getByLabel('Email').fill('ada@example.com');
+  await page.getByLabel('Email', { exact: true }).fill('ada@example.com');
   await page.getByRole('button', { name: 'NOTIFY ME' }).click();
-  await expect(page.getByRole('status')).toContainText('WE’LL LET YOU KNOW');
+  await expect(page.locator('.restock--done')).toContainText('We’ll let you know');
 
   await signIn(page);
   await page.request.post(`/api/admin/stock/${(await (await page.request.get('/api/admin/stock')).json()).find(s => s.productId === 'phone').variantId}`, { data: { stock: 4 } });

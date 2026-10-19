@@ -259,8 +259,8 @@ test('saved pieces can be found again, and bought from the saved list', async ({
 test('joining the list is real: the owner sees the address', async ({ page }) => {
   await page.goto('/');
   await page.fill('#email', 'drop02@example.com');
-  await page.getByRole('button', { name: 'JOIN' }).click();
-  await expect(page.locator('.newsletter .form-msg')).toContainText('YOU’RE IN');
+  await page.locator('.newsletter').getByRole('button', { name: 'JOIN' }).click();
+  await expect(page.locator('.newsletter .form-msg')).toContainText('You’re in');
 
   await signIn(page);
   await page.goto('/admin#list');

@@ -35,10 +35,10 @@ export function JoinForm({ id, onJoined }) {
       track('subscribe');
       markWelcome('joined');   // someone on the list is never offered it again
       setEmail('');
-      setMsg({ text: 'YOU’RE IN. WATCH YOUR INBOX FOR DROP 02.', error: false });
+      setMsg({ text: 'You’re in. Watch your inbox for Drop 02.', ok: true, joined: true });
       onJoined?.();
     } catch (err) {
-      setMsg({ text: err.message.toUpperCase(), error: true });
+      setMsg({ text: err.message, error: true });
       shake(box.current?.form);
     } finally {
       setBusy(false);
@@ -58,7 +58,7 @@ export function JoinForm({ id, onJoined }) {
             const v = e.target.value;
             setEmail(v);
             // Once checked, a fix is welcomed at once; a new slip waits for them to leave the box.
-            if (msg?.error || msg?.ok) setMsg(isEmail(v) ? { text: 'Looks good!', ok: true } : null);
+            if (msg?.error || (msg?.ok && !msg.joined)) setMsg(isEmail(v) ? { text: 'Looks good!', ok: true } : null);
           }}
           onBlur={() => {
             if (!email.trim() || busy) return;

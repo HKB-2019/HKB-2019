@@ -12,6 +12,8 @@ import { pop, textIn } from '../lib/feel.js';
 import { askForRestock } from '../lib/api.js';
 import { track } from '../lib/analytics.js';
 import { isEmail } from '../lib/delivery.js';
+import { useEmailCheck, EMAIL_OK, EMAIL_BAD } from '../lib/useEmailCheck.js';
+import FieldNote from '../components/FieldNote.jsx';
 import { jumpToTop, glideTo } from '../lib/smoothScroll.js';
 import { useGlideToProduct, arrivedByPhoto, FROM_SHOP } from '../lib/pageMorph.js';
 import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel } from '../lib/colours.js';
@@ -126,12 +128,13 @@ function RestockAsk({ product, colour = '' }) {
   const [size, setSize] = useState(gone[0]?.size ?? '');
   const [email, setEmail] = useState('');
   const [state, setState] = useState(null);   // null | 'sending' | 'done' | error message
+  const check = useEmailCheck(email);
 
   useEffect(() => { setOpen(false); setState(null); setSize(gone[0]?.size ?? ''); }, [product.id, colour]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!gone.length) return null;
   if (state === 'done') {
-    return <p className="restock restock--done" role="status">WE’LL LET YOU KNOW WHEN {optionLabel(colour, size).toUpperCase()} IS BACK.</p>;
+    return <p className="restock restock--done" role="status">You’re on the list. We’ll let you know when {optionLabel(colour, size)} is back.</p>;
   }
   if (!open) {
     return (
@@ -143,7 +146,7 @@ function RestockAsk({ product, colour = '' }) {
 
   const send = async (e) => {
     e.preventDefault();
-    if (!isEmail(email)) { setState('Enter a valid email address.'); return; }
+    if (!isEmail(email)) { setState(EMAIL_BAD); return; }
     setState('sending');
     try { await askForRestock(product.id, size, email.trim(), colour); setState('done'); track('restock_request', { productId: product.id, size }); }
     catch (err) { setState(err.message); }
@@ -163,10 +166,13 @@ function RestockAsk({ product, colour = '' }) {
         )}
         <label className="sr-only" htmlFor="restock-email">Email</label>
         <input id="restock-email" type="email" autoComplete="email" placeholder="Your email"
-               value={email} onChange={(e) => { setEmail(e.target.value); if (state !== 'sending') setState(null); }} />
+               value={email} onChange={(e) => { setEmail(e.target.value); if (state !== 'sending') setState(null); }}
+               {...check.input}
+               {...(state && state !== 'sending' ? { className: 'is-error', 'aria-invalid': true } : {})} />
         <button className="btn btn--ghost" disabled={state === 'sending'}>{state === 'sending' ? '…' : 'NOTIFY ME'}</button>
       </div>
-      {state && state !== 'sending' && <p className="field__error" role="alert">{state}</p>}
+      <FieldNote error={state && state !== 'sending' ? state : check.state === 'bad' ? EMAIL_BAD : null}
+                 ok={!state && check.state === 'ok' ? EMAIL_OK : null} reserve />
     </form>
   );
 }
