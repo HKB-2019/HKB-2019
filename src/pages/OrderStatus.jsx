@@ -4,6 +4,9 @@ import { motion } from 'framer-motion';
 import { getOrder } from '../lib/api.js';
 import { useShop } from '../store/ShopContext.jsx';
 import Wordmark from '../components/Wordmark.jsx';
+import StateMark from '../components/StateMark.jsx';
+import doodleOk from '../assets/states/doodle-ok.webp';
+import doodleBad from '../assets/states/doodle-bad.webp';
 
 /* Where Paystack sends the customer back to. Paystack appends both `trxref`
  * and `reference`; they carry the same value, so either will do.
@@ -77,6 +80,10 @@ export default function OrderStatus() {
     : order?.status === 'paid' && order.sentAt ? 'sent'
     : (order?.status ?? 'pending');
   const copy = COPY[status] ?? COPY.pending;
+  // The owner's success and error panels: a green tick once the money is in,
+  // a red cross when it did not go through, neither while it is being checked.
+  const tone = error || ['failed', 'abandoned', 'unpaid'].includes(status) ? 'bad'
+    : ['paid', 'sent'].includes(status) ? 'ok' : null;
 
   if (isGift) return <Navigate to={`/gift-card?reference=${encodeURIComponent(reference)}`} replace />;
 
@@ -87,11 +94,12 @@ export default function OrderStatus() {
       </header>
 
       <motion.main
-        className="status__panel"
+        className={`status__panel${tone ? ` status__panel--${tone}` : ''}`}
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
+        <StateMark tone={tone} size="lg" />
         {error ? (
           <>
             <p className="eyebrow">Order</p>
@@ -117,9 +125,6 @@ export default function OrderStatus() {
             )}
 
             {status === 'pending' && !error && <div className="status__wait" aria-hidden="true" />}
-            {status === 'unpaid' && (
-              <Link className="btn btn--ghost btn--block status__retry" to="/?bag=open">BACK TO YOUR BAG</Link>
-            )}
 
             {order && (
               <>
@@ -164,7 +169,15 @@ export default function OrderStatus() {
           </>
         )}
 
-        <Link className="btn btn--solid btn--block" to="/">BACK TO THE SHOP</Link>
+        {tone === 'bad' && !error ? (
+          <>
+            <Link className="btn btn--contrast btn--block status__retry" to="/?bag=open">TRY AGAIN</Link>
+            <Link className="status__back" to="/">Back to the shop</Link>
+          </>
+        ) : (
+          <Link className="btn btn--solid btn--block" to="/">BACK TO THE SHOP</Link>
+        )}
+        {tone && <img className="state-panel__doodle" src={tone === 'ok' ? doodleOk : doodleBad} alt="" aria-hidden="true" />}
       </motion.main>
     </div>
   );

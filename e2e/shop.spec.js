@@ -70,7 +70,7 @@ test('a customer who cancels on Paystack is told nothing was taken, and keeps th
   await page.click('#cancel');
 
   await expect(page.locator('.status__title')).toHaveText('Payment not completed');
-  await page.getByRole('link', { name: 'BACK TO YOUR BAG' }).click();
+  await page.getByRole('link', { name: 'TRY AGAIN' }).click();
   await expect(page.locator('.drawer')).toContainText('THE PATTERN SCARF');
 });
 
@@ -109,7 +109,7 @@ test('a price change in the admin reaches the shop and the bag', async ({ page }
 
   await page.reload();
   await expect(card(page, 'THE PATTERN SCARF').locator('.card__price')).toHaveText('₦19,000');
-  await expect(page.locator('.toast').first()).toContainText('NOW ₦19,000');
+  await expect(page.locator('.toast').first()).toContainText('is now ₦19,000');
   await page.locator('.cart-btn').click();
   await expect(page.locator('.line-item__price')).toHaveText('₦19,000');
 });
@@ -133,7 +133,7 @@ test('a size set to zero in the admin is struck out on the shop, and leaves the 
   await again.getByRole('radio', { name: 'Black' }).click();
   await expect(again.getByRole('button', { name: 'Add THE FACE TEE in Black, S', exact: true })).toBeEnabled();
   await expect(page.locator('.cart-count')).toHaveText('0');
-  await expect(page.locator('.toast').first()).toContainText('NO LONGER AVAILABLE');
+  await expect(page.locator('.toast').first()).toContainText('is no longer available');
 });
 
 test('the bag stops at what is left', async ({ page }) => {
@@ -148,7 +148,7 @@ test('the bag stops at what is left', async ({ page }) => {
   await plus.click();
   await plus.click();
   await expect(page.locator('.qty span')).toHaveText('2');
-  await expect(page.locator('.toast').last()).toContainText('ONLY 2 LEFT');
+  await expect(page.locator('.toast').last()).toContainText('Only 2 left');
 });
 
 test('checkout stays closed until delivery is priced', async ({ page, shop }) => {
@@ -190,7 +190,7 @@ test('the country list shows only once the owner delivers abroad; then a custome
   const toCheckout = async () => {
     await page.goto('/product/scarf');
     await page.getByRole('button', { name: 'ADD TO BAG' }).click();
-    await page.locator('.cart-btn').click();
+    await page.getByRole('button', { name: 'VIEW BAG' }).click();
     await page.getByRole('button', { name: 'CHECKOUT' }).click();
   };
   // Nigeria only: no country to choose, just the states.

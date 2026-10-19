@@ -270,12 +270,12 @@ test('a shared product link shows its name, price, words and photo', { skip: !bu
 
 test('an uploaded hero becomes the home page’s preview photo', { skip: !built && 'run npm run build first' }, async () => {
   const before = await shop.request('/');
-  assert.ok(before.raw.includes('<link rel="preload" as="image" fetchpriority="high" href="/assets/img/hero-model.webp">'),
+  assert.ok(before.raw.includes('<link rel="preload" as="image" fetchpriority="high" href="/assets/img/hero-design.webp" imagesrcset="/assets/img/hero-design.webp 1600w, /assets/img/hero-design@2x.webp 1672w" imagesizes="(max-width: 900px) 250vw, 100vw">'),
     'the built-in hero starts loading with the page');
   await shop.request('/api/admin/home/image/hero', { method: 'POST', cookie, json: photo() });
   const { img } = (await site()).home.images.hero;
   const home = await shop.request('/');
   assert.ok(home.raw.includes(`og:image" content="${shop.base}${img}"`));
   assert.ok(home.raw.includes(`href="${img}" imagesrcset="${img} 1x, ${img}/2x 2x">`), 'and is the one loaded early');
-  assert.ok(!home.raw.includes('hero-model.webp'), 'the built-in one is not fetched for nothing');
+  assert.ok(!home.raw.includes('hero-design.webp'), 'the built-in one is not fetched for nothing');
 });

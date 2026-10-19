@@ -7,7 +7,7 @@ import { test, expect, signIn, fillDelivery } from './fixtures.js';
 const toCheckout = async (page, product) => {
   await page.goto(`/product/${product}`);
   await page.getByRole('button', { name: 'ADD TO BAG' }).click();
-  await page.locator('.cart-btn').click();
+  await page.getByRole('button', { name: 'VIEW BAG' }).click();
   await page.getByRole('button', { name: 'CHECKOUT' }).click();
 };
 const applyGift = async (page, code) => {

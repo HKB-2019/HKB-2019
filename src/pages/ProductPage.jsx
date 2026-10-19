@@ -200,11 +200,14 @@ function BuyBox({ product, colour, onColour }) {
   const chosen = sizes.find(s => s.size === size && s.available);
 
   const add = () => {
-    if (product.soldOut) { toast('SOLD OUT — JOIN THE LIST FOR RESTOCKS'); return; }
-    if (colourOut) { toast(`${colour.toUpperCase()} HAS SOLD OUT — TRY ANOTHER COLOUR`); return; }
+    if (product.soldOut) { toast({ tone: 'bad', title: 'Sold out', body: 'Join the list to hear when it’s back.' }); return; }
+    if (colourOut) { toast({ tone: 'bad', title: `${colour} has sold out`, body: 'Try another colour.' }); return; }
     if (!chosen) { setAsked(true); return; }
-    addToCart(product, chosen.size, colour);
-    // The button says so for a moment; its name for screen readers stays.
+    const got = addToCart(product, chosen.size, colour, { quiet: true });
+    if (!got) return;   // the bag has said why (sold out, the most per order)
+    // A panel offers the bag or more shopping; the button says so for a
+    // moment too, and its name for screen readers stays.
+    openOverlay({ added: got });
     setAdded(true);
     clearTimeout(addedTimer.current);
     addedTimer.current = setTimeout(() => setAdded(false), 1600);

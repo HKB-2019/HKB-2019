@@ -134,7 +134,7 @@ export default function Essentials() {
         <span className="section__rule" aria-hidden="true" />
         <button className="link-arrow" onClick={() => {
           expandDropGrid();
-          toast('ACCESSORIES ADDED TO THE GRID', 'violet');
+          toast({ tone: 'ok', title: 'Accessories added to the grid' });
         }}>
           <span>SHOP ACCESSORIES</span>
           <Arrow />
@@ -166,7 +166,7 @@ export default function Essentials() {
             const pic = hasColours(p) ? photoFor(p, shown) : p;
             const to = `/product/${p.id}${hasColours(p) && shown !== firstColour(p) ? `?colour=${encodeURIComponent(shown)}` : ''}`;
             const onPick = () => {
-              if (p.soldOut) { toast('SOLD OUT — JOIN THE LIST FOR RESTOCKS'); return; }
+              if (p.soldOut) { toast({ tone: 'bad', title: 'Sold out', body: 'Join the list to hear when it’s back.', img: p.img }); return; }
               if (only) addToCart(p, only.size);
               else setPicking(id => id === p.id ? null : p.id);
             };

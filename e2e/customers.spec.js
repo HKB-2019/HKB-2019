@@ -8,7 +8,7 @@ test('a buyer becomes a customer record the owner can tag, note, find and forget
   // A customer buys the cap and asks to hear about new drops.
   await page.goto('/product/cap');
   await page.getByRole('button', { name: 'ADD TO BAG' }).click();
-  await page.locator('.cart-btn').click();
+  await page.getByRole('button', { name: 'VIEW BAG' }).click();
   await page.getByRole('button', { name: 'CHECKOUT' }).click();
   await fillDelivery(page);
   await page.getByLabel('Email me about new drops and restocks. Leave any time.').check();

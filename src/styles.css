@@ -53,9 +53,13 @@
   /* states */
   --good:          #7fd6a6;
   --warn:          #d9c07f;
-  --bad:           #d4697e;
-  --bad-line:      #c9566d;
-  --bad-text:      #f0b3bf;
+  /* the owner's success and error colours: a clear green, a clear red */
+  --ok:            #3ccf74;
+  --ok-rgb:        60 207 116;
+  --bad-rgb:       240 80 63;
+  --bad:           #f0503f;
+  --bad-line:      #f0503f;
+  --bad-text:      #ff9d8f;
   --heart:         #d9697f;
   --up:            #0ca30c;
   --down:          #e66767;
@@ -121,9 +125,12 @@
   --violet-soft-rgb: 74 34 196;
   --good:          #17663d;
   --warn:          #74540b;
-  --bad:           #b03049;
-  --bad-line:      #b03049;
-  --bad-text:      #8f2238;
+  --ok:            #17803f;
+  --ok-rgb:        23 128 63;
+  --bad-rgb:       196 46 30;
+  --bad:           #c42e1e;
+  --bad-line:      #c42e1e;
+  --bad-text:      #9e2416;
   --heart:         #a53049;
   --up:            #17663d;
   --down:          #b03049;
@@ -364,6 +371,11 @@ html{ scrollbar-color:var(--line) var(--bg); }
 .btn--solid::before{ background:var(--violet-hi); }
 .btn--solid:hover::before{ transform:scaleY(1); }
 .btn--solid:hover{ box-shadow:0 10px 30px -12px rgb(var(--violet-rgb) / .9); }
+
+/* The owner's success and error panels: a plain light button on dark (dark on light). */
+.btn--contrast{ background:var(--ink); color:var(--bg); border-radius:10px; font-size:13px; }
+.btn--contrast::before{ background:rgb(var(--bg-rgb) / .12); }
+.btn--contrast:hover::before{ transform:scaleY(1); }
 
 .btn--ghost{ border-color:rgb(var(--ink-rgb) / .5); color:var(--ink); }
 .btn--ghost::before{ background:var(--ink); }
@@ -935,6 +947,35 @@ html{ scrollbar-color:var(--line) var(--bg); }
 .modal__panel--sm{ max-width:432px; }
 .modal__panel--film{ max-width:940px; padding:0; overflow:hidden; }
 .modal__close{ position:absolute; top:16px; right:16px; z-index:4; }
+
+/* The owner's success panel ("added to your bag"). */
+.modal__panel--state{
+  --tone-rgb:var(--ok-rgb);
+  width:min(440px, 100%); max-width:440px; overflow:hidden; isolation:isolate;
+  padding:52px 36px 34px; text-align:center;
+  border:1px solid rgb(var(--tone-rgb) / .32);
+  background:linear-gradient(155deg, rgb(var(--tone-rgb) / .16), transparent 55%), var(--raised);
+}
+.modal__panel.modal__panel--state{ border-radius:16px; }
+.state-panel{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; }
+.state-panel__title{
+  margin:22px 0 14px; font-family:var(--sans); font-weight:700;
+  font-size:clamp(24px,5vw,30px); line-height:1.15; letter-spacing:-.02em; text-wrap:balance;
+}
+.state-panel__piece{ display:flex; align-items:center; gap:12px; margin:0 0 26px; text-align:left; }
+.state-panel__piece img{ width:48px; height:48px; border-radius:8px; object-fit:cover; outline:1px solid rgb(var(--ink-rgb) / .08); outline-offset:-1px; }
+.state-panel__piece p{ margin:0; display:flex; flex-direction:column; gap:2px; }
+.state-panel__piece span:first-child{ font-size:13px; font-weight:600; letter-spacing:.06em; }
+.state-panel__piece span + span{ font-size:14px; color:var(--ink-dim); }
+.state-panel__link{
+  margin-top:8px; min-height:48px; padding:0 16px;
+  font-size:15px; color:var(--ink-dim); transition:color .2s var(--ease);
+}
+.state-panel__link:hover{ color:var(--ink); }
+.state-panel__doodle{
+  position:absolute; right:0; bottom:0; z-index:0; width:clamp(78px,24%,112px); height:auto;
+  pointer-events:none; user-select:none;
+}
 .modal__title{
   margin:0 0 18px; font-size:11px; font-weight:400;
   letter-spacing:.26em; text-transform:uppercase;
@@ -1038,19 +1079,66 @@ html{ scrollbar-color:var(--line) var(--bg); }
 }
 
 /* ============ TOASTS ============ */
+/* The owner's message cards: ringed tick or cross, the piece's photo when
+   there is one, title and line, a close button, and the time left as a thin
+   bar along the foot in the message's colour. */
 .toast-wrap{
-  position:fixed; left:50%; bottom:36px; z-index:120;
+  position:fixed; left:50%; bottom:calc(28px + var(--preview-bar-h, 0px)); z-index:120;
   transform:translateX(-50%);
-  display:flex; flex-direction:column; gap:10px; align-items:center;
+  width:min(460px, calc(100vw - 32px));
+  display:flex; flex-direction:column; gap:10px; align-items:stretch;
   pointer-events:none;
 }
 .toast{
+  --tone:var(--violet-soft);
+  position:relative; overflow:hidden; pointer-events:auto;
+  display:flex; align-items:center; gap:14px;
+  padding:14px 8px 16px 16px; border-radius:12px;
   background:var(--raised); border:1px solid var(--line);
-  padding:15px 26px; font-size:11px; letter-spacing:.24em;
-  text-transform:uppercase; color:var(--ink);
   box-shadow:0 18px 50px var(--shadow);
+  color:var(--ink); text-align:left;
 }
-.toast--violet{ border-color:rgb(var(--violet-soft-rgb) / .34); }
+.toast--ok{ --tone:var(--ok); }
+.toast--bad{ --tone:var(--bad); }
+.toast__img{ width:52px; height:52px; flex:none; border-radius:8px; object-fit:cover; background:var(--bg-2); outline:1px solid rgb(var(--ink-rgb) / .08); outline-offset:-1px; }
+.toast__text{ flex:1; min-width:0; }
+.toast__title{ margin:0; font-size:15px; font-weight:600; line-height:1.35; letter-spacing:-.005em; }
+.toast__body{ margin:3px 0 0; font-size:14px; line-height:1.45; color:var(--ink-dim); overflow-wrap:anywhere; }
+.toast__close{
+  flex:none; width:40px; height:40px; display:grid; place-items:center;
+  color:var(--ink-faint); border-radius:8px; transition:color .2s var(--ease), background-color .2s var(--ease);
+}
+.toast__close svg{ width:14px; height:14px; }
+.toast__close:hover{ color:var(--ink); background:rgb(var(--ink-rgb) / .06); }
+.toast__close:focus-visible{ outline:2px solid var(--violet-soft); outline-offset:-2px; }
+.toast__time{
+  position:absolute; left:0; right:0; bottom:0; height:3px;
+  background:linear-gradient(90deg, var(--tone) 60%, transparent);
+  transform-origin:left; animation:toast-time linear forwards;
+}
+.toast.is-held .toast__time{ animation-play-state:paused; }
+@keyframes toast-time{ from{ transform:scaleX(1); } to{ transform:scaleX(0); } }
+@media (max-width:420px){
+  .toast{ gap:12px; padding-left:14px; }
+  .toast .state-mark{ width:32px; height:32px; }
+  .toast__img{ width:44px; height:44px; }
+  .toast__title{ font-size:14px; }
+  .toast__body{ font-size:13px; }
+}
+
+/* The ringed tick or cross. */
+.state-mark{
+  flex:none; display:inline-grid; place-items:center;
+  width:36px; height:36px; border-radius:50%;
+  border:1.6px solid currentColor;
+}
+.state-mark svg{ width:16px; height:16px; }
+.state-mark--ok{ color:var(--ok); }
+.state-mark--bad{ color:var(--bad); }
+.state-mark--bad svg{ width:13px; height:13px; }
+.state-mark--lg{ width:76px; height:76px; border-width:2px; }
+.state-mark--lg svg{ width:34px; height:34px; }
+.state-mark--lg.state-mark--bad svg{ width:28px; height:28px; }
 /* With the bag or a panel open, its foot holds the total and the button:
    messages come in at the top instead of over them. Above the phone bar on
    a product page. */
@@ -1741,6 +1829,29 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 .field select:focus{ outline:none; border-bottom-color:var(--violet-soft); }
 .field select option{ background:var(--bg-2); color:var(--ink); }
 .field select.is-error, .field input[aria-invalid="true"]{ border-bottom-color:var(--bad-line); }
+/* The owner's field states: a green line and tick once an answer is right,
+   a red line and cross when it is not, with a line of words beneath. */
+.field input.is-valid, .newsletter__form input.is-valid{ border-color:var(--ok); }
+.field input.is-valid, .field input[aria-invalid="true"],
+.newsletter__form input.is-valid, .newsletter__form input.is-error{
+  padding-right:34px; background-repeat:no-repeat; background-size:18px 18px;
+  background-position:right 6px center;
+}
+.newsletter__form input.is-valid, .newsletter__form input.is-error{ padding-right:40px; background-position:right 12px center; }
+.field input.is-valid, .newsletter__form input.is-valid{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%233ccf74'/%3E%3Cpath d='M5 9.4l2.6 2.5L13 6.4' fill='none' stroke='%23050407' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.field input[aria-invalid="true"], .newsletter__form input.is-error{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%23f0503f'/%3E%3Cpath d='M6 6l6 6M12 6l-6 6' stroke='%23050407' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+:root[data-theme="light"] .field input.is-valid, :root[data-theme="light"] .newsletter__form input.is-valid{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%2317803f'/%3E%3Cpath d='M5 9.4l2.6 2.5L13 6.4' fill='none' stroke='%23fbf9f6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+:root[data-theme="light"] .field input[aria-invalid="true"], :root[data-theme="light"] .newsletter__form input.is-error{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%23c42e1e'/%3E%3Cpath d='M6 6l6 6M12 6l-6 6' stroke='%23fbf9f6' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.field__ok{ display:block; margin-top:7px; font-size:13px; color:var(--ok); }
+.form-msg.is-ok{ color:var(--ok); }
 
 /* -------------------------------------------------------------- modals */
 
@@ -1901,7 +2012,25 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
   .admin-new{ grid-template-columns:1fr; margin-left:0; }
   .admin-card{ padding:18px; }
 }
-.status__retry{ margin:0 0 30px; }
+.status__retry{ margin:0 0 6px; }
+.status__back{
+  display:flex; align-items:center; justify-content:center; min-height:48px;
+  font-size:15px; color:var(--ink-dim); transition:color .2s var(--ease);
+}
+.status__back:hover{ color:var(--ink); }
+/* Paid, or not: the owner's tinted panels with the brush strokes in a corner. */
+.status__panel--ok, .status__panel--bad{
+  --tone-rgb:var(--ok-rgb);
+  position:relative; overflow:hidden; isolation:isolate;
+  margin-block:clamp(24px,6vh,64px); padding:clamp(40px,6vw,56px) clamp(22px,5vw,44px) clamp(56px,8vw,72px);
+  border:1px solid rgb(var(--tone-rgb) / .32); border-radius:16px;
+  background:linear-gradient(155deg, rgb(var(--tone-rgb) / .16), transparent 55%), var(--raised);
+}
+.status__panel--bad{ --tone-rgb:var(--bad-rgb); }
+.status__panel .state-mark{ display:grid; margin:0 0 24px; }
+@media (max-width:560px){
+  .status__panel--ok, .status__panel--bad{ margin-inline:16px; width:auto; }
+}
 
 /* ============ PRODUCT PAGES ============ */
 /* Cards' and the Essentials' photos open the product page. */
@@ -2627,7 +2756,7 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
    outlined boxes like the sign-up box, and every box has the same corners. */
 
 /* small capitals: labels, small headings, quiet buttons and links */
-.skip-link, .drawer__title, .drawer__row, .modal__title, .tab, .field span, .toast,
+.skip-link, .drawer__title, .drawer__row, .modal__title, .tab, .field span,
 .status__total, .status__tracking p span:first-child, .gift__label, .gift__tile--other,
 .gift__mode, .giftcard__label, .delivery__back, .line-item__remove, .welcome__skip, .empty p,
 .pdp__sizes legend, .pdp__colours legend, .pdp__more summary, .pdp__guide, .pdp__inline,
@@ -2667,7 +2796,7 @@ body:has(.pdp__bar.is-on) .toast-wrap{ bottom:96px; }
 .field input.is-error, .field select.is-error, .field input[aria-invalid="true"]{ border-color:var(--bad-line); }
 
 /* the same corners on every box */
-.pdp__size-row button, .pdp__save, .gift__tile, .qty, .toast, .modal__panel, .card__sizes button,
+.pdp__size-row button, .pdp__save, .gift__tile, .qty, .modal__panel, .card__sizes button,
 .discount__row input, .restock__row input, .restock__row select, .admin-stock-input,
 .admin-crm__search, .admin-crm__input, .admin-row-form input, .preview-bar__actions button,
 .preview-bar__tag, .admin-table-wrap, .admin-status{

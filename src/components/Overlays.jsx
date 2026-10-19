@@ -8,7 +8,9 @@ import { asset } from '../lib/media.js';
 import { track, visitId } from '../lib/analytics.js';
 import { zoneFor, naira, isEmail, isPhone } from '../lib/delivery.js';
 import { countriesAbroad } from '../data/countries.js';
-import { Close, Heart } from './Icons.jsx';
+import { Close, Heart, ArrowShort } from './Icons.jsx';
+import StateMark from './StateMark.jsx';
+import doodleOk from '../assets/states/doodle-ok.webp';
 import { SizeButtons } from './DropGrid.jsx';
 import { useFocusTrap } from '../lib/useFocusTrap.js';
 import { shake, shakeInvalid } from '../lib/feel.js';
@@ -120,12 +122,13 @@ function CurrencyNote({ itemsNaira }) {
   );
 }
 
-function Field({ label, id, error, hint, children }) {
+function Field({ label, id, error, ok, hint, children }) {
   return (
     <label className="field field--tight" htmlFor={id}>
       <span>{label}{hint && <em className="field__hint"> · {hint}</em>}</span>
       {children}
       {error && <small className="field__error" id={`${id}-error`}>{error}</small>}
+      {!error && ok && <small className="field__ok">{ok}</small>}
     </label>
   );
 }
@@ -251,6 +254,9 @@ function DeliveryForm({ onBack }) {
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState(null);
+  // The email is checked when they leave the box, then again as they type:
+  // a mistake is pointed out late, a fix is welcomed at once.
+  const [emailSeen, setEmailSeen] = useState(false);
   const form = useRef(null);
 
   const zones = site?.delivery ?? [];
@@ -294,7 +300,7 @@ function DeliveryForm({ onBack }) {
 
   const validate = () => {
     const e = {};
-    if (!isEmail(d.email)) e.email = 'Enter the email for your receipt.';
+    if (!isEmail(d.email)) e.email = d.email.trim() ? 'Please enter a valid email address.' : 'Enter the email for your receipt.';
     if (d.name.trim().length < 2) e.name = 'Enter your full name.';
     if (!isPhone(d.phone)) e.phone = 'Enter a phone number the rider can call.';
     if (!inNigeria && d.address.country.trim().length < 2) e.country = 'Choose your country.';
@@ -326,7 +332,7 @@ function DeliveryForm({ onBack }) {
     } catch (err) {
       setBusy(false);
       setServerError(err.message);
-      toast('CHECKOUT COULD NOT START');
+      toast({ tone: 'bad', title: 'Payment couldn’t start', body: 'Please check your connection and try again.' });
     }
   };
 
@@ -336,9 +342,17 @@ function DeliveryForm({ onBack }) {
     <form className="delivery" onSubmit={onPay} noValidate ref={form}>
       <button type="button" className="delivery__back" onClick={onBack}>← BACK TO BAG</button>
 
-      <Field label="EMAIL FOR RECEIPT" id="d-email" error={errors.email}>
+      <Field label="EMAIL FOR RECEIPT" id="d-email" error={errors.email}
+             ok={emailSeen && isEmail(d.email) ? 'Looks good!' : null}>
         <input id="d-email" type="email" autoComplete="email" inputMode="email"
-               value={d.email} onChange={set('email')} {...err('email')} />
+               value={d.email} onChange={set('email')}
+               onBlur={() => {
+                 if (!d.email.trim()) return;
+                 setEmailSeen(true);
+                 if (!isEmail(d.email)) setErrors(x => ({ ...x, email: 'Please enter a valid email address.' }));
+               }}
+               {...err('email')}
+               className={errors.email ? 'is-error' : emailSeen && isEmail(d.email) ? 'is-valid' : undefined} />
       </Field>
       <Field label="FULL NAME" id="d-name" error={errors.name}>
         <input id="d-name" autoComplete="name" value={d.name} onChange={set('name')} {...err('name')} />
@@ -534,6 +548,31 @@ function Modal({ label, labelledBy, wide, className = '', closeOutside = true, c
   );
 }
 
+/* ------------------------------------------------------------ added to bag */
+
+/* The owner's success panel: a piece has gone in the bag from its own page.
+ * The way on is the bag; carrying on shopping is the quiet second choice. */
+function AddedModal({ name, what, img }) {
+  const { openOverlay, closeOverlay } = useShop();
+  return (
+    <Modal labelledBy="addedTitle" className="modal__panel--state modal__panel--ok">
+      <div className="state-panel">
+        <StateMark tone="ok" size="lg" />
+        <h2 className="state-panel__title" id="addedTitle">Added to your bag</h2>
+        <div className="state-panel__piece">
+          {img && <img src={img} alt="" />}
+          <p><span>{name}</span><span>{what}</span></p>
+        </div>
+        <button type="button" className="btn btn--contrast btn--block" onClick={() => openOverlay('cart')}>
+          VIEW BAG <ArrowShort className="btn__arrow" />
+        </button>
+        <button type="button" className="state-panel__link" onClick={closeOverlay}>Continue shopping</button>
+      </div>
+      <img className="state-panel__doodle" src={doodleOk} alt="" aria-hidden="true" />
+    </Modal>
+  );
+}
+
 /* ------------------------------------------------------------ track an order */
 
 /* Replaces a sign-in form that did nothing: it told people "Welcome back"
@@ -693,6 +732,7 @@ export default function Overlays() {
           {overlay === 'film'  && <FilmModal />}
           {overlay === 'welcome' && <WelcomeModal />}
           {info                && <InfoModal title={info} />}
+          {overlay.added       && <AddedModal {...overlay.added} />}
           {overlay.zoom        && <ZoomViewer {...overlay.zoom} />}
         </motion.div>
       )}

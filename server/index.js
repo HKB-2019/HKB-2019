@@ -107,7 +107,12 @@ async function pageMeta(path) {
       const img = `/api/images/${hero}`;
       return { image: img, imageAlt: 'MASQ.', preload: { href: img, srcset: `${img} 1x, ${img}/2x 2x` } };
     }
-    return { preload: { href: '/assets/img/hero-model.webp' } };
+    // The same choice of files the hero's own picture makes, so it is fetched once.
+    return { preload: {
+      href: '/assets/img/hero-design.webp',
+      srcset: '/assets/img/hero-design.webp 1600w, /assets/img/hero-design@2x.webp 1672w',
+      sizes: '(max-width: 900px) 250vw, 100vw'
+    } };
   }
   return null;
 }

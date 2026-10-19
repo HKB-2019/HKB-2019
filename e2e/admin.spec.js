@@ -116,7 +116,7 @@ test('a delivery switch works the moment it is flipped, with no SAVE needed', as
   const toCheckout = async () => {
     await page.goto('/product/scarf');
     await page.getByRole('button', { name: 'ADD TO BAG' }).click();
-    await page.locator('.cart-btn').click();
+    await page.getByRole('button', { name: 'VIEW BAG' }).click();
     await page.getByRole('button', { name: 'CHECKOUT' }).click();
   };
 

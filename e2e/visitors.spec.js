@@ -10,7 +10,7 @@ test('a shopper’s visit is counted, and shows up in VISITORS', async ({ page }
   await page.getByRole('button', { name: 'M', exact: true }).click();
   await page.getByRole('button', { name: 'ADD TO BAG' }).click();
   await expect(page.locator('.cart-count')).toHaveText('1');
-  await page.locator('.cart-btn').click();
+  await page.getByRole('button', { name: 'VIEW BAG' }).click();
   await page.getByRole('button', { name: 'CHECKOUT' }).click();
   await page.waitForTimeout(300);                          // let the last event land
 

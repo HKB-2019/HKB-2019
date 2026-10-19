@@ -65,7 +65,7 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
   const to = hasColours(product) && shown !== firstColour(product) ? `${base}?colour=${encodeURIComponent(shown)}` : base;
 
   const onQuickAdd = () => {
-    if (product.soldOut) { toast('SOLD OUT — JOIN THE LIST FOR RESTOCKS'); return; }
+    if (product.soldOut) { toast({ tone: 'bad', title: 'Sold out', body: 'Join the list to hear when it’s back.', img: product.img }); return; }
     // One size: nothing to choose, so add it straight away.
     if (only) { addToCart(product, only.size); return; }
     picking ? onClosePick() : onPick(product.id);
@@ -161,7 +161,7 @@ export default function DropGrid() {
   const list = showAll ? inDrop : inDrop.filter(p => p.featured);
 
   const onViewAll = () => {
-    if (!showAll) toast(`SHOWING ALL ${inDrop.length} PIECES`);
+    if (!showAll) toast(`Showing all ${inDrop.length} pieces`);
     setShowAll(v => !v);
   };
 

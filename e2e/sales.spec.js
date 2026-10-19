@@ -21,7 +21,7 @@ test('the owner makes a code in the admin, and a customer pays less with it', as
   await page.goto('/product/tee');
   await page.getByRole('button', { name: 'M', exact: true }).click();
   await page.getByRole('button', { name: 'ADD TO BAG' }).click();
-  await page.locator('.cart-btn').click();
+  await page.getByRole('button', { name: 'VIEW BAG' }).click();
   await page.getByRole('button', { name: 'CHECKOUT' }).click();
   await fillDelivery(page);
 
@@ -50,7 +50,7 @@ test('the owner makes a code in the admin, and a customer pays less with it', as
 test('a refund is recorded from the orders list, and puts the stock back', async ({ page }) => {
   await page.goto('/product/cap');
   await page.getByRole('button', { name: 'ADD TO BAG' }).click();
-  await page.locator('.cart-btn').click();
+  await page.getByRole('button', { name: 'VIEW BAG' }).click();
   await page.getByRole('button', { name: 'CHECKOUT' }).click();
   await fillDelivery(page);
   await page.getByRole('button', { name: /^PAY/ }).click();

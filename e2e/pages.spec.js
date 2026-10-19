@@ -27,7 +27,11 @@ test('a product card opens its page, where a size is chosen and bought', async (
   await page.getByRole('button', { name: 'ADD TO BAG' }).click();
   await expect(page.locator('.cart-count')).toHaveText('1');
 
-  await page.locator('.cart-btn').click();
+  // The owner's success panel offers the bag.
+  const added = page.getByRole('dialog', { name: 'Added to your bag' });
+  await expect(added).toContainText('THE FACE TEE');
+  await expect(added).toContainText('Black, L');
+  await added.getByRole('button', { name: 'VIEW BAG' }).click();
   await expect(page.locator('.line-item__variant')).toHaveText('BLACK · SIZE L');
 });
 

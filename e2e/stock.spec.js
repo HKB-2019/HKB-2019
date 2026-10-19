@@ -52,7 +52,7 @@ test('a shelf count below what is already sold is caught, and nothing is saved',
   // A customer buys both, and pays; they are not sent yet.
   await page.goto('/product/backpack');
   await page.getByRole('button', { name: 'ADD TO BAG' }).click();
-  await page.locator('.cart-btn').click();
+  await page.getByRole('button', { name: 'VIEW BAG' }).click();
   await page.getByRole('button', { name: 'Increase quantity of THE CARRIER BACKPACK' }).click();
   await page.getByRole('button', { name: 'CHECKOUT' }).click();
   await fillDelivery(page);

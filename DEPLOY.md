@@ -96,8 +96,8 @@ Everything below is in the admin — no code.
    in the preview when someone shares the link on WhatsApp.
    **Colours:** the sample tee (Indigo, Black, White), hoodie (Black,
    Indigo) and cap (Black, Green, White) have made-up colours and counts.
-   The black tee's photo is the indigo one recoloured — replace it with a
-   real one — and the other extra colours have no photo yet (the page says
+   The black tee's photo is the indigo one (Dayo, before the adire cloth)
+   recoloured — replace it with a real one — and the other extra colours have no photo yet (the page says
    which colour is shown). Set the real ones under
    *Colours* on each card: the first colour is the one in the main photo,
    and each colour can have a photo of its own. A piece with no colours is

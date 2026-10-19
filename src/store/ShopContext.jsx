@@ -92,11 +92,16 @@ export function ShopProvider({ children }) {
 
   /* ------------------------------------------------------------ toasts */
 
-  const toast = useCallback((message, variant) => {
+  /* A toast is { title, body?, img?, tone? }: tone 'ok' (it worked), 'bad'
+   * (it did not) or none (news). A plain string is a title. Each stays for
+   * its own time, longer for a problem, and can be closed sooner (Toasts.jsx
+   * keeps the clock, and holds it while the pointer rests on one). */
+  const toast = useCallback((message, tone) => {
+    const t = typeof message === 'string' ? { title: message, tone } : message;
     const id = ++toastId.current;
-    setToasts(t => [...t, { id, message, variant }]);
-    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2600);
+    setToasts(list => [...list.slice(-2), { id, ms: t.tone === 'bad' ? 6000 : 4200, ...t }]);
   }, []);
+  const dismissToast = useCallback((id) => setToasts(list => list.filter(x => x.id !== id)), []);
 
   /* --------------------------------------------------------- catalogue */
 
@@ -134,46 +139,51 @@ export function ShopProvider({ children }) {
       const max = maxFor(p, line.size, colour);
       if (!p || max === 0) {
         notes.push(p && hasColours(p) && !colour
-          ? `${line.name} now comes in colours — choose yours again`
-          : `${line.name} (${what}) is no longer available — removed from your bag`);
+          ? `${line.name} now comes in colours: choose yours again.`
+          : `${line.name} (${what}) is no longer available, so it has been taken out.`);
         changed = true;
         continue;
       }
       const qty = Math.min(line.qty, max);
-      if (qty !== line.qty) notes.push(`Only ${max} ${p.name} (${what}) left — your bag has been updated`);
-      if (p.price !== line.price) notes.push(`${p.name} is now ${format(p.price)}`);
+      if (qty !== line.qty) notes.push(`Only ${max} ${p.name} (${what}) left.`);
+      if (p.price !== line.price) notes.push(`${p.name} is now ${format(p.price)}.`);
       const { img } = photoFor(p, colour);
       const updated = { ...line, name: p.name, price: p.price, img, qty };
       if (qty !== line.qty || p.price !== line.price || p.name !== line.name || img !== line.img) changed = true;
       next.push(updated);
     }
     if (changed) setCart(next);
-    notes.slice(0, 3).forEach(n => toast(n.toUpperCase()));
+    notes.slice(0, 3).forEach(n => toast({ title: 'Your bag has been updated', body: n }));
   }, [status, products, cart, format, toast]);
 
   const productById = useCallback((id) => products.find(p => p.id === id), [products]);
 
   /* --------------------------------------------------------------- bag */
 
-  const addToCart = useCallback((product, size, colour = '') => {
+  /* Returns what went in, or nothing if it could not. `quiet` leaves the
+   * saying-so to the caller (the product page shows its own panel). */
+  const addToCart = useCallback((product, size, colour = '', { quiet = false } = {}) => {
     const p = products.find(x => x.id === product.id) ?? product;
-    if (hasColours(p) && !colour) { toast('CHOOSE A COLOUR FIRST'); return; }
+    if (hasColours(p) && !colour) { toast({ tone: 'bad', title: 'Choose a colour first' }); return; }
     const what = optionLabel(colour, size);
     const max = maxFor(p, size, colour);
-    if (max === 0) { toast(`${p.name} (${what}) HAS SOLD OUT`); return; }
+    if (max === 0) { toast({ tone: 'bad', title: 'Sold out', body: `${p.name} (${what}) has sold out.`, img: photoFor(p, colour).img }); return; }
 
     const key = `${p.id}|${colour}|${size}`;
     const existing = cart.find(i => i.key === key);
     if (existing && existing.qty >= max) {
-      toast(max < MAX_PER_LINE ? `ONLY ${max} LEFT IN ${what}` : `UP TO ${MAX_PER_LINE} PER ORDER`);
+      toast(max < MAX_PER_LINE
+        ? { tone: 'bad', title: `Only ${max} left in ${what}`, body: 'They are all in your bag already.' }
+        : { tone: 'bad', title: `Up to ${MAX_PER_LINE} per order` });
       return;
     }
     const { img } = photoFor(p, colour);
     setCart(items => existing
       ? items.map(i => i.key === key ? { ...i, qty: i.qty + 1 } : i)
       : [...items, { key, id: p.id, name: p.name, price: p.price, img, colour, size, qty: 1 }]);
-    toast(`${p.name} ADDED TO BAG`, 'violet');
+    if (!quiet) toast({ tone: 'ok', title: 'Added to bag', body: `${p.name} · ${what}`, img });
     track('add_to_cart', { productId: p.id, size, valueKobo: p.priceKobo });
+    return { name: p.name, what, img };
   }, [products, cart, toast]);
 
   const changeQty = useCallback((key, delta) => {
@@ -182,7 +192,7 @@ export function ShopProvider({ children }) {
     if (delta > 0) {
       const max = maxFor(products.find(p => p.id === line.id), line.size, line.colour ?? '');
       if (line.qty + delta > max) {
-        toast(max === 0 ? 'SOLD OUT' : max < MAX_PER_LINE ? `ONLY ${max} LEFT` : `UP TO ${MAX_PER_LINE} PER ORDER`);
+        toast({ tone: 'bad', title: max === 0 ? 'Sold out' : max < MAX_PER_LINE ? `Only ${max} left` : `Up to ${MAX_PER_LINE} per order` });
         return;
       }
     }
@@ -193,13 +203,13 @@ export function ShopProvider({ children }) {
 
   const removeItem = useCallback((key) => {
     setCart(items => items.filter(i => i.key !== key));
-    toast('REMOVED FROM BAG');
+    toast('Removed from your bag');
   }, [toast]);
 
   const toggleWish = useCallback((id) => {
     const on = wishlist.includes(id);
     setWishlist(list => on ? list.filter(w => w !== id) : [...list, id]);
-    toast(on ? 'REMOVED FROM SAVED' : 'SAVED TO YOUR LIST');
+    toast(on ? 'Removed from saved' : { tone: 'ok', title: 'Saved to your list' });
   }, [wishlist, toast]);
 
   /* Emptied once an order is confirmed paid — the bag has become an order,
@@ -235,7 +245,7 @@ export function ShopProvider({ children }) {
     wishlist, toggleWish,
     currency, setCurrency, format,
     overlay, openOverlay, closeOverlay,
-    toasts, toast
+    toasts, toast, dismissToast
   };
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
