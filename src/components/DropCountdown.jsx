@@ -45,7 +45,7 @@ export default function DropCountdown() {
         <img src={photo ? photo.img : asset('assets/img/countdown.webp')}
              srcSet={photo
                ? `${photo.img} 1x, ${photo.img2x} 2x`
-               : `${asset('assets/img/countdown.webp')} 1600w, ${asset('assets/img/countdown@2x.webp')} 3000w`}
+               : `${asset('assets/img/countdown.webp')} 1600w, ${asset('assets/img/countdown@2x.webp')} 1918w`}
              sizes={photo ? undefined : '(max-width: 900px) 160vw, 100vw'} alt="" loading="lazy" />
       </div>
       <div className="countdown__inner">
