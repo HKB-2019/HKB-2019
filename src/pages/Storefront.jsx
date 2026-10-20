@@ -81,8 +81,10 @@ export default function Storefront() {
   // "Back to your bag" from an unfinished payment lands with the bag open.
   const [params, setParams] = useSearchParams();
   useEffect(() => {
-    if (params.get('bag') !== 'open') return;
-    openOverlay('cart');
+    const bag = params.get('bag');
+    if (bag !== 'open' && bag !== 'checkout') return;
+    // "Use a different payment method": straight to the delivery step.
+    openOverlay(bag === 'checkout' ? 'checkout' : 'cart');
     params.delete('bag');
     setParams(params, { replace: true });
   }, [params, setParams, openOverlay]);

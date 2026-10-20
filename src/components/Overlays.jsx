@@ -1,18 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShop, useHome } from '../store/ShopContext.jsx';
 import { startCheckout, checkDiscount, checkGiftCard } from '../lib/api.js';
 import { useSectionLink } from '../lib/useSectionLink.js';
 import { asset } from '../lib/media.js';
 import { track, visitId } from '../lib/analytics.js';
-import { zoneFor, naira, isEmail, isPhone } from '../lib/delivery.js';
+import { zoneFor, naira, isEmail, isPhone, looksNigerian } from '../lib/delivery.js';
+import Amount from './Amount.jsx';
 import { countriesAbroad } from '../data/countries.js';
-import { Close, Heart, ArrowShort, BagIcon } from './Icons.jsx';
+import { Close, Heart, ArrowShort, BagIcon, Check } from './Icons.jsx';
 import StateMark from './StateMark.jsx';
 import StateArt from './StateArt.jsx';
+import Dialog, { PieceCard } from './Dialog.jsx';
+import { TrashMark } from './StateMark.jsx';
 import { SizeButtons } from './DropGrid.jsx';
 import { useFocusTrap } from '../lib/useFocusTrap.js';
+import { glideTo } from '../lib/smoothScroll.js';
 import { shake, shakeInvalid } from '../lib/feel.js';
 import ZoomViewer from './ZoomViewer.jsx';
 import { FROM_SHOP } from '../lib/pageMorph.js';
@@ -87,13 +91,34 @@ function NameLink({ id, name, colour }) {
 
 function BagLines() {
   const { cart, changeQty, removeItem, format } = useShop();
+  // "Remove this item?" — the owner's dialog, over the bag, which stays open.
+  const [ask, setAsk] = useState(null);
+  const lastAsk = useRef(null);
+  if (ask) lastAsk.current = ask;
+  const shown = ask ?? lastAsk.current;
+  const confirmRemove = shown && (
+    <Dialog open={Boolean(ask)} tone="bad" labelledBy="removeTitle" onClose={() => setAsk(null)}>
+      <TrashMark />
+      <h2 className="state-panel__title" id="removeTitle">Remove this item?</h2>
+      <p className="state-panel__note">Are you sure you want to remove {shown.name} from your bag?</p>
+      <PieceCard img={shown.img} name={shown.name}
+                 meta={<>{shown.colour ? <>Colour: {shown.colour}<span aria-hidden="true"> · </span></> : null}Size: {shown.size}</>}
+                 price={format(shown.price * shown.qty)} aside={shown.qty > 1 ? `Qty: ${shown.qty}` : null} />
+      <button type="button" className="btn btn--danger btn--block" onClick={() => { removeItem(shown.key); setAsk(null); }}>REMOVE ITEM</button>
+      <button type="button" className="state-panel__cancel" onClick={() => setAsk(null)}>Cancel</button>
+    </Dialog>
+  );
   if (cart.length === 0) {
     return (
-      <EmptyState icon={<BagIcon />} title="Your bag is waiting for something special"
-                  text="Looks like you haven’t added anything yet." button="START SHOPPING" />
+      <>
+        <EmptyState icon={<BagIcon />} title="Your bag is waiting for something special"
+                    text="Looks like you haven’t added anything yet." button="START SHOPPING" />
+        {confirmRemove}
+      </>
     );
   }
   return (
+    <>
     <AnimatePresence initial={false} mode="popLayout">
       {cart.map(item => (
         <motion.article
@@ -112,17 +137,19 @@ function BagLines() {
             <p className="line-item__price">{format(item.price * item.qty)}</p>
             <div className="qty">
               <button aria-label={`Decrease quantity of ${item.name}`}
-                      onClick={() => changeQty(item.key, -1)}>−</button>
+                      onClick={() => (item.qty === 1 ? setAsk(item) : changeQty(item.key, -1))}>−</button>
               <span aria-live="polite">{item.qty}</span>
               <button aria-label={`Increase quantity of ${item.name}`}
                       onClick={() => changeQty(item.key, 1)}>+</button>
             </div>
           </div>
           <button className="line-item__remove"
-                  onClick={() => removeItem(item.key)}>REMOVE</button>
+                  onClick={() => setAsk(item)}>REMOVE</button>
         </motion.article>
       ))}
     </AnimatePresence>
+    {confirmRemove}
+    </>
   );
 }
 
@@ -138,15 +165,117 @@ function CurrencyNote({ itemsNaira }) {
   );
 }
 
-function Field({ label, id, error, ok, reserve = false, hint, children }) {
+function Field({ label, id, error, ok, warn, reserve = false, hint, children }) {
   return (
     <label className="field field--tight" htmlFor={id}>
       <span>{label}{hint && <em className="field__hint"> · {hint}</em>}</span>
       {children}
       {error && <small className="field__error" id={`${id}-error`}>{error}</small>}
-      {!error && ok && <small className="field__ok">{ok}</small>}
-      {!error && !ok && reserve && <small className="field__note-room" aria-hidden="true" />}
+      {!error && warn && <small className="field__warn" id={`${id}-warn`}>{warn}</small>}
+      {!error && !warn && ok && <small className="field__ok">{ok}</small>}
+      {!error && !warn && !ok && reserve && <small className="field__note-room" aria-hidden="true" />}
     </label>
+  );
+}
+
+/* What is wrong with the delivery details, field by field (none: all right). */
+function problemsWith(d, inNigeria) {
+  const e = {};
+  if (!isEmail(d.email)) e.email = d.email.trim() ? 'Please enter a valid email address.' : 'Enter the email for your receipt.';
+  if (d.name.trim().length < 2) e.name = 'Enter your full name.';
+  if (!isPhone(d.phone)) e.phone = 'Enter a phone number the rider can call.';
+  if (!inNigeria && d.address.country.trim().length < 2) e.country = 'Choose your country.';
+  if (!d.address.state.trim()) e.state = inNigeria ? 'Choose your state.' : 'Enter your state or region.';
+  if (d.address.city.trim().length < 2) e.city = 'Enter your city or area.';
+  if (d.address.line1.trim().length < 3) e.line1 = 'Enter your street address.';
+  const pc = (d.address.postcode ?? '').trim();
+  if (!inNigeria && pc && !/^[A-Za-z0-9][A-Za-z0-9 -]{1,11}$/.test(pc)) e.postcode = 'Letters, numbers, spaces and dashes only.';
+  return e;
+}
+
+/* Bag → Delivery → Payment → Done: where checkout has got to. The line fills
+ * to the step, the dot there breathes. Payment happens on Paystack's page and
+ * Done on the order page, so the bag only ever shows the first two. */
+const CHECKOUT_STEPS = ['Bag', 'Delivery', 'Payment', 'Done'];
+export function CheckoutSteps({ at }) {
+  return (
+    <ol className="steps steps--checkout" aria-label="Checkout steps">
+      <span className="steps__track" aria-hidden="true">
+        <span className="steps__fill" style={{ transform: `scaleX(${at / (CHECKOUT_STEPS.length - 1)})` }} />
+      </span>
+      {CHECKOUT_STEPS.map((label, i) => {
+        const state = i < at ? 'done' : i === at ? 'now' : 'next';
+        return (
+          <li key={label} className={`steps__step is-${state}`} aria-current={state === 'now' ? 'step' : undefined}>
+            <span className="steps__dot">{state === 'done' && <Check />}</span>
+            <span className="steps__label">{label}</span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/* While the payment is being set up: the server checks every price and size,
+ * holds the pieces, and opens a payment with Paystack, in one go. The first
+ * two tick when its answer comes back; the last turns until the page goes. */
+function Processing({ stage, giftOnly }) {
+  const steps = ['Checking prices and stock', 'Holding your pieces', giftOnly ? 'Placing your order' : 'Opening Paystack’s secure page'];
+  return (
+    <motion.div className="processing" role="status" aria-live="polite"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: UI_OUT } }}
+                transition={{ duration: UI_IN, ease: EASE_OUT }}>
+      <motion.div className="processing__card" initial={{ y: 12, scale: 0.97 }} animate={{ y: 0, scale: 1 }}
+                  transition={{ duration: 0.4, ease: EASE_OUT }}>
+        <span className="processing__ring" aria-hidden="true"><span /></span>
+        <h3 className="processing__title">{giftOnly ? 'Placing your order' : 'Processing payment'}</h3>
+        <p className="processing__note">Please don’t close this window.</p>
+        <ol className="processing__steps">
+          {steps.map((label, i) => {
+            const done = stage === 'opening' ? i < 2 : false;
+            const now = stage === 'opening' ? i === 2 : i < 2;
+            return (
+              <li key={label} className={done ? 'is-done' : now ? 'is-now' : ''}>
+                <span className="processing__dot" aria-hidden="true">
+                  {done ? <StateMark tone="ok" delay={i * 0.12} /> : <span className="spinner" />}
+                </span>
+                {label}
+              </li>
+            );
+          })}
+        </ol>
+        <p className="processing__lock"><LockIcon /> Secure payment by Paystack</p>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+const LockIcon = () => (
+  <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+    <rect x="3" y="7" width="10" height="7" rx="1.6" /><path d="M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7" />
+  </svg>
+);
+
+/* "₦X away from free delivery", and the bar filling towards it, when the
+ * owner offers free delivery over an amount. */
+function FreeDeliveryBar({ itemsKobo }) {
+  const { site } = useShop();
+  const over = site?.freeDelivery?.overKobo;
+  if (!over) return null;
+  const left = over - itemsKobo;
+  const reach = Math.min(1, Math.max(0, itemsKobo / over));
+  return (
+    <div className={`free-bar${left <= 0 ? ' is-done' : ''}`}>
+      <p className="free-bar__text">
+        {left <= 0
+          ? <><StateMark tone="ok" /> <span><strong>Free delivery unlocked.</strong> Your order ships free.</span></>
+          : <span>You’re <strong>{naira(left)}</strong> away from free delivery.</span>}
+      </p>
+      <span className="free-bar__track" aria-hidden="true">
+        <motion.span className="free-bar__fill" initial={false} animate={{ scaleX: reach }}
+                     transition={{ duration: 0.6, ease: EASE_OUT }} />
+      </span>
+    </div>
   );
 }
 
@@ -271,11 +400,11 @@ function DeliveryForm({ onBack }) {
   const { cart, cartSubtotal, delivery, setDelivery, site, discountCode, closeOverlay } = useShop();
   const [applied, setApplied] = useState(null);
   const [errors, setErrors] = useState({});
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false);   // false | 'checking' | 'opening'
   const [serverError, setServerError] = useState(null);
-  // The email is checked when they leave the box, then again as they type:
-  // a mistake is pointed out late, a fix is welcomed at once.
-  const [emailSeen, setEmailSeen] = useState(false);
+  // Each box is checked when they leave it, then again as they type: a
+  // mistake is pointed out late, a fix is welcomed at once.
+  const [seen, setSeen] = useState({});
   const form = useRef(null);
 
   const zones = site?.delivery ?? [];
@@ -285,9 +414,12 @@ function DeliveryForm({ onBack }) {
 
   const zone = zoneFor(d.address);
   const open = zones.find(z => z.zone === zone);
-  // No fee in the total until there is somewhere to deliver to (a state, in Nigeria).
-  const fee = open && (!inNigeria || d.address.state) ? open.feeKobo : null;
   const discountKobo = applied?.discountKobo ?? 0;
+  // Free over the owner's amount, after any discount, as the server decides.
+  const freeOver = site?.freeDelivery?.overKobo;
+  const free = Boolean(freeOver) && cartSubtotal * 100 - discountKobo >= freeOver;
+  // No fee in the total until there is somewhere to deliver to (a state, in Nigeria).
+  const fee = open && (!inNigeria || d.address.state) ? (free ? 0 : open.feeKobo) : null;
   const total = cartSubtotal * 100 - discountKobo + (fee ?? 0);
   // A gift card pays after any discount, delivery included; Paystack takes the rest.
   const [gift, setGift] = useState(null);
@@ -318,19 +450,27 @@ function DeliveryForm({ onBack }) {
   };
 
   const validate = () => {
-    const e = {};
-    if (!isEmail(d.email)) e.email = d.email.trim() ? 'Please enter a valid email address.' : 'Enter the email for your receipt.';
-    if (d.name.trim().length < 2) e.name = 'Enter your full name.';
-    if (!isPhone(d.phone)) e.phone = 'Enter a phone number the rider can call.';
-    if (!inNigeria && d.address.country.trim().length < 2) e.country = 'Choose your country.';
-    if (!d.address.state.trim()) e.state = inNigeria ? 'Choose your state.' : 'Enter your state or region.';
-    if (d.address.city.trim().length < 2) e.city = 'Enter your city or area.';
-    if (d.address.line1.trim().length < 3) e.line1 = 'Enter your street address.';
-    const pc = (d.address.postcode ?? '').trim();
-    if (!inNigeria && pc && !/^[A-Za-z0-9][A-Za-z0-9 -]{1,11}$/.test(pc)) e.postcode = 'Letters, numbers, spaces and dashes only.';
+    const e = problemsWith(d, inNigeria);
     setErrors(e);
+    setSeen(Object.fromEntries(['email', 'name', 'phone', 'country', 'state', 'city', 'line1', 'postcode'].map(k => [k, true])));
     return Object.keys(e).length === 0;
   };
+
+  // Leaving a box: a mistake is said now. An empty box is let be (they may
+  // only be passing through), and so is leaving it for a button, which
+  // would otherwise jump from under the finger as the line appears.
+  const leave = (key) => (e) => {
+    if (e.relatedTarget?.closest?.('button')) return;
+    const value = key in d.address ? d.address[key] : d[key];
+    if (!String(value ?? '').trim()) return;
+    setSeen(x => ({ ...x, [key]: true }));
+    const problem = problemsWith(d, inNigeria)[key];
+    if (problem) setErrors(x => ({ ...x, [key]: problem }));
+  };
+  const problems = problemsWith(d, inNigeria);
+  const good = (key) => seen[key] && !errors[key] && !problems[key];
+  const phoneWarn = good('phone') && inNigeria && !looksNigerian(d.phone)
+    ? 'This doesn’t look like a Nigerian number. Check it, so the rider can reach you.' : null;
 
   const onPay = async (ev) => {
     ev.preventDefault();
@@ -338,15 +478,18 @@ function DeliveryForm({ onBack }) {
     if (!validate()) { shakeInvalid(form.current); return; }
     if (!open) { setServerError('Sorry — we don’t deliver there yet.'); return; }
 
-    setBusy(true); setServerError(null);
+    setBusy('checking'); setServerError(null);
     try {
       const { authorizationUrl, reference } = await startCheckout(d, cart, applied ? discountCode : undefined, visitId(), gift?.code);
       track('checkout', { valueKobo: total });
-      // Leaving for the payment page: the bag closes behind us, so coming
-      // back (the preview's payment page is in the same page) finds the shop.
-      closeOverlay();
+      setBusy('opening');
+      // A moment for the ticks to land before the page changes.
+      await new Promise(r => setTimeout(r, 450));
       // Paid in full by a gift card: nothing for Paystack, straight to the order.
-      if (!authorizationUrl) { navigate(`/order?reference=${encodeURIComponent(reference)}`); return; }
+      if (!authorizationUrl) { closeOverlay(); navigate(`/order?reference=${encodeURIComponent(reference)}`); return; }
+      if (authorizationUrl.startsWith('#')) closeOverlay();   // the preview's pretend payment page, in this page
+      // Coming back with the browser's Back finds the shop, not this screen.
+      else window.addEventListener('pageshow', (e) => { if (e.persisted) closeOverlay(); }, { once: true });
       window.location.href = authorizationUrl;   // hand off to Paystack
     } catch (err) {
       setBusy(false);
@@ -355,30 +498,25 @@ function DeliveryForm({ onBack }) {
     }
   };
 
-  const err = (k) => errors[k] ? { 'aria-invalid': true, 'aria-describedby': `d-${k}-error`, className: 'is-error' } : {};
+  const err = (k) => errors[k] ? { 'aria-invalid': true, 'aria-describedby': `d-${k}-error`, className: 'is-error' }
+    : good(k) ? { className: 'is-valid' } : {};
 
   return (
     <form className="delivery" onSubmit={onPay} noValidate ref={form}>
       <button type="button" className="delivery__back" onClick={onBack}>← BACK TO BAG</button>
 
       <Field label="EMAIL FOR RECEIPT" id="d-email" error={errors.email}
-             ok={emailSeen && isEmail(d.email) ? 'Looks good!' : null} reserve>
+             ok={good('email') ? 'Looks good!' : null} reserve>
         <input id="d-email" type="email" autoComplete="email" inputMode="email"
-               value={d.email} onChange={set('email')}
-               onBlur={() => {
-                 if (!d.email.trim()) return;
-                 setEmailSeen(true);
-                 if (!isEmail(d.email)) setErrors(x => ({ ...x, email: 'Please enter a valid email address.' }));
-               }}
-               {...err('email')}
-               className={errors.email ? 'is-error' : emailSeen && isEmail(d.email) ? 'is-valid' : undefined} />
+               value={d.email} onChange={set('email')} onBlur={leave('email')} {...err('email')} />
       </Field>
       <Field label="FULL NAME" id="d-name" error={errors.name}>
-        <input id="d-name" autoComplete="name" value={d.name} onChange={set('name')} {...err('name')} />
+        <input id="d-name" autoComplete="name" value={d.name} onChange={set('name')} onBlur={leave('name')} {...err('name')} />
       </Field>
-      <Field label="PHONE" id="d-phone" error={errors.phone} hint="for the rider">
+      <Field label="PHONE" id="d-phone" error={errors.phone} warn={phoneWarn} hint="for the rider">
         <input id="d-phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="0803 123 4567"
-               value={d.phone} onChange={set('phone')} {...err('phone')} />
+               value={d.phone} onChange={set('phone')} onBlur={leave('phone')} {...err('phone')}
+               {...(phoneWarn ? { className: 'is-warn', 'aria-describedby': 'd-phone-warn' } : {})} />
       </Field>
 
       {/* Only when the owner delivers abroad (Settings → Outside Nigeria):
@@ -400,22 +538,35 @@ function DeliveryForm({ onBack }) {
       <Field label={inNigeria ? 'STATE' : 'STATE OR REGION'} id="d-state" error={errors.state}>
         {inNigeria ? (
           <select id="d-state" autoComplete="address-level1"
-                  value={d.address.state} onChange={setAddr('state')} {...err('state')}>
+                  value={d.address.state} onChange={setAddr('state')} onBlur={leave('state')} {...err('state')}>
             <option value="">Choose…</option>
             {(site?.states ?? []).map(s => <option key={s} value={s}>{s === 'FCT' ? 'FCT (Abuja)' : s}</option>)}
           </select>
         ) : (
           <input id="d-state" autoComplete="address-level1"
-                 value={d.address.state} onChange={setAddr('state')} {...err('state')} />
+                 value={d.address.state} onChange={setAddr('state')} onBlur={leave('state')} {...err('state')} />
         )}
       </Field>
+      <AnimatePresence initial={false}>
+        {!open && site && (d.address.state || !inNigeria) && (inNigeria || d.address.country) && (
+          <motion.div className="delivery__nope" role="alert" key="nope"
+                      initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: UI_IN, ease: EASE_OUT }}>
+            <div className="delivery__nope-in">
+              <StateMark tone="bad" />
+              <p><strong>We don’t deliver to {inNigeria ? d.address.state : d.address.country} yet.</strong>
+                <span>Choose another address, or check back soon.</span></p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <Field label="CITY OR AREA" id="d-city" error={errors.city}>
         <input id="d-city" autoComplete="address-level2" placeholder={inNigeria ? 'e.g. Lekki' : ''}
-               value={d.address.city} onChange={setAddr('city')} {...err('city')} />
+               value={d.address.city} onChange={setAddr('city')} onBlur={leave('city')} {...err('city')} />
       </Field>
       <Field label="STREET ADDRESS" id="d-line1" error={errors.line1}>
         <input id="d-line1" autoComplete="address-line1"
-               value={d.address.line1} onChange={setAddr('line1')} {...err('line1')} />
+               value={d.address.line1} onChange={setAddr('line1')} onBlur={leave('line1')} {...err('line1')} />
       </Field>
       <Field label="FLAT, LANDMARK" id="d-line2" hint="optional">
         <input id="d-line2" autoComplete="address-line2"
@@ -424,7 +575,7 @@ function DeliveryForm({ onBack }) {
       {!inNigeria && (
         <Field label="POSTCODE / ZIP" id="d-postcode" error={errors.postcode} hint="if you have one">
           <input id="d-postcode" autoComplete="postal-code" maxLength={12} autoCapitalize="characters"
-                 value={d.address.postcode ?? ''} onChange={setAddr('postcode')} {...err('postcode')} />
+                 value={d.address.postcode ?? ''} onChange={setAddr('postcode')} onBlur={leave('postcode')} {...err('postcode')} />
         </Field>
       )}
       {/* Never ticked for them: news is only sent to people who asked. */}
@@ -444,13 +595,13 @@ function DeliveryForm({ onBack }) {
         <div className="drawer__row">
           <span>DELIVERY</span>
           <span>{d.address.state || !inNigeria
-            ? (open ? (fee === 0 ? 'FREE' : naira(fee)) : 'NOT AVAILABLE')
+            ? (open ? (fee === 0 ? <span className="drawer__free">FREE</span> : naira(fee)) : 'NOT AVAILABLE')
             : '—'}</span>
         </div>
         {giftKobo > 0 && (
           <div className="drawer__row drawer__row--discount"><span>GIFT CARD</span><span>−{naira(giftKobo)}</span></div>
         )}
-        <div className="drawer__row drawer__row--total"><span>{giftKobo > 0 ? 'TO PAY' : 'TOTAL'}</span><span>{naira(due)}</span></div>
+        <div className="drawer__row drawer__row--total"><span>{giftKobo > 0 ? 'TO PAY' : 'TOTAL'}</span><Amount value={due} format={naira} /></div>
       </div>
 
       <button type="submit" className="btn btn--solid btn--block" disabled={busy || !cart.length}>
@@ -462,13 +613,14 @@ function DeliveryForm({ onBack }) {
       <p className={`form-msg${serverError ? ' is-show is-error' : ''}`} role="status" aria-live="polite">
         {serverError ?? ''}
       </p>
+      <AnimatePresence>{busy && <Processing stage={busy} giftOnly={due === 0} />}</AnimatePresence>
     </form>
   );
 }
 
-function CartDrawer() {
+function CartDrawer({ start = 'bag' }) {
   const { cart, cartQty, cartSubtotal, format, site, catalogueStatus } = useShop();
-  const [step, setStep] = useState('bag');
+  const [step, setStep] = useState(start);
 
   // Delivery prices are the owner's to set; until they are, nothing can be sold.
   const checkoutOpen = (site?.delivery ?? []).length > 0;
@@ -476,6 +628,7 @@ function CartDrawer() {
   if (step === 'delivery' && cart.length) {
     return (
       <Drawer label="Delivery" title="DELIVERY">
+        <CheckoutSteps at={1} />
         <DeliveryForm onBack={() => setStep('bag')} />
       </Drawer>
     );
@@ -485,7 +638,8 @@ function CartDrawer() {
     <Drawer
       label="Your bag" title="YOUR BAG" count={cartQty}
       foot={<>
-        <div className="drawer__row"><span>SUBTOTAL</span><span>{format(cartSubtotal)}</span></div>
+        <FreeDeliveryBar itemsKobo={Math.round(cartSubtotal * 100)} />
+        <div className="drawer__row"><span>SUBTOTAL</span><Amount value={cartSubtotal} format={format} /></div>
         <CurrencyNote itemsNaira={cartSubtotal} />
         <p className="drawer__note">
           {checkoutOpen || catalogueStatus !== 'ready'
@@ -499,6 +653,7 @@ function CartDrawer() {
         </button>
       </>}
     >
+      {cart.length > 0 && <CheckoutSteps at={0} />}
       <BagLines />
     </Drawer>
   );
@@ -591,6 +746,46 @@ function AddedModal({ name, what, img, colour, size, price, qty }) {
           VIEW BAG <ArrowShort className="btn__arrow" />
         </button>
         <button type="button" className="btn btn--ghost btn--block state-panel__second" onClick={closeOverlay}>CONTINUE SHOPPING</button>
+      </div>
+    </Modal>
+  );
+}
+
+/* ------------------------------------------------------------ out of stock */
+
+/* The owner's "Out of stock" panel, when a sold-out piece is tapped: the
+ * piece itself, a way to hear when it is back (the product page's own form,
+ * opened and waiting), and a way to the others. */
+function SoldOutModal({ id, name, img, price, colour, size, everySize }) {
+  const { closeOverlay } = useShop();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const goTo = useSectionLink();
+  const page = `/product/${id}`;
+  const notify = () => {
+    closeOverlay();
+    navigate(`${page}${colour ? `?colour=${encodeURIComponent(colour)}` : ''}`, { state: { ...FROM_SHOP, notify: true, size } });
+  };
+  const similar = () => {
+    closeOverlay();
+    // On its own page the others are just below; elsewhere, the drop.
+    const more = pathname === page && document.getElementById('moreLike');
+    if (more) glideTo(more, -120); else goTo('#drop');
+  };
+  return (
+    <Modal labelledBy="soldOutTitle" className="modal__panel--state modal__panel--bad">
+      <StateArt tone="bad" />
+      <div className="state-panel">
+        <StateMark tone="bad" size="lg" />
+        <h2 className="state-panel__title" id="soldOutTitle">Out of stock</h2>
+        <p className="state-panel__note">
+          {everySize ? 'This piece has sold out for now.' : 'This piece is no longer available in the selected size.'}
+        </p>
+        <PieceCard img={img} name={name} price={price}
+                   meta={colour || size ? <>{colour ? <>Colour: {colour}</> : null}{colour && size ? <span aria-hidden="true"> · </span> : null}{size ? <>Size: {size}</> : null}</> : null}
+                   aside={<span className="pill pill--bad">Sold out</span>} />
+        <button type="button" className="btn btn--danger btn--block" onClick={notify}>NOTIFY ME WHEN AVAILABLE</button>
+        <button type="button" className="btn btn--ghost btn--block state-panel__second" onClick={similar}>VIEW SIMILAR ITEMS</button>
       </div>
     </Modal>
   );
@@ -750,12 +945,14 @@ export default function Overlays() {
             transition={{ duration: UI_IN, ease: EASE_OUT }}
           />
           {overlay === 'cart'  && <CartDrawer />}
+          {overlay === 'checkout' && <CartDrawer start="delivery" />}
           {overlay === 'saved' && <SavedDrawer />}
           {overlay === 'track' && <TrackOrderModal />}
           {overlay === 'film'  && <FilmModal />}
           {overlay === 'welcome' && <WelcomeModal />}
           {info                && <InfoModal title={info} />}
           {overlay.added       && <AddedModal {...overlay.added} />}
+          {overlay.soldOut     && <SoldOutModal {...overlay.soldOut} />}
           {overlay.zoom        && <ZoomViewer {...overlay.zoom} />}
         </motion.div>
       )}

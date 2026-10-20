@@ -6,7 +6,9 @@ import { useShop } from '../store/ShopContext.jsx';
 import Wordmark from '../components/Wordmark.jsx';
 import StateMark from '../components/StateMark.jsx';
 import StateArt, { useBadShake } from '../components/StateArt.jsx';
-import { Copy, Check } from '../components/Icons.jsx';
+import { Copy, Check, Truck } from '../components/Icons.jsx';
+import { FactCard } from '../components/Dialog.jsx';
+import OrderResult, { when, deliveryWindow } from '../components/OrderResult.jsx';
 import { gsap } from 'gsap';
 
 /* Where Paystack sends the customer back to. Paystack appends both `trxref`
@@ -40,6 +42,9 @@ export default function OrderStatus() {
 
   const [order, setOrder] = useState(null);
   const [error, setError] = useState(null);
+  // Still pending after a few checks: the "Payment pending" panel says so.
+  const [waited, setWaited] = useState(false);
+  const [round, setRound] = useState(0);
   const { clearCart } = useShop();
   const cleared = useRef(false);
 
@@ -64,8 +69,9 @@ export default function OrderStatus() {
 
         // The webhook is usually first, but not always. Give it a little while —
         // unless Paystack has already said the payment was not completed.
-        if (data.status === 'pending' && data.payment !== 'not_completed' && ++tries < 10) {
-          setTimeout(check, 3000);
+        if (data.status === 'pending' && data.payment !== 'not_completed') {
+          if (++tries >= 3) setWaited(true);
+          if (tries < 10) setTimeout(check, 3000);
         }
       } catch (err) {
         if (live) setError(err.message);
@@ -74,7 +80,7 @@ export default function OrderStatus() {
 
     check();
     return () => { live = false; };
-  }, [reference, clearCart, isGift]);
+  }, [reference, clearCart, isGift, round]);
 
   const status = order?.status === 'pending' && order.payment === 'not_completed'
     ? 'unpaid'
@@ -129,6 +135,22 @@ export default function OrderStatus() {
             <>
               {(status === 'paid' || status === 'sent') && <OrderSteps at={status === 'sent' ? 2 : 1} />}
               <Reference value={reference} />
+              {order && (order.paidAt || order.paymentMethod || order.createdAt) && (
+                <FactCard rows={[
+                  ['Date', when(order.paidAt ?? order.createdAt)],
+                  order.paymentMethod && ['Payment method', order.paymentMethod],
+                  order.failureReason && tone === 'bad' && ['Reason', order.failureReason],
+                  ['Items', `${order.itemCount ?? order.items.length} ${(order.itemCount ?? order.items.length) === 1 ? 'item' : 'items'}`],
+                  order.deliveryEstimate && ['Estimated delivery', deliveryWindow(order.deliveryEstimate)],
+                  order.deliveryTo && ['Delivering to', order.deliveryTo]
+                ]} />
+              )}
+              {status === 'paid' && (
+                <div className="state-card state-card--note status__note">
+                  <Truck />
+                  <p><strong>No delivery updates yet</strong><span>We’ll email you when your order leaves the studio, with a tracking number.</span></p>
+                </div>
+              )}
 
               {status === 'sent' && (order.courier || order.tracking) && (
                 <div className="status__tracking">
@@ -192,6 +214,8 @@ export default function OrderStatus() {
           )}
         </motion.div>
       </motion.main>
+      {!error && <OrderResult order={order} status={status} waited={waited} reference={reference}
+                              onRecheck={() => { setWaited(false); setRound(r => r + 1); }} />}
     </div>
   );
 }

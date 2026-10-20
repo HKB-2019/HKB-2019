@@ -54,3 +54,23 @@ export default function StateMark({ tone, size, burst = false, delay = 0 }) {
     </span>
   );
 }
+
+/* The red bin of the owner's "Remove this item?" dialog: its lid lifts once
+ * as it appears, as if about to take the piece. */
+export function TrashMark() {
+  const calm = useReducedMotion();
+  return (
+    <span className="state-mark state-mark--lg state-mark--bad state-mark--trash" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <motion.g style={{ originX: '20%', originY: '100%' }}
+                  initial={calm ? false : { rotate: 0, y: 0 }}
+                  animate={calm ? undefined : { rotate: [0, -22, -22, 0], y: [0, -1.5, -1.5, 0] }}
+                  transition={{ duration: 0.9, delay: 0.25, times: [0, 0.3, 0.6, 1], ease: EASE }}>
+          <path d="M4.5 6.5h15" /><path d="M9.5 6.5V4.8c0-.7.5-1.2 1.2-1.2h2.6c.7 0 1.2.5 1.2 1.2v1.7" />
+        </motion.g>
+        <path d="M6.5 6.5l.9 12.2c.1 1 .9 1.8 1.9 1.8h5.4c1 0 1.8-.8 1.9-1.8l.9-12.2" />
+        <path d="M10 10.5v6M14 10.5v6" />
+      </svg>
+    </span>
+  );
+}

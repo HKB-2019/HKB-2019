@@ -172,6 +172,16 @@ export function ShopProvider({ children }) {
 
   /* --------------------------------------------------------------- bag */
 
+  /* The owner's "Out of stock" panel, in place of a passing message: the
+   * piece, and the two ways on (be told when it is back, see others). */
+  const showSoldOut = useCallback((product, colour = '', size = '') => {
+    const p = products.find(x => x.id === product.id) ?? product;
+    setOverlay({ soldOut: {
+      id: p.id, name: p.name, img: photoFor(p, colour).img ?? p.img, price: format(p.price),
+      colour, size, everySize: Boolean(p.soldOut) || !size
+    } });
+  }, [products, format]);
+
   /* Returns what went in, or nothing if it could not. `quiet` leaves the
    * saying-so to the caller (the product page shows its own panel). */
   const addToCart = useCallback((product, size, colour = '', { quiet = false } = {}) => {
@@ -179,7 +189,7 @@ export function ShopProvider({ children }) {
     if (hasColours(p) && !colour) { toast({ tone: 'warn', title: 'Choose a colour first' }); return; }
     const what = optionLabel(colour, size);
     const max = maxFor(p, size, colour);
-    if (max === 0) { toast({ tone: 'bad', title: 'Sold out', body: `${p.name} (${what}) has sold out.`, img: photoFor(p, colour).img }); return; }
+    if (max === 0) { showSoldOut(p, colour, size); return; }
 
     const key = `${p.id}|${colour}|${size}`;
     const existing = cart.find(i => i.key === key);
@@ -196,7 +206,7 @@ export function ShopProvider({ children }) {
     if (!quiet) toast({ tone: 'ok', title: 'Added to bag', body: `${p.name} · ${what}`, img, action: { label: 'View bag', onClick: () => setOverlay('cart') } });
     track('add_to_cart', { productId: p.id, size, valueKobo: p.priceKobo });
     return { name: p.name, what, img, colour, size, price: format(p.price), qty: existing ? existing.qty + 1 : 1 };
-  }, [products, cart, toast, format]);
+  }, [products, cart, toast, format, showSoldOut]);
 
   const changeQty = useCallback((key, delta) => {
     const line = cart.find(i => i.key === key);
@@ -211,17 +221,21 @@ export function ShopProvider({ children }) {
     setCart(items => items
       .map(i => i.key === key ? { ...i, qty: i.qty + delta } : i)
       .filter(i => i.qty > 0));
+    // One card for a run of taps, updated in place rather than stacked.
+    if (line.qty + delta > 0) {
+      toast({ key: 'qty', tone: 'ok', title: 'Quantity updated', body: `${line.name} · ${line.qty + delta} in your bag`, img: line.img, ms: 2600 });
+    }
   }, [cart, products, toast]);
 
-  /* Taken out at once, with Undo on the message to put it back where it was
-   * (rather than an "Are you sure?" before every removal). */
+  /* Taken out (after the bag's "Remove this item?"), with Undo on the
+   * message to put it back where it was. */
   const removeItem = useCallback((key) => {
     const at = cart.findIndex(i => i.key === key);
     if (at < 0) return;
     const line = cart[at];
     setCart(items => items.filter(i => i.key !== key));
     toast({
-      title: 'Removed from your bag', body: `${line.name} · ${optionLabel(line.colour ?? '', line.size)}`, img: line.img,
+      tone: 'bad', title: 'Item removed', body: `${line.name} · ${optionLabel(line.colour ?? '', line.size)}`, img: line.img,
       action: { label: 'Undo', onClick: () => setCart(items => items.some(i => i.key === key) ? items
         : [...items.slice(0, at), line, ...items.slice(at)]) }
     });
@@ -245,6 +259,18 @@ export function ShopProvider({ children }) {
   const cartQty      = useMemo(() => cart.reduce((n, i) => n + i.qty, 0), [cart]);
   const cartSubtotal = useMemo(() => cart.reduce((n, i) => n + i.price * i.qty, 0), [cart]);
 
+  /* Free delivery reached: said once, as the bag crosses the owner's amount
+   * (not on arriving with a bag already over it). */
+  const freeOver = site?.freeDelivery?.overKobo ?? null;
+  const wasOver = useRef(null);
+  useEffect(() => {
+    const over = freeOver !== null && cartSubtotal * 100 >= freeOver;
+    if (wasOver.current === false && over) {
+      toast({ key: 'free', tone: 'ok', title: 'Free delivery unlocked', body: 'Your order now ships free.' });
+    }
+    wasOver.current = freeOver === null ? null : over;
+  }, [cartSubtotal, freeOver, toast]);
+
   /* ---------------------------------------------------------- overlays */
 
   const openOverlay  = useCallback((which) => setOverlay(which), []);
@@ -266,7 +292,7 @@ export function ShopProvider({ children }) {
 
   const value = {
     products, site, catalogueStatus: status, loadCatalogue, productById,
-    cart, cartQty, cartSubtotal, addToCart, changeQty, removeItem, clearCart, maxFor,
+    cart, cartQty, cartSubtotal, addToCart, showSoldOut, changeQty, removeItem, clearCart, maxFor,
     delivery, setDelivery, discountCode, setDiscountCode,
     wishlist, toggleWish,
     currency, setCurrency, format,

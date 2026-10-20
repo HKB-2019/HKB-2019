@@ -52,7 +52,7 @@ export function SizeButtons({ product, onPicked, onColour }) {
 }
 
 function ProductCard({ product, picking, onPick, onClosePick }) {
-  const { wishlist, toggleWish, format, toast, addToCart } = useShop();
+  const { wishlist, toggleWish, format, addToCart, showSoldOut } = useShop();
   const glide = useGlideToProduct();
   const base = `/product/${product.id}`;
   const saved = wishlist.includes(product.id);
@@ -66,7 +66,7 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
   const to = hasColours(product) && shown !== firstColour(product) ? `${base}?colour=${encodeURIComponent(shown)}` : base;
 
   const onQuickAdd = () => {
-    if (product.soldOut) { toast({ tone: 'bad', title: 'Sold out', body: 'Join the list to hear when it’s back.', img: product.img }); return; }
+    if (product.soldOut) { showSoldOut(product, shown); return; }
     // One size: nothing to choose, so add it straight away.
     if (only) { addToCart(product, only.size); return; }
     picking ? onClosePick() : onPick(product.id);

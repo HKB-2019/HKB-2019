@@ -131,6 +131,19 @@ function RestockAsk({ product, colour = '' }) {
   const check = useEmailCheck(email);
 
   useEffect(() => { setOpen(false); setState(null); setSize(gone[0]?.size ?? ''); }, [product.id, colour]);   // eslint-disable-line react-hooks/exhaustive-deps
+  // Sent here by the "Out of stock" panel's NOTIFY ME: the form is open,
+  // on the size they wanted, and the page glides to it.
+  const { state: arrived, key: visit } = useLocation();
+  useEffect(() => {
+    if (!arrived?.notify || !gone.length) return;
+    setOpen(true);
+    if (gone.some(s => s.size === arrived.size)) setSize(arrived.size);
+    const t = setTimeout(() => {
+      const el = document.getElementById('restock-email');
+      if (el) { glideTo(el, -180); el.focus({ preventScroll: true }); }
+    }, 80);
+    return () => clearTimeout(t);
+  }, [visit]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!gone.length) return null;
   if (state === 'done') {
@@ -180,7 +193,7 @@ function RestockAsk({ product, colour = '' }) {
 /* ------------------------------------------------------- buying box */
 
 function BuyBox({ product, colour, onColour }) {
-  const { addToCart, format, wishlist, toggleWish, openOverlay, toast } = useShop();
+  const { addToCart, format, wishlist, toggleWish, openOverlay, showSoldOut } = useShop();
   const sizes = sizesFor(product, colour);
   // One size and no colours: nothing to choose. One size in colours: the size
   // needs no choosing, the colour does.
@@ -206,8 +219,7 @@ function BuyBox({ product, colour, onColour }) {
   const chosen = sizes.find(s => s.size === size && s.available);
 
   const add = () => {
-    if (product.soldOut) { toast({ tone: 'bad', title: 'Sold out', body: 'Join the list to hear when it’s back.' }); return; }
-    if (colourOut) { toast({ tone: 'bad', title: `${colour} has sold out`, body: 'Try another colour.' }); return; }
+    if (product.soldOut || colourOut) { showSoldOut(product, colour); return; }
     if (!chosen) { setAsked(true); return; }
     const got = addToCart(product, chosen.size, colour, { quiet: true });
     if (!got) return;   // the bag has said why (sold out, the most per order)

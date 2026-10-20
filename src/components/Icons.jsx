@@ -54,6 +54,18 @@ export const Check = () => (
   <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
 );
 
+export const CardIcon = () => (
+  <svg viewBox="0 0 28 28" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="6.5" width="22" height="15" rx="2.6"/><path d="M3 11.5h22M7.5 17h5"/>
+  </svg>
+);
+
+export const Truck = () => (
+  <svg viewBox="0 0 28 28" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2.5 7.5h14v12h-14zM16.5 11.5h5l4 4.2v3.8h-9"/><circle cx="7.5" cy="20.5" r="2.2"/><circle cx="20.5" cy="20.5" r="2.2"/>
+  </svg>
+);
+
 export const CaretLeft = () => (
   <svg viewBox="0 0 12 18" aria-hidden="true"><path d="M9.5 1 2 9l7.5 8" fill="none" stroke="currentColor" strokeWidth="1.4"/></svg>
 );

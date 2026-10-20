@@ -25,6 +25,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.134.0",
     "@electric-sql/pglite": "^0.5.8",
+    "canvas-confetti": "^1.9.3",
     "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
     "framer-motion": "^13.4.1",

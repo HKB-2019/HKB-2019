@@ -10,7 +10,7 @@ import { hasColours, onlyChoice, firstColour, photoFor } from '../lib/colours.js
 const DRAG_THRESHOLD = 5;
 
 export default function Essentials() {
-  const { addToCart, format, toast, products, catalogueStatus } = useShop();
+  const { addToCart, format, toast, products, catalogueStatus, showSoldOut } = useShop();
   const glide = useGlideToProduct();
   const { home } = useHome();
   const essentials = products.filter(p => p.inEssentials);
@@ -166,7 +166,7 @@ export default function Essentials() {
             const pic = hasColours(p) ? photoFor(p, shown) : p;
             const to = `/product/${p.id}${hasColours(p) && shown !== firstColour(p) ? `?colour=${encodeURIComponent(shown)}` : ''}`;
             const onPick = () => {
-              if (p.soldOut) { toast({ tone: 'bad', title: 'Sold out', body: 'Join the list to hear when it’s back.', img: p.img }); return; }
+              if (p.soldOut) { showSoldOut(p, shown); return; }
               if (only) addToCart(p, only.size);
               else setPicking(id => id === p.id ? null : p.id);
             };

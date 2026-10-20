@@ -20,3 +20,8 @@ export const isPhone = (v) => {
   const digits = s.replace(/\D/g, '');
   return /^\+?[\d\s()-]+$/.test(s) && digits.length >= 7 && digits.length <= 15;
 };
+
+/* A number that passes isPhone but does not look like a Nigerian one (0 or
+ * 234, then the rest: 0803 123 4567, +234 803 123 4567): worth a second
+ * look, not a reason to stop. */
+export const looksNigerian = (v) => /^(0|234)[1-9]\d{7,9}$/.test(String(v ?? '').replace(/\D/g, ''));
