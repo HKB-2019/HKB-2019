@@ -64,7 +64,10 @@ const markSeen = (reference, kind) => {
  * only when there is something to celebrate; not at all with reduced motion. */
 function celebrate() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  import('canvas-confetti').then(({ default: confetti }) => {
+  import('canvas-confetti').then(({ default: lib }) => {
+    // Drawn on the page itself, not in a background worker: the shop's
+    // security policy allows no workers made on the fly.
+    const confetti = lib.create(null, { resize: true, useWorker: false });
     const colors = ['#5a2be0', '#7a4dff', '#f2a51d', '#3fc1c9', '#e8336f', '#3ccf74'];
     const base = { colors, disableForReducedMotion: true, ticks: 180, gravity: 1.05, scalar: 0.9, zIndex: 150 };
     confetti({ ...base, particleCount: 60, spread: 62, startVelocity: 42, angle: 60, origin: { x: 0.12, y: 0.72 } });

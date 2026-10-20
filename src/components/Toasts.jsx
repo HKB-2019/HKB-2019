@@ -8,8 +8,8 @@ import StateMark from './StateMark.jsx';
  * none for plain news): the ringed mark drawing itself in, the piece's photo
  * when there is one, a title and a line, an optional action (Undo, View bag),
  * the MASQ. stripe, a close button, and a bar along the foot running down the
- * time it has left. They arrive from the top right (from the top on a phone),
- * newest first; resting the pointer on one, or tabbing into it, holds its
+ * time it has left. They arrive from the top right (from the top on a phone,
+ * one at a time), newest first; resting the pointer on one, or tabbing into it, holds its
  * clock. A card with no time (`ms: null`, "You're offline") stays until the
  * thing it is about is over. */
 
@@ -78,7 +78,8 @@ export default function Toasts() {
   return (
     <div className="toast-wrap" aria-live="polite" aria-atomic="false">
       <AnimatePresence initial={false}>
-        {[...toasts].reverse().map(t => <ToastSlot key={t.id} t={t} dismiss={dismissToast} phone={phone} />)}
+        {/* On a phone one at a time, the newest: three would cover the page. */}
+        {[...toasts].reverse().slice(0, phone ? 1 : 3).map(t => <ToastSlot key={t.id} t={t} dismiss={dismissToast} phone={phone} />)}
       </AnimatePresence>
     </div>
   );

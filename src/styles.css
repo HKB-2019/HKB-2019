@@ -3166,3 +3166,105 @@ body:has(.drawer) .toast-wrap{ right:calc(min(430px, 100%) + 20px); }
 .processing__steps li:not(.is-now):not(.is-done) .spinner{ animation:none; opacity:.35; border-right-color:currentColor; }
 .processing__lock{ display:flex; align-items:center; justify-content:center; gap:6px; margin:0; font-size:12px; color:var(--ink-faint); }
 .processing__lock svg{ width:13px; height:13px; }
+
+/* a password box with an eye to show it */
+.password{ position:relative; display:block; }
+.password input{ width:100%; padding-right:48px !important; }
+.password__eye{
+  position:absolute; right:0; top:50%; transform:translateY(-50%); display:grid; place-items:center;
+  width:44px; height:44px; color:var(--ink-dim); transition:color .2s var(--ease);
+}
+.password__eye:hover, .password__eye[aria-pressed="true"]{ color:var(--ink); }
+.password__eye svg{ width:20px; height:20px; }
+
+/* ============ ANNOUNCEMENTS AND MAINTENANCE (SiteNotices.jsx) ============ */
+/* The bar across the top: the header and the page move down by its height. */
+:root{ --announce-h:0px; }
+.header{ top:var(--announce-h); transition:top .4s var(--ease-out), background .35s var(--ease), border-color .35s var(--ease); }
+#main{ padding-top:var(--announce-h); transition:padding-top .4s var(--ease-out); }
+.announce{
+  --tone-rgb:var(--info-rgb);
+  position:fixed; inset:0 0 auto 0; z-index:95; color:var(--ink);
+  background:linear-gradient(90deg, rgb(var(--tone-rgb) / .2), rgb(var(--tone-rgb) / .08) 70%), var(--bg-2);
+  border-bottom:1px solid rgb(var(--tone-rgb) / .4);
+}
+.announce--ok{ --tone-rgb:var(--ok-rgb); }
+.announce--warn{ --tone-rgb:var(--amber-rgb); }
+.announce__inner{ display:flex; align-items:center; gap:10px; max-width:1240px; margin:0 auto; padding:9px 12px 9px 20px; min-height:44px; }
+.announce .state-mark{ width:20px; height:20px; flex:none; }
+.announce__text{ flex:1; min-width:0; margin:0; font-size:14px; line-height:1.45; }
+.announce__text strong{ font-weight:600; }
+.announce__text span{ color:var(--ink-dim); }
+.announce__close{ display:grid; place-items:center; width:40px; height:40px; flex:none; border-radius:8px; color:var(--ink-dim); }
+.announce__close:hover{ color:var(--ink); background:rgb(var(--ink-rgb) / .07); }
+.announce__close svg{ width:14px; height:14px; }
+@media (max-width:640px){
+  .announce__inner{ padding:8px 6px 8px 16px; align-items:flex-start; }
+  .announce .state-mark{ margin-top:2px; }
+  .announce__text{ font-size:13px; }
+  .toast-wrap{ top:calc(var(--header-h-sm, 64px) + var(--announce-h) + 8px); }
+}
+
+.maintenance .status__panel{ max-width:540px; }
+.tools-mark svg{ overflow:visible; }
+.maintenance__eta{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px; margin:0 0 24px; font-size:15px; font-weight:600; }
+.maintenance__join{ width:100%; padding:18px 0 0; border-top:1px solid rgb(var(--ink-rgb) / .1); }
+.maintenance__lead{ margin:0 0 12px; font-size:14px; color:var(--ink-dim); text-align:center; }
+.maintenance__join .newsletter__form{ margin:0 auto; max-width:420px; }
+.maintenance__social{ justify-content:center; margin-top:22px; }
+
+/* ============ SEARCH ============ */
+.search{
+  position:fixed; top:0; left:0; right:0; z-index:100; max-height:min(86vh, 720px); display:flex; flex-direction:column;
+  background:var(--bg-2); border-bottom:1px solid var(--line); box-shadow:0 30px 80px var(--shadow);
+}
+.search__bar{ display:flex; align-items:center; gap:12px; width:min(1000px, 100%); margin:0 auto; padding:18px 20px; border-bottom:1px solid var(--line); }
+.search__bar > svg{ width:22px; height:22px; flex:none; color:var(--ink-dim); }
+.search__bar input{
+  flex:1; min-width:0; height:48px; border:0; background:none; color:var(--ink); font:inherit; font-size:20px; letter-spacing:-.01em;
+}
+.search__bar input:focus{ outline:none; }
+.search__bar input::-webkit-search-cancel-button{ display:none; }
+.search__clear{ display:grid; place-items:center; width:40px; height:40px; flex:none; border-radius:50%; color:var(--ink-dim); }
+.search__clear:hover{ color:var(--ink); background:rgb(var(--ink-rgb) / .07); }
+.search__clear svg{ width:13px; height:13px; }
+.search__close{ flex:none; min-height:44px; padding:0 4px 0 10px; font-size:11px; letter-spacing:.22em; color:var(--ink-dim); }
+.search__close:hover{ color:var(--ink); }
+.search__body{ overflow-y:auto; overscroll-behavior:contain; width:min(1000px, 100%); margin:0 auto; padding:18px 20px 26px; }
+.search__label{ margin:0 0 12px; font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-faint); }
+.search__list{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px; }
+.search__item{
+  width:100%; display:grid; grid-template-columns:56px minmax(0, 1fr); grid-template-rows:auto auto; column-gap:12px; row-gap:3px; align-items:center;
+  padding:8px; border:1px solid var(--line); border-radius:12px; text-align:left; color:var(--ink);
+  transition:border-color .2s var(--ease), background-color .2s var(--ease);
+}
+.search__item:hover, .search__item:focus-visible{ border-color:rgb(var(--violet-soft-rgb) / .5); background:var(--tint); }
+.search__item img, .search__ph{ grid-row:1 / span 2; width:56px; height:56px; border-radius:8px; object-fit:cover; background:var(--bg-3); }
+.search__name{ align-self:end; font-size:13px; font-weight:600; letter-spacing:.05em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.search__price{ align-self:start; font-size:14px; color:var(--ink-dim); font-variant-numeric:tabular-nums; }
+.search__empty{ padding:20px 0 6px; }
+@media (max-width:640px){
+  .search{ max-height:100dvh; height:100dvh; }
+  .search__bar{ padding:10px 10px 10px 16px; }
+  .search__bar input{ font-size:17px; }
+  .search__list{ grid-template-columns:1fr; }
+}
+/* the 500 behind the mark on "Something went wrong" */
+.error-code{
+  position:absolute; top:-6px; left:50%; transform:translateX(-50%); margin:0; z-index:-1;
+  font-size:clamp(88px, 22vw, 132px); font-weight:800; letter-spacing:-.04em; line-height:1;
+  color:rgb(var(--bad-rgb) / .1); user-select:none;
+}
+.status__head{ position:relative; }
+/* a small phone: search joins the bar, so tracking an order moves to the menu */
+.mobile-nav__track{ display:none; }
+@media (max-width:480px){
+  .track-btn{ display:none; }
+  .mobile-nav__track{ display:flex; }
+  .utils{ gap:14px; }
+}
+/* the order number in a facts card: its own line under the label */
+.state-facts__row:has(.state-facts__ref){ grid-template-columns:minmax(0, 1fr); gap:3px; }
+.state-facts__ref{ font-family:inherit !important; font-size:13px !important; letter-spacing:.01em !important; font-weight:600; }
+/* solid enough that the brush strokes never show through the facts */
+.state-panel .state-facts{ background:rgb(var(--bg-rgb) / .86); }

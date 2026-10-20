@@ -109,11 +109,14 @@ test('a delivery is received: only what arrived is typed, it is added on top, an
   // Going back asks first when something was typed, and then changes nothing.
   await page.getByRole('button', { name: 'RECEIVE A DELIVERY' }).click();
   await arrived('THE MARK CAP, Black, ONE SIZE').fill('5');
-  page.once('dialog', d => d.dismiss());
   await page.getByRole('button', { name: '← BACK TO STOCK' }).click();
+  const ask = page.getByRole('dialog', { name: 'Leave without saving?' });
+  await expect(ask).toContainText('What you typed on 1 line will be lost.');
+  await ask.getByRole('button', { name: 'KEEP EDITING' }).click();
+  await expect(ask).toBeHidden();
   await expect(arrived('THE MARK CAP, Black, ONE SIZE')).toHaveValue('5');     // stayed
-  page.once('dialog', d => d.accept());
   await page.getByRole('button', { name: '← BACK TO STOCK' }).click();
+  await ask.getByRole('button', { name: 'Leave without saving' }).click();
   await expect(viewRow(page, 'THE MARK CAP', 'Black, ONE SIZE').locator('td').nth(3)).toHaveText('50');
 
   // The save bar is on screen even at the top of a long list.

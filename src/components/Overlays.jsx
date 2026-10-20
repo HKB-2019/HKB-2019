@@ -9,7 +9,7 @@ import { track, visitId } from '../lib/analytics.js';
 import { zoneFor, naira, isEmail, isPhone, looksNigerian } from '../lib/delivery.js';
 import Amount from './Amount.jsx';
 import { countriesAbroad } from '../data/countries.js';
-import { Close, Heart, ArrowShort, BagIcon, Check } from './Icons.jsx';
+import { Close, Heart, ArrowShort, BagIcon, Check, SearchIcon } from './Icons.jsx';
 import StateMark from './StateMark.jsx';
 import StateArt from './StateArt.jsx';
 import Dialog, { PieceCard } from './Dialog.jsx';
@@ -751,6 +751,80 @@ function AddedModal({ name, what, img, colour, size, price, qty }) {
   );
 }
 
+/* ------------------------------------------------------------------ search */
+
+/* Search the pieces on sale: by name, colour, size or what the owner wrote
+ * about them. Results come as the customer types; Enter opens the first.
+ * Nothing found says so, with the way back to the drop. */
+const fold = (t) => String(t ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+function matches(p, words) {
+  const hay = fold([p.name, p.badge, p.description, p.details, ...(p.colours ?? []).map(c => c.name), ...(p.sizes ?? []).map(s => s.size)].join(' '));
+  return words.every(w => hay.includes(w));
+}
+
+function SearchPanel() {
+  const { products, format, closeOverlay } = useShop();
+  const navigate = useNavigate();
+  const [q, setQ] = useState('');
+  const ref = useFocusTrap(true);
+  const words = fold(q).split(/\s+/).filter(Boolean);
+  const found = words.length ? products.filter(p => matches(p, words)) : [];
+  // Before typing: the drop, as somewhere to start.
+  const start = products.filter(p => p.inDrop && !p.soldOut).slice(0, 4);
+  const list = words.length ? found : start;
+  const open = (p) => { closeOverlay(); navigate(`/product/${p.id}`, { state: FROM_SHOP }); };
+
+  return (
+    <motion.div ref={ref} className="search" role="dialog" aria-modal="true" aria-label="Search the shop" data-lenis-prevent
+                initial={{ y: -24, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -16, opacity: 0, transition: { duration: UI_OUT, ease: EASE_OUT } }}
+                transition={{ duration: UI_IN, ease: EASE_OUT }}>
+      <form className="search__bar" role="search" onSubmit={(e) => { e.preventDefault(); if (found[0]) open(found[0]); }}>
+        <SearchIcon />
+        <label className="sr-only" htmlFor="search-q">Search</label>
+        <input id="search-q" type="search" autoFocus autoComplete="off" spellCheck="false" enterKeyHint="search"
+               placeholder="Search tees, hoodies, colours…" value={q} maxLength={60}
+               onChange={(e) => setQ(e.target.value)} aria-controls="search-results"
+               // A search box takes Escape to clear itself; here it closes the panel, as everywhere else.
+               onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); closeOverlay(); } }} />
+        {q && <button type="button" className="search__clear" aria-label="Clear search" onClick={() => { setQ(''); document.getElementById('search-q')?.focus(); }}><Close /></button>}
+        <button type="button" className="search__close" onClick={closeOverlay}>CLOSE</button>
+      </form>
+      <div className="search__body" id="search-results" aria-live="polite">
+        {words.length > 0 && found.length === 0 ? (
+          <motion.div className="empty search__empty" key="none" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: UI_IN, ease: EASE_OUT }}>
+            <motion.span className="empty__icon" aria-hidden="true" initial={{ scale: 0.7, rotate: -12, opacity: 0 }}
+                         animate={{ scale: 1, rotate: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.05, ease: EASE_OUT }}><SearchIcon /></motion.span>
+            <h3 className="empty__title">No results found</h3>
+            <p className="empty__text">We couldn’t find anything for “{q.trim()}”. Check the spelling, try another word, or see the whole drop.</p>
+            <ShopButton label="EXPLORE THE DROP" />
+          </motion.div>
+        ) : (
+          <>
+            <p className="search__label">
+              {words.length ? `${found.length} ${found.length === 1 ? 'piece' : 'pieces'}` : 'From the drop'}
+            </p>
+            <ul className="search__list">
+              {list.map((p, i) => (
+                <motion.li key={p.id} layout="position" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                           transition={{ duration: 0.3, delay: Math.min(i, 6) * 0.04, ease: EASE_OUT }}>
+                  <button type="button" className="search__item" onClick={() => open(p)}>
+                    {p.img ? <img src={p.img} alt="" /> : <span className="search__ph" />}
+                    <span className="search__name">{p.name}</span>
+                    <span className={`search__price${p.soldOut ? ' card__sold' : ''}`}>{p.soldOut ? 'SOLD OUT' : format(p.price)}</span>
+                  </button>
+                </motion.li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 /* ------------------------------------------------------------ out of stock */
 
 /* The owner's "Out of stock" panel, when a sold-out piece is tapped: the
@@ -947,6 +1021,7 @@ export default function Overlays() {
           {overlay === 'cart'  && <CartDrawer />}
           {overlay === 'checkout' && <CartDrawer start="delivery" />}
           {overlay === 'saved' && <SavedDrawer />}
+          {overlay === 'search' && <SearchPanel />}
           {overlay === 'track' && <TrackOrderModal />}
           {overlay === 'film'  && <FilmModal />}
           {overlay === 'welcome' && <WelcomeModal />}

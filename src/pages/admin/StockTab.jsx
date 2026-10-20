@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { adminStock, adminSaveStockCounts, adminReceiveStock, adminStockHistory, adminDownload } from '../../lib/api.js';
+import Dialog from '../../components/Dialog.jsx';
+import StateMark from '../../components/StateMark.jsx';
 
 /* STOCK: what there is, line by line — read only, so nothing changes by a
  * stray tap. Two ways to change it, each its own mode with a way back and a
@@ -37,6 +39,7 @@ export default function StockTab({ onChanged }) {
   const [mode, setMode] = useState('view');         // 'view' | 'count' | 'receive'
   const [arrived, setArrived] = useState({});       // variantId → how many came (receive mode)
   const [deliveryNote, setDeliveryNote] = useState('');
+  const [asking, setAsking] = useState(0);          // lines that would be lost, while "Leave without saving?" is up
 
   const load = async () => {
     const [st, h] = await Promise.all([adminStock(), adminStockHistory()]);
@@ -59,7 +62,7 @@ export default function StockTab({ onChanged }) {
   // Back to the list; typed numbers would be lost, so ask first.
   const leave = () => {
     const unsaved = mode === 'receive' ? deliveries.length : changes.length;
-    if (unsaved && !window.confirm(`Leave without saving? What you typed on ${unsaved === 1 ? '1 line' : `${unsaved} lines`} will be lost.`)) return;
+    if (unsaved) { setAsking(unsaved); return; }
     switchTo('view');
   };
 
@@ -249,6 +252,15 @@ export default function StockTab({ onChanged }) {
           </details>
         </>
       )}
+      <Dialog open={asking > 0} tone="warn" labelledBy="leaveTitle" onClose={() => setAsking(0)}>
+        <StateMark tone="warn" size="lg" />
+        <h2 className="state-panel__title" id="leaveTitle">Leave without saving?</h2>
+        <p className="state-panel__note">
+          What you typed on {asking === 1 ? '1 line' : `${asking} lines`} will be lost.
+        </p>
+        <button type="button" className="btn btn--contrast btn--block" onClick={() => setAsking(0)}>KEEP EDITING</button>
+        <button type="button" className="state-panel__cancel" onClick={() => { setAsking(0); switchTo('view'); }}>Leave without saving</button>
+      </Dialog>
     </section>
   );
 }

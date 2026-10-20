@@ -244,6 +244,21 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   only for the rest, and a card that covers everything pays the order at once.
   A late payment after the card was spent elsewhere becomes "refund due".
   Emails with the code come with Brevo; until then the buyer sends it.
+- **Free delivery, announcements, maintenance.** In Settings the owner can
+  make delivery free over an amount (after any discount; the server decides,
+  the bag shows how close the customer is), put a line across the top of the
+  shop (news, good news or a warning; customers can close it), and close the
+  shop for maintenance: customers see "We'll be back soon" and checkout and
+  gift card payments are refused (503) until it is opened again; the owner,
+  signed in, still sees the shop. Each delivery area can also have a number
+  of days, which gives a paid order its estimated delivery dates.
+- **What the customer is told after paying.** The order page says how it
+  was paid ("Visa •••• 4242", "Bank transfer · GTBank", "Gift card", from
+  Paystack's answer), the date, the items and the estimated delivery; a
+  declined card shows the bank's reason. The first time, a panel says so too
+  (Order placed!, Payment failed, Card declined, Payment pending).
+- **Search** from the magnifier in the header: names, colours, sizes and the
+  owner's descriptions of everything on sale.
 - **An admin that runs the shop.** Orders with who and where, `MARK SENT`,
   spreadsheet export; products — name, price, badge, placement, on or off
   sale, order, sizes, counts, photo; stock take; the mailing list; delivery
@@ -387,6 +402,14 @@ the expiry by hand breaks the signature. Every comparison, password and
 signature alike, is constant-time. Eight wrong passwords from one address locks
 that address out for fifteen minutes, and a wrong password never says which
 part was wrong.
+
+A session lasts eight hours. Five minutes before it ends the admin asks
+whether to stay signed in; STAY SIGNED IN (`POST /api/admin/renew`) gives a
+fresh eight hours to a session that is still valid, but only up to a day after
+the password was last typed (the session carries that time, signed, and a
+renewal keeps it), so a copied cookie cannot be kept alive for ever. At the
+end it says "Session expired" rather than letting a save fail. The password
+boxes have an eye to show what was typed.
 
 SIGN OUT signs out everywhere at once. The cookie is signed rather than stored,
 so clearing it in one browser would leave any other copy (another phone, a

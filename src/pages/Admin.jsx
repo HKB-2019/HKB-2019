@@ -2,8 +2,11 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   adminLogin, adminLogout, adminMe, adminStatus, adminSetup, adminOrders,
-  adminSummary, adminFulfil, adminRefunded, adminDownload
+  adminSummary, adminFulfil, adminRefunded, adminDownload, adminRenew
 } from '../lib/api.js';
+import Dialog from '../components/Dialog.jsx';
+import StateMark from '../components/StateMark.jsx';
+import PasswordInput from '../components/PasswordInput.jsx';
 import ProductsTab from './admin/ProductsTab.jsx';
 import { pageHref } from '../lib/media.js';
 import { useTheme } from '../lib/theme.js';
@@ -68,8 +71,8 @@ function Login({ onDone }) {
         <h1 className="admin-gate__title">Sign in</h1>
         <label className="field">
           <span>PASSWORD</span>
-          <input
-            type="password" autoFocus autoComplete="current-password"
+          <PasswordInput
+            autoFocus autoComplete="current-password"
             className={error ? 'is-error' : ''}
             value={password}
             onChange={(e) => { setPassword(e.target.value); setError(null); }}
@@ -127,15 +130,15 @@ function Setup({ onDone }) {
         </label>
         <label className="field">
           <span>NEW PASSWORD · AT LEAST {MIN_PASSWORD} CHARACTERS</span>
-          <input
-            id="setup-password" type="password" autoComplete="new-password"
+          <PasswordInput
+            id="setup-password" autoComplete="new-password"
             value={password} onChange={(e) => { setPassword(e.target.value); setError(null); }}
           />
         </label>
         <label className="field">
           <span>TYPE IT AGAIN</span>
-          <input
-            id="setup-again" type="password" autoComplete="new-password"
+          <PasswordInput
+            id="setup-again" autoComplete="new-password"
             className={mismatch ? 'is-error' : ''}
             value={again} onChange={(e) => { setAgain(e.target.value); setError(null); }}
           />
@@ -366,11 +369,62 @@ function Orders({ orders, onChanged, filter, setFilter }) {
   );
 }
 
+/* ------------------------------------------------------- session expiry */
+
+/* A session lasts eight hours. Five minutes before the end the owner is
+ * asked whether to stay; at the end, told plainly, rather than finding out
+ * when a save fails. Staying renews it, up to a day after the password. */
+const WARN_MS = 5 * 60 * 1000;
+
+function SessionWatch({ expiresAt, onRenewed, onEnded }) {
+  const [now, setNow] = useState(() => Date.now());
+  const [state, setState] = useState(null);     // null | 'renewing' | error message
+  const left = expiresAt - now;
+  useEffect(() => {
+    if (!expiresAt) return;
+    // A tick a second only in the last minutes; before then, once at the warning.
+    const wait = left > WARN_MS ? left - WARN_MS : 1000;
+    const t = setTimeout(() => setNow(Date.now()), Math.min(wait, 2 ** 31 - 1));
+    return () => clearTimeout(t);
+  }, [expiresAt, now]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  const stay = async () => {
+    setState('renewing');
+    try { const r = await adminRenew(); setState(null); onRenewed(r.expiresAt); }
+    catch (err) { setState(err.message || 'Please sign in again.'); }
+  };
+  const mins = Math.max(0, Math.floor(left / 60000));
+  const secs = String(Math.max(0, Math.floor(left / 1000) % 60)).padStart(2, '0');
+  const ended = expiresAt && left <= 0;
+
+  return (
+    <>
+      <Dialog open={Boolean(expiresAt) && !ended && left <= WARN_MS} tone="warn" labelledBy="sessionTitle" closeOutside={false} onClose={stay}>
+        <StateMark tone="wait" size="lg" />
+        <h2 className="state-panel__title" id="sessionTitle">Your session is about to expire</h2>
+        <p className="state-panel__note">For the shop’s safety you’ll be signed out in <strong className="num" aria-live="off">{mins}:{secs}</strong>. Anything not saved will be lost.</p>
+        {state && state !== 'renewing' && <p className="field__error" role="alert">{state}</p>}
+        <button type="button" className="btn btn--contrast btn--block" onClick={stay} disabled={state === 'renewing'}>
+          {state === 'renewing' ? <><span className="spinner" aria-hidden="true" /> STAYING…</> : 'STAY SIGNED IN'}
+        </button>
+        <button type="button" className="state-panel__cancel" onClick={onEnded}>Sign out now</button>
+      </Dialog>
+      <Dialog open={Boolean(ended)} tone="bad" labelledBy="endedTitle" closeOutside={false} onClose={onEnded}>
+        <StateMark tone="bad" size="lg" />
+        <h2 className="state-panel__title" id="endedTitle">Session expired</h2>
+        <p className="state-panel__note">You’ve been signed out to keep the shop safe. Sign in again to carry on.</p>
+        <button type="button" className="btn btn--contrast btn--block" onClick={onEnded}>SIGN IN AGAIN</button>
+      </Dialog>
+    </>
+  );
+}
+
 /* ------------------------------------------------------------------ page */
 
 export default function Admin() {
   const { theme, toggle } = useTheme();
   const [signedIn, setSignedIn] = useState(null);   // null = still checking
+  const [expiresAt, setExpiresAt] = useState(null);
   const [needsSetup, setNeedsSetup] = useState(false);
   const [summary, setSummary]   = useState(null);
   const [orders, setOrders]     = useState([]);
@@ -379,7 +433,7 @@ export default function Admin() {
 
   useEffect(() => {
     adminMe()
-      .then(() => setSignedIn(true))
+      .then((me) => { setExpiresAt(me.expiresAt ?? null); setSignedIn(true); })
       .catch(async () => {
         // Not signed in: is there a password to sign in with yet?
         try { setNeedsSetup(!(await adminStatus()).configured); } catch { /* show sign-in */ }
@@ -429,11 +483,17 @@ export default function Admin() {
   };
 
   if (signedIn === null) return <div className="admin-gate"><p className="admin-empty">Checking…</p></div>;
-  if (!signedIn && needsSetup) return <Setup onDone={() => { setNeedsSetup(false); setSignedIn(true); }} />;
-  if (!signedIn) return <Login onDone={() => setSignedIn(true)} />;
+  const signedInNow = () => {
+    setSignedIn(true);
+    adminMe().then(me => setExpiresAt(me.expiresAt ?? null)).catch(() => {});
+  };
+  if (!signedIn && needsSetup) return <Setup onDone={() => { setNeedsSetup(false); signedInNow(); }} />;
+  if (!signedIn) return <Login onDone={signedInNow} />;
 
   return (
     <div className="admin">
+      <SessionWatch expiresAt={expiresAt} onRenewed={setExpiresAt}
+                    onEnded={() => { setExpiresAt(null); adminLogout().catch(() => {}).finally(() => setSignedIn(false)); }} />
       <header className="admin-header">
         <div className="admin-header__inner">
           <a href={pageHref('/')} className="logo"><Wordmark alt="MASQ. — back to the shop" /></a>
@@ -443,7 +503,7 @@ export default function Admin() {
             {theme === 'light' ? <Moon /> : <Sun />}
           </button>
           <button className="admin-signout" title="Signs out every browser and phone"
-                  onClick={() => adminLogout().then(() => setSignedIn(false))}>SIGN OUT</button>
+                  onClick={() => adminLogout().then(() => { setExpiresAt(null); setSignedIn(false); })}>SIGN OUT</button>
         </div>
         <nav className="admin-tabs" aria-label="Admin sections">
           <div className="admin-tabs__inner">

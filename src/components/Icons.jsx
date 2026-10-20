@@ -54,6 +54,12 @@ export const Check = () => (
   <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
 );
 
+export const SearchIcon = () => (
+  <svg viewBox="0 0 22 22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+    <circle cx="9.5" cy="9.5" r="6" /><path d="M14 14l5 5" />
+  </svg>
+);
+
 export const CardIcon = () => (
   <svg viewBox="0 0 28 28" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="6.5" width="22" height="15" rx="2.6"/><path d="M3 11.5h22M7.5 17h5"/>

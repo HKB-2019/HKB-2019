@@ -134,6 +134,36 @@ test('signing out ends the session everywhere, not just in this browser', async 
   assert.equal((await request('/api/admin/orders', { cookie: again })).status, 200);
 });
 
+test('stay signed in: a valid session is renewed, keeping when the password was typed', async () => {
+  const { cookie } = await login();
+  const res = await request('/api/admin/renew', { method: 'POST', cookie });
+  assert.equal(res.status, 200);
+  const renewed = res.setCookie.map(c => c.split(';')[0]).join('; ');
+  assert.ok(renewed.startsWith('masq_admin='));
+  const before = JSON.parse(Buffer.from(cookie.split('=')[1].split('.')[0], 'base64url').toString());
+  const after = JSON.parse(Buffer.from(renewed.split('=')[1].split('.')[0], 'base64url').toString());
+  assert.equal(after.auth, before.auth, 'renewal must not reset the time the password was typed');
+  assert.ok(after.exp >= before.exp);
+  assert.equal((await request('/api/admin/orders', { cookie: renewed })).status, 200);
+});
+
+test('stay signed in: refused without a session, and a day after the password', async () => {
+  assert.equal((await request('/api/admin/renew', { method: 'POST' })).status, 401);
+  const { issueSession } = await import('../lib/auth.js');
+  const old = issueSession('admin', 60_000, Date.now() - 25 * 3600 * 1000);
+  const res = await request('/api/admin/renew', { method: 'POST', cookie: `masq_admin=${old}` });
+  assert.equal(res.status, 401);
+  assert.equal(res.setCookie.length, 0);
+});
+
+test('stay signed in: a renewed session still ends when signed out everywhere', async () => {
+  const { cookie } = await login();
+  const res = await request('/api/admin/renew', { method: 'POST', cookie });
+  const renewed = res.setCookie.map(c => c.split(';')[0]).join('; ');
+  await request('/api/admin/logout', { method: 'POST', cookie: renewed });
+  assert.equal((await request('/api/admin/orders', { cookie: renewed })).status, 401);
+});
+
 test('signing out without a session signs nobody else out', async () => {
   const { cookie } = await login();
   await request('/api/admin/logout', { method: 'POST' });

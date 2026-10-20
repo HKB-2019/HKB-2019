@@ -138,11 +138,11 @@ function Delivery({ value, onSaved }) {
               </td>
               <td className="admin-days">
                 <input id={`days-${z}`} className="admin-stock-input admin-days__input" inputMode="numeric" placeholder="—"
-                       aria-label={`Fewest days to deliver to ${label}`} value={rows[z].min}
+                       aria-label={`${label}: fewest days for delivery`} value={rows[z].min}
                        onChange={(e) => setRows(r => ({ ...r, [z]: { ...r[z], min: e.target.value } }))} />
                 <span aria-hidden="true">to</span>
                 <input className="admin-stock-input admin-days__input" inputMode="numeric" placeholder="—"
-                       aria-label={`Most days to deliver to ${label}`} value={rows[z].max}
+                       aria-label={`${label}: most days for delivery`} value={rows[z].max}
                        onChange={(e) => setRows(r => ({ ...r, [z]: { ...r[z], max: e.target.value } }))} />
               </td>
             </tr>

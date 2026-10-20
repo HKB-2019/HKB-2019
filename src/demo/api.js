@@ -470,8 +470,15 @@ export function subscribe(email) {
 let signedIn = true;      // the preview opens signed in; any password works after SIGN OUT
 
 export const adminStatus = () => settle({ configured: true });
-export const adminMe = () => (signedIn ? settle({ signedIn: true }) : fail('Sign in first.', 401));
-export const adminLogin = () => { signedIn = true; return settle({ ok: true }); };
+// Eight hours from signing in, as on the real server.
+let sessionEnds = Date.now() + 8 * 3600 * 1000;
+export const adminMe = () => (signedIn ? settle({ signedIn: true, expiresAt: sessionEnds }) : fail('Sign in first.', 401));
+export const adminRenew = () => {
+  if (!signedIn) return fail('Not signed in.', 401);
+  sessionEnds = Date.now() + 8 * 3600 * 1000;
+  return settle({ ok: true, expiresAt: sessionEnds });
+};
+export const adminLogin = () => { signedIn = true; sessionEnds = Date.now() + 8 * 3600 * 1000; return settle({ ok: true }); };
 export const adminLogout = () => { signedIn = false; return settle({ ok: true }); };
 export const adminSetup = () => { signedIn = true; return settle({ ok: true }); };
 

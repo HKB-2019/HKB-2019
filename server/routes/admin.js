@@ -7,7 +7,7 @@ import { returnToCard } from '../lib/giftcards.js';
 import {
   verifyPassword, issueSession, requireAdmin, currentSession, signOutEverywhere, COOKIE,
   recordFailure, isLockedOut, clearFailures,
-  storedPasswordHash, claimPassword, checkSetupCode
+  storedPasswordHash, claimPassword, checkSetupCode, RENEW_LIMIT
 } from '../lib/auth.js';
 
 export const adminRouter = Router();
@@ -16,8 +16,8 @@ const clientIp = (req) => req.ip || req.socket?.remoteAddress || 'unknown';
 
 const MIN_PASSWORD = 12;
 
-const setSessionCookie = (res) =>
-  res.cookie(COOKIE, issueSession(), {
+const setSessionCookie = (res, authAt = null) =>
+  res.cookie(COOKIE, issueSession('admin', undefined, authAt), {
     httpOnly: true,                                   // JavaScript cannot read it
     sameSite: 'lax',                                  // not sent cross-site
     secure: process.env.NODE_ENV === 'production',    // HTTPS only in production
@@ -109,6 +109,18 @@ adminRouter.post('/admin/logout', async (req, res) => {
 
 adminRouter.get('/admin/me', requireAdmin, (req, res) => {
   res.json({ signedIn: true, expiresAt: req.admin.exp });
+});
+
+/* "Stay signed in", from the admin's warning before a session runs out: a
+ * fresh eight hours, for a session that is still valid, up to a day after
+ * the password was last typed. After that, the password again. */
+adminRouter.post('/admin/renew', requireAdmin, (req, res) => {
+  const authAt = req.admin.auth ?? req.admin.iat ?? 0;
+  if (Date.now() - authAt > RENEW_LIMIT) {
+    return res.status(401).json({ error: 'Please sign in again.', code: 'reauth' });
+  }
+  setSessionCookie(res, authAt);
+  res.json({ ok: true, expiresAt: Date.now() + 8 * 60 * 60 * 1000 });
 });
 
 /* ------------------------------------------------------------- orders */

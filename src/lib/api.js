@@ -2,6 +2,15 @@
 
 const BASE = import.meta.env.VITE_API_URL || '';
 
+/* What to say when the server gives no words of its own. */
+function friendly(status) {
+  if (status === 429) return 'Too many tries in a short time. Please wait a minute, then try again.';
+  if (status === 503) return 'The shop is busy or being updated. Please try again in a moment.';
+  if (status >= 500) return 'Something went wrong on our end. Please try again in a moment.';
+  if (status === 404) return 'We couldn’t find that.';
+  return `Something went wrong (${status}). Please try again.`;
+}
+
 async function request(path, options = {}) {
   let res;
   try {
@@ -11,11 +20,13 @@ async function request(path, options = {}) {
     });
   } catch {
     // Offline, or a free host still waking up.
-    throw Object.assign(new Error('Could not reach the shop. Check your connection and try again.'), { status: 0 });
+    throw Object.assign(new Error(navigator.onLine === false
+      ? 'You’re offline. Check your internet connection and try again.'
+      : 'Could not reach the shop. Check your connection and try again.'), { status: 0, code: 'network' });
   }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw Object.assign(new Error(body.error || `Request failed (${res.status})`), { status: res.status, code: body.code });
+    throw Object.assign(new Error(body.error || friendly(res.status)), { status: res.status, code: body.code });
   }
   return body;
 }
@@ -72,6 +83,7 @@ const adminRequest = (path, options = {}) =>
 export const adminLogin    = (password) => adminRequest('/admin/login', { method:'POST', body: JSON.stringify({ password }) });
 export const adminLogout   = ()         => adminRequest('/admin/logout', { method:'POST' });
 export const adminMe       = ()         => adminRequest('/admin/me');
+export const adminRenew    = ()         => adminRequest('/admin/renew', { method:'POST' });
 export const adminStatus   = ()         => adminRequest('/admin/status');
 export const adminSetup    = (code, password) =>
   adminRequest('/admin/setup', { method:'POST', body: JSON.stringify({ code, password }) });

@@ -45,11 +45,16 @@ function sessionSecret() {
 
 const EIGHT_HOURS = 8 * 60 * 60 * 1000;
 
-export function issueSession(subject = 'admin', ttlMs = EIGHT_HOURS) {
+/* `auth` is when the password was last typed. A renewed session keeps it,
+ * so "stay signed in" can stretch a working day but never forever. */
+export const RENEW_LIMIT = 24 * 60 * 60 * 1000;
+
+export function issueSession(subject = 'admin', ttlMs = EIGHT_HOURS, authAt = null) {
   const now = Date.now();
   const payload = Buffer.from(JSON.stringify({
     sub: subject,
     iat: now,
+    auth: authAt ?? now,
     exp: now + ttlMs,
     jti: randomBytes(8).toString('hex')
   })).toString('base64url');

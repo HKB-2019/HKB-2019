@@ -10,7 +10,7 @@ import { JoinForm } from './Newsletter.jsx';
  * order, and the small print. Pages open in a panel; shop links go to their
  * part of the home page from wherever the shopper is. */
 
-const SOCIAL = [
+export const SOCIAL = [
   ['instagram', 'Instagram', Instagram],
   ['tiktok', 'TikTok', TikTok],
   ['x', 'X', XIcon]

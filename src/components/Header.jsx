@@ -6,7 +6,7 @@ import { useSectionLink } from '../lib/useSectionLink.js';
 import { NAV, NAV_TARGETS } from '../data/home.js';
 import { CURRENCIES } from '../data/currencies.js';
 import { jumpToTop } from '../lib/smoothScroll.js';
-import { ChevronDown, AccountIcon, BagIcon, Heart, Sun, Moon } from './Icons.jsx';
+import { ChevronDown, AccountIcon, BagIcon, Heart, Sun, Moon, SearchIcon } from './Icons.jsx';
 import { useTheme } from '../lib/theme.js';
 import { EASE_OUT, UI_IN, UI_OUT } from '../lib/motion.js';
 import Wordmark from './Wordmark.jsx';
@@ -120,13 +120,18 @@ export default function Header() {
             <SwapIcon swap={theme}>{theme === 'light' ? <Moon /> : <Sun />}</SwapIcon>
           </button>
 
+          <button className="icon-btn search-btn" aria-label="Search the shop" aria-haspopup="dialog"
+                  onClick={() => openOverlay('search')}>
+            <SearchIcon />
+          </button>
+
           <button className="icon-btn saved-btn" aria-label={`Saved pieces (${wishlist.length})`} aria-haspopup="dialog"
                   onClick={() => openOverlay('saved')}>
             <Heart />
             {wishlist.length > 0 && <span className="saved-count" aria-hidden="true">{wishlist.length}</span>}
           </button>
 
-          <button className="icon-btn" aria-label="Track an order" aria-haspopup="dialog"
+          <button className="icon-btn track-btn" aria-label="Track an order" aria-haspopup="dialog"
                   onClick={() => openOverlay('track')}>
             <AccountIcon />
           </button>
@@ -161,6 +166,10 @@ export default function Header() {
             {LINKS.map(({ href, label }) => (
               <a key={href} href={'/' + href} onClick={(e) => go(e, href)}>{label}</a>
             ))}
+            {/* On a small phone the bar has no room for it: here instead. */}
+            <button type="button" className="mobile-nav__theme mobile-nav__track" onClick={() => { setMenuOpen(false); openOverlay('track'); }}>
+              <AccountIcon /> Track an order
+            </button>
             <button type="button" className="mobile-nav__theme" onClick={toggle}>
               <SwapIcon swap={theme}>{theme === 'light' ? <Moon /> : <Sun />}</SwapIcon>
               {theme === 'light' ? 'Dark theme' : 'Light theme'}

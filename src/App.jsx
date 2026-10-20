@@ -8,6 +8,7 @@ import ProductPage from './pages/ProductPage.jsx';
 import GiftCardPage from './pages/GiftCardPage.jsx';
 import GiftCardOpen from './pages/GiftCardOpen.jsx';
 import { previewRoutes, PreviewBanner } from './lib/preview.jsx';
+import ErrorBoundary from './components/ErrorPage.jsx';
 
 // The preview is one page on someone else's site, so its pages live after
 // the # in the address. The real shop has real addresses.
@@ -32,6 +33,7 @@ export default function App() {
     // pops in) and drops all movement — slides, scales, springs.
     <MotionConfig reducedMotion="user">
     <Router useTransitions={false}>
+      <ErrorBoundary>
       <Routes>
         <Route path="/" element={<Storefront />} />
         <Route path="/product/:id" element={<ProductPage />} />
@@ -44,6 +46,7 @@ export default function App() {
         {previewRoutes}
         <Route path="*" element={<Storefront />} />
       </Routes>
+      </ErrorBoundary>
       <PreviewBanner />
       <PageTracker />
     </Router>

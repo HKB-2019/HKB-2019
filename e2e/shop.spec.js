@@ -70,6 +70,16 @@ test('a customer who cancels on Paystack is told nothing was taken, and keeps th
   await page.click('#cancel');
 
   await expect(page.locator('.status__title')).toHaveText('Payment not completed');
+  // The owner's panel says so first, once, with the same way back.
+  const told = page.getByRole('dialog', { name: 'Payment not completed' });
+  await expect(told).toContainText('No amount was charged');
+  await told.getByRole('button', { name: 'TRY AGAIN' }).click();
+  await expect(page.locator('.drawer')).toContainText('THE PATTERN SCARF');
+
+  // Back on the order page, the panel is not said again; the page's own button works.
+  await page.goBack();
+  await expect(page.locator('.status__title')).toHaveText('Payment not completed');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('link', { name: 'TRY AGAIN' }).click();
   await expect(page.locator('.drawer')).toContainText('THE PATTERN SCARF');
 });
@@ -94,6 +104,13 @@ test('a sold-out piece cannot go in the bag', async ({ page }) => {
   await expect(phoneCase.locator('.slide__price')).toHaveText('SOLD OUT');
   await phoneCase.hover();
   await phoneCase.locator('.slide__name').click();
+  // The owner's "Out of stock" panel, with the two ways on.
+  const panel = page.getByRole('dialog', { name: 'Out of stock' });
+  await expect(panel).toContainText('THE MASK CASE');
+  await expect(panel.getByRole('button', { name: 'NOTIFY ME WHEN AVAILABLE' })).toBeVisible();
+  await panel.getByRole('button', { name: 'NOTIFY ME WHEN AVAILABLE' }).click();
+  // …which opens the piece's page with the back-in-stock form ready.
+  await expect(page.locator('#restock-email')).toBeFocused();
   await expect(page.locator('.cart-count')).toHaveText('0');
 });
 
