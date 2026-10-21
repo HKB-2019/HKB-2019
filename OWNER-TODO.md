@@ -1,5 +1,7 @@
 # MASQ. — what's left, what's on your side, and every screen
 
+**Shop preview (with the admin inside):** https://claude.ai/artifact/C7GwTxuGrFtSpHnCw5n6yF
+
 Kept up to date with the project. Plain steps; the detailed how-to for
 setting things up is in `DEPLOY.md`.
 
@@ -53,7 +55,7 @@ setting things up is in `DEPLOY.md`.
     - Photos for the top of each Journal page. Today they reuse the shop's pictures.
     - **About page photos** (the hooded man at the top, the hoodie, the jacket, the three craft / culture / community tiles, the vision background). It uses the shop's pictures for now.
 13. **The receipt email's top picture: done.** It uses the bag from your email design. Send a sharper one later if you like.
-14. **The 3D empty-state pictures** (bag, heart, magnifier, box), from your empty-states board (`design/boards/empty-states.webp`). They show when the bag is empty, nothing is saved, a search finds nothing, or there are no orders yet. Today those screens use simple outline icons. Your choice: I cut them from the board (like the email bag), you send sharper ones, or Kling makes them (uses credits).
+14. **The 3D empty-state pictures: done.** The bag, heart, magnifier and box are cut from your empty-states board and show on the empty bag, saved, search and orders screens. Send sharper ones later if you like.
 15. **The brand film: select the pictures.** Go through the film boards (`design/film/README.md`): Film 01 "Worn, Not Spoken", the Ori One reel, and the two posters. Pick the pictures that go in, and we'll write a **Seedance 2.5** prompt for video generation on **Google Flow**. When the film is made, put its link in admin → Settings, and it plays on the home page.
 16. **Brand decisions** (`design/brand/README.md`). The brand boards differ from the shop on:
     - fonts: Rift Bold needs a paid licence; Clash Grotesk is free;
@@ -64,22 +66,23 @@ setting things up is in `DEPLOY.md`.
 
     Tell me which way each goes.
 17. **Kling credits for the banner photos.** You chose to have the Journal and About banner photos cleaned up with Kling (the words printed on them removed, made sharp). Your Kling account has 0 credits today, so top it up first; I'll tell you the cost before using any.
-18. **Ori One (the shoe).** If it's going on sale, I need photos, sizes, price and stock. Or say "coming soon" and I'll add a waiting list.
+18. **Admin designs from ChatGPT.** Paste the eight messages in `design/ADMIN-PROMPT.md` into ChatGPT, one at a time, and send me the boards. The prompt lists everything the admin already does, so nothing is lost, plus the new screens (dashboard, returns, collections, maintenance view).
+19. **Ori One (the shoe).** If it's going on sale, I need photos, sizes, price and stock. Or say "coming soon" and I'll add a waiting list.
 
 ### Accounts needed for features not built yet (only when you want them)
 
-19. **Sign in with Google:** a Google Cloud project and an OAuth client ID.
-20. **Sign in with Apple:** an Apple Developer account ($99 a year).
-21. **Codes by text message:** an SMS company (e.g. Termii) and an approved sender name.
-22. **Address search while typing** (optional), from your inline-feedback board, section 14. At checkout and in saved addresses, the customer types a few letters ("Allen Av") and picks the full address from a list, so fewer addresses are mistyped for the courier. It needs a Google Places key with billing on; Google charges per search after a free monthly allowance. The shop works without it: customers type the address themselves.
-23. **Saved cards:** just your go-ahead. Paystack supports it, but it's a money path to build carefully.
-24. **Courier booking from the admin** (optional): an account with a courier that has an API (e.g. GIG, Sendbox).
-25. **Live currency rates** (optional): an exchange-rate service key. Today you type the rates in.
+20. **Sign in with Google:** a Google Cloud project and an OAuth client ID.
+21. **Sign in with Apple:** an Apple Developer account ($99 a year).
+22. **Codes by text message:** an SMS company (e.g. Termii) and an approved sender name.
+23. **Address search while typing** (optional), from your inline-feedback board, section 14. At checkout and in saved addresses, the customer types a few letters ("Allen Av") and picks the full address from a list, so fewer addresses are mistyped for the courier. It needs a Google Places key with billing on; Google charges per search after a free monthly allowance. The shop works without it: customers type the address themselves.
+24. **Saved cards:** just your go-ahead. Paystack supports it, but it's a money path to build carefully.
+25. **Courier booking from the admin** (optional): an account with a courier that has an API (e.g. GIG, Sendbox).
+26. **Live currency rates** (optional): an exchange-rate service key. Today you type the rates in.
 
 ### Business and legal
 
-26. Have a lawyer read the **Terms of sale**, **Privacy** and **Returns** pages. Nigeria's data protection law (NDPA 2023) applies to customer data.
-27. Keep Paystack's compliance documents up to date.
+27. Have a lawyer read the **Terms of sale**, **Privacy** and **Returns** pages. Nigeria's data protection law (NDPA 2023) applies to customer data.
+28. Keep Paystack's compliance documents up to date.
 
 ---
 
@@ -96,7 +99,6 @@ setting things up is in `DEPLOY.md`.
 - Google, Apple and SMS sign-in.
 - Saved cards.
 - Address search.
-- The 3D illustrations.
 
 **Pages left to build.** Everything still to make, shop and admin. "Design in hand" means your design is in `design/` (sent 17 and 18 Oct; details in `design/REDESIGN.md`); "Design needed" means I need a design from you first.
 
@@ -112,7 +114,7 @@ setting things up is in `DEPLOY.md`.
 - **The redesigned product page.**
 - **Empty states for these pages:** "No products match these filters", "No items in this category" and "No saved searches".
 
-*Admin screens (design needed):*
+*Admin screens (design needed: you make them with the prompt in `design/ADMIN-PROMPT.md`, item 18):*
 - **A dashboard home:** the first screen after signing in, with the day's sales, orders to send, low stock and visitors at a glance. Today the admin opens on Orders, with the money strip on top.
 - **A returns and refunds screen:** see return requests, approve or decline them, and mark the refund made. Today there is only MARK REFUNDED on an order.
 - **A "your shop is in maintenance" view:** what you see in the admin while the shop is closed. Today it's a switch in Settings and a note on the shop.
