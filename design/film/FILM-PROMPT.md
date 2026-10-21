@@ -1,6 +1,8 @@
 # MASQ. Film 01: "Worn, Not Spoken". The prompt
 
-**One prompt** does both jobs: it makes the storyboard picture in ChatGPT and the film in Google Flow (or Seedance). Paste it as it is in both.
+Two prompts, one after the other: **the ChatGPT prompt** made the storyboard ([the finished storyboard, 21 Oct](8-storyboard-v3.png)); **the Google Flow prompt** at the end turns it into the film.
+
+## 1. ChatGPT: the storyboard (done)
 
 **What to attach, in this order:**
 1. [The new storyboard](7-storyboard-v2.png) (made in ChatGPT, 21 Oct)
@@ -61,3 +63,48 @@ OUTPUT:
 
 AVOID: a different or redrawn mask, a symmetrical or generic tribal mask, a misspelled or changed Face Tee print, missing ring of words, changed faces, a different person between shots, blended faces, cartoon, 3D-render or painted looks, plastic skin, extra fingers or warped hands, other brands or logos, misspelled "MASQ.", bright or daylight backgrounds, neon, sneakers or shoes in close-up, fast cuts, shaky camera, lens flares, oversaturated colour.
 ```
+
+## 2. Google Flow: the film
+
+Flow (Veo 3.1) makes about 8 seconds at a time, so the film is made in **five parts with the same prompt**. Only the second line changes: `MAKE NOW: PART 1`, then `PART 2`, up to `PART 5`.
+
+**Attach as Ingredients (Flow takes 3 pictures):**
+- **Parts 1, 2, 3 and 5:** [the finished storyboard](8-storyboard-v3.png), [Dayo](references/cast-dayo.png), [the Face Tee print](references/E-face-tee.png).
+- **Part 4:** [the finished storyboard](8-storyboard-v3.png), [Ifeoma](references/cast-ifeoma.png), [Kunle](references/cast-kunle.png).
+
+**Steps:**
+1. Settings: Veo 3.1 Quality, 16:9, sound on.
+2. Make Part 1. When you're happy, use **Extend** (it carries on from the last frame) for each next part, changing only the second line. Part 4 changes its pictures, so make it as a new clip and join it in the **Scene builder**.
+3. Make two or three tries of each part and keep the best.
+4. In editing (Flow, CapCut or similar), add the words from the storyboard in the brush lettering, and the MASQ. logo with "ENTER THE WORLD OF MASQ." at the end.
+
+```
+MASQ. — FILM 01 "WORN, NOT SPOKEN" · Google Flow
+
+MAKE NOW: PART 1
+
+A cinematic luxury fashion film for MASQ., a Nigerian streetwear brand, made in five parts of 8 seconds that join into one 40-second film. Follow the attached storyboard exactly, frame by frame: the same shots, framing, light, clothes and order. The faces are exactly the attached test shots. Make only the part named on the second line, as one continuous 8-second shot sequence with soft dissolves between its frames.
+
+LOOK: 16:9, 24 fps, shot on an ARRI Alexa 35 with Cooke anamorphic lenses, shallow depth of field, oval bokeh, fine 35 mm film grain. Low-key light: one hard side key light, a thin rim light, light haze, deep crushed blacks with a blue-violet undertone, warm true skin tones. The only bright colours come from the mask artwork: teal, orange, yellow, violet, pink, cream. Slow, deliberate camera: push-ins, orbits, tracking, slow-motion fabric. No fast cuts, no shaky camera, nothing bouncy.
+
+THE CAST, the same faces in every part, real skin with visible pores, never smoothed:
+— DAYO: warm caramel-brown skin, light brown eyes, chiselled jaw, curly black hair with a skin fade, a short full beard.
+— IFEOMA: warm golden-brown skin with freckles, almond brown eyes, very short tight black curls, small gold studs.
+— KUNLE: deep brown skin, a long lean face, a thin moustache and light stubble, close-cropped hair, a small gold hoop earring.
+
+THE FACE TEE: the MASQ. mask on the chest inside a ring of white words, "WE WEAR IDENTITY •" over the top and "UNAPOLOGETICALLY YOURS" under it, with "MASQ." in colourful brush letters and a row of five small symbols below. Dayo wears it in royal violet, Ifeoma in black, Kunle in white under an open black satin bomber. The mask on every garment is the same split-face MASQ. mask as in the storyboard, never redrawn.
+
+THE PARTS:
+PART 1 (0–8s, storyboard 1.1–2.5): two seconds of pure black; then macro black leather sliding past in raking light; the MASQ. mask embossed in black leather, slow push-in; royal-violet fabric folding like a slow wave; black stitching on a leather seam, slow tilt up; fade to black.
+PART 2 (8–16s, 3.1–4.2): painted fragments in the mask's colours float and orbit in black haze, align and lock into the MASQ. mask, its glow settling; then a low-angle track down a dark wet corridor as the figure in the black raffia costume and the carved wooden mask walks towards camera; in a shaft of side light his hand lifts the carved mask away.
+PART 3 (16–24s, 4.3–5.2): it is Dayo, in the royal-violet Face Tee, as the light falls on him; slow push-in to a close-up of his face, half-lit, eyes into the lens; then a macro pan around the ring of words on his Face Tee to the mask; the black cap turning slowly at 45°, a rim light along the brim.
+PART 4 (24–32s, 5.3–6.2): a hand slowly pulls the zip of the black leather backpack with the embossed mask; Ifeoma in the black Face Tee as the violet MASQ. wrap billows around her in slow motion; Dayo, Ifeoma and Kunle walk side by side through a pool of hard light, tracked from the side; from behind, Kunle's black bomber with the mask on the back.
+PART 5 (32–40s, 6.3–8.2): a slow-motion close-up of a hand trailing the violet wrap; the Face Tee print on Dayo's chest rising with his breath; the MASQ. mask alone, centred on black, holding still; the carved wooden mask turning slowly in black as flecks of paint drift around it; it dissolves into darkness; hold on black for the logo.
+
+SOUND: no dialogue, no voice-over. A slow talking drum and low sub-bass pulses, soft fabric and leather sounds, a breath of wind; it rises across the parts and falls to silence at the end of Part 5.
+
+NO TEXT ON SCREEN except the Face Tee print: no titles, captions, subtitles or logos (they are added in editing). Avoid: changed or blended faces, a different mask, a misspelled print, cartoon or 3D-render looks, plastic skin, warped hands, bright or daylight backgrounds, sneakers, fast cuts, shaky camera, lens flares.
+```
+
+When the film is made, put its link in **admin → Settings → Film**.
+
