@@ -98,3 +98,10 @@ FOR NOW. · DROP 01 LIMITED EDITION · AVAILABLE SOON · @masq.world.
   will use whatever domain the shop goes live on. Decide which it is.
 - Ori One is not in the shop yet. If the film announces it, the shop should
   have a page (or a "coming soon" with the waiting list) by the time it airs.
+
+## 6. The merged selection (chosen 21 Oct)
+
+All of the storyboard, plus frame 5 of the campaign stills (the flowing wrap), the masked figure from poster 4 and the carved mask from poster 5, with the official MASQ. mask they must use. The prompts are in [FILM-PROMPT.md](FILM-PROMPT.md); the pictures to upload are in [references/](references/).
+
+![The merged selection](6-merged-selection.webp)
+
