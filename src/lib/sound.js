@@ -1,9 +1,10 @@
 import { asset } from './media.js';
 
 /* The shop's sounds, for good news only: a light tick when something small
- * works (added to the bag, saved, a code applied, signed in) and a fuller
- * chime for the big moments (an order placed, a gift card ready). Two short
- * files in public/assets/sound (soft bell notes, made by tools/make-sounds.py).
+ * works (added to the bag, saved, a code applied, signed in) and, for the
+ * big moments (an order placed, a gift card ready), a soft chord with high
+ * notes twinkling down like the confetti that falls with it. Two short files
+ * in public/assets/sound, made by tools/make-sounds.py.
  *
  * They play through an ordinary <audio> player, the way a video's sound
  * does, so a phone plays them even with its ring switch on silent. A browser
