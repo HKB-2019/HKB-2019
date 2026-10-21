@@ -13,26 +13,26 @@
  * behind VIEW ALL, and the Essentials carousel as its own selection (the pod
  * shell is carousel-only; the tee is grid-only). */
 export const CATALOGUE = [
-  { id:'tee',      name:'THE FACE TEE',         naira:28000, img:'assets/img/prod-tee.webp',      drop:1, featured:1, essential:0, category:'tshirts', type:'graphic', collections:['drop-01'], isNew:1, colours:[
+  { id:'tee',      name:'THE FACE TEE',         naira:28000, img:'assets/img/p-tee-1.webp',      drop:1, featured:1, essential:0, category:'tshirts', type:'graphic', collections:['drop-01'], isNew:1, colours:[
       { name:'Indigo', hex:'#3d2f9e', sizes:{ S:12, M:18, L:14, XL:6 } },
       { name:'Black',  hex:'#141416', sizes:{ S:8, M:10, L:9, XL:4 }, img:'assets/img/prod-tee-black.webp' },
       { name:'White',  hex:'#efece6', sizes:{ S:5, M:7, L:6, XL:2 } }
     ] },
-  { id:'cap',      name:'THE MARK CAP',         naira:14000, img:'assets/img/prod-cap.webp',      drop:1, featured:1, essential:1, category:'headwear', type:'caps', collections:['drop-01', 'essentials'], colours:[
+  { id:'cap',      name:'THE MARK CAP',         naira:14000, img:'assets/img/d-cap.webp',      drop:1, featured:1, essential:1, category:'headwear', type:'caps', collections:['drop-01', 'essentials'], colours:[
       { name:'Black',  hex:'#141416', sizes:{ 'ONE SIZE':30 } },
       { name:'Green',  hex:'#2f5a3c', sizes:{ 'ONE SIZE':12 } },
       { name:'White',  hex:'#efece6', sizes:{ 'ONE SIZE':10 } }
     ] },
-  { id:'backpack', name:'THE CARRIER BACKPACK', naira:65000, img:'assets/img/prod-backpack.webp', drop:1, featured:1, essential:1, category:'bags', type:'backpacks', collections:['drop-01', 'essentials'], sizes:{ 'ONE SIZE':8 } },
-  { id:'scarf',    name:'THE PATTERN SCARF',    naira:18000, img:'assets/img/prod-scarf.webp',    drop:1, featured:1, essential:1, category:'accessories', type:'scarves', collections:['drop-01', 'essentials', 'limited'], sizes:{ 'ONE SIZE':22 } },
+  { id:'backpack', name:'THE CARRIER BACKPACK', naira:65000, img:'assets/img/d-backpack.webp', drop:1, featured:1, essential:1, category:'bags', type:'backpacks', collections:['drop-01', 'essentials'], sizes:{ 'ONE SIZE':8 } },
+  { id:'scarf',    name:'THE PATTERN SCARF',    naira:18000, img:'assets/img/d-scarf.webp',    drop:1, featured:1, essential:1, category:'accessories', type:'scarves', collections:['drop-01', 'essentials', 'limited'], sizes:{ 'ONE SIZE':22 } },
   { id:'hoodie',   name:'THE RITUAL HOODIE',    naira:52000, img:'assets/img/ess-hoodie.webp',    drop:1, featured:0, essential:1, category:'outerwear', type:'hoodies', collections:['drop-01', 'essentials'], colours:[
       { name:'Black',  hex:'#141416', sizes:{ S:5, M:9, L:7, XL:3 } },
       { name:'Indigo', hex:'#3d2f9e', sizes:{ S:3, M:4, L:4, XL:2 } }
     ] },
   { id:'jacket',   name:'THE SYMBOL JACKET',    naira:98000, img:'assets/img/ess-jacket.webp',    drop:1, featured:0, essential:1, category:'outerwear', type:'jackets', collections:['drop-01', 'essentials', 'limited'], sizes:{ M:2, L:3, XL:1 }, badge:'LIMITED' },
   { id:'wallet',   name:'THE ARTIFACT WALLET',  naira:22000, img:'assets/img/ess-wallet.webp',    drop:1, featured:0, essential:1, category:'accessories', type:'lifestyle', collections:['drop-01', 'essentials'], sizes:{ 'ONE SIZE':16 } },
-  { id:'phone',    name:'THE MASK CASE',        naira:12000, img:'assets/img/ess-phone.webp',     drop:1, featured:0, essential:1, category:'accessories', type:'phone-cases', collections:['drop-01', 'essentials'], sizes:{ 'ONE SIZE':0 } },
-  { id:'airpods',  name:'THE POD SHELL',        naira:9000,  img:'assets/img/ess-airpods.webp',   drop:0, featured:0, essential:1, category:'accessories', type:'lifestyle', collections:['essentials'], sizes:{ 'ONE SIZE':24 } },
+  { id:'phone',    name:'THE MASK CASE',        naira:12000, img:'assets/img/d-phone.webp',     drop:1, featured:0, essential:1, category:'accessories', type:'phone-cases', collections:['drop-01', 'essentials'], sizes:{ 'ONE SIZE':0 } },
+  { id:'airpods',  name:'THE POD SHELL',        naira:9000,  img:'assets/img/d-airpods.webp',   drop:0, featured:0, essential:1, category:'accessories', type:'lifestyle', collections:['essentials'], sizes:{ 'ONE SIZE':24 } },
 
   /* The pieces drawn in the owner's Shop and Collections designs (design/
    * category-*.webp, collection-*.webp, shop-all.webp), with the designs' names,

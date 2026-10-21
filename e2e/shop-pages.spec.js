@@ -66,6 +66,6 @@ test('the owner puts a piece in a collection, and it shows there', async ({ page
   await expect(page.getByRole('heading', { name: 'The archive opens after our first season.' })).toBeVisible();
   await adminPatch(page, 'cap', { collections: ['archive'], season: '2025 — Drop 00' });
   await page.goto('/collections/archive');
-  await expect(page.getByRole('heading', { name: /THE MARK CAP/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'The Mark Cap (2025)' })).toBeVisible();   // title case, with its year
   await expect(page.getByRole('navigation', { name: 'Seasons' })).toContainText('2025');
 });

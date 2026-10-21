@@ -310,11 +310,24 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   look" picks. The SHOP ▾ and COLLECTIONS ▾ menus open wide panels
   (src/components/MegaMenu.jsx). The pieces drawn in the designs are in the
   catalogue, their photos cut from the boards (`assets/img/d-*`, and the page
-  photos `h-*`, `b-*`, `s-*`) until the owner sends the real ones.
+  photos `h-*`, `b-*`, `s-*`) until the owner sends the real ones. Past-season
+  pieces (only in the Archive) stay off the Shop pages. Collection cards carry
+  a "+" and title-case names, with "MASQ. x Partner" above on Collaborations
+  and the year after on the Archive.
+- **Design sample, preview only** (src/demo/designSample.js): what the designs
+  draw but isn't true yet — the stars and review count, the "Trusted by a
+  global community" faces, partner marks and the featured collaboration band,
+  archive seasons with their pictures and pieces, Limited Edition's four
+  promises, and the designs' delivery and returns words. It reaches the pages
+  only through the preview's stand-in (`site.design`, a product's `rating`,
+  `reviews`, `closer`), so the live shop shows none of it until the owner
+  confirms it. Film panels (Drop 01's Lookbook, the Archive film) play the
+  owner's film, or the bundled brand film until one is set.
 - **The product page** follows the owner's Face Tee design for every piece:
   thumbnails, arrows and full screen; category, SKU, colour, size, a stock line,
   quantity, ADD TO BAG and BUY NOW (straight to delivery); the three promises;
-  See it closer; tabs (Description, Materials, Size & Fit, Shipping, Returns);
+  See it closer (a "PLAY VIDEO" film panel when the piece has a close-up still,
+  else a photo that opens the close-up view); tabs (Description, Materials, Size & Fit, Shipping, Returns);
   Complete the Look and You Might Also Like.
 - **About** (`/about`, src/pages/About.jsx): the owner's About board: our
   story, purpose, inspiration, craft / culture / community, vision, values and

@@ -4,9 +4,9 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'reac
 import { motion } from 'framer-motion';
 import ShopLayout from '../components/ShopLayout.jsx';
 import { useShop } from '../store/ShopContext.jsx';
-import { srcSet, GALLERY_SIZES } from '../lib/media.js';
+import { asset, srcSet, GALLERY_SIZES } from '../lib/media.js';
 import { useSectionLink } from '../lib/useSectionLink.js';
-import { Heart, Check, CaretLeft, CaretRight, ArrowShort, BagIcon } from '../components/Icons.jsx';
+import { Heart, Check, CaretLeft, CaretRight, ArrowShort, BagIcon, Play } from '../components/Icons.jsx';
 import SwapIcon from '../components/SwapIcon.jsx';
 import { pop, textIn } from '../lib/feel.js';
 import { askForRestock } from '../lib/api.js';
@@ -22,11 +22,10 @@ import Swatches from '../components/Swatches.jsx';
 import { ProductCard } from '../components/DropGrid.jsx';
 import { useHome } from '../store/ShopContext.jsx';
 import { categoryOf } from '../data/shop.js';
+import { titleCase } from '../lib/names.js';
 
 import { EASE_OUT } from '../lib/motion.js';
 const TITLE = document.title;
-/** "THE MASQ. BEANIE" → "The MASQ. Beanie": the page's title as the design sets it. */
-const titleCase = (name) => name.split(' ').map(w => (w.includes('.') || w.length < 2 ? w : w[0] + w.slice(1).toLowerCase())).join(' ');
 
 /* ------------------------------------------------------------- gallery */
 
@@ -302,6 +301,7 @@ function BuyBox({ product, colour, onColour }) {
       <p className={`pdp__price${product.soldOut ? ' card__sold' : ''}`} ref={price}>
         {product.soldOut ? 'SOLD OUT' : format(product.price)}
       </p>
+      {product.rating > 0 && <Stars rating={product.rating} reviews={product.reviews} />}
       {product.description && <p className="pdp__lede">{product.description.split(/\n\s*\n/)[0]}</p>}
 
       {hasColours(product) && (
@@ -477,19 +477,37 @@ function Tabs({ product }) {
   );
 }
 
-/** "See it closer": a photo of the piece that opens the close-up view. */
+/** Five stars filled to the rating, with the number of reviews beside them. */
+function Stars({ rating, reviews }) {
+  const pct = Math.max(0, Math.min(5, rating)) / 5 * 100;
+  return (
+    <p className="pdp__stars">
+      <span className="pdp__stars-row" style={{ '--fill': `${pct}%` }} aria-hidden="true">★★★★★</span>
+      <span>{rating.toFixed(1)}{reviews ? ` (${reviews} reviews)` : ''}</span>
+      <span className="sr-only">Rated {rating.toFixed(1)} out of 5</span>
+    </p>
+  );
+}
+
+/**
+ * "See it closer". With a close-up film still for the piece it plays the
+ * film, as the design has it; otherwise its photo opens the close-up view.
+ */
 function Closer({ product }) {
   const { openOverlay } = useShop();
   const photos = product.photos?.length ? product.photos : (product.img ? [{ img: product.img, img2x: product.img2x }] : []);
-  if (!photos.length) return null;
+  if (!photos.length && !product.closer) return null;
   const i = photos.length > 1 ? 1 : 0;
+  const film = Boolean(product.closer);
   return (
-    <button type="button" className="pdp-closer" onClick={() => openOverlay({ zoom: { photos, index: i, name: product.name } })}>
-      <img src={photos[i].img2x || photos[i].img} alt="" aria-hidden="true" loading="lazy" />
+    <button type="button" className={`pdp-closer${film ? ' pdp-closer--film' : ''}`} aria-haspopup="dialog"
+            onClick={() => openOverlay(film ? 'film' : { zoom: { photos, index: i, name: product.name } })}>
+      <img src={film ? asset(product.closer) : (photos[i].img2x || photos[i].img)} alt="" aria-hidden="true" loading="lazy" />
+      {film && <span className="film__disc pdp-closer__disc" aria-hidden="true"><Play /></span>}
       <span className="pdp-closer__text">
         <strong>SEE IT<br />CLOSER</strong>
-        <span>A closer look at the details, texture and craftsmanship.</span>
-        <em>ZOOM IN <ArrowShort /></em>
+        <span>A closer look at the details, texture and craftsmanship behind {titleCase(product.name)}.</span>
+        <em>{film ? 'PLAY VIDEO' : 'ZOOM IN'} <ArrowShort /></em>
       </span>
     </button>
   );
@@ -508,7 +526,7 @@ function Row({ id, title, link, pieces }) {
       </div>
       <div className="grid" onClick={(e) => { if (!e.target.closest('.card')) setPicking(null); }}>
         {pieces.map(p => (
-          <ProductCard key={p.id} product={p} bagButton picking={picking === p.id} onPick={setPicking} onClosePick={() => setPicking(null)}
+          <ProductCard key={p.id} product={p} bagButton="plus" picking={picking === p.id} onPick={setPicking} onClosePick={() => setPicking(null)}
                        badge={p.isNew ? 'NEW' : undefined} />
         ))}
       </div>

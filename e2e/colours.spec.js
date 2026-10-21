@@ -105,7 +105,7 @@ test('the cap comes in black, green and white, and the tee photo follows its col
 
   await page.goto('/product/tee');
   const photo = page.locator('.pdp__frame img').first();
-  await expect(photo).toHaveAttribute('src', /prod-tee\.webp$/);
+  await expect(photo).toHaveAttribute('src', /p-tee-1\.webp$/);
   await page.getByRole('radio', { name: 'Black' }).click();
   await expect(photo).toHaveAttribute('src', /prod-tee-black\.webp$/);
 

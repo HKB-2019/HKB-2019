@@ -11,6 +11,7 @@ import { ArrowShort, Arrow, Heart, BagIcon } from './Icons.jsx';
 
 import { EASE_OUT, EASE_IN_OUT } from '../lib/motion.js';
 import { pop } from '../lib/feel.js';
+import { titleCase } from '../lib/names.js';
 import { ErrorBanner, detailsOf } from './Notices.jsx';
 
 /** Photos fade in once they have arrived, instead of popping in line by line. */
@@ -52,9 +53,11 @@ export function SizeButtons({ product, onPicked, onColour }) {
 }
 
 /* `badge` replaces the piece's own mark (the Shop pages show NEW or LIMITED
- * EDITION); `bagButton` swaps the round arrow for the Shop pages' round bag
- * button, which adds it (or opens its sizes). */
-export function ProductCard({ product, picking, onPick, onClosePick, badge, bagButton = false }) {
+ * EDITION); `bagButton` swaps the round arrow for the Shop pages' round button
+ * that adds it (or opens its sizes): a bag, or a plus with `bagButton="plus"`.
+ * On those pages the name is in title case, under its partner (`kicker`) and
+ * followed by its year in the archive (`suffix`). */
+export function ProductCard({ product, picking, onPick, onClosePick, badge, bagButton = false, kicker, suffix }) {
   const { wishlist, toggleWish, format, addToCart, showSoldOut } = useShop();
   const glide = useGlideToProduct();
   const base = `/product/${product.id}`;
@@ -125,7 +128,10 @@ export function ProductCard({ product, picking, onPick, onClosePick, badge, bagB
 
       <div className="card__meta">
         <div className="card__text">
-          <h3 className="card__name"><Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)}>{product.name}</Link></h3>
+          {kicker && <p className="card__kicker">{kicker}</p>}
+          <h3 className={`card__name${bagButton ? ' card__name--titled' : ''}`}>
+            <Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)}>{bagButton ? titleCase(product.name) : product.name}{suffix ? ` ${suffix}` : ''}</Link>
+          </h3>
           <p className={`card__price${product.soldOut ? ' card__sold' : ''}`}>
             {product.soldOut ? 'SOLD OUT' : format(product.price)}
           </p>
@@ -136,7 +142,7 @@ export function ProductCard({ product, picking, onPick, onClosePick, badge, bagB
         {bagButton ? (
           <button type="button" className="round-arrow round-arrow--bag" onClick={onQuickAdd} aria-expanded={only || product.soldOut ? undefined : picking}
                   aria-label={product.soldOut ? `${product.name}: none left` : only ? `Add ${product.name} to bag` : `Choose a size of ${product.name}`}>
-            <BagIcon />
+            {bagButton === 'plus' ? <span className="round-arrow__plus" aria-hidden="true">+</span> : <BagIcon />}
           </button>
         ) : (
           <Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)} className="round-arrow"

@@ -108,8 +108,8 @@ setting things up is in [the setup guide (DEPLOY.md)](https://github.com/HKB-201
 
 *Shop pages:* all built (see above). Left from those designs:
 - **"No saved searches"**: waits for a saved-search feature, if you want one.
-- **Reviews and stars, and the "Trusted by a global community" faces**: left out until they are real (questions below).
-- **Collaborations and Archive** show "on their way" until you confirm real partners and seasons; then you add them on each piece in the admin and they appear.
+- **Shown in the preview link only, exactly as your designs draw them** (for viewing while the shop isn't live): the stars "4.8 (128 reviews)", the "Trusted by a global community" faces, the four Collaborations partners with their marks and the featured MASQ. × Kòlẹ́ band, the five Archive seasons with their pictures and 12 archive pieces, Limited Edition's four promises, and "2–5 business days / 7-day returns". The live shop leaves each of these out until you confirm it is real (questions below), so customers never see a claim that isn't true.
+- **On the live shop, Collaborations and Archive** show "on their way" until you confirm real partners and seasons; then you add them on each piece in the admin and they appear.
 
 *Admin screens (design needed: you make them with the prompt in [the admin prompt (design/ADMIN-PROMPT.md)](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/ADMIN-PROMPT.md), item 18):*
 - **A dashboard home:** the first screen after signing in, with the day's sales, orders to send, low stock and visitors at a glance. Today the admin opens on Orders, with the money strip on top.
@@ -135,7 +135,8 @@ setting things up is in [the setup guide (DEPLOY.md)](https://github.com/HKB-201
 **Things to confirm for those pages:**
 1. Outerwear title: "Layer Your Identity" or "MASQ. Your Identity"? I'll use "Layer Your Identity" unless you say otherwise.
 2. Drop 01 button: the design reads "SHOP THE COLLECTIAR", which looks like a typo. I'll write "SHOP THE COLLECTION".
-3. New products: the bottle, sunglasses, lanyard, socks, card wallet and the Harrington, windbreaker, varsity, anorak and padded vest jackets will show once you add them in the admin. The pages are built to hold them.
+3. Product page button: your design says "Add to Cart"; the rest of the shop says "bag" (the bag icon, "Your bag"). I've kept "ADD TO BAG". Say "cart" and I'll change it everywhere.
+4. New products: the bottle, sunglasses, lanyard, socks, card wallet and the Harrington, windbreaker, varsity, anorak and padded vest jackets will show once you add them in the admin. The pages are built to hold them.
 
 **Questions still open from last time:**
 - **Collaboration partners:** are Artifact, Kòlẹ́, Lagos to the World and 042 real partners? Only real ones go on the site.

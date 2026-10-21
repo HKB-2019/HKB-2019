@@ -73,7 +73,7 @@ test('extra photos join the gallery after the main one, and can be removed', asy
   assert.equal(a.status, 201, a.raw);
   const b = await shop.request('/api/admin/products/tee/photos', { method: 'POST', cookie, json: photo(PHOTO.jpeg) });
   assert.equal(b.body.photos.length, 3, 'main + 2');
-  assert.equal(b.body.photos[0].img, '/assets/img/prod-tee.webp', 'the main photo first');
+  assert.equal(b.body.photos[0].img, '/assets/img/p-tee-1.webp', 'the main photo first');
 
   const tee = await publicProduct('tee');
   assert.deepEqual(tee.photos.map(p => p.img), b.body.photos.map(p => p.img), 'customers see the same gallery');
@@ -251,11 +251,11 @@ test('a shared product link shows its name, price, words and photo', { skip: !bu
   assert.match(page.raw, /og:title" content="THE FACE TEE — MASQ\."/);
   assert.match(page.raw, /og:description" content="₦28,000 · Heavy &quot;cotton&quot; &lt;script&gt;alert\(1\)&lt;\/script&gt; &amp; more\."/);
   assert.ok(!page.raw.includes('<script>alert(1)'), 'the owner’s words cannot become code');
-  assert.match(page.raw, /og:image" content="http:\/\/127\.0\.0\.1:\d+\/assets\/img\/prod-tee@2x\.webp"/);
+  assert.match(page.raw, /og:image" content="http:\/\/127\.0\.0\.1:\d+\/assets\/img\/p-tee-1@2x\.webp"/);
   assert.match(page.raw, /og:type" content="product"/);
   assert.ok(!page.raw.includes('og:image:width'), 'the built-in preview’s size no longer applies');
-  assert.ok(page.raw.includes('<link rel="preload" as="image" fetchpriority="high" href="/assets/img/prod-tee.webp" ' +
-    'imagesrcset="/assets/img/prod-tee.webp 700w, /assets/img/prod-tee@2x.webp 1400w" imagesizes="(max-width:900px) 100vw, 50vw">'),
+  assert.ok(page.raw.includes('<link rel="preload" as="image" fetchpriority="high" href="/assets/img/p-tee-1.webp" ' +
+    'imagesrcset="/assets/img/p-tee-1.webp 700w, /assets/img/p-tee-1@2x.webp 1400w" imagesizes="(max-width:900px) 100vw, 50vw">'),
     'the big photo starts loading with the page');
 
   const hidden = await api('/products/tee', 'PATCH', { hidden: true });

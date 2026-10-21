@@ -12,15 +12,17 @@ import { PAGES, PAGES_DEFAULT } from '../data/pages.js';
 import { GUIDE_CURRENCIES, DEFAULT_RATES } from '../data/currencies.js';
 import { STARTER_STORIES, TOPIC_KEYS, readMinutes } from '../data/journal.js';
 import { COLLECTION_KEYS, categoryOf } from '../data/shop.js';
+import { DESIGN_PIECES, SEASON_PICTURES, FACE_TEE, DESIGN_PERKS, LIMITED_PROMISES, PARTNER_MARKS, FEATURED_COLLAB } from './designSample.js';
 import { sampleReport } from './sampleAnalytics.js';
 import QRCode from 'qrcode';
 
-const KEY = 'masq:preview-store-7';   // a new number whenever the sample's shape changes
+const KEY = 'masq:preview-store-8';   // a new number whenever the sample's shape changes
 // The sample data from before KEY's last changes, newest first. Carried over
 // once, with delivery abroad switched off: the shop and admin previews had
 // drifted apart on it, and are now one preview. Declared up here, before the
 // store loads: read any later, it does not exist yet and every load fails.
-const OLD_KEYS = ['masq:preview-store-6', 'masq:preview-store-5'];
+// Store 8 brought the designs' own pieces and Face Tee; older samples start afresh.
+const OLD_KEYS = [];
 const ZONES = ['lagos', 'abuja', 'nigeria', 'international'];
 const ZONE_LABELS = { lagos: 'Lagos', abuja: 'Abuja (FCT)', nigeria: 'Rest of Nigeria', international: 'Outside Nigeria' };
 const STATES = [
@@ -40,7 +42,7 @@ function sampleStore() {
   let colourId = 0;
   // `sizes` is one row per colour and size, as on the server: colour '' for a
   // piece without colours.
-  const products = CATALOGUE.map((p, position) => ({
+  const products = [...CATALOGUE, ...DESIGN_PIECES].map((p, position) => ({
     id: p.id, name: p.name, priceKobo: p.naira * 100, img: p.img, uploaded: null,
     badge: p.badge ?? null, inDrop: !!p.drop, featured: !!p.featured, inEssentials: !!p.essential,
     hidden: false, position, description: '', details: '', extras: [], availableAt: null,
@@ -51,8 +53,20 @@ function sampleStore() {
   // The hoodie waits for a drop, so the home page shows its countdown.
   products.find(p => p.id === 'hoodie').availableAt = new Date(Date.now() + 3 * 86_400_000 + 5 * 3_600_000).toISOString();
   const tee = products.find(p => p.id === 'tee');
-  tee.description = 'Heavyweight cotton, cut a little boxy.\n\nThe face on the front is MASQ.’s first mark: a mask drawn from the shapes of the old carvings, in the colours of the city at night.';
-  tee.details = 'Sample text — the owner writes this in the admin.\nWash cold, inside out.';
+  // The Face Tee as its page is drawn in the owner's design: six colours, its
+  // words, five photos and its reviews (src/demo/designSample.js).
+  Object.assign(tee, {
+    description: FACE_TEE.description, details: FACE_TEE.details, materials: FACE_TEE.materials, fit: FACE_TEE.fit,
+    sku: FACE_TEE.sku, look: FACE_TEE.look, extras: FACE_TEE.extras, closer: FACE_TEE.closer,
+    rating: FACE_TEE.rating, reviews: FACE_TEE.reviews,
+    colours: FACE_TEE.colours.map(c => ({ id: ++colourId, name: c.name, hex: c.hex, img: '', photo: null })),
+    sizes: FACE_TEE.colours.flatMap(c => Object.entries(c.sizes).map(([size, stock]) => ({ variantId: ++variantId, colour: c.name, size, stock })))
+  });
+  // The design's Phone Case is on sale; the wallet shows a sold-out piece instead.
+  const phone = products.find(p => p.id === 'phone');
+  phone.name = 'THE PHONE CASE';
+  phone.sizes.forEach(x => { x.stock = 7; });
+  products.find(p => p.id === 'wallet').sizes.forEach(x => { x.stock = 0; });
 
   const line = (id, size, qty, colour = '') => {
     const p = products.find(x => x.id === id);
@@ -95,7 +109,7 @@ function sampleStore() {
       pages: { ...PAGES_DEFAULT },
       social: { instagram: '', tiktok: '', x: '' },
       film: { url: '', kind: null, youtubeId: null },
-      home: structuredClone(HOME_DEFAULT),
+      home: { ...structuredClone(HOME_DEFAULT), ...DESIGN_PERKS },
       rates: { ...DEFAULT_RATES },
       heroSwitch: { every: 8 }
     },
@@ -204,7 +218,7 @@ const colourPhoto = (c) => (c.photo ? { img: c.photo.img, img2x: c.photo.img2x }
 
 /* The Shop pages' details. A sample saved before they existed takes the
  * catalogue's own, so an open preview needs no reset. */
-const STARTS = Object.fromEntries(CATALOGUE.map(c => [c.id, c]));
+const STARTS = Object.fromEntries([...CATALOGUE, ...DESIGN_PIECES].map(c => [c.id, c]));
 function pageDetails(p) {
   const seed = STARTS[p.id] ?? {};
   return {
@@ -214,7 +228,7 @@ function pageDetails(p) {
     sku: p.sku ?? '', materials: p.materials ?? '', fit: p.fit ?? '',
     isNew: p.isNew ?? Boolean(seed.isNew),
     preorder: p.preorder ?? false, shipsNote: p.shipsNote ?? '',
-    partner: p.partner ?? '', season: p.season ?? '',
+    partner: p.partner ?? seed.partner ?? '', season: p.season ?? seed.season ?? '',
     look: p.look ?? [],
     // Newest first: a later place in the catalogue counts as newer.
     addedAt: p.availableAt ?? p.addedAt ?? new Date(Date.UTC(2026, 8, 1) + (p.position ?? 0) * 86_400_000).toISOString()
@@ -229,7 +243,10 @@ function shape(p, forAdmin) {
     img: main?.img ?? '', img2x: main?.img2x ?? '',
     badge: p.badge, inDrop: p.inDrop, featured: p.featured, inEssentials: p.inEssentials,
     soldOut: p.sizes.length === 0 || p.sizes.every(s => s.stock <= 0),
-    ...pageDetails(p)
+    ...pageDetails(p),
+    // The design's reviews and close-up, on the Face Tee only (designSample.js).
+    ...(p.rating ? { rating: p.rating, reviews: p.reviews } : {}),
+    ...(p.closer ? { closer: p.closer } : {})
   };
   if (forAdmin) {
     return { ...base, hidden: p.hidden, hasUpload: !!p.uploaded, hasBuiltInPhoto: !!p.img,
@@ -282,7 +299,10 @@ export const getSite = () => settle({
   maintenanceSoon: maintenanceNow().soon,
   announcement: setting('announcement').on
     ? (({ on, ...a }) => a)({ ...SETTING_DEFAULTS.announcement, ...setting('announcement') }) : null,
-  accounts: true
+  accounts: true,
+  // What the designs show but the live shop does not claim yet: shown in the
+  // preview only (src/demo/designSample.js).
+  design: { partners: PARTNER_MARKS, seasons: SEASON_PICTURES, limited: LIMITED_PROMISES, featured: FEATURED_COLLAB, trusted: 'assets/img/trusted-faces.webp' }
 }, 120);
 
 /* As server/lib/settings.js maintenanceNow. */

@@ -37,7 +37,7 @@ test('a file that is not a photo is refused before it is uploaded', async ({ pag
   const scarf = productCard(page, 'THE PATTERN SCARF');
   await scarf.getByLabel(/^Photo for /).setInputFiles(NOT_A_PHOTO);
   await expect(scarf.locator('.admin-note--bad')).toContainText('JPEG, PNG or WebP');
-  await expect(scarf.locator('.admin-product__photo > img')).toHaveAttribute('src', '/assets/img/prod-scarf.webp');
+  await expect(scarf.locator('.admin-product__photo > img')).toHaveAttribute('src', '/assets/img/d-scarf.webp');
 });
 
 test('a new product is made, photographed, stocked and put on sale — and a customer can buy it', async ({ page }) => {

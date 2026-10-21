@@ -4325,7 +4325,7 @@ a:hover > * > .jr-go, a:hover .jr-go{ background:var(--violet); border-color:var
 .sh-story__pic{ position:relative; min-height:280px; }
 .sh-story__pic img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .sh-story__pic::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg, #050407 0%, transparent 40%); }
-.sh-story__film{ position:relative; display:flex; align-items:center; gap:18px; padding:var(--pad); text-align:left; color:#f4f1eb; min-height:280px; overflow:hidden; }
+.sh-story__film{ position:relative; isolation:isolate; display:flex; align-items:center; gap:18px; padding:var(--pad); text-align:left; color:#f4f1eb; min-height:280px; overflow:hidden; }
 .sh-story__film img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:-1; filter:brightness(.6); transition:transform .8s var(--ease-out); }
 .sh-story__film:hover img{ transform:scale(1.04); }
 .sh-story__film .film__disc{ position:relative; }
@@ -4603,4 +4603,79 @@ a:hover > * > .jr-go, a:hover .jr-go{ background:var(--violet); border-color:var
   .pdp__actions{ flex-wrap:wrap; }
   .pdp__save{ margin-left:auto; }
   .pdp__add{ order:3; flex:1 1 100%; min-width:0; }
+}
+
+/* ---------- design details: faces, promises, partners, seasons, stars ---------- */
+/* card names as the Shop designs set them: title case, a partner line above */
+.card__name--titled{ text-transform:none; font-size:13px; letter-spacing:0; }
+.card__kicker{ margin:0; font-size:11px; font-weight:500; letter-spacing:.02em; color:var(--ink-dim); }
+.round-arrow__plus{ font-size:19px; font-weight:300; line-height:1; margin-top:-1px; }
+
+/* the faces under a hero's button */
+.sh-trusted{ display:flex; align-items:center; gap:14px; margin:22px 0 0; max-width:300px; font-size:12.5px; line-height:1.45; color:#d8d3cb; }
+.sh-trusted img{ width:86px; height:auto; flex:none; }
+
+/* Limited Edition's four promises */
+.sh-promises{
+  max-width:var(--maxw); margin:0 auto; padding:22px var(--pad) 4px; list-style:none;
+  display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:16px 28px;
+}
+.sh-promises li{ display:flex; align-items:center; gap:14px; }
+.sh-promises strong{ display:block; font-size:13.5px; font-weight:600; }
+.sh-promises em{ display:block; font-style:normal; font-size:12.5px; color:var(--ink-dim); }
+
+/* partner marks: the lockups are drawn on black, so the strip is black in both themes */
+.sh-partners:has(img){ max-width:none; margin-top:0; padding:14px var(--pad); background:#050407; justify-content:space-around; border-block:1px solid rgb(255 255 255 / .08); }
+.sh-partners img{ display:block; height:clamp(34px, 3.6vw, 48px); width:auto; }
+
+/* the archive's seasons, with arrows */
+.sh-seasons-wrap{ max-width:var(--maxw); margin:0 auto; padding:22px var(--pad) 0; display:flex; align-items:center; gap:12px; }
+.sh-seasons-wrap .sh-seasons{ flex:1; min-width:0; max-width:none; margin:0; padding:2px; scroll-snap-type:x proximity; }
+.sh-seasons-wrap .sh-season{ scroll-snap-align:start; }
+.sh-seasons__step{ flex:none; width:40px; height:40px; }
+.sh-seasons-wrap .sh-season img{ width:72px; height:72px; }
+
+/* a film panel's extra line (Archive's "A look back") */
+.sh-story__film-label > span{ display:block; font-size:13px; color:#f4f1eb; }
+
+/* Collaborations' featured partner: words over its photo, then the film */
+.sh-featured{ grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); }
+.sh-featured .sh-story__text{ position:relative; isolation:isolate; align-self:stretch; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; }
+.sh-featured__bg{ position:absolute; inset:0; z-index:-1; }
+.sh-featured__bg img{ width:100%; height:100%; object-fit:cover; object-position:right center; }
+.sh-featured__bg::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg, #050407 30%, rgb(5 4 7 / .35) 75%, rgb(5 4 7 / .1)); }
+@media (max-width:1200px){ .sh-featured .sh-words{ display:none; } }
+@media (max-width:900px){ .sh-featured{ grid-template-columns:minmax(0, 1fr); } }
+.sh-featured__title{ margin:10px 0 6px; font-family:var(--serif); font-size:clamp(34px, 4vw, 56px); font-weight:600; line-height:1; letter-spacing:-.01em; color:#f4f1eb; }
+.sh-featured__us{ font-family:var(--sans); font-weight:800; letter-spacing:.02em; }
+.sh-featured__title > span[aria-hidden]{ font-family:var(--sans); font-weight:300; font-size:.5em; vertical-align:middle; margin:0 .2em; color:#d8d3cb; }
+.sh-featured__sub{ margin:0 0 10px; font-size:clamp(17px, 1.6vw, 21px); color:#f4f1eb; }
+
+/* the product page's stars */
+.pdp__stars{ display:flex; align-items:center; gap:10px; margin:10px 0 0; font-size:13.5px; color:var(--ink-dim); }
+.pdp__stars-row{
+  font-size:16px; letter-spacing:3px; line-height:1;
+  background:linear-gradient(90deg, #f2b632 var(--fill), var(--line) var(--fill));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+
+/* See it closer, playing the film: the disc sits in the middle of the picture */
+.pdp-closer--film img{ width:100%; }
+.pdp-closer--film::after{ background:linear-gradient(90deg, #0b0a10 18%, rgb(11 10 16 / .55) 45%, rgb(11 10 16 / .05) 75%); }
+.pdp-closer--film .pdp-closer__text{ max-width:190px; }
+.pdp-closer__disc{ position:absolute; left:58%; top:50%; translate:-50% -50%; width:64px; height:64px; }
+.pdp-closer--film:hover .pdp-closer__disc{ background:var(--violet); border-color:var(--violet); }
+
+@media (max-width:900px){
+  .sh-promises{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width:640px){
+  .sh-promises{ padding-left:16px; padding-right:16px; gap:14px 16px; }
+  .sh-promises .sh-chip__icon svg{ width:22px; height:22px; }
+  .sh-seasons-wrap{ padding-left:16px; padding-right:16px; }
+  .sh-seasons__step{ display:none; }
+  .sh-partners:has(img){ justify-content:flex-start; gap:12px 26px; }
+  .sh-partners img{ height:30px; }
+  .pdp-closer__disc{ left:auto; right:18px; translate:0 -50%; width:52px; height:52px; }
+  .pdp-closer--film .pdp-closer__text{ max-width:150px; }
 }

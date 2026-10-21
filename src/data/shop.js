@@ -84,6 +84,7 @@ export const SHOP_PAGES = {
     title: [['More Than'], ['A ', { accent: 'Cap.' }]],
     sub: 'Headwear designed to carry culture, identity and purpose. From everyday fits to statement pieces, MASQ. caps are made to be worn, not just seen.',
     button: 'EXPLORE HEADWEAR',
+    trusted: false,       // the design has no faces under its button
     img: 'assets/img/h-headwear.webp',
     allName: 'All Headwear', counts: true,
     filters: ['category', 'price', 'colour', 'collection'],
@@ -119,6 +120,7 @@ export const SHOP_PAGES = {
     button: 'SHOP ACCESSORIES',
     img: 'assets/img/h-accessories.webp',
     allName: 'All Accessories',
+    plus: true,           // the design's cards carry a + rather than a bag
     groups: [
       { key: 'all', name: 'All Accessories', line: 'View everything' },
       { key: 'headwear', name: 'Caps & Headwear', line: 'Everyday style', match: { category: 'headwear' } },
@@ -201,7 +203,8 @@ export const COLLECTION_PAGES = {
     filters: ['season', 'category', 'price', 'colour', 'size', 'availability'],
     story: { title: ['Stories That', 'Shaped Us'], caps: true,
       text: 'Each piece in the archive represents a moment, a place and a purpose. Explore the journeys behind the designs.',
-      button: 'EXPLORE THE STORY', to: '/journal/brand-stories', img: 'assets/img/s-archive.webp' },
+      button: 'EXPLORE THE STORY', to: '/journal/brand-stories', img: 'assets/img/s-archive.webp',
+      film: 'ARCHIVE FILM', filmLine: 'A look back', filmImg: 'assets/img/a-film.webp' },
     empty: { title: 'The archive opens after our first season.', text: 'Pieces from past drops will live here.' }
   }
 };

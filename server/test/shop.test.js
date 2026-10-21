@@ -509,8 +509,8 @@ test('the catalogue reports real stock and computes soldOut', async () => {
   assert.equal(tee.colours[2].sizes.find(s => s.size === 'XL').left, 2);
   assert.equal(indigo.img, null, 'no photo of its own: the main photo shows');
   assert.deepEqual(res.body.find(p => p.id === 'scarf').colours, [], 'one colour: no choice to make');
-  assert.equal(tee.img, '/assets/img/prod-tee.webp');
-  assert.equal(tee.img2x, '/assets/img/prod-tee@2x.webp');
+  assert.equal(tee.img, '/assets/img/p-tee-1.webp');
+  assert.equal(tee.img2x, '/assets/img/p-tee-1@2x.webp');
 
   assert.ok(!res.body.find(p => p.id === 'airpods').inDrop, 'the pod shell is carousel-only');
   assert.ok(res.body.find(p => p.id === 'airpods').inEssentials);

@@ -63,7 +63,7 @@ function sortPieces(pieces, sort) {
 /* --------------------------------------------------------------- hero */
 
 /* The photo comes from the owner's board with its brush words painted on. */
-function Hero({ label, kicker, title, small, tagline, sub, button, img, crumbs }) {
+function Hero({ label, kicker, title, small, tagline, sub, button, img, crumbs, trusted }) {
   return (
     <section className="sh-hero">
       <div className="sh-hero__photo" aria-hidden="true"><img src={asset(img)} alt="" /></div>
@@ -79,6 +79,9 @@ function Hero({ label, kicker, title, small, tagline, sub, button, img, crumbs }
             <button type="button" className="btn btn--solid sh-hero__go" onClick={() => scrollToId('#pieces')}>
               {button} <ArrowShort className="btn__arrow" />
             </button>
+          )}
+          {trusted && (
+            <p className="sh-trusted"><img src={asset(trusted)} alt="" aria-hidden="true" /><span>Trusted by a global community that wears culture proudly.</span></p>
           )}
         </motion.div>
       </div>
@@ -409,7 +412,7 @@ function Placeholders() {
  * The pieces with their filters, sort and pages: the heart of every Shop and
  * Collections page. `pieces` are the page's own; `groups` the panels'.
  */
-function Listing({ pieces, groups, kinds, allName, gridTitle, badge, empty, groupsTitle }) {
+function Listing({ pieces, groups, kinds, allName, gridTitle, badge, empty, groupsTitle, cardButton = true, cardWords }) {
   const { catalogueStatus, catalogueError, loadCatalogue } = useShop();
   const [params, setParams] = useSearchParams();
   const [sheet, setSheet] = useState(false);
@@ -478,7 +481,7 @@ function Listing({ pieces, groups, kinds, allName, gridTitle, badge, empty, grou
         ) : (
           <div className="grid sh-grid" onClick={(e) => { if (!e.target.closest('.card')) setPicking(null); }}>
             {onPage.map(p => (
-              <ProductCard key={p.id} product={p} bagButton picking={picking === p.id} onPick={setPicking} onClosePick={() => setPicking(null)}
+              <ProductCard key={p.id} product={p} bagButton={cardButton} {...cardWords?.(p)} picking={picking === p.id} onPick={setPicking} onClosePick={() => setPicking(null)}
                            badge={badge && p.collections?.includes('limited') ? badge : p.isNew ? 'NEW' : p.preorder ? 'PRE-ORDER' : undefined} />
             ))}
           </div>
@@ -519,8 +522,8 @@ const Words = () => (
 
 /** A collection's story band: words and a button beside a photo, and a film when there is one. */
 function StoryBand({ story }) {
-  const { site, openOverlay } = useShop();
-  const film = story.film && site?.film;
+  const { openOverlay } = useShop();
+  const film = story.film;
   return (
     <Reveal as="section" className={`sh-story${film ? ' sh-story--film' : ''}`} aria-label="The story">
       <div className="sh-story__text">
@@ -534,11 +537,73 @@ function StoryBand({ story }) {
         <button type="button" className="sh-story__film" aria-haspopup="dialog" onClick={() => openOverlay('film')}>
           <img src={asset(story.filmImg ?? 'assets/img/film-still.webp')} alt="" aria-hidden="true" loading="lazy" />
           <span className="film__disc" aria-hidden="true"><Play /></span>
-          <span className="sh-story__film-label"><strong>{story.film}</strong><em>Watch the film</em></span>
+          <span className="sh-story__film-label"><strong>{story.film}</strong>{story.filmLine && <span>{story.filmLine}</span>}<em>Watch the film</em></span>
         </button>
       )}
       {story.words && <Words />}
     </Reveal>
+  );
+}
+
+/** Collaborations' featured partner: words and a button beside its film. */
+function FeaturedBand({ band }) {
+  const { openOverlay } = useShop();
+  return (
+    <Reveal as="section" className="sh-story sh-story--film sh-featured" aria-label="Featured collaboration">
+      <div className="sh-story__text">
+        <div className="sh-featured__bg" aria-hidden="true"><img src={asset(band.img)} alt="" loading="lazy" /></div>
+        <p className="sh-label">FEATURED COLLABORATION</p>
+        <h2 className="sh-featured__title"><span className="sh-featured__us">MASQ.</span> <span aria-hidden="true">×</span> {band.partner}</h2>
+        <p className="sh-featured__sub">{band.title}</p>
+        <p className="sh-story__line">{band.text}</p>
+        <button type="button" className="btn btn--solid sh-story__go" onClick={() => scrollToId('#pieces')}>EXPLORE THE COLLECTION <ArrowShort className="btn__arrow" /></button>
+      </div>
+      <button type="button" className="sh-story__film" aria-haspopup="dialog" onClick={() => openOverlay('film')}>
+        <img src={asset(band.filmImg)} alt="" aria-hidden="true" loading="lazy" />
+        <span className="film__disc" aria-hidden="true"><Play /></span>
+        <span className="sh-story__film-label"><strong>{band.film}</strong><em>Watch the film</em></span>
+      </button>
+      <Words />
+    </Reveal>
+  );
+}
+
+const PROMISE_ICONS = [CHIP_ICONS.diamond, <svg key="t" viewBox="0 0 24 24"><path d="M2 7h11v9H2zM13 10h4l3 3v3h-7" /><circle cx="6" cy="17.5" r="1.8" /><circle cx="17" cy="17.5" r="1.8" /></svg>,
+  <svg key="s" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z" /><path d="M9 12l2 2 4-4" /></svg>, CHIP_ICONS.box];
+
+/** Limited Edition's four promises, when the shop has them worded. */
+function Promises({ items }) {
+  return (
+    <ul className="sh-promises" aria-label="Our promises">
+      {items.map(([title, text], i) => (
+        <li key={title}><span className="sh-chip__icon" aria-hidden="true">{PROMISE_ICONS[i % PROMISE_ICONS.length]}</span><span><strong>{title}</strong><em>{text}</em></span></li>
+      ))}
+    </ul>
+  );
+}
+
+/** The archive's seasons in a row that scrolls, with arrows either side. */
+function Seasons({ seasons, pieces, chosen, onChoose, pictures }) {
+  const [row, setRow] = useState(null);
+  const step = (dir) => row?.scrollBy({ left: dir * row.clientWidth * 0.8, behavior: 'smooth' });
+  return (
+    <div className="sh-seasons-wrap">
+      <button type="button" className="round-arrow sh-seasons__step" aria-label="Earlier seasons" onClick={() => step(-1)}><CaretLeft /></button>
+      <nav className="sh-seasons" aria-label="Seasons" ref={setRow}>
+        {seasons.map(s => {
+          const on = chosen === s;
+          const pic = pictures?.[s] ? asset(pictures[s]) : pieces.find(p => p.season === s && p.img)?.img;
+          const [year, ...rest] = s.split(/\s+—\s+|\s+-\s+/);
+          return (
+            <button key={s} type="button" className={`sh-season${on ? ' is-on' : ''}`} aria-pressed={on} onClick={() => onChoose(on ? null : s)}>
+              {pic && <img src={pic} alt="" aria-hidden="true" loading="lazy" />}
+              <span><strong>{year}</strong>{rest.length > 0 && <em>{rest.join(' — ')}</em>}</span>
+            </button>
+          );
+        })}
+      </nav>
+      <button type="button" className="round-arrow sh-seasons__step" aria-label="Later seasons" onClick={() => step(1)}><CaretRight /></button>
+    </div>
   );
 }
 
@@ -555,11 +620,11 @@ function usePageTitle(title) {
 /** /shop and /shop/:category */
 export function ShopPage() {
   const { category = 'all' } = useParams();
-  const { products } = useShop();
+  const { products, site } = useShop();
   const page = SHOP_PAGES[category];
   const [params, setParams] = useSearchParams();
   usePageTitle(page ? (category === 'all' ? 'Shop' : page.crumb) : 'Shop');
-  const pieces = useMemo(() => (page?.includes ? products.filter(p => page.includes.includes(p.category)) : products), [products, page]);
+  const pieces = useMemo(() => products.filter(p => !pastOnly(p) && (!page?.includes || page.includes.includes(p.category))), [products, page]);
   if (!page) return <Navigate to="/shop" replace />;
   const groups = groupsOf(page);
   const chosenG = list(params.get('type'));
@@ -574,18 +639,23 @@ export function ShopPage() {
   return (
     <ShopLayout footerJoin={false}>
       <Hero label={page.label} title={page.title} sub={page.sub} button={page.button} img={page.img}
+            trusted={page.trusted !== false ? site?.design?.trusted : null}
             crumbs={category === 'all' ? null : [['Home', '/'], ['Shop', '/shop'], [page.crumb]]} />
       <PhotoPanels groups={panelGroups} chosen={chosen} onChoose={choose} pieces={pieces} fallback={page.img} />
-      <Listing pieces={pieces} groups={groups} kinds={page.filters} allName={category === 'all' ? 'All Products' : page.allName} />
+      <Listing pieces={pieces} groups={groups} kinds={page.filters} allName={category === 'all' ? 'All Products' : page.allName}
+               cardButton={page.plus ? 'plus' : true} />
       <DropBand band={page.band} />
     </ShopLayout>
   );
 }
 
+/** In the Archive and nowhere else: pieces from past seasons. */
+const pastOnly = (p) => p.collections?.length > 0 && p.collections.every(c => c === 'archive');
+
 /** The collections' own rows of categories: All, then each with pieces in it. */
-function categoryGroups(pieces) {
+function categoryGroups(pieces, allName = 'All') {
   return [
-    { key: 'all', name: 'All', icon: 'all' },
+    { key: 'all', name: allName, icon: 'all' },
     ...CATEGORIES.filter(c => pieces.some(p => p.category === c.key))
       .map(c => ({ key: c.key, name: c.key === 'bags' ? 'Bags' : c.name, icon: c.key, match: { category: c.key } }))
   ];
@@ -594,7 +664,8 @@ function categoryGroups(pieces) {
 /** /collections/:slug */
 export function CollectionPage() {
   const { slug } = useParams();
-  const { products } = useShop();
+  const { products, site } = useShop();
+  const design = site?.design;
   const c = collectionOf(slug);
   const page = COLLECTION_PAGES[slug];
   const [params, setParams] = useSearchParams();
@@ -604,7 +675,7 @@ export function CollectionPage() {
   const seasons = useMemo(() => [...new Set(pieces.map(p => p.season).filter(Boolean))].sort().reverse(), [pieces]);
   const partners = useMemo(() => [...new Set(pieces.map(p => p.partner).filter(Boolean))], [pieces]);
   if (!c || !page) return <Navigate to="/collections" replace />;
-  const groups = categoryGroups(pieces);
+  const groups = categoryGroups(pieces, slug === 'collaborations' ? 'All Collaborations' : 'All');
   const chosenG = list(params.get('type'));
   const chosen = chosenG.length === 1 ? chosenG[0] : chosenG.length ? null : 'all';
   const choose = (key) => setParams(writeFilters(params, { ...readFilters(params), g: key === 'all' ? [] : [key] }), { preventScrollReset: true });
@@ -614,35 +685,32 @@ export function CollectionPage() {
   return (
     <ShopLayout footerJoin={false}>
       <Hero label="COLLECTION" kicker={page.kicker} title={page.title} small={page.smallSecond} tagline={page.tagline}
-            sub={page.sub} button={page.button} img={page.img}
+            sub={page.sub} button={page.button} img={page.img} trusted={design?.trusted}
             crumbs={[['Home', '/'], ['Collections', '/collections'], [c.name]]} />
-      {page.promises && <Perks />}
+      {page.promises && (design?.limited ? <Promises items={design.limited} /> : <Perks />)}
       {page.partners && partners.length > 0 && (
         <ul className="sh-partners" aria-label="Our partners">
-          {partners.map(name => <li key={name}><span className="sh-partners__us">MASQ.</span><span aria-hidden="true">×</span><span>{name}</span></li>)}
+          {partners.map(name => (
+            <li key={name}>
+              {design?.partners?.[name]
+                ? <img src={asset(design.partners[name])} alt={`MASQ. × ${name}`} loading="lazy" />
+                : <><span className="sh-partners__us">MASQ.</span><span aria-hidden="true">×</span><span>{name}</span></>}
+            </li>
+          ))}
         </ul>
       )}
       {page.seasons && seasons.length > 0 && (
-        <nav className="sh-seasons" aria-label="Seasons">
-          {seasons.map(s => {
-            const on = season.length === 1 && season[0] === s;
-            const pic = pieces.find(p => p.season === s && p.img);
-            const [year, ...rest] = s.split(/\s+—\s+|\s+-\s+/);
-            return (
-              <button key={s} type="button" className={`sh-season${on ? ' is-on' : ''}`} aria-pressed={on} onClick={() => chooseSeason(on ? null : s)}>
-                {pic && <img src={pic.img} alt="" aria-hidden="true" loading="lazy" />}
-                <span><strong>{year}</strong>{rest.length > 0 && <em>{rest.join(' — ')}</em>}</span>
-              </button>
-            );
-          })}
-        </nav>
+        <Seasons seasons={seasons} pieces={pieces} pictures={design?.seasons} chosen={season.length === 1 ? season[0] : null} onChoose={chooseSeason} />
       )}
-      {pieces.length > 0 && groups.length > 2 && (
+      {pieces.length > 0 && groups.length > 2 && !page.seasons && (
         <ChipRow items={groups} chosen={chosen} onChoose={choose} label="Kinds of piece" />
       )}
       <Listing pieces={pieces} groups={groups} kinds={page.filters} allName={`All ${c.key === 'drop-01' ? 'pieces' : c.name}`}
                gridTitle={page.gridTitle} badge={page.badge} empty={page.empty}
-               groupsTitle={slug === 'collaborations' ? 'Product Type' : 'Category'} />
+               groupsTitle={slug === 'collaborations' ? 'Product Type' : 'Category'} cardButton="plus"
+               cardWords={slug === 'collaborations' ? (p) => (p.partner ? { kicker: `MASQ. x ${p.partner}` } : null)
+                 : slug === 'archive' ? (p) => (p.season ? { suffix: `(${p.season.slice(0, 4)})` } : null) : undefined} />
+      {slug === 'collaborations' && design?.featured && partners.length > 0 && <FeaturedBand band={design.featured} />}
       {page.story && <StoryBand story={page.story} />}
       {page.band && <DropBand band={page.band} />}
       {slug !== 'limited' && slug !== 'drop-01' && <Perks />}
