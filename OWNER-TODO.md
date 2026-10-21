@@ -38,22 +38,22 @@ setting things up is in `DEPLOY.md`.
    - all the account codes and links.
 8. **When the shop earns:** move Render to the paid plan (about $7 a month) so the shop never falls asleep.
 
-### Optional switches
+### Optional extras (the shop works without them)
 
-9. **"Write it for me"** in the admin: an Anthropic key in Render (step 6). Costs a few cents per description.
+9. **"Write it for me"** in the admin. A button on each product in admin → Products that writes the product's description for you. It needs an Anthropic key in Render (DEPLOY.md, step 6) and costs a few cents per description. Skip it and you type descriptions yourself.
 
 ### Pictures and words only you can give
 
 10. **Product photos** for every piece and every colour, plus real descriptions. The shop uses sample photos today.
-11. **Home page photos** (admin → Home page).
+11. **Home page photos: nothing to do.** The home page already uses the photos you chose (Dayo and Ifeoma at the top, Ifeoma in the patterned hood for the countdown, the carved violet eyes in the craft band). Change them in admin → Home page only if you want to.
 12. **The Journal.**
     - Read the 10 starter stories I wrote (admin → Journal). Check the facts and the voice; change or hide anything.
     - Give each story a real cover photo; they use the shop's photos for now.
     - People & Creatives needs real people. Lifestyle & Community needs real events. I won't invent either.
     - Photos for the top of each Journal page. Today they reuse the shop's pictures.
     - **About page photos** (the hooded man at the top, the hoodie, the jacket, the three craft / culture / community tiles, the vision background). It uses the shop's pictures for now.
-13. **The receipt email's top picture:** the green-lit black MASQ. bag from the email design.
-14. **The 3D empty-state illustrations** (bag, heart, magnifier, box). Send them, or say yes to making them with Kling (uses your credits).
+13. **The receipt email's top picture: done.** It uses the bag from your email design. Send a sharper one later if you like.
+14. **The 3D empty-state pictures** (bag, heart, magnifier, box), from your empty-states board (`design/boards/empty-states.webp`). They show when the bag is empty, nothing is saved, a search finds nothing, or there are no orders yet. Today those screens use simple outline icons. Your choice: I cut them from the board (like the email bag), you send sharper ones, or Kling makes them (uses credits).
 15. **The brand film: select the pictures.** Go through the film boards (`design/film/README.md`): Film 01 "Worn, Not Spoken", the Ori One reel, and the two posters. Pick the pictures that go in, and we'll write a **Seedance 2.5** prompt for video generation on **Google Flow**. When the film is made, put its link in admin → Settings, and it plays on the home page.
 16. **Brand decisions** (`design/brand/README.md`). The brand boards differ from the shop on:
     - fonts: Rift Bold needs a paid licence; Clash Grotesk is free;
@@ -71,7 +71,7 @@ setting things up is in `DEPLOY.md`.
 19. **Sign in with Google:** a Google Cloud project and an OAuth client ID.
 20. **Sign in with Apple:** an Apple Developer account ($99 a year).
 21. **Codes by text message:** an SMS company (e.g. Termii) and an approved sender name.
-22. **Address search while typing:** a Google Places key, with billing on.
+22. **Address search while typing** (optional), from your inline-feedback board, section 14. At checkout and in saved addresses, the customer types a few letters ("Allen Av") and picks the full address from a list, so fewer addresses are mistyped for the courier. It needs a Google Places key with billing on; Google charges per search after a free monthly allowance. The shop works without it: customers type the address themselves.
 23. **Saved cards:** just your go-ahead. Paystack supports it, but it's a money path to build carefully.
 24. **Courier booking from the admin** (optional): an account with a courier that has an API (e.g. GIG, Sendbox).
 25. **Live currency rates** (optional): an exchange-rate service key. Today you type the rates in.

@@ -92,6 +92,7 @@ export function orderEmail({ kind, order, items, origin, social = {}, contact = 
     .nav a{ margin-left:12px !important; }
     .stack{ display:block !important; width:auto !important; text-align:left !important; }
     .stack-gap{ padding-top:0 !important; }
+    .hero-bag img{ width:180px !important; margin:0 0 6px auto !important; }
   }
 </style></head>
 <body style="margin:0;padding:0;background:${BG};">
@@ -110,11 +111,19 @@ export function orderEmail({ kind, order, items, origin, social = {}, contact = 
   </td></tr>
 
   <tr><td class="pad hero" style="padding:30px 32px 32px;background:${BG};background-image:radial-gradient(ellipse at 85% 40%, #12402a 0%, ${BG} 62%);">
-    <h1 style="margin:0 0 14px;${FONT}font-size:40px;line-height:1.08;font-weight:800;color:${INK};letter-spacing:-.02em;">${esc(heading)}</h1>
-    <p style="margin:0 0 24px;max-width:380px;${FONT}font-size:16px;line-height:1.55;color:#d2cec7;">${esc(intro)}</p>
-    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-      <td class="btn-cell" style="padding-right:12px;">${button(link, 'View Order →', true)}</td>
-      <td class="btn-cell">${button(link, 'Track Order', false)}</td>
+    <!-- rtl puts the bag first in the code, so on a phone it stacks above the words; each cell reads ltr. -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" dir="rtl"><tr>
+      <td class="stack hero-bag" dir="ltr" width="230" valign="middle" align="right" style="width:230px;">
+        <img src="${origin}/assets/email/hero-bag.png" width="230" height="196" alt="" style="display:block;border:0;width:230px;max-width:100%;height:auto;margin-left:auto;">
+      </td>
+      <td class="stack" dir="ltr" valign="middle" style="padding-right:12px;">
+        <h1 style="margin:0 0 14px;${FONT}font-size:40px;line-height:1.08;font-weight:800;color:${INK};letter-spacing:-.02em;">${esc(heading)}</h1>
+        <p style="margin:0 0 24px;max-width:380px;${FONT}font-size:16px;line-height:1.55;color:#d2cec7;">${esc(intro)}</p>
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td class="btn-cell" style="padding-right:12px;">${button(link, 'View Order →', true)}</td>
+          <td class="btn-cell">${button(link, 'Track Order', false)}</td>
+        </tr></table>
+      </td>
     </tr></table>
   </td></tr>
 
