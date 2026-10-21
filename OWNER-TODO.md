@@ -3,6 +3,9 @@
 Kept up to date with the project. Plain steps; the detailed how-to for
 setting things up is in `DEPLOY.md`.
 
+> **Don't forget:** pick the pictures from the film boards so we can write the
+> **Seedance 2.5** prompt for the brand film on **Google Flow** (item 15).
+
 ---
 
 ## 1. Your to-do list
@@ -51,7 +54,7 @@ setting things up is in `DEPLOY.md`.
     - **About page photos** (the hooded man at the top, the hoodie, the jacket, the three craft / culture / community tiles, the vision background). It uses the shop's pictures for now.
 13. **The receipt email's top picture:** the green-lit black MASQ. bag from the email design.
 14. **The 3D empty-state illustrations** (bag, heart, magnifier, box). Send them, or say yes to making them with Kling (uses your credits).
-15. **The brand film.** Go through the film boards (`design/film/README.md`): Film 01 "Worn, Not Spoken", the Ori One reel, and the two posters. Choose what goes in, and we'll write a **Seedance 2.5** prompt for video generation on **Google Flow**. When the film is made, put its link in admin → Settings, and it plays on the home page.
+15. **The brand film: select the pictures.** Go through the film boards (`design/film/README.md`): Film 01 "Worn, Not Spoken", the Ori One reel, and the two posters. Pick the pictures that go in, and we'll write a **Seedance 2.5** prompt for video generation on **Google Flow**. When the film is made, put its link in admin → Settings, and it plays on the home page.
 16. **Brand decisions** (`design/brand/README.md`). The brand boards differ from the shop on:
     - fonts: Rift Bold needs a paid licence; Clash Grotesk is free;
     - the exact purple;
@@ -60,22 +63,23 @@ setting things up is in `DEPLOY.md`.
     - the founding year.
 
     Tell me which way each goes.
-17. **Ori One (the shoe).** If it's going on sale, I need photos, sizes, price and stock. Or say "coming soon" and I'll add a waiting list.
+17. **Kling credits for the banner photos.** You chose to have the Journal and About banner photos cleaned up with Kling (the words printed on them removed, made sharp). Your Kling account has 0 credits today, so top it up first; I'll tell you the cost before using any.
+18. **Ori One (the shoe).** If it's going on sale, I need photos, sizes, price and stock. Or say "coming soon" and I'll add a waiting list.
 
 ### Accounts needed for features not built yet (only when you want them)
 
-18. **Sign in with Google:** a Google Cloud project and an OAuth client ID.
-19. **Sign in with Apple:** an Apple Developer account ($99 a year).
-20. **Codes by text message:** an SMS company (e.g. Termii) and an approved sender name.
-21. **Address search while typing:** a Google Places key, with billing on.
-22. **Saved cards:** just your go-ahead. Paystack supports it, but it's a money path to build carefully.
-23. **Courier booking from the admin** (optional): an account with a courier that has an API (e.g. GIG, Sendbox).
-24. **Live currency rates** (optional): an exchange-rate service key. Today you type the rates in.
+19. **Sign in with Google:** a Google Cloud project and an OAuth client ID.
+20. **Sign in with Apple:** an Apple Developer account ($99 a year).
+21. **Codes by text message:** an SMS company (e.g. Termii) and an approved sender name.
+22. **Address search while typing:** a Google Places key, with billing on.
+23. **Saved cards:** just your go-ahead. Paystack supports it, but it's a money path to build carefully.
+24. **Courier booking from the admin** (optional): an account with a courier that has an API (e.g. GIG, Sendbox).
+25. **Live currency rates** (optional): an exchange-rate service key. Today you type the rates in.
 
 ### Business and legal
 
-25. Have a lawyer read the **Terms of sale**, **Privacy** and **Returns** pages. Nigeria's data protection law (NDPA 2023) applies to customer data.
-26. Keep Paystack's compliance documents up to date.
+26. Have a lawyer read the **Terms of sale**, **Privacy** and **Returns** pages. Nigeria's data protection law (NDPA 2023) applies to customer data.
+27. Keep Paystack's compliance documents up to date.
 
 ---
 
@@ -94,15 +98,31 @@ setting things up is in `DEPLOY.md`.
 - Address search.
 - The 3D illustrations.
 
-**Waiting on screens that don't exist yet:**
-- The shop page and category pages with filters (the SHOP and COLLECTIONS menus). Your boards for these are still to come.
-- The redesigned product page.
-- "No items in this category" and "No saved searches": these need category pages and saved searches first.
+**Pages left to build (your designs are in `design/`, sent 17 and 18 Oct; details in `design/REDESIGN.md`):**
+- **Shop: all products**, with the filter column, sort, page numbers and the SHOP ▾ menu.
+- **Category pages:** T-Shirts, Headwear, Bags & Accessories, Accessories and Outerwear.
+- **Outerwear.** I kept the first Outerwear design and marked the new one as replacing it. Compared with the first one, the new version:
+  - has photos in the sub-category panels;
+  - uses a round bag button for quick add;
+  - adds page numbers;
+  - drops the play button and the promises strip.
+- **Collection pages:** All Collections, Drop 01 Urban Rituals, Essentials, Limited Edition, Collaborations and Archive, with the COLLECTIONS ▾ menu.
+- **The redesigned product page.**
+- "No items in this category" and "No saved searches": these come with the category pages and saved searches.
+
+**Things to confirm for those pages:**
+1. Outerwear title: "Layer Your Identity" or "MASQ. Your Identity"? I'll use "Layer Your Identity" unless you say otherwise.
+2. Drop 01 button: the design reads "SHOP THE COLLECTIAR", which looks like a typo. I'll write "SHOP THE COLLECTION".
+3. New products: the bottle, sunglasses, lanyard, socks, card wallet and the Harrington, windbreaker, varsity, anorak and padded vest jackets will show once you add them in the admin. The pages are built to hold them.
+
+**Questions still open from last time:**
+- **Collaboration partners:** are Artifact, Kòlẹ́, Lagos to the World and 042 real partners? Only real ones go on the site.
+- **Archive seasons:** did the 2020–2023 seasons (Foundations, Origins, Cultural Codes, Essentials) really happen? Only real ones are shown.
+- **Delivery and returns wording:** the designs say "2–5 business days" and "7-day return policy"; the shop today says 1–3 / 3–5 working days and 14-day returns. Which is right? Also "Authenticity guaranteed" and "Premium packaging" on Limited Edition.
+- **Customer faces** ("Trusted by a global community"): left out until there are real customers who agree to be shown.
+- **Reviews and stars:** build real reviews, or leave the stars out?
 
 **Designs I still need from you:**
-- Shop / category pages with filters and sorting.
-- Collection pages (Ori, Egungun, Code, Neo Masq, if those are the collections).
-- Product page redesign.
 - Returns request flow, and reviews (if wanted).
 - A 404 "page not found" page. Today an unknown address shows the home page.
 - A cookie notice. Not legally required while the shop sets no tracking cookies, but useful if you add ads later.
