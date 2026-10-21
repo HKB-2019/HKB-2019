@@ -64,6 +64,32 @@ OUTPUT:
 AVOID: a different or redrawn mask, a symmetrical or generic tribal mask, a misspelled or changed Face Tee print, missing ring of words, changed faces, a different person between shots, blended faces, cartoon, 3D-render or painted looks, plastic skin, extra fingers or warped hands, other brands or logos, misspelled "MASQ.", bright or daylight backgrounds, neon, sneakers or shoes in close-up, fast cuts, shaky camera, lens flares, oversaturated colour.
 ```
 
+## 1b. ChatGPT: fix the storyboard's flaws
+
+Run this in ChatGPT on [the finished storyboard](8-storyboard-v3.png) before Google Flow. It fixes only frames 4.4, 4.3, 6.1, 5.4, 2.2, 5.2 and 5.3, and changes nothing else. Attach, in order: the storyboard, Dayo, Ifeoma, Kunle, the Face Tee print, the merged board.
+
+```
+Attached: 1. the MASQ. Film 01 storyboard to fix. 2. Dayo's test shot. 3. Ifeoma's test shot. 4. Kunle's test shot. 5. the MASQ. Face Tee print. 6. the merged board (picture A is the official MASQ. mask).
+
+Edit image 1. Keep the whole sheet exactly as it is — layout, header, scene labels, time codes, camera notes, text panels, colour palette, notes, and every frame not listed below. Fix only these frames:
+
+1. FRAME 4.4 (close-up into lens): the face must be Dayo, exactly as in image 2 — warm caramel-brown skin with golden undertones, light brown eyes, a strong chiselled jaw, full lips, curly black 4C hair on top with a skin fade and a sharp line-up, a short full beard and moustache. Keep the same framing, half-lit from the side, eyes into the lens.
+
+2. FRAME 4.3 (medium shot, light falls in): make sure it is Dayo from image 2, and frame him slightly wider so the whole Face Tee print on his royal-violet t-shirt shows: the MASQ. mask inside the ring of white words "WE WEAR IDENTITY •" over the top and "UNAPOLOGETICALLY YOURS" under it, "MASQ." in colourful brush letters below, and the row of five small symbols — copied exactly from image 5.
+
+3. FRAME 6.1 (three figures walking): bring the camera a little closer so all three faces are clear and recognisable: Dayo (image 2) in the royal-violet Face Tee, Ifeoma (image 3) in the black Face Tee with the violet wrap, Kunle (image 4) in the white Face Tee under an open black satin bomber. All three t-shirts carry the full Face Tee print from image 5, with its ring of words.
+
+4. FRAME 5.4 (wrap in motion): the face must be Ifeoma, exactly as in image 3 — warm golden-brown skin with freckles across her cheeks and nose, large almond brown eyes, a very short cut of tight black 4C curls, small gold studs. The Face Tee print on her black t-shirt is the full print from image 5.
+
+5. FRAMES 2.2, 5.2 and 5.3 (the embossed masks on the leather, the cap and the backpack): the embossed mask must be the official MASQ. mask, picture A in image 6, pressed tone-on-tone — the vertical split face, the almond eye on one side and the round sun-eye with rays on the other, the long nose ridge, the open mouth with teeth bars, and the five short strokes like a crown on top. Not a symmetrical or generic tribal mask.
+
+Same cinematic look in every fixed frame: ARRI Alexa 35, anamorphic lens, shallow depth of field, a hard side light with a thin rim light, light haze, crushed blacks with a blue-violet undertone, real skin with visible pores and fine hairs, no smoothing, fine film grain.
+
+Do not change any other frame, the words, the spelling or the layout. Spell "MASQ." exactly, with the full stop.
+```
+
+Then use the corrected storyboard in Google Flow below.
+
 ## 2. Google Flow: the film
 
 Flow (Veo 3.1) makes about 8 seconds at a time, so the film is made in **five parts with the same prompt**. Only the second line changes: `MAKE NOW: PART 1`, then `PART 2`, up to `PART 5`.
