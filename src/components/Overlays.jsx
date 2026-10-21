@@ -29,6 +29,7 @@ import { JoinForm } from './Newsletter.jsx';
 import Lines from './Lines.jsx';
 
 import { EASE_OUT, UI_IN, UI_OUT } from '../lib/motion.js';
+import { tick } from '../lib/sound.js';
 
 /* ------------------------------------------------------------ drawer shell */
 
@@ -319,7 +320,7 @@ function DiscountBox({ applied, onApplied }) {
     setState('checking');
     try {
       const r = await checkDiscount(code, cart);
-      setDiscountCode(r.code); onApplied(r); setState(null);
+      setDiscountCode(r.code); onApplied(r); setState(null); tick();
       track('discount_applied');
     } catch (e) { setState(e.message); shake(box.current?.querySelector('input')); }
   };
@@ -369,7 +370,7 @@ function GiftCardBox({ gift, onGift, usingKobo }) {
   const apply = async () => {
     if (!typed.trim()) return;
     setState('checking');
-    try { onGift(await checkGiftCard(typed)); setState(null); }
+    try { onGift(await checkGiftCard(typed)); setState(null); tick(); }
     catch (e) { setState(e.message); shake(box.current?.querySelector('input')); }
   };
 
@@ -809,6 +810,7 @@ function AddedModal({ name, what, img, colour, size, price, qty, left }) {
   // Only a few left of what went in: the same panel, amber, saying so.
   const low = Number.isInteger(left) && left <= 3 && left > 0;
   const tone = low ? 'warn' : 'ok';
+  useEffect(() => { if (!low) tick(); }, []);   // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <Modal labelledBy="addedTitle" className={`modal__panel--state modal__panel--${tone}`}>
       <StateArt tone={tone} />

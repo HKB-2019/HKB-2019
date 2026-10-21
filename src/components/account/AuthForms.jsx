@@ -9,6 +9,7 @@ import { useShop } from '../../store/ShopContext.jsx';
 import { useEmailCheck } from '../../lib/useEmailCheck.js';
 import { isEmail } from '../../lib/delivery.js';
 import { shake } from '../../lib/feel.js';
+import { tick, chime } from '../../lib/sound.js';
 import { EmailNote } from '../FieldNote.jsx';
 import FieldNote from '../FieldNote.jsx';
 import PasswordInput from '../PasswordInput.jsx';
@@ -298,7 +299,7 @@ export function Forgot() {
     e.preventDefault();
     if (!isEmail(email)) { setError('Please enter a valid email address.'); return; }
     setBusy(true); setError(null);
-    try { const r = await accountForgot(email.trim()); setSent({ email: email.trim(), link: r.previewLink }); }
+    try { const r = await accountForgot(email.trim()); setSent({ email: email.trim(), link: r.previewLink }); tick(); }
     catch (err) { setError(err.message); }
     setBusy(false);
   };
@@ -354,7 +355,7 @@ export function Reset() {
     e.preventDefault();
     if (!passwordOk(password)) { setError({ message: 'Use at least 8 characters, with a letter and a number.' }); return; }
     setBusy(true); setError(null);
-    try { await accountReset(email, token, password); setDone(true); }
+    try { await accountReset(email, token, password); setDone(true); chime(); }
     catch (err) { setError(err); }
     setBusy(false);
   };

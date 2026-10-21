@@ -329,10 +329,15 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   (`assets/img/z-<id>-1/2.webp`), sample words, details, materials, size & fit,
   a SKU, sample stars and the See-it-closer film. On the shop side only; the
   admin shows just what was entered, and anything entered there wins.
-- **A soft chime when an order is placed** (src/lib/sound.js), with the
-  confetti: three quiet rising notes made in the browser, no sound file. It
-  plays only where the browser allows sound without a fresh tap, otherwise
-  nothing; `localStorage['masq:sound'] = 'off'` silences it.
+- **Sounds for good news only** (src/lib/sound.js), made in the browser, no
+  sound file. A light **tick** for small wins — every green "it worked"
+  message (added to bag, saved, signed in, address or profile saved, joined
+  the list), the Added-to-your-bag panel, a discount code or gift card
+  applied, a reset link sent. A fuller **chime** for big moments — an order
+  placed (with the confetti), a gift card ready (once per card), a password
+  reset. Never for errors or warnings. They play only where the browser
+  allows sound (after a tap in the shop), otherwise nothing;
+  `localStorage['masq:sound'] = 'off'` silences them.
 - **The product page** follows the owner's Face Tee design for every piece:
   thumbnails, arrows and full screen; category, SKU, colour, size, a stock line,
   quantity, ADD TO BAG and BUY NOW (straight to delivery); the three promises;

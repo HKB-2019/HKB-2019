@@ -6,6 +6,7 @@ import { HOME_DEFAULT } from '../data/home.js';
 import { track } from '../lib/analytics.js';
 import { holdSmoothScroll } from '../lib/smoothScroll.js';
 import { hasColours, sizesFor, photoFor, optionLabel } from '../lib/colours.js';
+import { tick } from '../lib/sound.js';
 
 /* One place for everything the shop needs to remember: the catalogue and site
  * settings from the server, the bag, the saved list, the chosen currency,
@@ -120,6 +121,7 @@ export function ShopProvider({ children }) {
     const id = ++toastId.current;
     const ms = t.ms === null ? null : t.ms ?? (t.undo ? 10000 : t.tone === 'bad' ? 6000 : t.action ? 6000 : 4500);
     setToasts(list => [...list.filter(x => !t.key || x.key !== t.key).slice(-2), { ...t, id, ms }]);
+    if (t.tone === 'ok' && !t.busy) tick();
   }, []);
 
   /* Something that did not go, with Retry: "Retrying…" while it runs, then

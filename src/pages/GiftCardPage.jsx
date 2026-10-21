@@ -10,6 +10,7 @@ import { shake, shakeInvalid } from '../lib/feel.js';
 import { useEmailCheck, EMAIL_BAD } from '../lib/useEmailCheck.js';
 import { EmailNote } from '../components/FieldNote.jsx';
 import StateMark from '../components/StateMark.jsx';
+import { chime } from '../lib/sound.js';
 
 /* /gift-card — buy a MASQ. gift card, and (with ?reference=, where Paystack
  * sends the buyer back) see it once paid: its code, to copy or send. With
@@ -240,13 +241,20 @@ function Bought({ reference }) {
     return () => { live = false; };
   }, [reference]);
 
-  // Paid: the card turns over to show its code, once, a moment after the page settles.
+  // Paid: the card turns over to show its code, once, a moment after the page
+  // settles, with its chime (once per card, not on every visit to this page).
   const active = card?.status === 'active';
   useEffect(() => {
     if (!active) return;
     const t = setTimeout(() => setRevealed(true), 450);
-    return () => clearTimeout(t);
-  }, [active]);
+    const key = `masq:chimed:${card.code}`;
+    const heard = () => { try { return sessionStorage.getItem(key) === '1'; } catch { return false; } };
+    const c = heard() ? null : setTimeout(() => {
+      try { sessionStorage.setItem(key, '1'); } catch { /* private window */ }
+      chime();
+    }, 500);
+    return () => { clearTimeout(t); clearTimeout(c); };
+  }, [active]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   const copy = (what, value) => async () => {
     try { await navigator.clipboard.writeText(value); setCopied(what); setTimeout(() => setCopied(null), 1800); }
