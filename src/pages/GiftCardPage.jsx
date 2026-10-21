@@ -324,6 +324,7 @@ export default function GiftCardPage() {
     <div className="status gift-page">
       <header className="status__bar">
         <Link to="/" className="logo"><Wordmark /></Link>
+        <Link to="/" className="status__back"><span aria-hidden="true">←</span> Back to the shop</Link>
       </header>
       <motion.main className="gift-page__main" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
         {reference ? <Bought reference={reference} /> : params.has('topup') ? <TopUpFind /> : <Buy />}

@@ -102,6 +102,7 @@ export default function OrderStatus() {
     <div className="status">
       <header className="status__bar">
         <Link to="/" className="logo"><Wordmark /></Link>
+        <Link to="/" className="status__back"><span aria-hidden="true">←</span> Back to the shop</Link>
       </header>
 
       <motion.main

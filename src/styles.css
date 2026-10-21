@@ -2645,7 +2645,12 @@ body:has(.drawer) .toast-wrap{ right:calc(min(430px, 100%) + 20px); }
 .viz-bars + .viz-bars{ margin-top:14px; }
 .viz-bars__row{ display:grid; grid-template-columns:minmax(0,1fr) repeat(var(--cols, 4), minmax(52px, 84px)); gap:10px; align-items:center; }
 .viz-bars__row > .num{ text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-dim); white-space:nowrap; }
-@media (max-width:640px){ .viz-bars__row{ grid-template-columns:minmax(0,1fr) repeat(var(--cols, 4), 56px); gap:8px; } }
+/* On a phone the names keep room to read; the table scrolls sideways instead of squeezing them. */
+@media (max-width:640px){
+  .viz-bars{ overflow-x:auto; }
+  .viz-bars__row{ grid-template-columns:minmax(110px,1fr) repeat(var(--cols, 4), 56px); gap:8px; min-width:calc(110px + var(--cols, 4) * 64px); }
+  .viz-bars__row--head > span:first-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+}
 .viz-bars__row--head{ font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); padding:0 0 4px; }
 .viz-bars__row--head > .num{ color:var(--ink-faint); }
 .viz-bars__label{ position:relative; min-width:0; padding:6px 8px; }
@@ -3428,8 +3433,10 @@ body:has(.drawer) .toast-wrap{ right:calc(min(430px, 100%) + 20px); }
   background:var(--violet); color:#fff; font-size:11px; font-weight:700; letter-spacing:.04em;
 }
 .account-btn.is-in:hover .account-btn__initials{ background:var(--violet-hi); }
-@media (max-width:480px){ .account-btn{ display:none; } .mobile-nav__account{ display:flex; } }
+/* On a phone the account moves from the bar into the menu. (Hidden first,
+   then shown: the other way round, the menu never had a way to sign in.) */
 .mobile-nav__account{ display:none; }
+@media (max-width:480px){ .account-btn{ display:none; } .mobile-nav__account{ display:flex; } }
 
 /* ============ CUSTOMER ACCOUNTS (src/components/account) ============ */
 /* signing in: the form, and the hooded photo beside it */
@@ -4025,3 +4032,11 @@ a:hover > * > .jr-go, a:hover .jr-go{ background:var(--violet); border-color:var
   .admin-story__two, .admin-story__photo{ grid-template-columns:1fr; }
   .admin-story__photo > img, .admin-story__photo > .admin-home-photo__empty{ width:100%; }
 }
+
+/* a way back from the pages that stand on their own (order, gift card) */
+.status__bar{ justify-content:space-between; gap:16px; }
+.status__back{
+  display:inline-flex; align-items:center; gap:8px; min-height:44px; font-size:13px; font-weight:500; color:var(--ink-dim);
+  transition:color .2s var(--ease);
+}
+.status__back:hover{ color:var(--ink); }

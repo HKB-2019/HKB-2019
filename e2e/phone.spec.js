@@ -113,3 +113,14 @@ test('a long page in a panel can be read to the end, and a tap outside closes it
 
 /** The smallest real WebP: one pixel. Enough for the server to accept as a photo. */
 const PIXEL = 'UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==';
+
+test('on a phone the menu has Sign in, Track an order and the Journal', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Open menu' }).tap();
+  const menu = page.locator('.mobile-nav');
+  await expect(menu.getByRole('link', { name: 'Sign in' })).toBeVisible();
+  await expect(menu.getByRole('button', { name: 'Track an order' })).toBeVisible();
+  await menu.getByRole('link', { name: /journal/i }).tap();
+  await expect(page).toHaveURL(/\/journal$/);
+  await noSidewaysScroll(page);
+});

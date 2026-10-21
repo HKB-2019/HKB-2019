@@ -284,6 +284,22 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   needs the password and a code sent to the new address; nothing moves until
   the code comes back, the old address is told, and orders, the list and
   back-in-stock requests follow it.
+- **The shop's own order emails** (server/lib/receipts.js, server/lib/emails.js),
+  once email is set up: the receipt from the owner's email design (desktop,
+  phone and plain-text versions) when an order is paid — sent once, claimed in
+  the database so the webhook and the order page cannot both send it — with
+  Resend on the order page (45 seconds apart, five in all, only ever to the
+  order's own email); and "on its way" with the courier and tracking when the
+  owner marks it sent.
+- **Action feedback** (the owner's board): Undo with its seconds in a ring and
+  a "restored" message; Retry with Retrying… / Still having trouble / contact
+  us after three misses; offer and tip messages shown once a visit; error
+  details with Copy reference and Contact support.
+- **The Journal** (`/journal`, src/pages/Journal.jsx, server/routes/journal.js):
+  a front page, six topic pages and a story page from the owner's boards, with
+  the stories in the database and a JOURNAL tab in the admin to write,
+  schedule, hide, feature and give each a cover photo. Ten starter stories are
+  put in once (src/data/journal.js); after that the admin is the Journal.
 - **Banners from Settings.** The announcement can carry a button: to a page
   of the shop or a secure address, or opening longer details. Maintenance can
   close the shop or only show a notice across the top, now or at a planned
@@ -487,9 +503,8 @@ A pass over the whole codebase before this round found, and fixed:
   account (Google, Apple, an SMS provider) first.
 - **Saved cards** on the account: Paystack can charge a card again once it
   has been paid with, but a one-tap charge is a money path to build with care.
-- **Our own emails.** Paystack emails the customer a receipt and the owner a
-  payment notice, so nobody is left without word — but the shop does not yet
-  send its own confirmation or "your order has shipped".
+- **More order emails:** "delivered" and "refund made" (the receipt and "on
+  its way" are done).
 - **Courier booking.** Delivery is priced and the address collected; the
   parcel is booked with a courier by hand, using the orders spreadsheet.
 - **International duties.** Abroad can be switched on with a flat fee; duties

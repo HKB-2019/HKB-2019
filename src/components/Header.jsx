@@ -6,7 +6,7 @@ import { useSectionLink } from '../lib/useSectionLink.js';
 import { NAV, NAV_TARGETS } from '../data/home.js';
 import { CURRENCIES } from '../data/currencies.js';
 import { jumpToTop } from '../lib/smoothScroll.js';
-import { ChevronDown, AccountIcon, BagIcon, Heart, Sun, Moon, SearchIcon } from './Icons.jsx';
+import { ChevronDown, AccountIcon, BagIcon, Heart, Sun, Moon, SearchIcon, Truck } from './Icons.jsx';
 import { useTheme } from '../lib/theme.js';
 import { EASE_OUT, UI_IN, UI_OUT } from '../lib/motion.js';
 import Wordmark from './Wordmark.jsx';
@@ -145,7 +145,7 @@ export default function Header() {
           ) : (
             <button className="icon-btn track-btn" aria-label="Track an order" aria-haspopup="dialog"
                     onClick={() => openOverlay('track')}>
-              <AccountIcon />
+              <Truck />
             </button>
           )}
 
@@ -186,7 +186,7 @@ export default function Header() {
               </Link>
             )}
             <button type="button" className={`mobile-nav__theme${accountsOn ? '' : ' mobile-nav__track'}`} onClick={() => { setMenuOpen(false); openOverlay('track'); }}>
-              <AccountIcon /> Track an order
+              <Truck /> Track an order
             </button>
             <button type="button" className="mobile-nav__theme" onClick={toggle}>
               <SwapIcon swap={theme}>{theme === 'light' ? <Moon /> : <Sun />}</SwapIcon>

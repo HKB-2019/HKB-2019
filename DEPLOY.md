@@ -133,7 +133,8 @@ Then buy something from your own shop with one of Paystack's test cards, and
 watch the order appear in the admin with the name and address you typed.
 
 When a payment goes through, Paystack emails the customer a receipt and you
-a notice. The shop does not send its own emails yet.
+a notice. Once email is set up (step 7) the shop also sends its own receipt,
+and an "on its way" email when you mark an order sent.
 
 You do not need to set a callback URL — the shop works out its own address.
 
@@ -161,8 +162,10 @@ email. If it ever leaks, delete it in the Anthropic console and make another.
 
 ## 7. Customer accounts (optional, needs email)
 
-Customers can make an account to see their orders, keep their details for
-checkout, and protect it with a code from an app. Every account starts by
+This switches on the shop's own emails — the receipt when an order is paid,
+"on its way" when you mark it sent — and customer accounts. Customers can make
+an account to see their orders, keep their details for checkout, and protect
+it with a code from an app. Every account starts by
 proving its email with a six-digit code, and a forgotten password is reset by
 an emailed link, so accounts stay **off** until the shop can send email. Until
 then the person icon in the header is *Track an order*, as before.
@@ -178,6 +181,9 @@ then the person icon in the header is *Track an order*, as before.
    Save; Render restarts the shop by itself.
 5. The header's person icon now says **Sign in**. Make an account with your
    own email to see the code arrive.
+6. **Your own web address?** If the shop is on your own domain (not the
+   `onrender.com` one), add `PUBLIC_URL` → `https://yourshop.com` in
+   Render's Environment, so the links in emails point there.
 
 Sign-in with Google or Apple is not built: each needs the shop's own
 developer account with them (Apple's costs $99 a year). Say when you want it.
