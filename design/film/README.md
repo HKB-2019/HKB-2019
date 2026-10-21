@@ -105,3 +105,6 @@ All of the storyboard, plus frame 5 of the campaign stills (the flowing wrap), t
 
 ![The merged selection](6-merged-selection.webp)
 
+## 7. Scene stills
+
+Eight new campaign stills with Dayo, Ifeoma and Kunle: [SCENES-PROMPT.md](SCENES-PROMPT.md). The carved mask, cut out of the Ori One Onyx poster, is in [references/B-carved-mask.png](references/B-carved-mask.png).
