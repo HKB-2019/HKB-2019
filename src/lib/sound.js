@@ -1,26 +1,61 @@
 /* The shop's sounds, for good news only: a light tick when something small
  * works (added to the bag, saved, a code applied, signed in) and a fuller
  * chime for the big moments (an order placed, a gift card ready). Made in the
- * browser (Web Audio), so there is no file to load. They play only where the
- * browser allows sound — after the customer has tapped something in the
- * shop — and are otherwise skipped in silence. A customer who has turned
- * sounds off (localStorage `masq:sound` = "off") never hears them. */
+ * browser (Web Audio), so there is no file to load.
+ *
+ * Browsers let a page make sound only once someone has tapped it, and an
+ * iPhone only if the sound is switched on inside that tap — so the first tap
+ * anywhere in the shop quietly unlocks it, and later good news can be heard.
+ * A phone on silent stays silent. Customers can turn the sounds off with the
+ * switch in the footer (kept in localStorage `masq:sound`). */
 
 let ctx = null;
+const KEY = 'masq:sound';
+const listeners = new Set();
 
-function soundOff() {
-  try { return localStorage.getItem('masq:sound') === 'off'; } catch { return false; }
+export function soundOn() {
+  try { return localStorage.getItem(KEY) !== 'off'; } catch { return true; }
 }
+
+/** Turns the sounds on or off, and tells anything showing the switch. */
+export function setSoundOn(on) {
+  try { localStorage.setItem(KEY, on ? 'on' : 'off'); } catch { /* private window: this visit only */ }
+  listeners.forEach(fn => fn(on));
+}
+
+export function onSoundChange(fn) {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+/* Inside a tap: make (or wake) the audio and play one silent sample, which is
+ * what an iPhone needs to let the page make sound from then on. */
+function unlock() {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return;
+  try {
+    ctx ??= new Ctx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const src = ctx.createBufferSource();
+    src.buffer = ctx.createBuffer(1, 1, 22050);
+    src.connect(ctx.destination);
+    src.start(0);
+  } catch { /* no sound is fine */ }
+  if (ctx?.state === 'running') stopListening();
+}
+const TAPS = ['pointerdown', 'touchend', 'keydown'];
+function stopListening() { TAPS.forEach(t => window.removeEventListener(t, unlock, true)); }
+if (typeof window !== 'undefined') TAPS.forEach(t => window.addEventListener(t, unlock, true));
 
 /** Plays [frequency, start offset] notes as soft bells. */
 async function play(notes, volume, ring) {
-  if (typeof window === 'undefined' || soundOff()) return;
+  if (typeof window === 'undefined' || !soundOn()) return;
   const Ctx = window.AudioContext || window.webkitAudioContext;
   if (!Ctx) return;
   try {
     ctx ??= new Ctx();
     if (ctx.state === 'suspended') await ctx.resume();
-    if (ctx.state !== 'running') return;          // the browser wants a tap first: stay silent
+    if (ctx.state !== 'running') return;          // not unlocked by a tap yet: stay silent
     const start = ctx.currentTime + 0.02;
     const out = ctx.createGain();
     out.gain.value = volume;

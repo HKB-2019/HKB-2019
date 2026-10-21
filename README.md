@@ -335,9 +335,11 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   the list), the Added-to-your-bag panel, a discount code or gift card
   applied, a reset link sent. A fuller **chime** for big moments — an order
   placed (with the confetti), a gift card ready (once per card), a password
-  reset. Never for errors or warnings. They play only where the browser
-  allows sound (after a tap in the shop), otherwise nothing;
-  `localStorage['masq:sound'] = 'off'` silences them.
+  reset. Never for errors or warnings. Browsers allow page sound only after a
+  tap, and an iPhone only if it is switched on inside that tap, so the first
+  tap anywhere in the shop quietly unlocks it; a phone on silent stays
+  silent. **Sounds on / off** in the footer turns them off for good (kept in
+  `localStorage['masq:sound']`).
 - **The product page** follows the owner's Face Tee design for every piece:
   thumbnails, arrows and full screen; category, SKU, colour, size, a stock line,
   quantity, ADD TO BAG and BUY NOW (straight to delivery); the three promises;

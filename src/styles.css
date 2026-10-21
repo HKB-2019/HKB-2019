@@ -861,6 +861,12 @@ html{ scrollbar-color:var(--line) var(--bg); }
 }
 .footer__base p{ margin:0; }
 .footer__base span{ white-space:nowrap; } /* a narrow screen breaks the line at the dot */
+.footer__sound{
+  display:inline-flex; align-items:center; gap:7px; min-height:44px; margin:-13px 0; padding:0;
+  font:inherit; letter-spacing:inherit; text-transform:inherit; color:inherit; transition:color .2s;
+}
+.footer__sound:hover{ color:var(--ink); }
+.footer__sound svg{ width:17px; height:17px; flex:none; }
 
 @media (max-width:900px){
   .footer__inner{ grid-template-columns:minmax(0,1fr); }

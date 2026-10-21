@@ -355,3 +355,14 @@ test('the footer is grouped, and every link in it goes somewhere', async ({ page
   await footer.getByRole('link', { name: 'Collections' }).click();
   await expect(page).toHaveURL(/\/collections$/);
 });
+
+test('a shopper can turn the good-news sounds off, and it stays off', async ({ page }) => {
+  await page.goto('/');
+  const sound = page.locator('footer').getByRole('button', { name: /Sounds on/ });
+  await expect(sound).toHaveAttribute('aria-pressed', 'true');
+  await sound.click();
+  const off = page.locator('footer').getByRole('button', { name: /Sounds off/ });
+  await expect(off).toHaveAttribute('aria-pressed', 'false');
+  await page.reload();
+  await expect(page.locator('footer').getByRole('button', { name: /Sounds off/ })).toBeVisible();
+});

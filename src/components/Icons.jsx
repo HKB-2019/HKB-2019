@@ -110,6 +110,16 @@ export const Sun = () => (
   </svg>
 );
 
+/** A speaker, with sound waves when on and a cross when off. */
+export const Speaker = ({ on = true }) => (
+  <svg viewBox="0 0 22 22" aria-hidden="true">
+    <path d="M3.6 8.4h3.2l4.4-3.6v12.4l-4.4-3.6H3.6z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+    {on
+      ? <path d="M14.2 8.2a4 4 0 0 1 0 5.6M16.6 6a7.2 7.2 0 0 1 0 10" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+      : <path d="M14.4 8.8l4.4 4.4M18.8 8.8l-4.4 4.4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>}
+  </svg>
+);
+
 export const Moon = () => (
   <svg viewBox="0 0 22 22" aria-hidden="true">
     <path d="M17.8 13.6A7.4 7.4 0 0 1 8.4 4.2a7.4 7.4 0 1 0 9.4 9.4z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>

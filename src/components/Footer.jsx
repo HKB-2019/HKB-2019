@@ -1,10 +1,12 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useShop, useHome } from '../store/ShopContext.jsx';
 import { useSectionLink } from '../lib/useSectionLink.js';
-import { Instagram, TikTok, XIcon } from './Icons.jsx';
+import { Instagram, TikTok, XIcon, Speaker } from './Icons.jsx';
 import Lines from './Lines.jsx';
 import Wordmark from './Wordmark.jsx';
 import { JoinForm } from './Newsletter.jsx';
+import { soundOn, setSoundOn, onSoundChange, tick } from '../lib/sound.js';
 
 /* The footer, in groups a shopper scans for: the shop itself, help with an
  * order, and the small print. Pages open in a panel; shop links go to their
@@ -15,6 +17,19 @@ export const SOCIAL = [
   ['tiktok', 'TikTok', TikTok],
   ['x', 'X', XIcon]
 ];
+
+/** Sounds on or off: the shop plays a soft tick or chime for good news; a
+ *  shopper who would rather not hear them turns them off here, for good. */
+function SoundSwitch() {
+  const [on, setOn] = useState(soundOn);
+  useEffect(() => onSoundChange(setOn), []);
+  const flip = () => { setSoundOn(!on); if (!on) tick(); };   // turned on: a tick to show it
+  return (
+    <button type="button" className="footer__sound" aria-pressed={on} onClick={flip}>
+      <Speaker on={on} /> Sounds {on ? 'on' : 'off'}
+    </button>
+  );
+}
 
 /* `join`: false on pages with a sign-up of their own (the Journal), so the
  * form is not there twice. */
@@ -96,6 +111,7 @@ export default function Footer({ join = true }) {
       <div className="footer__base">
         <p>© {new Date().getFullYear()} MASQ. All rights reserved.</p>
         <p><span>Prices in naira</span> · <span>Payments secured by Paystack</span></p>
+        <SoundSwitch />
       </div>
     </footer>
   );
