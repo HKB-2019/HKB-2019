@@ -5,17 +5,23 @@ import { useAccount } from '../store/AccountContext.jsx';
 import { Loader } from '../components/Notices.jsx';
 import { SignIn, SignUp, Verify, Forgot, Reset } from '../components/account/AuthForms.jsx';
 import { Overview, Orders, Profile, Security } from '../components/account/AccountArea.jsx';
+import { Addresses } from '../components/account/Addresses.jsx';
+import { Notifications } from '../components/account/Notifications.jsx';
 
 /* /account and everything under it: signing in and the customer's own pages.
  * The pages for someone signed out send a signed-in visitor to their account;
  * the account's pages send a signed-out one to sign in, and back after. */
 
 const OUT = { '/account/sign-in': SignIn, '/account/sign-up': SignUp, '/account/verify': Verify, '/account/forgot': Forgot, '/account/reset': Reset };
-const IN = { '/account': Overview, '/account/orders': Orders, '/account/profile': Profile, '/account/security': Security };
+const IN = {
+  '/account': Overview, '/account/orders': Orders, '/account/profile': Profile, '/account/addresses': Addresses,
+  '/account/security': Security, '/account/notifications': Notifications
+};
 const TITLES = {
   '/account/sign-in': 'Sign in', '/account/sign-up': 'Create an account', '/account/verify': 'Check your email',
   '/account/forgot': 'Reset your password', '/account/reset': 'New password',
-  '/account': 'Your account', '/account/orders': 'Your orders', '/account/profile': 'Profile', '/account/security': 'Security'
+  '/account': 'Your account', '/account/orders': 'Your orders', '/account/profile': 'Profile', '/account/addresses': 'Addresses',
+  '/account/security': 'Security', '/account/notifications': 'Notifications'
 };
 
 export default function Account() {

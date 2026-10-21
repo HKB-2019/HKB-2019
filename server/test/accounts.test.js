@@ -6,7 +6,7 @@
  */
 import { test, before, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { startShop, stubPaystack, colourOf } from './helpers.js';
+import { startShop, stubPaystack, colourOf, WHO } from './helpers.js';
 
 let shop, outbox, lib;
 before(async () => {
@@ -299,4 +299,156 @@ test('deleting an account needs the password, and ends it everywhere', async () 
   assert.equal((await shop.request('/api/account/me', { cookie })).status, 401);
   assert.equal((await post('/login', { email: EMAIL, password: PASS })).status, 401);
   assert.equal((await shop.one('SELECT COUNT(*) AS n FROM account_sessions')).n, 0);
+});
+
+/* ---- change email ---------------------------------------------------- */
+
+const lastOf = (kind) => outbox.filter(m => m.kind === kind).at(-1);
+
+test('changing the email: password first, a code to the new inbox, orders under the old email still seen', async () => {
+  const cookie = await member();
+  const items = [{ productId: 'cap', colour: colourOf('cap'), size: 'ONE SIZE', qty: 1 }];
+  const before = await shop.checkout({ email: EMAIL, items });
+  await shop.request(`/api/orders/${before.body.reference}`);
+  await shop.request('/api/subscribe', { method: 'POST', json: { email: EMAIL } });
+  const ask = (json) => post('/email', json, cookie);
+
+  assert.equal((await ask({ email: 'not-an-email', password: PASS })).body.field, 'email');
+  assert.equal((await ask({ email: EMAIL, password: PASS })).body.field, 'email', 'already theirs');
+  assert.equal((await ask({ email: 'new@example.com', password: 'wrong-one-1' })).body.field, 'password');
+  await member('taken@example.com');
+  assert.equal((await ask({ email: 'taken@example.com', password: PASS })).status, 409);
+
+  const sent = await ask({ email: 'New@Example.com', password: PASS });
+  assert.equal(sent.status, 200, sent.raw);
+  assert.equal(lastOf('email').to, 'new@example.com');
+  assert.equal((await shop.request('/api/account/me', { cookie })).body.email, EMAIL, 'nothing changes before the code');
+  assert.equal((await shop.request('/api/account/me', { cookie })).body.pendingEmail, 'new@example.com');
+  assert.equal((await post('/email/resend', {}, cookie)).status, 429, 'a new code waits 45 seconds');
+
+  const wrong = await post('/email/confirm', { code: lastOf('email').big === '000000' ? '111111' : '000000' }, cookie);
+  assert.equal(wrong.body.field, 'code');
+  const ok = await post('/email/confirm', { code: lastOf('email').big }, cookie);
+  assert.equal(ok.status, 200, ok.raw);
+  assert.equal(ok.body.email, 'new@example.com');
+  assert.equal(ok.body.pendingEmail, null);
+  assert.equal(lastOf('email-changed').to, EMAIL, 'the old address is told');
+  assert.match(lastOf('email-changed').lines[0], /n•••@example\.com/);
+
+  // Signs in with the new one only; still sees the order placed before; still on the list.
+  assert.equal((await post('/login', { email: EMAIL, password: PASS })).status, 401);
+  assert.equal((await post('/login', { email: 'new@example.com', password: PASS })).status, 200);
+  const list = (await shop.request('/api/account/orders', { cookie })).body;
+  assert.equal(list[0].reference, before.body.reference);
+  assert.equal((await shop.one("SELECT COUNT(*)::int AS n FROM subscribers WHERE email = 'new@example.com'")).n, 1);
+  assert.equal((await post('/email/confirm', { code: '123456' }, cookie)).body.code, 'expired', 'one code, once');
+});
+
+test('an email change cannot take an address another account proves first', async () => {
+  const cookie = await member();
+  assert.equal((await post('/email', { email: 'later@example.com', password: PASS }, cookie)).status, 200);
+  const code = lastOf('email').big;
+  await member('later@example.com');
+  const late = await post('/email/confirm', { code }, cookie);
+  assert.equal(late.status, 409);
+  assert.equal((await shop.request('/api/account/me', { cookie })).body.email, EMAIL);
+});
+
+/* ---- addresses ------------------------------------------------------- */
+
+test('addresses: checked like checkout, the first is the default, one default at a time', async () => {
+  const cookie = await member();
+  const call = (method, path = '', json) => shop.request(`/api/account/addresses${path}`, { method, cookie, json });
+  assert.deepEqual((await call('GET')).body, []);
+
+  const bad = await call('POST', '', { ...WHO, address: { ...WHO.address, state: 'Narnia' } });
+  assert.equal(bad.status, 400);
+  assert.equal(bad.body.field, 'state');
+  assert.equal((await call('POST', '', { ...WHO, phone: '12' })).body.field, 'phone');
+
+  let list = (await call('POST', '', { ...WHO, label: 'Home' })).body;
+  assert.equal(list.length, 1);
+  assert.equal(list[0].isDefault, true, 'the first is the default');
+  assert.equal(list[0].address.state, 'Lagos');
+  list = (await call('POST', '', { ...WHO, label: 'Work', address: { ...WHO.address, state: 'fct', city: 'Wuse' } })).body;
+  assert.equal(list.length, 2);
+  const work = list.find(a => a.label === 'Work');
+  assert.equal(work.address.state, 'FCT');
+  assert.equal(work.isDefault, false);
+
+  list = (await call('POST', `/${work.id}/default`)).body;
+  assert.equal(list[0].id, work.id, 'the default comes first');
+  assert.equal(list.filter(a => a.isDefault).length, 1);
+
+  list = (await call('PUT', `/${work.id}`, { ...WHO, label: 'Office', address: { ...WHO.address, line1: '5 Broad Street' } })).body;
+  assert.equal(list.find(a => a.id === work.id).label, 'Office');
+  assert.equal(list.find(a => a.id === work.id).isDefault, true, 'editing keeps it the default');
+
+  list = (await call('DELETE', `/${work.id}`)).body;
+  assert.equal(list.length, 1);
+  assert.equal(list[0].isDefault, true, 'the one left takes over');
+
+  // Someone else's address is out of reach.
+  const other = await member('bo@example.com');
+  const theirs = (await shop.request('/api/account/addresses', { method: 'POST', cookie: other, json: WHO })).body[0];
+  assert.equal((await call('PUT', `/${theirs.id}`, WHO)).status, 404);
+  await call('DELETE', `/${theirs.id}`);
+  assert.equal((await shop.request('/api/account/addresses', { cookie: other })).body.length, 1);
+  assert.equal((await shop.request('/api/account/addresses')).status, 401);
+});
+
+test('at most ten addresses', async () => {
+  const cookie = await member();
+  for (let i = 0; i < 10; i++) await shop.request('/api/account/addresses', { method: 'POST', cookie, json: WHO });
+  assert.equal((await shop.request('/api/account/addresses', { method: 'POST', cookie, json: WHO })).status, 400);
+});
+
+/* ---- notifications --------------------------------------------------- */
+
+test('notifications: the mailing list, sign-in alerts, and back-in-stock requests', async () => {
+  const cookie = await member();
+  const get = async () => (await shop.request('/api/account/notifications', { cookie })).body;
+  const set = (json) => shop.request('/api/account/notifications', { method: 'PATCH', cookie, json });
+
+  let n = await get();
+  assert.equal(n.newsletter, false);
+  assert.equal(n.signInAlerts, true);
+  assert.deepEqual(n.stockAlerts, []);
+
+  assert.equal((await set({ newsletter: true })).body.newsletter, true);
+  assert.equal((await shop.one(`SELECT COUNT(*)::int AS n FROM subscribers WHERE email = '${EMAIL}'`)).n, 1);
+  assert.equal((await set({ newsletter: false })).body.newsletter, false);
+  assert.equal((await shop.one(`SELECT COUNT(*)::int AS n FROM subscribers WHERE email = '${EMAIL}'`)).n, 0);
+
+  await shop.one("INSERT INTO stock_alerts (product_id, colour, size, email) VALUES ('tee', 'Indigo', 'M', 'ADA@example.com')");
+  await shop.one("INSERT INTO stock_alerts (product_id, colour, size, email) VALUES ('tee', 'Indigo', 'L', 'bo@example.com')");
+  n = await get();
+  assert.equal(n.stockAlerts.length, 1);
+  assert.equal(n.stockAlerts[0].size, 'M');
+  const theirs = (await shop.one("SELECT id FROM stock_alerts WHERE email = 'bo@example.com'")).id;
+  await shop.request(`/api/account/notifications/stock/${theirs}`, { method: 'DELETE', cookie });
+  assert.equal((await shop.one('SELECT COUNT(*)::int AS n FROM stock_alerts')).n, 2, 'someone else’s request stays');
+  n = (await shop.request(`/api/account/notifications/stock/${n.stockAlerts[0].id}`, { method: 'DELETE', cookie })).body;
+  assert.deepEqual(n.stockAlerts, []);
+});
+
+test('a sign-in from a new browser is told to the account’s email, unless turned off', async () => {
+  await member();
+  const ua = (agent) => ({ 'user-agent': agent });
+  const login = (agent) => shop.request('/api/account/login', { method: 'POST', json: { email: EMAIL, password: PASS }, headers: ua(agent) });
+  const firefox = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0';
+  const safari = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+  const count = () => outbox.filter(m => m.kind === 'sign-in').length;
+  const start = count();
+  const first = await login(firefox);
+  assert.equal(first.status, 200);
+  assert.equal(count(), start + 1);
+  assert.match(outbox.at(-1).lines[0], /Firefox/);
+  await login(firefox);
+  assert.equal(count(), start + 1, 'not again for the same browser');
+
+  await shop.request('/api/account/notifications', { method: 'PATCH', cookie: cookieOf(first), json: { signInAlerts: false } });
+  await login(safari);
+  assert.equal(count(), start + 1, 'off means off');
 });

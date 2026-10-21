@@ -6,7 +6,7 @@ ask the owner.
 
 | Board | What it covers | Built |
 |---|---|---|
-| `accounts-and-authentication.webp` | Sign-in, email code, profile, password reset, field states, security, saved profile, delete account, sign-out | Yes (`src/components/account`), except sign-in with Google/Apple, SMS codes, and the Addresses / Payment methods / Notifications sections |
+| `accounts-and-authentication.webp` | Sign-in, email code, profile, password reset, field states, security, saved profile, delete account, sign-out | Yes (`src/components/account`), including Addresses and Notifications (`Addresses.jsx`, `Notifications.jsx`) and changing the email; not sign-in with Google/Apple or SMS codes (need outside accounts), or Payment methods (saved cards) |
 | `banner-variants.webp` | Announcement (default, with button, informational, closed), maintenance (planned, live, countdown), persistent errors, placement, closing rules | Yes (`SiteNotices.jsx`, `Notices.jsx`) |
 | `persistent-error.webp` | Page, form, upload, checkout, offline, server, empty-with-error, detailed, stepper and list errors | Yes, except the row-level list error (no list loads row by row yet) |
 | `empty-states.webp` | Bag, wishlist, search, orders, saved searches, category, order history, small inline versions | Bag, wishlist, search, orders and the inline rows; not the 3D illustrations (need images), saved searches or category (those features don't exist yet) |

@@ -1284,7 +1284,9 @@ function accounts() {
   store.accounts ??= [{
     email: 'ada@example.com', name: 'Ada Obi', phone: '+234 803 000 0001', birthDate: null, gender: '',
     password: 'masq-preview-1', verified: true, twoFactor: false, totp: null, photo: null,
-    passwordChangedAt: ago(24 * 40), createdAt: ago(24 * 60), events: [{ kind: 'Email verified', device: 'This browser', at: ago(24 * 60) }]
+    passwordChangedAt: ago(24 * 40), createdAt: ago(24 * 60), events: [{ kind: 'Email verified', device: 'This browser', at: ago(24 * 60) }],
+    addresses: [{ id: 9001, label: 'Home', name: 'Ada Obi', phone: '+234 803 000 0001', isDefault: true,
+      address: { line1: '12 Admiralty Way', line2: 'Flat 3B', city: 'Lekki', state: 'Lagos', country: 'Nigeria' } }]
   }];
   return store.accounts;
 }
@@ -1292,12 +1294,13 @@ const find = (email) => accounts().find(a => a.email === String(email ?? '').tri
 const event = (a, kind) => { a.events = [{ kind, device: 'This browser', at: new Date().toISOString() }, ...(a.events ?? [])].slice(0, 30); };
 const acctShape = (a) => ({
   email: a.email, name: a.name, phone: a.phone, birthDate: a.birthDate, gender: a.gender, verified: a.verified,
-  twoFactor: a.twoFactor, hasPhoto: Boolean(a.photo), passwordChangedAt: a.passwordChangedAt, createdAt: a.createdAt, expiresAt: meEnds
+  twoFactor: a.twoFactor, hasPhoto: Boolean(a.photo), passwordChangedAt: a.passwordChangedAt, createdAt: a.createdAt, expiresAt: meEnds,
+  pendingEmail: a.pendingEmail ?? null, signInAlerts: a.signInAlerts !== false
 });
 const signIn = (a, remember) => { me = a.email; meEnds = Date.now() + (remember ? 720 : 12) * HOUR; event(a, 'Signed in'); save(); return acctShape(a); };
 const signedInAccount = () => (me && meEnds > Date.now() ? find(me) : null);
 const newCode = (purpose, email) => {
-  const c = purpose === 'verify' ? String(Math.floor(Math.random() * 1e6)).padStart(6, '0') : Math.random().toString(36).slice(2, 14);
+  const c = purpose !== 'reset' ? String(Math.floor(Math.random() * 1e6)).padStart(6, '0') : Math.random().toString(36).slice(2, 14);
   codes.set(`${purpose}|${email}`, c);
   return c;
 };
@@ -1424,7 +1427,8 @@ export function account2faOff(password) {
 export function accountOrders() {
   const a = signedInAccount();
   if (!a) return failWith('Please sign in.', 401);
-  const mine = store.orders.filter(o => o.email.toLowerCase() === a.email && ['paid', 'refund_due', 'refunded', 'pending'].includes(o.status));
+  const emails = [a.email, ...(a.oldEmails ?? [])];
+  const mine = store.orders.filter(o => emails.includes(o.email.toLowerCase()) && ['paid', 'refund_due', 'refunded', 'pending'].includes(o.status));
   return settle(mine.map(o => ({
     reference: o.reference, status: o.status === 'paid' && o.fulfilledAt ? 'sent' : o.status, createdAt: o.createdAt, paidAt: o.paidAt,
     totalKobo: totalOf(o), itemCount: o.items.reduce((n, i) => n + i.qty, 0),
@@ -1438,6 +1442,127 @@ export function accountDelete(password) {
   store.accounts = accounts().filter(x => x !== a); me = null; save();
   return settle({ ok: true }, 500);
 }
+
+/* Moving to a new email: the code comes back with the answer, as at sign-up. */
+export function accountEmail(email, password) {
+  const a = signedInAccount();
+  if (!a) return failWith('Please sign in.', 401);
+  const e = String(email ?? '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)) return failWith('Please enter a valid email address.', 400, { field: 'email' });
+  if (e === a.email) return failWith('That’s already your email.', 400, { field: 'email' });
+  if (a.password !== password) return failWith('Your password is not right.', 400, { field: 'password' });
+  if (find(e)?.verified) return failWith('Another account already uses this email.', 409, { field: 'email' });
+  a.pendingEmail = e; save();
+  return settle({ ok: true, email: e, wait: 45, previewCode: newCode('email', e) }, 500);
+}
+export function accountEmailResend() {
+  const a = signedInAccount();
+  if (!a?.pendingEmail) return failWith('Start again: enter your new email.', 400, { code: 'expired' });
+  return settle({ ok: true, wait: 45, previewCode: newCode('email', a.pendingEmail) });
+}
+export function accountEmailConfirm(code) {
+  const a = signedInAccount();
+  if (!a?.pendingEmail) return failWith('Start again: enter your new email.', 400, { code: 'expired' });
+  if (codes.get(`email|${a.pendingEmail}`) !== code) return failWith('That code is not right. Check the email and try again.', 400, { field: 'code' });
+  codes.delete(`email|${a.pendingEmail}`);
+  store.accounts = accounts().filter(x => x === a || x.email !== a.pendingEmail);
+  a.oldEmails = [...(a.oldEmails ?? []).filter(x => x !== a.pendingEmail), a.email];
+  store.subscribers.forEach(x => { if (x.email === a.email) x.email = a.pendingEmail; });
+  store.alerts.forEach(x => { if (x.email === a.email) x.email = a.pendingEmail; });
+  a.email = a.pendingEmail; a.pendingEmail = null; me = a.email;
+  event(a, 'Email changed'); save();
+  return settle(acctShape(a), 400);
+}
+export const accountEmailCancel = () => { const a = signedInAccount(); if (a) { a.pendingEmail = null; save(); } return settle({ ok: true }); };
+
+/* Saved addresses, checked loosely here; the real shop checks them as checkout does. */
+const addressList = (a) => [...(a.addresses ?? [])].sort((x, y) => Number(y.isDefault) - Number(x.isDefault) || x.id - y.id);
+function addressProblem(b) {
+  const ad = b?.address ?? {};
+  if (String(b?.name ?? '').trim().length < 2) return ['Please enter your full name.', 'name'];
+  if (String(b?.phone ?? '').replace(/\D/g, '').length < 7) return ['Please enter a phone number the rider can call.', 'phone'];
+  if (String(ad.state ?? '').trim().length < 2) return ['Please choose your state from the list.', 'state'];
+  if (String(ad.city ?? '').trim().length < 2) return ['Please enter your city or area.', 'city'];
+  if (String(ad.line1 ?? '').trim().length < 3) return ['Please enter your street address.', 'line1'];
+  if (String(b?.label ?? '').trim().length > 30) return ['Keep the label under 30 characters.', 'label'];
+  return null;
+}
+const cleanAddress = (b) => ({
+  label: String(b.label ?? '').trim(), name: b.name.trim(), phone: b.phone.trim(),
+  address: { line1: b.address.line1.trim(), line2: String(b.address.line2 ?? '').trim(), city: b.address.city.trim(), state: b.address.state.trim(),
+    ...(b.address.postcode ? { postcode: String(b.address.postcode).trim().toUpperCase() } : {}), country: b.address.country || 'Nigeria' }
+});
+export const accountAddresses = () => (signedInAccount() ? settle(addressList(signedInAccount())) : failWith('Please sign in.', 401));
+export function accountAddAddress(b) {
+  const a = signedInAccount();
+  if (!a) return failWith('Please sign in.', 401);
+  const bad = addressProblem(b);
+  if (bad) return failWith(bad[0], 400, { field: bad[1] });
+  a.addresses ??= [];
+  if (a.addresses.length >= 10) return failWith('You can keep up to 10 addresses. Remove one first.', 400);
+  const first = !a.addresses.length;
+  if (b.isDefault && !first) a.addresses.forEach(x => { x.isDefault = false; });
+  a.addresses.push({ id: store.nextId++, ...cleanAddress(b), isDefault: first || b.isDefault === true });
+  save();
+  return settle(addressList(a), 500);
+}
+export function accountEditAddress(id, b) {
+  const a = signedInAccount();
+  const row = a?.addresses?.find(x => x.id === id);
+  if (!row) return failWith('That address has gone. Refresh and try again.', 404);
+  const bad = addressProblem(b);
+  if (bad) return failWith(bad[0], 400, { field: bad[1] });
+  if (b.isDefault && !row.isDefault) a.addresses.forEach(x => { x.isDefault = false; });
+  Object.assign(row, cleanAddress(b), { isDefault: row.isDefault || b.isDefault === true });
+  save();
+  return settle(addressList(a), 500);
+}
+export function accountDefaultAddress(id) {
+  const a = signedInAccount();
+  if (!a?.addresses?.some(x => x.id === id)) return failWith('That address has gone. Refresh and try again.', 404);
+  a.addresses.forEach(x => { x.isDefault = x.id === id; }); save();
+  return settle(addressList(a));
+}
+export function accountRemoveAddress(id) {
+  const a = signedInAccount();
+  if (!a) return failWith('Please sign in.', 401);
+  const gone = a.addresses?.find(x => x.id === id);
+  a.addresses = (a.addresses ?? []).filter(x => x.id !== id);
+  if (gone?.isDefault && a.addresses[0]) a.addresses[0].isDefault = true;
+  save();
+  return settle(addressList(a));
+}
+
+/* What the account hears about. */
+function notificationsOf(a) {
+  return {
+    newsletter: store.subscribers.some(x => x.email === a.email),
+    signInAlerts: a.signInAlerts !== false,
+    stockAlerts: store.alerts.filter(x => x.email === a.email).map(x => ({
+      id: x.id, productId: x.productId, name: store.products.find(p => p.id === x.productId)?.name ?? 'A piece no longer sold',
+      colour: x.colour || null, size: x.size, createdAt: x.askedAt
+    }))
+  };
+}
+export const accountNotifications = () => (signedInAccount() ? settle(notificationsOf(signedInAccount())) : failWith('Please sign in.', 401));
+export function accountSetNotifications(b) {
+  const a = signedInAccount();
+  if (!a) return failWith('Please sign in.', 401);
+  if (typeof b.newsletter === 'boolean') {
+    if (b.newsletter && !store.subscribers.some(x => x.email === a.email)) store.subscribers.unshift({ id: store.nextId++, email: a.email, joinedAt: new Date().toISOString() });
+    if (!b.newsletter) store.subscribers = store.subscribers.filter(x => x.email !== a.email);
+  }
+  if (typeof b.signInAlerts === 'boolean') { a.signInAlerts = b.signInAlerts; event(a, b.signInAlerts ? 'Sign-in alerts turned on' : 'Sign-in alerts turned off'); }
+  save();
+  return settle(notificationsOf(a), 400);
+}
+export function accountRemoveStockAlert(id) {
+  const a = signedInAccount();
+  if (!a) return failWith('Please sign in.', 401);
+  store.alerts = store.alerts.filter(x => !(x.id === id && x.email === a.email)); save();
+  return settle(notificationsOf(a));
+}
+
 export const accountRemovePhoto = () => { const a = signedInAccount(); if (a) { a.photo = null; save(); } return settle({ ok: true }); };
 export const accountPhotoUrl = () => signedInAccount()?.photo ?? '';
 export function accountUploadPhoto(image, onProgress, signal) {

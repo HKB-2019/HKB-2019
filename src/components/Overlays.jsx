@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShop, useHome } from '../store/ShopContext.jsx';
-import { startCheckout, checkDiscount, checkGiftCard } from '../lib/api.js';
+import { startCheckout, checkDiscount, checkGiftCard, accountAddresses, accountAddAddress } from '../lib/api.js';
 import { useSectionLink } from '../lib/useSectionLink.js';
 import { asset } from '../lib/media.js';
 import { track, visitId } from '../lib/analytics.js';
@@ -433,14 +433,26 @@ function DeliveryForm({ onBack, onProblem }) {
   const due = total - giftKobo;
   const navigate = useNavigate();
 
+  // Signed in: their saved addresses, one tap each; the default fills in.
+  const [saved, setSaved] = useState(null);
+  const [picked, setPicked] = useState(null);     // the saved address in the boxes, untouched
+  const [keep, setKeep] = useState(false);        // save what they typed to their account
   const set = (key) => (e) => {
     setDelivery(v => ({ ...v, [key]: e.target.value }));
     setErrors(x => ({ ...x, [key]: null })); setServerError(null);
+    if (key !== 'email') setPicked(null);
   };
   const setAddr = (key) => (e) => {
     const value = e.target.value;
     setDelivery(v => ({ ...v, address: { ...v.address, [key]: value } }));
-    setErrors(x => ({ ...x, [key]: null })); setServerError(null);
+    setErrors(x => ({ ...x, [key]: null })); setServerError(null); setPicked(null);
+  };
+  const pickSaved = (a) => {
+    setPicked(a.id); setKeep(false);
+    setDelivery(v => ({ ...v, name: a.name, phone: a.phone,
+      address: { line1: a.address.line1, line2: a.address.line2 ?? '', city: a.address.city, state: a.address.state,
+        postcode: a.address.postcode ?? '', country: a.address.country } }));
+    setErrors({}); setServerError(null);
   };
   // Delivery abroad switched off (or not yet loaded as on): the address is in Nigeria.
   useEffect(() => {
@@ -479,6 +491,15 @@ function DeliveryForm({ onBack, onProblem }) {
   const { account } = useAccount();
   useEffect(() => {
     if (account && !d.email) setDelivery(v => ({ ...v, email: account.email, name: v.name || account.name, phone: v.phone || account.phone }));
+    if (!account) { setSaved(null); return; }
+    let live = true;
+    accountAddresses().then((list) => {
+      if (!live) return;
+      setSaved(list);
+      const first = list.find(a => a.isDefault);
+      if (first && !d.address.line1) pickSaved(first);
+    }).catch(() => {});
+    return () => { live = false; };
   }, [account]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   // Every box put right: the Delivery step is no longer red.
@@ -498,6 +519,10 @@ function DeliveryForm({ onBack, onProblem }) {
     if (!open) { setServerError({ message: 'Sorry — we don’t deliver there yet.' }); return; }
 
     setBusy('checking'); setServerError(null);
+    // Kept for next time, if they asked; the order goes ahead either way.
+    if (account && keep && picked === null) {
+      await accountAddAddress({ name: d.name, phone: d.phone, address: d.address }).catch(() => {});
+    }
     try {
       const { authorizationUrl, reference } = await startCheckout(d, cart, applied ? discountCode : undefined, visitId(), gift?.code);
       track('checkout', { valueKobo: total });
@@ -532,6 +557,18 @@ function DeliveryForm({ onBack, onProblem }) {
                value={d.email} onChange={set('email')} onBlur={leave('email')} {...err('email')}
                {...(emailSlip ? { className: 'is-warn', 'aria-describedby': 'd-email-warn' } : {})} />
       </Field>
+      {saved?.length > 0 && (
+        <div className="addr-picks" role="group" aria-label="Your saved addresses">
+          <p className="addr-picks__title">DELIVER TO</p>
+          {saved.map(a => (
+            <button key={a.id} type="button" className={`addr-pick${picked === a.id ? ' is-on' : ''}`} aria-pressed={picked === a.id} onClick={() => pickSaved(a)}>
+              <span className="addr-pick__dot" aria-hidden="true" />
+              <span><strong>{a.label || a.name}{a.isDefault && <em> · Default</em>}</strong>
+                <small>{[a.address.line1, a.address.city, a.address.state === 'FCT' ? 'FCT (Abuja)' : a.address.state].filter(Boolean).join(', ')}</small></span>
+            </button>
+          ))}
+        </div>
+      )}
       <Field label="FULL NAME" id="d-name" error={errors.name}>
         <input id="d-name" autoComplete="name" value={d.name} onChange={set('name')} onBlur={leave('name')} {...err('name')} />
       </Field>
@@ -599,6 +636,12 @@ function DeliveryForm({ onBack, onProblem }) {
           <input id="d-postcode" autoComplete="postal-code" maxLength={12} autoCapitalize="characters"
                  value={d.address.postcode ?? ''} onChange={setAddr('postcode')} onBlur={leave('postcode')} {...err('postcode')} />
         </Field>
+      )}
+      {account && picked === null && (saved?.length ?? 0) < 10 && (
+        <label className="delivery__optin">
+          <input type="checkbox" checked={keep} onChange={(e) => setKeep(e.target.checked)} />
+          <span>Save this address to my account.</span>
+        </label>
       )}
       {/* Never ticked for them: news is only sent to people who asked. */}
       <label className="delivery__optin">

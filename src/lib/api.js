@@ -101,6 +101,18 @@ export const account2faOn     = (code) => accountRequest('/2fa/enable', send('PO
 export const account2faOff    = (password) => accountRequest('/2fa/disable', send('POST', { password }));
 export const accountOrders    = ()     => accountRequest('/orders');
 export const accountDelete    = (password) => accountRequest('', send('DELETE', { password }));
+export const accountEmail     = (email, password) => accountRequest('/email', send('POST', { email, password }));
+export const accountEmailResend = ()   => accountRequest('/email/resend', send('POST'));
+export const accountEmailConfirm = (code) => accountRequest('/email/confirm', send('POST', { code }));
+export const accountEmailCancel = ()   => accountRequest('/email', { method: 'DELETE' });
+export const accountAddresses = ()     => accountRequest('/addresses');
+export const accountAddAddress = (b)   => accountRequest('/addresses', send('POST', b));
+export const accountEditAddress = (id, b) => accountRequest(`/addresses/${id}`, send('PUT', b));
+export const accountDefaultAddress = (id) => accountRequest(`/addresses/${id}/default`, send('POST'));
+export const accountRemoveAddress = (id) => accountRequest(`/addresses/${id}`, { method: 'DELETE' });
+export const accountNotifications = () => accountRequest('/notifications');
+export const accountSetNotifications = (b) => accountRequest('/notifications', send('PATCH', b));
+export const accountRemoveStockAlert = (id) => accountRequest(`/notifications/stock/${id}`, { method: 'DELETE' });
 export const accountRemovePhoto = ()   => accountRequest('/photo', { method: 'DELETE' });
 export const accountPhotoUrl  = (v = '') => `${BASE}/api/account/photo${v ? `?v=${v}` : ''}`;
 

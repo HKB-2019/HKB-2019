@@ -275,6 +275,15 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   lock it for 15 minutes; answers never say whether an email has an account
   (except sign-up, which must). Two minutes before a sign-in ends, the
   session warning offers to stay signed in.
+  Addresses: up to ten, checked by checkout's own rules
+  (server/lib/validate.js), one the default; at checkout they are offered
+  with the default filled in, and a new one can be saved with a tick.
+  Notifications: the mailing list on or off, sign-in alerts (an email when
+  a browser not seen before signs in; on unless turned off), and the
+  back-in-stock requests made with the account's email. Changing the email
+  needs the password and a code sent to the new address; nothing moves until
+  the code comes back, the old address is told, and orders, the list and
+  back-in-stock requests follow it.
 - **Banners from Settings.** The announcement can carry a button: to a page
   of the shop or a secure address, or opening longer details. Maintenance can
   close the shop or only show a notice across the top, now or at a planned
@@ -476,7 +485,8 @@ A pass over the whole codebase before this round found, and fixed:
 
 - **Sign in with Google or Apple**, and codes by SMS: each needs an outside
   account (Google, Apple, an SMS provider) first.
-- **Saved addresses and cards** on the account; changing an account's email.
+- **Saved cards** on the account: Paystack can charge a card again once it
+  has been paid with, but a one-tap charge is a money path to build with care.
 - **Our own emails.** Paystack emails the customer a receipt and the owner a
   payment notice, so nobody is left without word — but the shop does not yet
   send its own confirmation or "your order has shipped".

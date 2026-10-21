@@ -16,7 +16,7 @@ import StateMark from '../StateMark.jsx';
 import Dialog from '../Dialog.jsx';
 import { ErrorBanner, InlineNote } from '../Notices.jsx';
 import { ArrowShort } from '../Icons.jsx';
-import { AuthShell, CodeInput, PasswordStrength, passwordOk } from './parts.jsx';
+import { AuthShell, CodeInput, PasswordStrength, passwordOk, PreviewNote, useCountdown, mmss } from './parts.jsx';
 import { EASE_OUT } from '../../lib/motion.js';
 
 /* The owner's sign-in board: sign in, create an account, prove the email
@@ -25,17 +25,6 @@ import { EASE_OUT } from '../../lib/motion.js';
  * the shop's own Google and Apple developer accounts first (DEPLOY.md). */
 
 const Busy = ({ on, idle, busy }) => (on ? <><span className="spinner" aria-hidden="true" /> {busy}</> : <>{idle} <ArrowShort className="btn__arrow" /></>);
-
-/* A word from the preview, which cannot send email: the code it would have sent. */
-function PreviewNote({ code, link }) {
-  if (!code && !link) return null;
-  return (
-    <InlineNote tone="info" className="auth__preview">
-      <p><strong>Preview only</strong>
-        <span>{code ? <>No email is sent here. Your code is <b>{code}</b>.</> : <>No email is sent here. <Link to={link}>Open the reset link</Link>.</>}</span></p>
-    </InlineNote>
-  );
-}
 
 /* ------------------------------------------------------------- sign in */
 
@@ -243,17 +232,6 @@ export function SignUp() {
 }
 
 /* --------------------------------------------------- prove the email */
-
-function useCountdown(seconds) {
-  const [left, setLeft] = useState(seconds);
-  useEffect(() => {
-    if (left <= 0) return;
-    const t = setTimeout(() => setLeft(l => l - 1), 1000);
-    return () => clearTimeout(t);
-  }, [left]);
-  return [left, setLeft];
-}
-const mmss = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
 export function Verify() {
   const { signedIn } = useAccount();

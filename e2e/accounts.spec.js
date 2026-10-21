@@ -127,3 +127,60 @@ test('a signed-in customer finds their email and name already in checkout', asyn
   await expect(page.locator('#d-email')).toHaveValue(EMAIL);
   await expect(page.locator('#d-name')).toHaveValue('Kehinde Balogun');
 });
+
+test('a saved address: added on the account, filled in at checkout', async ({ page }) => {
+  await signUp(page);
+  await page.getByRole('link', { name: 'Addresses' }).click();
+  await expect(page.getByText('No saved addresses yet.')).toBeVisible();
+  await page.getByRole('button', { name: 'ADD AN ADDRESS' }).click();
+  await page.getByRole('button', { name: 'SAVE ADDRESS' }).click();
+  await expect(page.getByText('Enter the street address.')).toBeVisible();
+  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await page.fill('#a-name', 'Kehinde Balogun');
+  await page.fill('#a-phone', '0803 123 4567');
+  await page.selectOption('#a-state', 'Lagos');
+  await page.fill('#a-city', 'Yaba');
+  await page.fill('#a-line1', '7 Herbert Macaulay Way');
+  await page.getByRole('button', { name: 'SAVE ADDRESS' }).click();
+  await expect(page.locator('.addr', { hasText: '7 Herbert Macaulay Way' }).getByText('Default')).toBeVisible();
+
+  await page.goto('/');
+  const scarf = page.locator('.card', { hasText: 'THE PATTERN SCARF' });
+  await scarf.hover();
+  await scarf.getByRole('button', { name: 'ADD TO BAG' }).click();
+  await page.locator('.cart-btn').click();
+  await page.getByRole('button', { name: 'CHECKOUT' }).click();
+  await expect(page.getByRole('button', { name: /Home · Default/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#d-line1')).toHaveValue('7 Herbert Macaulay Way');
+  await expect(page.locator('#d-state')).toHaveValue('Lagos');
+});
+
+test('changing the email: a code to the new inbox, then signed in with it', async ({ page }) => {
+  await signUp(page);
+  await page.getByRole('link', { name: 'Profile' }).click();
+  await page.getByRole('button', { name: 'CHANGE', exact: true }).click();
+  await page.fill('#ce-email', 'kb.new@example.com');
+  await page.fill('#ce-password', PASS);
+  await page.getByRole('button', { name: 'SEND CODE' }).click();
+  await expect(page.getByRole('heading', { name: 'Check your new inbox' })).toBeVisible();
+  const mail = await lastMail('email');
+  expect(mail.to).toBe('kb.new@example.com');
+  await page.locator('.code-input input').first().fill(mail.big);
+  await expect(page.locator('.toast', { hasText: 'Email changed' })).toBeVisible();
+  await expect(page.locator('#p-email')).toHaveValue('kb.new@example.com');
+});
+
+test('notifications: joining the list and turning off sign-in alerts', async ({ page }) => {
+  await signUp(page);
+  await page.getByRole('link', { name: 'Notifications' }).click();
+  const news = page.getByRole('switch', { name: 'New drops and news' });
+  await expect(news).toHaveAttribute('aria-checked', 'false');
+  await news.click();
+  await expect(page.locator('.toast', { hasText: 'You’re on the list' })).toBeVisible();
+  const alerts = page.getByRole('switch', { name: 'Sign-in alerts' });
+  await alerts.click();
+  await expect(alerts).toHaveAttribute('aria-checked', 'false');
+  await page.reload();
+  await expect(page.getByRole('switch', { name: 'New drops and news' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByRole('switch', { name: 'Sign-in alerts' })).toHaveAttribute('aria-checked', 'false');
+});

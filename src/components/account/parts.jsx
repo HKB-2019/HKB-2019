@@ -1,7 +1,8 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Wordmark from '../Wordmark.jsx';
+import { InlineNote } from '../Notices.jsx';
 import { asset } from '../../lib/media.js';
 import { EASE_OUT } from '../../lib/motion.js';
 
@@ -119,3 +120,26 @@ export function fullPhone(typed) {
   const digits = t.replace(/\D/g, '').replace(/^0/, '');
   return digits ? `+234 ${digits.replace(/^(\d{3})(\d{3})(\d+)$/, '$1 $2 $3')}` : '';
 }
+
+/* A word from the preview, which cannot send email: the code it would have sent. */
+export function PreviewNote({ code, link }) {
+  if (!code && !link) return null;
+  return (
+    <InlineNote tone="info" className="auth__preview">
+      <p><strong>Preview only</strong>
+        <span>{code ? <>No email is sent here. Your code is <b>{code}</b>.</> : <>No email is sent here. <Link to={link}>Open the reset link</Link>.</>}</span></p>
+    </InlineNote>
+  );
+}
+
+/* Seconds left before another code may be sent, counting down. */
+export function useCountdown(seconds) {
+  const [left, setLeft] = useState(seconds);
+  useEffect(() => {
+    if (left <= 0) return;
+    const t = setTimeout(() => setLeft(l => l - 1), 1000);
+    return () => clearTimeout(t);
+  }, [left]);
+  return [left, setLeft];
+}
+export const mmss = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;

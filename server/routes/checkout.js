@@ -3,13 +3,13 @@ import { transaction, one as oneRow, query } from '../db.js';
 import { assertKobo } from '../lib/money.js';
 import { initializeTransaction, newReference } from '../lib/paystack.js';
 import { releaseStock } from '../lib/orders.js';
-import { openZones, zoneFor, NIGERIAN_STATES, ZONE_LABELS, getSetting, deliveryFee, closedForMaintenance } from '../lib/settings.js';
+import { openZones, ZONE_LABELS, getSetting, deliveryFee, closedForMaintenance } from '../lib/settings.js';
 import { rateLimit } from '../lib/limits.js';
 import { onSale } from '../lib/catalogue.js';
 import { applyCode } from '../lib/discounts.js';
 import { usableCard, spendCard, recordSpend } from '../lib/giftcards.js';
 import { attribution } from '../lib/analytics.js';
-import { isEmail } from '../lib/validate.js';
+import { isEmail, deliveryDetails } from '../lib/validate.js';
 
 export const checkoutRouter = Router();
 
@@ -25,59 +25,6 @@ export const checkoutLimit = rateLimit({
 
 function fail(status, message, extra) {
   return Object.assign(new Error(message), { status, ...extra });
-}
-
-/* ------------------------------------------------------ delivery details */
-
-const text = (v, { label, min = 1, max }) => {
-  const s = String(v ?? '').replace(/\s+/g, ' ').trim();
-  if (s.length < min) throw fail(400, `Please enter your ${label}.`);
-  if (s.length > max) throw fail(400, `Your ${label} is too long.`);
-  return s;
-};
-
-/**
- * Who the order goes to and where. Without these an order is paid for and
- * undeliverable, so they are required, and checked here — the browser's
- * checks are a convenience for the customer, not a guarantee for the shop.
- */
-function deliveryDetails(body) {
-  const name = text(body.name, { label: 'full name', min: 2, max: 80 });
-
-  const phone = String(body.phone ?? '').trim();
-  const digits = phone.replace(/\D/g, '');
-  if (!/^\+?[\d\s()-]+$/.test(phone) || digits.length < 7 || digits.length > 15) {
-    throw fail(400, 'Please enter a phone number the rider can call.');
-  }
-
-  const a = body.address ?? {};
-  const country = text(a.country, { label: 'country', min: 2, max: 56 });
-  const inNigeria = ['nigeria', 'ng'].includes(country.toLowerCase());
-
-  let state = text(a.state, { label: inNigeria ? 'state' : 'state or region', min: 2, max: 60 });
-  if (inNigeria) {
-    const match = NIGERIAN_STATES.find(s => s.toLowerCase() === state.toLowerCase().replace(/\s+state$/, ''));
-    if (!match) throw fail(400, 'Please choose your state from the list.');
-    state = match;
-  }
-
-  // A postcode, for the courier abroad (DHL and the like ask for one). Optional,
-  // since many countries have none; not asked for, and not kept, in Nigeria.
-  const postcode = inNigeria ? '' : String(a.postcode ?? '').replace(/\s+/g, ' ').trim().toUpperCase();
-  if (postcode && !/^[A-Z0-9][A-Z0-9 -]{1,11}$/.test(postcode)) {
-    throw fail(400, 'Please check the postcode: letters, numbers, spaces and dashes only.');
-  }
-
-  const address = {
-    line1: text(a.line1, { label: 'street address', min: 3, max: 120 }),
-    line2: String(a.line2 ?? '').replace(/\s+/g, ' ').trim().slice(0, 120),
-    city: text(a.city, { label: 'city or area', min: 2, max: 60 }),
-    state,
-    ...(postcode ? { postcode } : {}),
-    country: inNigeria ? 'Nigeria' : country
-  };
-
-  return { name, phone, address, zone: zoneFor(address) };
 }
 
 /**

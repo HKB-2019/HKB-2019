@@ -9,8 +9,9 @@ import { parseAgent } from './analytics.js';
  *   Sessions    a random token in an HttpOnly cookie; only its hash is kept,
  *               one row per browser, so a customer can see and end them.
  *               12 hours, or 30 days with "Remember me".
- *   Codes       six digits to prove an email (10 minutes, 5 tries), a long
- *               token in a link to set a new password (30 minutes). Hashed.
+ *   Codes       six digits to prove an email, or a new one the account is
+ *               moving to (10 minutes, 5 tries), a long token in a link to
+ *               set a new password (30 minutes). Hashed.
  *   Two-step    an authenticator app (TOTP, RFC 6238). The secret is kept
  *               encrypted with a key made from SESSION_SECRET.
  *   Guessing    ten wrong passwords or codes for one email in 15 minutes
@@ -20,7 +21,7 @@ export const COOKIE = 'masq_account';
 const HOUR = 3600_000;
 export const SHORT_SESSION = 12 * HOUR;
 export const LONG_SESSION = 30 * 24 * HOUR;
-const CODE_MINUTES = { verify: 10, reset: 30 };
+const CODE_MINUTES = { verify: 10, reset: 30, email: 10 };
 const CODE_TRIES = 5;
 export const RESEND_SECONDS = 45;
 
@@ -86,7 +87,8 @@ export async function currentAccount(req) {
   const row = await one(`
     SELECT s.id AS session_id, s.expires_at, s.created_at AS session_started, s.remember, s.last_seen_at,
            a.id, a.email, a.name, a.phone, a.birth_date, a.gender, a.password_hash, a.password_changed_at,
-           a.verified_at, a.totp_secret, a.totp_on, a.totp_last_step, a.photo_mime, a.created_at
+           a.verified_at, a.totp_secret, a.totp_on, a.totp_last_step, a.photo_mime, a.created_at,
+           a.pending_email, a.old_emails, a.sign_in_alerts
       FROM account_sessions s JOIN accounts a ON a.id = s.account_id
      WHERE s.token_hash = $1 AND s.expires_at > now()`, [sha256(token)]);
   if (!row) return null;
@@ -129,7 +131,7 @@ export async function logEvent(accountId, kind, req) {
 
 /** A new code (six digits) or token (for a link). Earlier unused ones stop working. */
 export async function issueCode(email, purpose) {
-  const code = purpose === 'verify'
+  const code = purpose !== 'reset'
     ? String(randomInt(0, 1_000_000)).padStart(6, '0')
     : randomBytes(24).toString('base64url');
   await query("UPDATE account_codes SET used_at = now() WHERE email = $1 AND purpose = $2 AND used_at IS NULL", [email, purpose]);
@@ -290,6 +292,8 @@ export function publicAccount(a, expiresAt) {
     verified: Boolean(a.verified_at),
     twoFactor: Boolean(a.totp_on),
     hasPhoto: Boolean(a.photo_mime),
+    pendingEmail: a.pending_email ?? null,
+    signInAlerts: a.sign_in_alerts !== false,
     passwordChangedAt: a.password_changed_at,
     createdAt: a.created_at,
     expiresAt: expiresAt ? new Date(expiresAt).getTime() : null

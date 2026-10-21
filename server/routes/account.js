@@ -2,14 +2,14 @@ import express, { Router } from 'express';
 import QRCode from 'qrcode';
 import { one, query, transaction } from '../db.js';
 import { hashPassword, verifyPassword } from '../lib/auth.js';
-import { isEmail, normEmail } from '../lib/validate.js';
+import { isEmail, normEmail, deliveryDetails } from '../lib/validate.js';
 import { rateLimit } from '../lib/limits.js';
 import { canSendMail, sendMail } from '../lib/mail.js';
 import { decodePhoto } from '../lib/images.js';
 import { photoUrls } from '../lib/catalogue.js';
 import {
   COOKIE, startSession, clearCookie, currentAccount, requireAccount, renewSession, renewCookie,
-  logEvent, issueCode, resendWait, codesSentLastHour, useCode, passwordProblem,
+  logEvent, issueCode, resendWait, codesSentLastHour, useCode, passwordProblem, deviceOf,
   lockedOut, recordMiss, clearMisses, twoStepTicket, readTicket,
   newTotpSecret, sealSecret, openSecret, totpStep, publicAccount, RESEND_SECONDS
 } from '../lib/accounts.js';
@@ -65,6 +65,27 @@ async function sendResetLink(req, email) {
     }
   });
   return link;
+}
+
+/* A sign-in from a browser this account has not been signed in from before:
+ * told to the account's email, unless turned off (Notifications). Never
+ * holds up the sign-in itself. */
+async function alertNewDevice(account, req) {
+  if (account.sign_in_alerts === false) return;
+  const device = deviceOf(req);
+  const seen = await one("SELECT 1 FROM account_events WHERE account_id = $1 AND kind LIKE 'Signed in%' AND device = $2 LIMIT 1",
+    [account.id, device]);
+  if (seen) return;
+  const at = new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  await sendMail({
+    to: account.email, kind: 'sign-in', subject: 'New sign-in to your MASQ. account',
+    message: {
+      heading: 'New sign-in',
+      lines: [`Your MASQ. account was signed in on ${device}, ${at} (Lagos time).`,
+        'If this was you, there’s nothing to do. If not, reset your password now and turn on two-step verification.'],
+      button: { label: 'RESET YOUR PASSWORD', href: `${origin(req)}/account/forgot` }
+    }
+  }).catch(err => console.error('[account] sign-in alert not sent:', err.message));
 }
 
 /* --------------------------------------------------------------- reads */
@@ -164,6 +185,7 @@ accountRouter.post('/account/login', accountLimit, async (req, res) => {
   if (account.totp_on) return res.json({ twoFactor: true, ticket: twoStepTicket(account.id, remember) });
 
   const expires = await startSession(res, req, account.id, remember);
+  await alertNewDevice(account, req);
   await logEvent(account.id, 'Signed in', req);
   res.json(publicAccount(account, expires));
 });
@@ -184,6 +206,7 @@ accountRouter.post('/account/login/2fa', accountLimit, async (req, res) => {
   }
   clearMisses(account.email);
   const expires = await startSession(res, req, account.id, ticket.r);
+  await alertNewDevice(account, req);
   await logEvent(account.id, 'Signed in with two-step verification', req);
   res.json(publicAccount(account, expires));
 });
@@ -374,18 +397,231 @@ accountRouter.post('/account/2fa/disable', requireAccount, accountLimit, async (
   res.json(publicAccount(row, req.account.expires_at));
 });
 
+/* ---------------------------------------------------------- change email */
+
+async function sendEmailCode(email, name) {
+  const code = await issueCode(email, 'email');
+  await sendMail({
+    to: email, kind: 'email', subject: `${code} is your MASQ. code`,
+    message: {
+      heading: 'Confirm your new email',
+      lines: [`${name ? `Hi ${name.split(' ')[0]}, h` : 'H'}ere is your code to move your MASQ. account to this email. It works for 10 minutes.`],
+      big: code
+    }
+  });
+}
+
+/* Step one: the new address and the password. A code goes to the new
+ * address; nothing changes until it comes back. */
+accountRouter.post('/account/email', requireAccount, accountLimit, mailLimit, async (req, res) => {
+  const email = normEmail(req.body?.email);
+  if (!isEmail(email)) throw fail(400, 'Please enter a valid email address.', { field: 'email' });
+  if (email === req.account.email) throw fail(400, 'That’s already your email.', { field: 'email' });
+  if (lockedOut(req.account.email)) throw fail(429, 'Too many tries. Please wait 15 minutes.');
+  if (typeof req.body?.password !== 'string' || !verifyPassword(req.body.password, req.account.password_hash)) {
+    recordMiss(req.account.email);
+    throw fail(400, 'Your password is not right.', { field: 'password' });
+  }
+  clearMisses(req.account.email);
+  if (await one('SELECT 1 FROM accounts WHERE email = $1 AND verified_at IS NOT NULL', [email])) {
+    throw fail(409, 'Another account already uses this email.', { field: 'email' });
+  }
+  const wait = await resendWait(email, 'email');
+  if (wait > 0) return res.status(429).json({ error: `Please wait ${wait} seconds before asking again.`, wait });
+  if (await codesSentLastHour(email) >= 6) throw fail(429, 'Too many codes sent to this email. Please wait an hour.');
+  await query('UPDATE accounts SET pending_email = $1 WHERE id = $2', [email, req.account.id]);
+  await sendEmailCode(email, req.account.name);
+  res.json({ ok: true, email, wait: RESEND_SECONDS });
+});
+
+accountRouter.post('/account/email/resend', requireAccount, accountLimit, mailLimit, async (req, res) => {
+  const email = req.account.pending_email;
+  if (!email) throw fail(400, 'Start again: enter your new email.', { code: 'expired' });
+  const wait = await resendWait(email, 'email');
+  if (wait > 0) return res.status(429).json({ error: `Please wait ${wait} seconds before asking again.`, wait });
+  if (await codesSentLastHour(email) >= 6) throw fail(429, 'Too many codes sent to this email. Please wait an hour.');
+  await sendEmailCode(email, req.account.name);
+  res.json({ ok: true, wait: RESEND_SECONDS });
+});
+
+/* Step two: the code from the new inbox. The account moves; its orders under
+ * the old email stay visible; the old address is told. */
+accountRouter.post('/account/email/confirm', requireAccount, accountLimit, async (req, res) => {
+  const next = req.account.pending_email;
+  const old = req.account.email;
+  if (!next) throw fail(400, 'Start again: enter your new email.', { code: 'expired' });
+  if (lockedOut(old)) throw fail(429, 'Too many tries. Please wait 15 minutes.');
+  const used = await useCode(next, 'email', String(req.body?.code ?? '').replace(/\D/g, ''));
+  if (!used.ok) {
+    recordMiss(old);
+    throw fail(400, used.expired ? 'That code has expired. Send a new one.' : 'That code is not right. Check the email and try again.',
+      { field: 'code', code: used.expired ? 'expired' : 'wrong' });
+  }
+  clearMisses(old);
+  const row = await transaction(async (tx) => {
+    const holder = await tx.one('SELECT id, verified_at FROM accounts WHERE email = $1', [next]);
+    if (holder?.verified_at) throw fail(409, 'Another account now uses this email.', { field: 'code' });
+    // An unfinished sign-up with that address: proving the inbox wins it, as at sign-up.
+    if (holder) await tx.query('DELETE FROM accounts WHERE id = $1', [holder.id]);
+    // The mailing list and back-in-stock requests follow the customer.
+    await tx.query(`UPDATE subscribers SET email = $1 WHERE email = $2
+                     AND NOT EXISTS (SELECT 1 FROM subscribers WHERE email = $1)`, [next, old]);
+    await tx.query(`UPDATE stock_alerts a SET email = $1 WHERE lower(a.email) = $2 AND NOT EXISTS (
+                      SELECT 1 FROM stock_alerts b WHERE b.email = $1 AND b.product_id = a.product_id
+                         AND b.colour = a.colour AND b.size = a.size)`, [next, old]);
+    return tx.one(`UPDATE accounts SET email = $1, pending_email = NULL,
+                          old_emails = array_append(array_remove(old_emails, $1::text), $2::text)
+                    WHERE id = $3 RETURNING *`, [next, old, req.account.id]);
+  });
+  await logEvent(req.account.id, 'Email changed', req);
+  await sendMail({
+    to: old, kind: 'email-changed', subject: 'Your MASQ. email was changed',
+    message: {
+      heading: 'Your email was changed',
+      lines: [`Your MASQ. account now signs in with ${next.replace(/^(.).*?(@.*)$/, '$1•••$2')}. This address won’t get its emails any more.`,
+        'If you didn’t do this, reply to this email or contact us straight away.']
+    }
+  }).catch(err => console.error('[account] email-change notice not sent:', err.message));
+  res.json(publicAccount(row, req.account.expires_at));
+});
+
+accountRouter.delete('/account/email', requireAccount, async (req, res) => {
+  await query('UPDATE accounts SET pending_email = NULL WHERE id = $1', [req.account.id]);
+  res.json({ ok: true });
+});
+
+/* ------------------------------------------------------------ addresses */
+
+const MAX_ADDRESSES = 10;
+const shapeAddress = (r) => ({
+  id: r.id, label: r.label, name: r.name, phone: r.phone, address: r.address, isDefault: r.is_default
+});
+
+async function listAddresses(accountId) {
+  const rows = await query(`SELECT * FROM account_addresses WHERE account_id = $1
+                             ORDER BY is_default DESC, created_at, id`, [accountId]);
+  return rows.map(shapeAddress);
+}
+
+/** Checked by checkout's own rules, so a saved address always checks out. */
+function addressBody(b) {
+  const label = String(b?.label ?? '').replace(/\s+/g, ' ').trim();
+  if (label.length > 30) throw fail(400, 'Keep the label under 30 characters.', { field: 'label' });
+  const { name, phone, address } = deliveryDetails(b ?? {});
+  return { label, name, phone, address };
+}
+
+accountRouter.get('/account/addresses', requireAccount, async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json(await listAddresses(req.account.id));
+});
+
+accountRouter.post('/account/addresses', requireAccount, accountLimit, async (req, res) => {
+  const a = addressBody(req.body);
+  await transaction(async (tx) => {
+    const { n } = await tx.one('SELECT COUNT(*)::int AS n FROM account_addresses WHERE account_id = $1', [req.account.id]);
+    if (n >= MAX_ADDRESSES) throw fail(400, `You can keep up to ${MAX_ADDRESSES} addresses. Remove one first.`);
+    const first = n === 0;
+    if (req.body?.isDefault && !first) await tx.query('UPDATE account_addresses SET is_default = FALSE WHERE account_id = $1', [req.account.id]);
+    await tx.query(`INSERT INTO account_addresses (account_id, label, name, phone, address, is_default)
+                    VALUES ($1, $2, $3, $4, $5, $6)`,
+      [req.account.id, a.label, a.name, a.phone, JSON.stringify(a.address), first || req.body?.isDefault === true]);
+  });
+  res.status(201).json(await listAddresses(req.account.id));
+});
+
+accountRouter.put('/account/addresses/:id', requireAccount, accountLimit, async (req, res) => {
+  const id = Number.parseInt(req.params.id, 10);
+  const a = addressBody(req.body);
+  await transaction(async (tx) => {
+    const mine = await tx.one('SELECT is_default FROM account_addresses WHERE id = $1 AND account_id = $2', [id, req.account.id]);
+    if (!mine) throw fail(404, 'That address has gone. Refresh and try again.');
+    const isDefault = mine.is_default || req.body?.isDefault === true;
+    if (isDefault && !mine.is_default) await tx.query('UPDATE account_addresses SET is_default = FALSE WHERE account_id = $1', [req.account.id]);
+    await tx.query(`UPDATE account_addresses SET label = $1, name = $2, phone = $3, address = $4, is_default = $5
+                     WHERE id = $6 AND account_id = $7`,
+      [a.label, a.name, a.phone, JSON.stringify(a.address), isDefault, id, req.account.id]);
+  });
+  res.json(await listAddresses(req.account.id));
+});
+
+accountRouter.post('/account/addresses/:id/default', requireAccount, async (req, res) => {
+  const id = Number.parseInt(req.params.id, 10);
+  await transaction(async (tx) => {
+    const mine = await tx.one('SELECT 1 FROM account_addresses WHERE id = $1 AND account_id = $2', [id, req.account.id]);
+    if (!mine) throw fail(404, 'That address has gone. Refresh and try again.');
+    await tx.query('UPDATE account_addresses SET is_default = (id = $1) WHERE account_id = $2', [id, req.account.id]);
+  });
+  res.json(await listAddresses(req.account.id));
+});
+
+accountRouter.delete('/account/addresses/:id', requireAccount, async (req, res) => {
+  const id = Number.parseInt(req.params.id, 10);
+  await transaction(async (tx) => {
+    const gone = await tx.one('DELETE FROM account_addresses WHERE id = $1 AND account_id = $2 RETURNING is_default', [id, req.account.id]);
+    // The default went: the oldest left takes its place.
+    if (gone?.is_default) {
+      await tx.query(`UPDATE account_addresses SET is_default = TRUE WHERE id = (
+                        SELECT id FROM account_addresses WHERE account_id = $1 ORDER BY created_at, id LIMIT 1)`, [req.account.id]);
+    }
+  });
+  res.json(await listAddresses(req.account.id));
+});
+
+/* -------------------------------------------------------- notifications */
+
+/* What the account hears about: the mailing list (its own table, shared with
+ * the footer's sign-up), sign-in alerts, and the back-in-stock requests made
+ * with its email. */
+async function notifications(account) {
+  const list = await one('SELECT 1 FROM subscribers WHERE email = $1', [account.email]);
+  const alerts = await query(`
+    SELECT a.id, a.colour, a.size, a.created_at, p.name, p.id AS product_id
+      FROM stock_alerts a LEFT JOIN products p ON p.id = a.product_id
+     WHERE lower(a.email) = $1 ORDER BY a.created_at DESC`, [account.email]);
+  return {
+    newsletter: Boolean(list),
+    signInAlerts: account.sign_in_alerts !== false,
+    stockAlerts: alerts.map(a => ({ id: a.id, productId: a.product_id, name: a.name ?? 'A piece no longer sold', colour: a.colour || null, size: a.size, createdAt: a.created_at }))
+  };
+}
+
+accountRouter.get('/account/notifications', requireAccount, async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json(await notifications(req.account));
+});
+
+accountRouter.patch('/account/notifications', requireAccount, async (req, res) => {
+  const b = req.body ?? {};
+  if (typeof b.newsletter === 'boolean') {
+    if (b.newsletter) await query('INSERT INTO subscribers (email) VALUES ($1) ON CONFLICT (email) DO NOTHING', [req.account.email]);
+    else await query('DELETE FROM subscribers WHERE email = $1', [req.account.email]);
+  }
+  if (typeof b.signInAlerts === 'boolean') {
+    await query('UPDATE accounts SET sign_in_alerts = $1 WHERE id = $2', [b.signInAlerts, req.account.id]);
+    req.account.sign_in_alerts = b.signInAlerts;
+    await logEvent(req.account.id, b.signInAlerts ? 'Sign-in alerts turned on' : 'Sign-in alerts turned off', req);
+  }
+  res.json(await notifications(req.account));
+});
+
+accountRouter.delete('/account/notifications/stock/:id', requireAccount, async (req, res) => {
+  await query('DELETE FROM stock_alerts WHERE id = $1 AND lower(email) = $2', [Number.parseInt(req.params.id, 10), req.account.email]);
+  res.json(await notifications(req.account));
+});
+
 /* --------------------------------------------------------------- orders */
 
-/* The orders placed with this account's email. Only a proven email ever
- * gets here (signing in needs one), so nobody sees another's orders by
- * signing up with their address. */
+/* The orders placed with this account's email, and with any email it had
+ * before. Only a proven email ever gets here (signing in, or changing it,
+ * needs a code), so nobody sees another's orders by using their address. */
 accountRouter.get('/account/orders', requireAccount, async (req, res) => {
   const orders = await query(`
     SELECT id, reference, status, created_at, paid_at, fulfilled_at, refunded_at,
            subtotal_kobo - discount_kobo + shipping_kobo AS total_kobo
       FROM orders
-     WHERE lower(email) = $1 AND status IN ('paid', 'refund_due', 'refunded', 'pending')
-     ORDER BY created_at DESC LIMIT 100`, [req.account.email]);
+     WHERE lower(email) = ANY($1::text[]) AND status IN ('paid', 'refund_due', 'refunded', 'pending')
+     ORDER BY created_at DESC LIMIT 100`, [[req.account.email, ...(req.account.old_emails ?? [])]]);
   const ids = orders.map(o => o.id);
   const items = ids.length ? await query(`
     SELECT oi.order_id, oi.name, oi.colour, oi.size, oi.qty, p.img, p.image_id

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   accountOrders, accountSave, accountPassword, accountSessions, accountEndSession, accountEndOthers,
   accountActivity, account2faSetup, account2faOn, account2faOff, accountDelete, accountUploadPhoto,
-  accountRemovePhoto, accountPhotoUrl
+  accountRemovePhoto, accountPhotoUrl, accountEmail, accountEmailResend, accountEmailConfirm, accountEmailCancel
 } from '../../lib/api.js';
 import { useAccount, initialsOf } from '../../store/AccountContext.jsx';
 import { useShop } from '../../store/ShopContext.jsx';
@@ -17,7 +17,10 @@ import Dialog, { ErrorDialog } from '../Dialog.jsx';
 import { CopyButton } from '../OrderResult.jsx';
 import { ErrorBanner, Loader, detailsOf } from '../Notices.jsx';
 import { BagIcon, Heart, ArrowShort, Check, Close } from '../Icons.jsx';
-import { CodeInput, PasswordStrength, passwordOk, PhoneField, fullPhone } from './parts.jsx';
+import { CodeInput, PasswordStrength, passwordOk, PhoneField, fullPhone, PreviewNote, useCountdown, mmss } from './parts.jsx';
+import { useEmailCheck } from '../../lib/useEmailCheck.js';
+import { isEmail } from '../../lib/delivery.js';
+import { EmailNote } from '../FieldNote.jsx';
 import { EASE_OUT, UI_IN } from '../../lib/motion.js';
 
 /* The signed-in side of the owner's accounts board: an overview, the
@@ -36,7 +39,8 @@ const STATUS = {
 /* ------------------------------------------------------------- the frame */
 
 const NAV = [
-  ['/account', 'Overview', true], ['/account/orders', 'Orders'], ['/account/profile', 'Profile'], ['/account/security', 'Security']
+  ['/account', 'Overview', true], ['/account/orders', 'Orders'], ['/account/profile', 'Profile'], ['/account/addresses', 'Addresses'],
+  ['/account/security', 'Security'], ['/account/notifications', 'Notifications']
 ];
 
 export function Avatar({ account, version, size = 'md' }) {
@@ -273,6 +277,111 @@ function PhotoUpload() {
   );
 }
 
+/* Moving the account to a new email: the new address and the password, then
+ * the code sent to the new inbox. Nothing changes until the code is back. */
+function ChangeEmail({ open, onClose }) {
+  const { account, setAccount } = useAccount();
+  const { toast } = useShop();
+  const [stage, setStage] = useState('ask');      // ask | code
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
+  const [errors, setErrors] = useState({});
+  const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState(null);
+  const [wait, setWait] = useCountdown(0);
+  const check = useEmailCheck(email);
+
+  useEffect(() => {
+    if (!open) return;
+    // A change already waiting for its code picks up where it was.
+    setStage(account.pendingEmail ? 'code' : 'ask'); setEmail(account.pendingEmail ?? '');
+    setPassword(''); setCode(''); setErrors({}); setPreview(null);
+  }, [open]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  const ask = async (e) => {
+    e.preventDefault();
+    if (!isEmail(email)) { setErrors({ email: 'Please enter a valid email address.' }); return; }
+    if (!password) { setErrors({ password: 'Enter your password.' }); return; }
+    setBusy(true); setErrors({});
+    try {
+      const r = await accountEmail(email, password);
+      setAccount(a => ({ ...a, pendingEmail: r.email }));
+      setEmail(r.email); setWait(r.wait ?? 45); setPreview(r.previewCode ?? null); setStage('code');
+    } catch (err) {
+      if (err.wait) { setWait(err.wait); setStage('code'); }
+      else setErrors({ [err.field ?? 'form']: err.message });
+    }
+    setBusy(false);
+  };
+  const resend = async () => {
+    setErrors({});
+    try { const r = await accountEmailResend(); setWait(r.wait ?? 45); setPreview(r.previewCode ?? null); toast({ key: 'code', tone: 'ok', title: 'Code sent', body: `A new code is on its way to ${email}.` }); }
+    catch (err) { if (err.wait) setWait(err.wait); else if (err.code === 'expired') setStage('ask'); else setErrors({ code: err.message }); }
+  };
+  const confirm = async (value = code) => {
+    if (value.length !== 6) return;
+    setBusy(true); setErrors({});
+    try {
+      const me = await accountEmailConfirm(value);
+      setAccount(a => ({ ...a, ...me }));
+      toast({ key: 'profile', tone: 'ok', title: 'Email changed', body: `You’ll sign in with ${me.email} from now on.` });
+      onClose();
+    } catch (err) { setErrors({ code: err.message }); setCode(''); if (err.code === 'expired' && err.field !== 'code') setStage('ask'); }
+    setBusy(false);
+  };
+  const another = async () => {
+    await accountEmailCancel().catch(() => {});
+    setAccount(a => ({ ...a, pendingEmail: null }));
+    setStage('ask'); setCode(''); setErrors({}); setPreview(null);
+  };
+
+  return (
+    <Dialog open={open} tone="info" labelledBy="emailTitle" onClose={onClose}>
+      <StateMark tone="info" sign="mail" size="lg" />
+      {stage === 'ask' ? (
+        <>
+          <h2 className="state-panel__title" id="emailTitle">Change your email</h2>
+          <p className="state-panel__note">We’ll send a code to the new address. Your email stays <strong>{account.email}</strong> until you enter it.</p>
+          <form className="acct-form acct-form--dialog" onSubmit={ask} noValidate>
+            <label className="field field--tight" htmlFor="ce-email"><span>NEW EMAIL ADDRESS</span>
+              <input id="ce-email" type="email" inputMode="email" autoComplete="email" autoFocus value={email}
+                     onChange={(e) => { setEmail(e.target.value); setErrors({}); }} {...check.input}
+                     {...(errors.email ? { className: 'is-error', 'aria-invalid': true } : {})} />
+              <EmailNote check={check} error={errors.email} onUse={setEmail} reserve={false} />
+            </label>
+            <label className="field field--tight" htmlFor="ce-password"><span>YOUR PASSWORD</span>
+              <PasswordInput id="ce-password" autoComplete="current-password" value={password}
+                             className={errors.password ? 'is-error' : undefined} onChange={(e) => { setPassword(e.target.value); setErrors({}); }} />
+              <FieldNote error={errors.password ?? errors.form} />
+            </label>
+            <button type="submit" className="btn btn--contrast btn--block" disabled={busy}>
+              {busy ? <><span className="spinner" aria-hidden="true" /> SENDING CODE…</> : 'SEND CODE'}
+            </button>
+          </form>
+        </>
+      ) : (
+        <>
+          <h2 className="state-panel__title" id="emailTitle">Check your new inbox</h2>
+          <p className="state-panel__note">We’ve sent a 6-digit code to <strong>{email}</strong>. It works for 10 minutes.</p>
+          <PreviewNote code={preview} />
+          <CodeInput value={code} onChange={(v) => { setCode(v); setErrors({}); }} onComplete={confirm} invalid={Boolean(errors.code)} label="Code from your new email" />
+          <FieldNote error={errors.code} />
+          <p className="auth__resend">
+            Didn’t receive the code?{' '}
+            {wait > 0 ? <span>Resend code ({mmss(wait)})</span> : <button type="button" className="auth__link" onClick={resend}>Resend code</button>}
+          </p>
+          <button type="button" className="btn btn--contrast btn--block" disabled={busy || code.length !== 6} onClick={() => confirm()}>
+            {busy ? <><span className="spinner" aria-hidden="true" /> CONFIRMING…</> : 'CONFIRM NEW EMAIL'}
+          </button>
+          <button type="button" className="state-panel__cancel" onClick={another}>Use a different email</button>
+        </>
+      )}
+      {stage === 'ask' && <button type="button" className="state-panel__cancel" onClick={onClose}>Cancel</button>}
+    </Dialog>
+  );
+}
+
 const sixteenAgo = () => { const d = new Date(); d.setFullYear(d.getFullYear() - 16); return d.toISOString().slice(0, 10); };
 
 export function Profile() {
@@ -283,6 +392,7 @@ export function Profile() {
   }));
   const [errors, setErrors] = useState({});
   const [state, setState] = useState(null);   // null | 'saving' | 'saved'
+  const [moving, setMoving] = useState(false);
   const set = (k) => (v) => { setF(x => ({ ...x, [k]: v })); setErrors(x => ({ ...x, [k]: null, form: null })); };
   const young = f.birthDate && f.birthDate > sixteenAgo();
 
@@ -317,11 +427,14 @@ export function Profile() {
         </label>
         <label className="field field--tight" htmlFor="p-email">
           <span>EMAIL ADDRESS</span>
-          <span className="readonly">
+          <span className="readonly readonly--change">
             <input id="p-email" value={account.email} readOnly aria-describedby="p-email-help" />
             <span className="pill pill--ok readonly__pill"><Check /> Verified</span>
+            <button type="button" className="btn btn--ghost readonly__go" onClick={() => setMoving(true)}>CHANGE</button>
           </span>
-          <FieldNote id="p-email-help" help="Your sign-in, and where your receipts go. It can’t be changed here." />
+          <FieldNote id="p-email-help" help={account.pendingEmail
+            ? `Waiting for the code sent to ${account.pendingEmail}.`
+            : 'Your sign-in, and where your receipts go.'} />
         </label>
         <label className="field field--tight" htmlFor="p-phone">
           <span>PHONE NUMBER<em className="field__hint"> · optional</em></span>
@@ -351,6 +464,7 @@ export function Profile() {
             : state === 'saved' ? <><Check /> SAVED</> : 'SAVE CHANGES'}
         </button>
       </form>
+      <ChangeEmail open={moving} onClose={() => setMoving(false)} />
     </AccountFrame>
   );
 }

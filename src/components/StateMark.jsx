@@ -22,7 +22,9 @@ const SIGNS = {
   // Signs for the account screens, drawn the same way in any tone.
   mail: ['M7 8.6h10v7H7z', 'M7.2 8.9l4.8 3.7 4.8-3.7'],
   lock: ['M8.2 11.2h7.6v5.4H8.2z', 'M9.8 11.2V9.6a2.2 2.2 0 0 1 4.4 0v1.6'],
-  shield: ['M12 6.6l4.6 1.8v3.4c0 2.8-2 4.8-4.6 5.6-2.6-.8-4.6-2.8-4.6-5.6V8.4z', 'M10.1 12.1l1.4 1.4 2.5-2.7']
+  shield: ['M12 6.6l4.6 1.8v3.4c0 2.8-2 4.8-4.6 5.6-2.6-.8-4.6-2.8-4.6-5.6V8.4z', 'M10.1 12.1l1.4 1.4 2.5-2.7'],
+  pin: ['M12 17.4s-4.2-3.9-4.2-7a4.2 4.2 0 0 1 8.4 0c0 3.1-4.2 7-4.2 7z', 'M12 9.2v2.2'],
+  bell: ['M8.2 14.8V11a3.8 3.8 0 0 1 7.6 0v3.8l1 1.2H7.2z', 'M10.8 17.6h2.4']
 };
 
 // The strokes either side of a big mark: the logo's colours, as in the design.
