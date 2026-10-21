@@ -15,7 +15,8 @@ import { asset } from './media.js';
  * (kept in localStorage `masq:sound`). */
 
 const KEY = 'masq:sound';
-const FILES = { tick: 'assets/sound/tick.wav', chime: 'assets/sound/chime.wav', silent: 'assets/sound/silent.wav' };
+// `?v=`: raised when a sound is remade, so browsers fetch the new one.
+const FILES = { tick: 'assets/sound/tick.wav?v=2', chime: 'assets/sound/chime.wav?v=2', silent: 'assets/sound/silent.wav' };
 const listeners = new Set();
 let player = null;
 
