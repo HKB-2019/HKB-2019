@@ -14,3 +14,16 @@ Made by `tools/make-sounds.py` (1–2) and `tools/make-sound-options.py` (3–8)
 | 6 | Wind chimes | Crystal tubes in a breeze, airy and slow; the most "soothing" |
 | 7 | Talking drum + bell | A soft drum note bending down, then a bright bell; the most Nigerian |
 | 8 | Soft pop | A modern app "done": two warm notes up with a gentle thump; the shortest |
+
+## The softer set
+
+Quieter (about a quarter lower at their loudest), lower notes, no sharp start, the bright edges filtered off, and more room around them.
+
+| # | Name | What it sounds like |
+|---|---|---|
+| 9 | Soft swell | A warm chord that breathes in and out; no notes are struck. The softest |
+| 10 | Felt piano | Three muffled piano notes, as if played with the soft pedal |
+| 11 | Glass | A rubbed wine glass: a pure note gently rising in, with a slight shimmer |
+| 12 | Soft kalimba | The thumb piano an octave lower, muted with a thumb |
+| 13 | Gentle chimes | A few wind chimes, slow and far away |
+| 14 | Wooden marimba | Three warm, round wooden notes with a soft mallet |

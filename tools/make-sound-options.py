@@ -121,3 +121,65 @@ place(x, np.sin(2 * np.pi * 110 * t) * np.exp(-t / 0.06), 0.0, 0.5)
 place(x, tone(E5, 1.2, 0.006, 0.35, ((1, 1.0), (2.0, 0.2))), 0.0, 0.8)
 place(x, tone(A5, 1.6, 0.006, 0.5, ((1, 1.0), (2.0, 0.2))), 0.1, 0.9)
 save('8-soft-pop.wav', reverb(x, 0.22))
+
+
+# ---- The softer set: no sharp starts, lower notes, the bright edges
+# filtered off, quieter, and more room around them. ----
+
+def lowpass(x, cutoff):
+    """Takes the brightness off: a gentle two-pass low-pass filter."""
+    a = np.exp(-2 * np.pi * cutoff / RATE)
+    for _ in range(2):
+        y = np.zeros_like(x)
+        for i in range(1, len(x)):
+            y[i] = (1 - a) * x[i] + a * y[i - 1]
+        x = y
+    return x
+
+
+def swell(freq, length, rise, tau, partials=((1, 1.0), (2, 0.12)), vibrato=0.0):
+    """A note that fades in slowly rather than being struck."""
+    t = t_(length)
+    env = np.where(t < rise, np.sin(np.pi / 2 * t / rise) ** 2, np.exp(-(t - rise) / tau))
+    wob = 1 + vibrato * np.sin(2 * np.pi * 5.0 * t)
+    return env * sum(a * np.sin(2 * np.pi * freq * k * np.cumsum(wob) / RATE) for k, a in partials)
+
+
+SOFT = 0.3
+G3, C3 = 196.0, 130.81
+
+# 9. Soft swell: a warm chord that breathes in and out; no notes are struck.
+x = np.zeros(int(3.0 * RATE))
+for f, at in ((C4, 0.0), (G4, 0.05), (E5, 0.1), (D5, 0.15), (C5 * 0.5 * 2, 0.2)):
+    place(x, swell(f, 2.8, 0.45, 0.8), at, 0.6)
+save('9-soft-swell.wav', reverb(lowpass(x, 2200), 0.4, size=1.3), SOFT)
+
+# 10. Felt piano: three muffled piano notes, as if played with the soft pedal.
+x = np.zeros(int(3.0 * RATE))
+for f, at in ((G4, 0.0), (C5, 0.22), (E5, 0.44)):
+    place(x, tone(f, 2.4, 0.025, 0.9, ((1, 1.0), (2, 0.35), (3, 0.12), (4, 0.05))), at, 0.8)
+save('10-felt-piano.wav', reverb(lowpass(x, 1400), 0.35), SOFT)
+
+# 11. Glass: a rubbed wine glass, a pure note gently rising in with a slight shimmer.
+x = np.zeros(int(3.0 * RATE))
+place(x, swell(C5 * 1.5, 2.8, 0.35, 0.9, ((1, 1.0), (2.0, 0.05)), vibrato=0.0015), 0.0, 0.7)
+place(x, swell(E5 * 1.5, 2.4, 0.4, 0.8, ((1, 1.0),), vibrato=0.0015), 0.3, 0.5)
+save('11-glass.wav', reverb(lowpass(x, 3000), 0.4, size=1.2), SOFT)
+
+# 12. Soft kalimba: the thumb piano an octave lower, muted with a thumb.
+x = np.zeros(int(3.0 * RATE))
+for i, f in enumerate((C4, E4, G4, C5)):
+    place(x, tone(f, 1.8, 0.01, 0.6, ((1, 1.0), (5.9, 0.12))), i * 0.16, 1 - i * 0.1)
+save('12-soft-kalimba.wav', reverb(lowpass(x, 1800), 0.32), SOFT)
+
+# 13. Gentle chimes: a few wind chimes, slow and far away.
+x = np.zeros(int(3.0 * RATE))
+for i, (f, at) in enumerate(((G5, 0.0), (E5, 0.35), (C6, 0.7), (D5, 1.1), (G5, 1.5))):
+    place(x, swell(f, 1.6, 0.03, 0.7, ((1, 1.0), (2.76, 0.15))), at, 0.9 - i * 0.12)
+save('13-gentle-chimes.wav', reverb(lowpass(x, 2500), 0.45, size=1.4), SOFT)
+
+# 14. Wooden marimba: two warm, round wooden notes with a soft mallet.
+x = np.zeros(int(3.0 * RATE))
+for f, at in ((G3 * 2, 0.0), (C4 * 2, 0.18), (E4 * 2, 0.36)):
+    place(x, tone(f, 1.6, 0.008, 0.35, ((1, 1.0), (4.0, 0.15), (10.0, 0.03))), at, 0.9)
+save('14-wooden-marimba.wav', reverb(lowpass(x, 1600), 0.3), SOFT)
