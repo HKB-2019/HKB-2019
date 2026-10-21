@@ -27,3 +27,14 @@ Quieter (about a quarter lower at their loudest), lower notes, no sharp start, t
 | 12 | Soft kalimba | The thumb piano an octave lower, muted with a thumb |
 | 13 | Gentle chimes | A few wind chimes, slow and far away |
 | 14 | Wooden marimba | Three warm, round wooden notes with a soft mallet |
+
+## Confetti itself
+
+Built from the sound confetti really makes: a soft "poof" of air as it bursts, then the light papery rustle of the pieces fluttering down, thinning out over about two and a half seconds. In stereo, with one burst on the left and one on the right, as the confetti fires from both sides on screen (best heard on headphones or a laptop).
+
+| # | Name | What it sounds like |
+|---|---|---|
+| 15 | Confetti poof | A soft puff of air from each side, then the paper rustle |
+| 16 | Soft party popper | A muffled pop (no bang), then the rustle |
+| 17 | Poof and sparkle | The burst and rustle, with a few soft twinkles falling with it |
+| 18 | Flutter | Just the paper pieces drifting down; the gentlest |
