@@ -22,11 +22,11 @@ async function request(path, options = {}) {
     // Offline, or a free host still waking up.
     throw Object.assign(new Error(navigator.onLine === false
       ? 'You’re offline. Check your internet connection and try again.'
-      : 'Could not reach the shop. Check your connection and try again.'), { status: 0, code: 'network' });
+      : 'Could not reach the shop. Check your connection and try again.'), { status: 0, code: 'network', at: Date.now() });
   }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw Object.assign(new Error(body.error || friendly(res.status)), { status: res.status, code: body.code });
+    throw Object.assign(new Error(body.error || friendly(res.status)), { status: res.status, code: body.code, field: body.field, wait: body.wait, at: Date.now() });
   }
   return body;
 }

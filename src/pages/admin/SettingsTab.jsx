@@ -306,6 +306,19 @@ function Announcement({ value }) {
         <span>Colour</span>
         <select value={a.tone} onChange={set('tone')}>{TONES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
       </label>
+      <label className="admin-field">
+        <span>Button <em>optional, e.g. Shop now</em></span>
+        <input maxLength={24} value={a.button ?? ''} onChange={set('button')} placeholder="Shop now" />
+      </label>
+      <label className="admin-field admin-field--wide">
+        <span>Button goes to <em>a page of the shop (/gift-card, /#drop) or https://…</em></span>
+        <input maxLength={300} value={a.link ?? ''} onChange={set('link')} placeholder="/#drop" />
+      </label>
+      <label className="admin-field admin-field--wide">
+        <span>…or opens these details <em>if there is no link, up to 600 characters</em></span>
+        <textarea rows={3} maxLength={600} value={a.details ?? ''} onChange={set('details')}
+                  placeholder="We now deliver to the UK, Ghana and the US. Choose your country at checkout to see the fee." />
+      </label>
       <div className="admin-card__foot">
         <button className="admin-action admin-action--primary">SAVE ANNOUNCEMENT</button>
         <Note state={state} />
@@ -317,14 +330,17 @@ function Announcement({ value }) {
 /* --------------------------------------------------------- maintenance */
 
 function Maintenance({ value }) {
-  const [m, setM] = useState({ ...value, minutes: value.minutes ? String(value.minutes) : '' });
+  // The planned start is typed in Lagos time (datetime-local has no zone).
+  const toLocal = (iso) => iso ? new Date(new Date(iso).getTime() + 3600_000).toISOString().slice(0, 16) : '';
+  const fromLocal = (v) => v ? new Date(`${v}:00+01:00`).toISOString() : null;
+  const [m, setM] = useState({ ...value, level: value.level ?? 'closed', minutes: value.minutes ? String(value.minutes) : '', startsAt: toLocal(value.startsAt) });
   const [state, save] = useSave('maintenance');
   const [rowError, setRowError] = useState(null);
   const send = (next) => {
     const raw = String(next.minutes).trim();
     if (raw && !/^\d+$/.test(raw)) { setRowError('Expected time: whole minutes, e.g. 30, or leave it empty.'); return; }
     setRowError(null);
-    save({ on: next.on, message: next.message, minutes: raw ? Number(raw) : null });
+    save({ on: next.on, level: next.level, message: next.message, minutes: raw ? Number(raw) : null, startsAt: fromLocal(next.startsAt) });
   };
   return (
     <form className="admin-card" onSubmit={(e) => { e.preventDefault(); send(m); }}>
@@ -344,11 +360,25 @@ function Maintenance({ value }) {
                placeholder="We’re doing some upgrades to bring you a better shopping experience." />
       </label>
       <label className="admin-field">
+        <span>While it is on</span>
+        <select value={m.level} onChange={(e) => setM(x => ({ ...x, level: e.target.value }))}>
+          <option value="closed">Close the shop (“We’ll be back soon”)</option>
+          <option value="notice">Keep it open, with a notice across the top</option>
+        </select>
+      </label>
+      <label className="admin-field">
+        <span>Planned start <em>Lagos time, optional</em></span>
+        <input type="datetime-local" value={m.startsAt} onChange={(e) => setM(x => ({ ...x, startsAt: e.target.value }))} />
+      </label>
+      <label className="admin-field">
         <span>Back in about <em>minutes, optional</em></span>
         <input className="admin-stock-input admin-fee-input" inputMode="numeric" value={m.minutes}
                onChange={(e) => setM(x => ({ ...x, minutes: e.target.value }))} placeholder="30" />
       </label>
-      {m.on && <p className="admin-alert admin-alert--inline">The shop is closed to customers.</p>}
+      {m.on && <p className="admin-alert admin-alert--inline">{m.level === 'notice' ? 'Customers see the maintenance notice.' : 'The shop is closed to customers.'}</p>}
+      {!m.on && m.startsAt && (
+        <p className="admin-help">Planned: customers are told ahead (with a countdown on the last day), and it switches on at the start and off again after the minutes given (an hour if none).</p>
+      )}
       <div className="admin-card__foot">
         <button className="admin-action admin-action--primary">SAVE MAINTENANCE</button>
         <Note state={rowError ?? state} />

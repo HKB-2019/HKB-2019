@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { topUpGiftCard } from '../lib/api.js';
 import { naira, isEmail } from '../lib/delivery.js';
-import { useEmailCheck, EMAIL_OK, EMAIL_BAD } from '../lib/useEmailCheck.js';
-import FieldNote from './FieldNote.jsx';
+import { useEmailCheck, EMAIL_BAD } from '../lib/useEmailCheck.js';
+import { EmailNote } from './FieldNote.jsx';
 
 /* Adding money to a gift card that works (a top-up): on the card's own page
  * (/gift/:code) and under "Top up a card" on /gift-card. Paid on Paystack as
@@ -68,7 +68,7 @@ export default function TopUp({ code, balanceKobo, startOpen = false }) {
           <span>YOUR EMAIL<em className="field__hint"> · for the receipt</em></span>
           <input id="t-email" type="email" autoComplete="email" inputMode="email" value={email}
                  onChange={(e) => { setEmail(e.target.value); setError(null); }} {...check.input} />
-          <FieldNote error={check.state === 'bad' ? EMAIL_BAD : null} ok={check.state === 'ok' ? EMAIL_OK : null} reserve />
+          <EmailNote check={check} onUse={setEmail} />
         </label>
       </fieldset>
       <button type="submit" className="btn btn--solid btn--block" disabled={busy}>

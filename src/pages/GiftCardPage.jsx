@@ -7,8 +7,8 @@ import Card, { DesignSwatches, designOf, longDate } from '../components/GiftCard
 import TopUp from '../components/GiftTopUp.jsx';
 import Wordmark from '../components/Wordmark.jsx';
 import { shake, shakeInvalid } from '../lib/feel.js';
-import { useEmailCheck, EMAIL_OK, EMAIL_BAD } from '../lib/useEmailCheck.js';
-import FieldNote from '../components/FieldNote.jsx';
+import { useEmailCheck, EMAIL_BAD } from '../lib/useEmailCheck.js';
+import { EmailNote } from '../components/FieldNote.jsx';
 import StateMark from '../components/StateMark.jsx';
 
 /* /gift-card — buy a MASQ. gift card, and (with ?reference=, where Paystack
@@ -134,7 +134,7 @@ function Buy() {
   const theirs = useEmailCheck(form.recipientEmail);
   const emailBox = (k, check) => errors[k] ? { ...check.input, ...fieldErr(k), className: 'is-error' } : check.input;
   const emailNote = (k, check) => (
-    <FieldNote id={`g-${k}-error`} error={errors[k] ?? (check.state === 'bad' ? EMAIL_BAD : null)} ok={check.state === 'ok' ? EMAIL_OK : null} reserve />
+    <EmailNote id={`g-${k}-error`} check={check} error={errors[k]} onUse={(v) => setForm(f => ({ ...f, [k]: v }))} />
   );
 
   return (
@@ -190,7 +190,12 @@ function Buy() {
           </label>
           <label className="field field--tight" htmlFor="g-message">
             <span>A MESSAGE<em className="field__hint"> · optional</em></span>
-            <textarea id="g-message" rows={3} maxLength={300} value={form.message} onChange={set('message')} />
+            <textarea id="g-message" rows={3} maxLength={300} value={form.message} onChange={set('message')}
+                      aria-describedby="g-message-count" />
+            {/* How much room is left, as the owner's textarea shows it. */}
+            <small className={`field__count${form.message.length > 270 ? ' is-near' : ''}`} id="g-message-count" aria-live="polite">
+              {form.message.length}/300
+            </small>
           </label>
         </fieldset>
 

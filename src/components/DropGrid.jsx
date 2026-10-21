@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import StateMark from './StateMark.jsx';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useShop, useHome } from '../store/ShopContext.jsx';
@@ -12,6 +11,7 @@ import { ArrowShort, Arrow, Heart } from './Icons.jsx';
 
 import { EASE_OUT, EASE_IN_OUT } from '../lib/motion.js';
 import { pop } from '../lib/feel.js';
+import { ErrorBanner, detailsOf } from './Notices.jsx';
 
 /** Photos fade in once they have arrived, instead of popping in line by line. */
 export const fadeIn = {
@@ -145,7 +145,7 @@ function Placeholder() {
 }
 
 export default function DropGrid() {
-  const { toast, products, catalogueStatus, loadCatalogue } = useShop();
+  const { toast, products, catalogueStatus, catalogueError, loadCatalogue } = useShop();
   const { home } = useHome();
   const [showAll, setShowAll] = useState(false);
   const [picking, setPicking] = useState(null);
@@ -183,14 +183,14 @@ export default function DropGrid() {
       </div>
 
       {catalogueStatus === 'error' ? (
-        <div className="banner banner--bad" role="alert">
-          <StateMark tone="bad" />
-          <div className="banner__text">
-            <p className="banner__title">The collection could not be loaded</p>
-            <p className="banner__body">There’s a problem with the connection. Please try again.</p>
-          </div>
-          <button className="btn btn--danger banner__action" onClick={loadCatalogue}>TRY AGAIN</button>
-        </div>
+        catalogueError?.status === 0 && navigator.onLine === false ? (
+          <ErrorBanner layout="panel" picture="offline" title="You’re offline."
+                       text="We can’t load new pieces right now. Please check your connection and try again."
+                       onRetry={loadCatalogue} retryLabel="Retry" details={detailsOf(catalogueError)} />
+        ) : (
+          <ErrorBanner title="We couldn’t load the collection." text="Please check your connection and try again."
+                       onRetry={loadCatalogue} retryLabel="Retry" details={detailsOf(catalogueError)} />
+        )
       ) : catalogueStatus !== 'ready' ? (
         <div className="grid" aria-busy="true" aria-label="Loading the collection">
           {Array.from({ length: 4 }, (_, i) => <Placeholder key={i} />)}

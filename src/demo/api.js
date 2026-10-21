@@ -241,17 +241,34 @@ export const getSite = () => settle({
     return next ? { at: next, pieces: store.products.filter(p => !p.hidden && p.availableAt === next).length } : null;
   })(),
   freeDelivery: setting('freeDelivery').enabled ? { overKobo: setting('freeDelivery').overKobo } : null,
-  maintenance: setting('maintenance').on
+  maintenance: maintenanceNow().closed
     ? { message: setting('maintenance').message, minutes: setting('maintenance').minutes, ownerView: signedIn } : null,
+  maintenanceNotice: maintenanceNow().notice ? { message: setting('maintenance').message } : null,
+  maintenanceSoon: maintenanceNow().soon,
   announcement: setting('announcement').on
-    ? { tone: setting('announcement').tone, title: setting('announcement').title, text: setting('announcement').text } : null
+    ? (({ on, ...a }) => a)({ ...SETTING_DEFAULTS.announcement, ...setting('announcement') }) : null,
+  accounts: true
 }, 120);
+
+/* As server/lib/settings.js maintenanceNow. */
+function maintenanceNow(now = Date.now()) {
+  const m = { ...SETTING_DEFAULTS.maintenance, ...setting('maintenance') };
+  const start = m.startsAt ? Date.parse(m.startsAt) : null;
+  const end = start !== null ? start + (m.minutes ?? 60) * 60_000 : null;
+  const live = m.on || (start !== null && now >= start && now < end);
+  return {
+    closed: live && m.level !== 'notice',
+    notice: live && m.level === 'notice',
+    soon: !live && start !== null && now < start && start - now < 7 * 24 * 3600_000
+      ? { startsAt: new Date(start).toISOString(), endsAt: new Date(end).toISOString() } : null
+  };
+}
 
 /* Settings added after a preview's sample data was made: their defaults. */
 const SETTING_DEFAULTS = {
   freeDelivery: { enabled: false, overKobo: null },
-  maintenance: { on: false, message: '', minutes: null },
-  announcement: { on: false, tone: 'info', title: '', text: '' }
+  maintenance: { on: false, level: 'closed', message: '', minutes: null, startsAt: null },
+  announcement: { on: false, tone: 'info', title: '', text: '', button: '', link: '', details: '' }
 };
 const setting = (key) => store.settings[key] ?? structuredClone(SETTING_DEFAULTS[key]);
 const feeFor = (zone, itemsKobo) => {
@@ -319,7 +336,7 @@ export function askForRestock(productId, size, email, colour = '') {
 }
 
 export async function startCheckout({ email, name, phone, address, newsletter }, items, discountCode, _session, giftCode) {
-  if (setting('maintenance').on) return fail('We’re doing some upgrades, so payments are paused for now. Please try again soon.', 503);
+  if (maintenanceNow().closed) return fail('We’re doing some upgrades, so payments are paused for now. Please try again soon.', 503);
   const zone = openZones().find(z => z.zone === zoneFor(address));
   if (!zone) return fail('Sorry — we don’t deliver there yet.');
   // As the server: a postcode only abroad, tidied; none kept for Nigeria.
@@ -845,13 +862,23 @@ export const adminSaveSetting = (key, value) => attempt(() => {
     if (message.length > 200) throw new Error('Maintenance: the message is 200 characters at most.');
     const m = value.minutes;
     if (m !== null && m !== undefined && !(Number.isInteger(m) && m >= 1 && m <= 10080)) throw new Error('Maintenance: the expected time is whole minutes, up to a week.');
-    clean = { on: value.on === true, message, minutes: Number.isInteger(m) ? m : null };
+    let startsAt = null;
+    if (value.startsAt) {
+      if (Number.isNaN(Date.parse(value.startsAt))) throw new Error('Maintenance: the start time is not a real date.');
+      startsAt = new Date(value.startsAt).toISOString();
+    }
+    clean = { on: value.on === true, level: value.level === 'notice' ? 'notice' : 'closed', message, minutes: Number.isInteger(m) ? m : null, startsAt };
   } else if (key === 'announcement') {
     const title = String(value.title ?? '').trim(), text = String(value.text ?? '').trim();
     if (title.length > 60) throw new Error('Announcement: the title is 60 characters at most.');
     if (text.length > 140) throw new Error('Announcement: the line under it is 140 characters at most.');
     if (value.on && !title) throw new Error('Announcement: give it a title before switching it on.');
-    clean = { on: value.on === true, tone: ['info', 'ok', 'warn'].includes(value.tone) ? value.tone : 'info', title, text };
+    const button = String(value.button ?? '').trim(), link = String(value.link ?? '').trim(), details = String(value.details ?? '').trim();
+    if (button.length > 24) throw new Error('Announcement: the button says 24 characters at most.');
+    if (details.length > 600) throw new Error('Announcement: the details are 600 characters at most.');
+    if (link && !(/^\/(?!\/)\S*$/.test(link) || /^https:\/\/\S+$/.test(link))) throw new Error('Announcement: the link is a page of the shop (starting /) or an address starting https://.');
+    if (button && !link && !details) throw new Error('Announcement: a button needs a link or details to show.');
+    clean = { on: value.on === true, tone: ['info', 'ok', 'warn'].includes(value.tone) ? value.tone : 'info', title, text, button, link, details };
   } else if (key === 'pages') {
     clean = Object.fromEntries(PAGES.map(k => [k, tidy(value[k] ?? PAGES_DEFAULT[k])]));
     const empty = PAGES.find(k => !clean[k]);

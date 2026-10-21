@@ -76,7 +76,7 @@ test('maintenance and announcement settings are checked', async () => {
   assert.equal((await put('maintenance', { on: true, message: '', minutes: 0 })).status, 400);
   assert.equal((await put('announcement', { on: true, tone: 'info', title: '', text: '' })).status, 400, 'a title first');
   assert.equal((await put('announcement', { on: true, tone: 'ok', title: 'Free delivery this week', text: 'On orders over ₦50,000.' })).status, 200);
-  assert.deepEqual((await site()).announcement, { tone: 'ok', title: 'Free delivery this week', text: 'On orders over ₦50,000.' });
+  assert.deepEqual((await site()).announcement, { tone: 'ok', title: 'Free delivery this week', text: 'On orders over ₦50,000.', button: '', link: '', details: '' });
   const odd = await put('announcement', { on: true, tone: 'shouty', title: 'Hi', text: '' });
   assert.equal(odd.body.tone, 'info', 'an unknown tone becomes plain news');
 });
@@ -132,4 +132,44 @@ test('an order paid in full by a gift card says so', async () => {
   const order = (await shop.request(`/api/orders/${res.body.reference}`)).body;
   assert.equal(order.status, 'paid');
   assert.equal(order.paymentMethod, 'Gift card');
+});
+
+/* ---- planned maintenance, notice only, announcement buttons ------------ */
+
+test('planned maintenance is said ahead, closes the shop for its window, and ends by itself', async () => {
+  const { maintenanceNow } = await import('../lib/settings.js');
+  const start = Date.now() + 3600_000;
+  const plan = { on: false, level: 'closed', message: '', minutes: 30, startsAt: new Date(start).toISOString() };
+  assert.deepEqual(maintenanceNow(plan, start - 1000).soon, { startsAt: new Date(start).toISOString(), endsAt: new Date(start + 30 * 60_000).toISOString() });
+  assert.equal(maintenanceNow(plan, start - 1000).closed, false);
+  assert.equal(maintenanceNow(plan, start + 1000).closed, true);
+  assert.equal(maintenanceNow(plan, start + 31 * 60_000).closed, false);
+  assert.equal(maintenanceNow({ ...plan, level: 'notice' }, start + 1000).notice, true);
+  assert.equal(maintenanceNow({ ...plan, level: 'notice' }, start + 1000).closed, false);
+
+  assert.equal((await put('maintenance', { ...plan })).status, 200);
+  const s = await site();
+  assert.equal(s.maintenance, null);
+  assert.equal(s.maintenanceSoon.startsAt, new Date(start).toISOString());
+  assert.equal((await put('maintenance', { ...plan, startsAt: 'next tuesday' })).status, 400);
+});
+
+test('notice-only maintenance keeps the shop open and taking payments, with a line across the top', async () => {
+  assert.equal((await put('maintenance', { on: true, level: 'notice', message: 'Some features may be unavailable.' })).status, 200);
+  const s = await site();
+  assert.equal(s.maintenance, null);
+  assert.deepEqual(s.maintenanceNotice, { message: 'Some features may be unavailable.' });
+  assert.equal((await shop.checkout({ email: 'a@example.com', ...item() })).status, 200);
+});
+
+test('an announcement button goes to a page of the shop or a secure address, never a script', async () => {
+  const base = { on: true, tone: 'ok', title: 'Enjoy 10% off', text: 'Use code WELCOME10.', button: 'Shop now' };
+  assert.equal((await put('announcement', { ...base, link: 'javascript:alert(1)' })).status, 400);
+  assert.equal((await put('announcement', { ...base, link: '//evil.example' })).status, 400);
+  assert.equal((await put('announcement', { ...base, link: 'http://plain.example' })).status, 400);
+  assert.equal((await put('announcement', base)).status, 400, 'a button needs somewhere to go');
+  assert.equal((await put('announcement', { ...base, link: '/#drop' })).status, 200);
+  assert.equal((await site()).announcement.link, '/#drop');
+  assert.equal((await put('announcement', { ...base, link: '', details: 'Ten per cent off your first order.' })).status, 200);
+  assert.equal((await site()).announcement.details, 'Ten per cent off your first order.');
 });

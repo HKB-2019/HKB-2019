@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useShop } from '../store/ShopContext.jsx';
 import StateMark from './StateMark.jsx';
@@ -7,20 +7,97 @@ import StateArt from './StateArt.jsx';
 import Wordmark from './Wordmark.jsx';
 import { Close } from './Icons.jsx';
 import { JoinForm } from './Newsletter.jsx';
+import Dialog from './Dialog.jsx';
 import { SOCIAL } from './Footer.jsx';
 import { readStore, writeStore } from '../lib/storage.js';
 import { EASE_OUT, UI_IN, UI_OUT } from '../lib/motion.js';
 
-/* The owner's banners across the top of the shop, set in Settings: news
- * (blue), good news (green) or a warning (amber). A closed one stays closed
- * until the owner changes what it says. The header and the page move down
- * to make room (--announce-h), and back up when it goes. */
+/* The owner's banners across the top of the shop (Settings), stacked:
+ *
+ *   announcement   news (blue), an offer (green) or a warning (amber), with an
+ *                  optional button: to a page, or "Learn more" in a panel.
+ *                  Closed, it stays closed until the owner changes its words.
+ *   maintenance    planned (amber, the date, or a countdown inside the last
+ *                  day) or going on with the shop still open. Closed, it
+ *                  stays closed for this visit; a new plan shows again.
+ *   owner's note   while the shop is closed to customers; not closable.
+ *
+ * The header and the page move down to make room (--announce-h). */
 
 const TONES = { info: 'info', ok: 'ok', warn: 'warn' };
-const keyOf = (a) => `${a.tone}|${a.title}|${a.text}`;
+const keyOf = (a) => `${a.tone}|${a.title}|${a.text}|${a.button}|${a.link}`;
 
-function Bar({ tone, title, text, onClose, live }) {
+const Megaphone = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M3 10v4a1 1 0 0 0 1 1h2l1.2 4.2a1 1 0 0 0 1 .8H10a1 1 0 0 0 1-1.2L10 15l8 4V5l-8 4H4a1 1 0 0 0-1 1zm17 0a2 2 0 0 1 0 4z" /></svg>
+);
+const Spanner = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14.7 6.3a4 4 0 0 0-5.2 5.2l-5.6 5.6a1.5 1.5 0 0 0 2.1 2.1l5.6-5.6a4 4 0 0 0 5.2-5.2l-2.4 2.4-2-.5-.5-2z" />
+  </svg>
+);
+const Cog = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
+  </svg>
+);
+
+const session = {
+  get: (k) => { try { return sessionStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => { try { sessionStorage.setItem(k, v); } catch { /* this visit only */ } }
+};
+
+function Bar({ tone, icon, title, text, onClose, live, children }) {
+  return (
+    <motion.div className={`announce announce--${tone}`} role={live ? 'status' : 'region'} aria-label={live ? undefined : title}
+                layout initial={{ y: -16, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: UI_OUT, ease: EASE_OUT } }}
+                transition={{ duration: 0.4, ease: EASE_OUT }}>
+      <div className="announce__inner">
+        {icon ? <span className={`announce__icon announce__icon--${tone}`}>{icon}</span> : <StateMark tone={tone} delay={0.25} />}
+        <p className="announce__text"><strong>{title}</strong>{text && <span> {text}</span>}</p>
+        {children}
+        {onClose && (
+          <button type="button" className="announce__close" aria-label={`Close: ${title}`} onClick={onClose}><Close /></button>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+/* HH MM SS to a moment, ticking; calls `onEnd` when it gets there. */
+function Countdown({ to, onEnd }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const left = Math.max(0, Date.parse(to) - now);
+  useEffect(() => { if (left === 0) onEnd?.(); }, [left === 0]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const parts = [[Math.floor(left / 3600_000), 'Hours'], [Math.floor(left / 60_000) % 60, 'Minutes'], [Math.floor(left / 1000) % 60, 'Seconds']];
+  return (
+    <span className="announce__count" role="timer" aria-label={`${parts[0][0]} hours ${parts[1][0]} minutes`}>
+      {parts.map(([n, label]) => (
+        <span key={label}><b>{String(n).padStart(2, '0')}</b><small>{label}</small></span>
+      ))}
+    </span>
+  );
+}
+
+const lagos = (iso, opts) => new Date(iso).toLocaleString('en-GB', { timeZone: 'Africa/Lagos', ...opts });
+
+export function SiteBar() {
+  const { site, loadCatalogue } = useShop();
+  const navigate = useNavigate();
+  const a = site?.announcement;
+  const m = site?.maintenance;
+  const notice = site?.maintenanceNotice;
+  const soon = site?.maintenanceSoon;
+  const [closed, setClosed] = useState(() => readStore('masq:announce-closed', ''));
+  const [hidden, setHidden] = useState(() => session.get('masq:maint-closed') ?? '');
+  const [more, setMore] = useState(false);
   const ref = useRef(null);
+
+  // Room for the bars, kept up to date as they come, go and wrap.
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -30,39 +107,54 @@ function Bar({ tone, title, text, onClose, live }) {
     ro.observe(el);
     return () => { ro.disconnect(); document.documentElement.style.setProperty('--announce-h', '0px'); };
   }, []);
-  return (
-    <motion.div ref={ref} className={`announce announce--${tone}`} role={live ? 'status' : 'region'} aria-label={live ? undefined : 'Announcement'}
-                initial={{ y: '-100%' }} animate={{ y: 0 }} exit={{ y: '-100%', transition: { duration: UI_OUT, ease: EASE_OUT } }}
-                transition={{ duration: 0.4, ease: EASE_OUT }}>
-      <div className="announce__inner">
-        <StateMark tone={tone} delay={0.25} />
-        <p className="announce__text"><strong>{title}</strong>{text && <span> {text}</span>}</p>
-        {onClose && (
-          <button type="button" className="announce__close" aria-label="Close announcement" onClick={onClose}><Close /></button>
-        )}
-      </div>
-    </motion.div>
-  );
-}
 
-export function SiteBar() {
-  const { site } = useShop();
-  const a = site?.announcement;
-  const m = site?.maintenance;
-  const [closed, setClosed] = useState(() => readStore('masq:announce-closed', ''));
   const showA = a && TONES[a.tone] && closed !== keyOf(a);
-  // The owner, signed in, sees the shop while it is closed: said so here.
-  const owner = m?.ownerView;
+  const soonKey = soon ? `soon|${soon.startsAt}` : '';
+  const noticeKey = notice ? `now|${notice.message}` : '';
+  const hide = (k) => { session.set('masq:maint-closed', k); setHidden(k); };
+  const within = soon && Date.parse(soon.startsAt) - Date.now() < 24 * 3600_000;
+  const go = (link) => (link.startsWith('/') ? navigate(link) : window.open(link, '_blank', 'noopener'));
+
   return (
-    <AnimatePresence onExitComplete={() => document.documentElement.style.setProperty('--announce-h', '0px')}>
-      {owner ? (
-        <Bar key="owner" tone="warn" live title="Maintenance mode is on."
-             text="Customers see “We’ll be back soon”. You see the shop because you’re signed in to the admin." />
-      ) : showA ? (
-        <Bar key={keyOf(a)} tone={a.tone} title={a.title} text={a.text}
-             onClose={() => { writeStore('masq:announce-closed', keyOf(a)); setClosed(keyOf(a)); }} />
-      ) : null}
-    </AnimatePresence>
+    <div className="site-bars" ref={ref}>
+      <AnimatePresence initial={false}>
+        {m?.ownerView && (
+          <Bar key="owner" tone="warn" live title="Maintenance mode is on."
+               text="Customers see “We’ll be back soon”. You see the shop because you’re signed in to the admin." />
+        )}
+        {showA && (
+          <Bar key={keyOf(a)} tone={a.tone} icon={a.tone === 'ok' ? <Megaphone /> : null} title={a.title} text={a.text}
+               onClose={() => { writeStore('masq:announce-closed', keyOf(a)); setClosed(keyOf(a)); }}>
+            {a.button && (
+              <button type="button" className={`announce__cta${a.tone === 'ok' ? ' announce__cta--solid' : ''}`}
+                      onClick={() => (a.link ? go(a.link) : setMore(true))}>{a.button}</button>
+            )}
+          </Bar>
+        )}
+        {notice && hidden !== noticeKey && (
+          <Bar key={noticeKey} tone="warn" icon={<Cog />} title="We’re currently performing maintenance."
+               text={notice.message || 'Some features may be unavailable. We’ll be back to normal shortly.'}
+               onClose={() => hide(noticeKey)} />
+        )}
+        {soon && hidden !== soonKey && (
+          <Bar key={soonKey} tone="warn" icon={<Spanner />}
+               title={within ? 'Scheduled maintenance starts in' : 'Scheduled maintenance'}
+               text={within ? 'Some features may be unavailable during this time.'
+                 : `Our site will be undergoing maintenance on ${lagos(soon.startsAt, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })} from ${lagos(soon.startsAt, { hour: '2-digit', minute: '2-digit' })} – ${lagos(soon.endsAt, { hour: '2-digit', minute: '2-digit' })} WAT.`}
+               onClose={() => hide(soonKey)}>
+            {within && <Countdown to={soon.startsAt} onEnd={loadCatalogue} />}
+          </Bar>
+        )}
+      </AnimatePresence>
+      {a?.details && (
+        <Dialog open={more} tone="info" labelledBy="announceMore" onClose={() => setMore(false)}>
+          <StateMark tone="info" size="lg" />
+          <h2 className="state-panel__title" id="announceMore">{a.title}</h2>
+          <p className="state-panel__note state-panel__note--pre">{a.details}</p>
+          <button type="button" className="btn btn--contrast btn--block" onClick={() => setMore(false)}>GOT IT</button>
+        </Dialog>
+      )}
+    </div>
   );
 }
 

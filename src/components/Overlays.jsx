@@ -8,6 +8,9 @@ import { asset } from '../lib/media.js';
 import { track, visitId } from '../lib/analytics.js';
 import { zoneFor, naira, isEmail, isPhone, looksNigerian } from '../lib/delivery.js';
 import Amount from './Amount.jsx';
+import { EmailSlip } from './FieldNote.jsx';
+import { ErrorBanner, InlineNote, detailsOf } from './Notices.jsx';
+import { suggestEmail } from '../lib/useEmailCheck.js';
 import { countriesAbroad } from '../data/countries.js';
 import { Close, Heart, ArrowShort, BagIcon, Check, SearchIcon } from './Icons.jsx';
 import StateMark from './StateMark.jsx';
@@ -197,18 +200,20 @@ function problemsWith(d, inNigeria) {
  * to the step, the dot there breathes. Payment happens on Paystack's page and
  * Done on the order page, so the bag only ever shows the first two. */
 const CHECKOUT_STEPS = ['Bag', 'Delivery', 'Payment', 'Done'];
-export function CheckoutSteps({ at }) {
+export function CheckoutSteps({ at, problem }) {
   return (
     <ol className="steps steps--checkout" aria-label="Checkout steps">
       <span className="steps__track" aria-hidden="true">
         <span className="steps__fill" style={{ transform: `scaleX(${at / (CHECKOUT_STEPS.length - 1)})` }} />
       </span>
       {CHECKOUT_STEPS.map((label, i) => {
-        const state = i < at ? 'done' : i === at ? 'now' : 'next';
+        // A step that cannot go on yet (the owner's multi-step error): red, with why.
+        const state = i < at ? 'done' : i === at ? (problem ? 'bad' : 'now') : 'next';
         return (
-          <li key={label} className={`steps__step is-${state}`} aria-current={state === 'now' ? 'step' : undefined}>
-            <span className="steps__dot">{state === 'done' && <Check />}</span>
+          <li key={label} className={`steps__step is-${state}`} aria-current={i === at ? 'step' : undefined}>
+            <span className="steps__dot">{state === 'done' ? <Check /> : state === 'bad' ? '!' : null}</span>
             <span className="steps__label">{label}</span>
+            {state === 'bad' && <span className="steps__why">{problem}</span>}
           </li>
         );
       })}
@@ -396,12 +401,12 @@ function GiftCardBox({ gift, onGift, usingKobo }) {
   );
 }
 
-function DeliveryForm({ onBack }) {
+function DeliveryForm({ onBack, onProblem }) {
   const { cart, cartSubtotal, delivery, setDelivery, site, discountCode, closeOverlay } = useShop();
   const [applied, setApplied] = useState(null);
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);   // false | 'checking' | 'opening'
-  const [serverError, setServerError] = useState(null);
+  const [serverError, setServerError] = useState(null);   // an error from the server, kept for View details
   // Each box is checked when they leave it, then again as they type: a
   // mistake is pointed out late, a fix is welcomed at once.
   const [seen, setSeen] = useState({});
@@ -469,14 +474,21 @@ function DeliveryForm({ onBack }) {
   };
   const problems = problemsWith(d, inNigeria);
   const good = (key) => seen[key] && !errors[key] && !problems[key];
+  // Every box put right: the Delivery step is no longer red.
+  const anyError = Object.values(errors).some(Boolean);
+  useEffect(() => { if (!anyError) onProblem?.(null); }, [anyError]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A real-looking address with a likely slip in it (gmial.com): a second look, one tap to fix.
+  const emailSlip = good('email') ? suggestEmail(d.email) : null;
   const phoneWarn = good('phone') && inNigeria && !looksNigerian(d.phone)
     ? 'This doesn’t look like a Nigerian number. Check it, so the rider can reach you.' : null;
 
   const onPay = async (ev) => {
     ev.preventDefault();
     if (!cart.length) return;
-    if (!validate()) { shakeInvalid(form.current); return; }
-    if (!open) { setServerError('Sorry — we don’t deliver there yet.'); return; }
+    if (!validate()) { shakeInvalid(form.current); onProblem?.('Details needed'); return; }
+    onProblem?.(null);
+    if (!open) { setServerError({ message: 'Sorry — we don’t deliver there yet.' }); return; }
 
     setBusy('checking'); setServerError(null);
     try {
@@ -493,8 +505,9 @@ function DeliveryForm({ onBack }) {
       window.location.href = authorizationUrl;   // hand off to Paystack
     } catch (err) {
       setBusy(false);
-      // Said once, under the button they pressed (not again in a message card).
-      setServerError(err.message || 'Payment couldn’t start. Please check your connection and try again.');
+      // Said once, under the button they pressed (not again in a message card),
+      // and kept until they try again or change something.
+      setServerError(Object.assign(err, { message: err.message || 'Payment couldn’t start. Please check your connection and try again.' }));
     }
   };
 
@@ -505,10 +518,12 @@ function DeliveryForm({ onBack }) {
     <form className="delivery" onSubmit={onPay} noValidate ref={form}>
       <button type="button" className="delivery__back" onClick={onBack}>← BACK TO BAG</button>
 
-      <Field label="EMAIL FOR RECEIPT" id="d-email" error={errors.email}
-             ok={good('email') ? 'Looks good!' : null} reserve>
+      <Field label="EMAIL FOR RECEIPT" id="d-email" error={errors.email} reserve
+             warn={emailSlip ? <>This email looks unusual.<EmailSlip suggestion={emailSlip} onUse={(v) => setDelivery(x => ({ ...x, email: v }))} /></> : null}
+             ok={good('email') ? 'Looks good!' : null}>
         <input id="d-email" type="email" autoComplete="email" inputMode="email"
-               value={d.email} onChange={set('email')} onBlur={leave('email')} {...err('email')} />
+               value={d.email} onChange={set('email')} onBlur={leave('email')} {...err('email')}
+               {...(emailSlip ? { className: 'is-warn', 'aria-describedby': 'd-email-warn' } : {})} />
       </Field>
       <Field label="FULL NAME" id="d-name" error={errors.name}>
         <input id="d-name" autoComplete="name" value={d.name} onChange={set('name')} onBlur={leave('name')} {...err('name')} />
@@ -610,9 +625,21 @@ function DeliveryForm({ onBack }) {
       </button>
       <p className="drawer__note drawer__note--center">Secure payment by Paystack. We never see your card.</p>
 
-      <p className={`form-msg${serverError ? ' is-show is-error' : ''}`} role="status" aria-live="polite">
-        {serverError ?? ''}
-      </p>
+      {/* Boxes still to fill: said here too, with the way back up to them. */}
+      {Object.values(errors).some(Boolean) && !busy && (
+        <InlineNote tone="bad" className="delivery__todo">
+          <p><strong>Please complete your delivery details to continue.</strong></p>
+          <button type="button" className="field__fix" onClick={() => {
+            const first = form.current?.querySelector('[aria-invalid="true"]');
+            first?.focus(); first?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          }}>Go to delivery details</button>
+        </InlineNote>
+      )}
+      {serverError && !busy && (
+        <ErrorBanner className="delivery__error" title="We couldn’t complete your order." text={serverError.message}
+                     onRetry={serverError.status !== undefined ? () => form.current?.requestSubmit() : undefined}
+                     details={serverError.status !== undefined ? detailsOf(serverError) : undefined} />
+      )}
       <AnimatePresence>{busy && <Processing stage={busy} giftOnly={due === 0} />}</AnimatePresence>
     </form>
   );
@@ -621,6 +648,7 @@ function DeliveryForm({ onBack }) {
 function CartDrawer({ start = 'bag' }) {
   const { cart, cartQty, cartSubtotal, format, site, catalogueStatus } = useShop();
   const [step, setStep] = useState(start);
+  const [problem, setProblem] = useState(null);   // why the delivery step cannot go on yet
 
   // Delivery prices are the owner's to set; until they are, nothing can be sold.
   const checkoutOpen = (site?.delivery ?? []).length > 0;
@@ -628,8 +656,8 @@ function CartDrawer({ start = 'bag' }) {
   if (step === 'delivery' && cart.length) {
     return (
       <Drawer label="Delivery" title="DELIVERY">
-        <CheckoutSteps at={1} />
-        <DeliveryForm onBack={() => setStep('bag')} />
+        <CheckoutSteps at={1} problem={problem} />
+        <DeliveryForm onBack={() => { setProblem(null); setStep('bag'); }} onProblem={setProblem} />
       </Drawer>
     );
   }
@@ -725,15 +753,22 @@ function Modal({ label, labelledBy, wide, className = '', closeOutside = true, c
 
 /* The owner's success panel: a piece has gone in the bag from its own page.
  * The way on is the bag; carrying on shopping is the quiet second choice. */
-function AddedModal({ name, what, img, colour, size, price, qty }) {
+function AddedModal({ name, what, img, colour, size, price, qty, left }) {
   const { openOverlay, closeOverlay } = useShop();
+  // Only a few left of what went in: the same panel, amber, saying so.
+  const low = Number.isInteger(left) && left <= 3 && left > 0;
+  const tone = low ? 'warn' : 'ok';
   return (
-    <Modal labelledBy="addedTitle" className="modal__panel--state modal__panel--ok">
-      <StateArt tone="ok" />
+    <Modal labelledBy="addedTitle" className={`modal__panel--state modal__panel--${tone}`}>
+      <StateArt tone={tone} />
       <div className="state-panel">
-        <StateMark tone="ok" size="lg" burst />
-        <h2 className="state-panel__title" id="addedTitle">Added to your bag</h2>
-        <p className="state-panel__note">{name} is in your bag.</p>
+        <StateMark tone={tone} size="lg" burst={!low} />
+        <h2 className="state-panel__title" id="addedTitle">{low ? 'Low stock' : 'Added to your bag'}</h2>
+        <p className="state-panel__note">
+          {low
+            ? `Only ${left} ${left === 1 ? 'is' : 'are'} left in your size. ${name} is in your bag — complete your purchase soon.`
+            : `${name} is in your bag.`}
+        </p>
         <div className="state-card state-card--piece">
           {img && <img src={img} alt="" />}
           <div className="state-card__piece">
@@ -765,6 +800,7 @@ function matches(p, words) {
 
 function SearchPanel() {
   const { products, format, closeOverlay } = useShop();
+  const goTo = useSectionLink();
   const navigate = useNavigate();
   const [q, setQ] = useState('');
   const ref = useFocusTrap(true);
@@ -798,8 +834,12 @@ function SearchPanel() {
             <motion.span className="empty__icon" aria-hidden="true" initial={{ scale: 0.7, rotate: -12, opacity: 0 }}
                          animate={{ scale: 1, rotate: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.05, ease: EASE_OUT }}><SearchIcon /></motion.span>
             <h3 className="empty__title">No results found</h3>
-            <p className="empty__text">We couldn’t find anything for “{q.trim()}”. Check the spelling, try another word, or see the whole drop.</p>
-            <ShopButton label="EXPLORE THE DROP" />
+            <p className="empty__text">We couldn’t find anything matching “{q.trim()}”. Try a different word, or browse the drop instead.</p>
+            <button type="button" className="btn btn--ghost search__again"
+                    onClick={() => { setQ(''); document.getElementById('search-q')?.focus(); }}>
+              <SearchIcon /> Try a different search
+            </button>
+            <button type="button" className="empty__link" onClick={() => { closeOverlay(); goTo('#drop'); }}>Browse all products</button>
           </motion.div>
         ) : (
           <>

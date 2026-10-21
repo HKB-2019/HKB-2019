@@ -60,6 +60,7 @@ export function ShopProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [site, setSite]         = useState(null);
   const [status, setStatus]     = useState('idle');   // idle | loading | ready | error
+  const [catalogueError, setCatalogueError] = useState(null);   // what went wrong, for View details
 
   // Kept while the bag is open and closed, so a customer who steps back to
   // change their bag does not have to type their address again. Memory only:
@@ -127,7 +128,9 @@ export function ShopProvider({ children }) {
       setProducts(p);
       setSite(s);
       setStatus('ready');
-    } catch {
+      setCatalogueError(null);
+    } catch (err) {
+      setCatalogueError(err);
       setStatus(s => (s === 'ready' ? s : 'error'));
     }
   }, []);
@@ -291,7 +294,7 @@ export function ShopProvider({ children }) {
   }, [overlay, closeOverlay]);
 
   const value = {
-    products, site, catalogueStatus: status, loadCatalogue, productById,
+    products, site, catalogueStatus: status, catalogueError, loadCatalogue, productById,
     cart, cartQty, cartSubtotal, addToCart, showSoldOut, changeQty, removeItem, clearCart, maxFor,
     delivery, setDelivery, discountCode, setDiscountCode,
     wishlist, toggleWish,

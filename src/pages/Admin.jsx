@@ -4,8 +4,8 @@ import {
   adminLogin, adminLogout, adminMe, adminStatus, adminSetup, adminOrders,
   adminSummary, adminFulfil, adminRefunded, adminDownload, adminRenew
 } from '../lib/api.js';
-import Dialog from '../components/Dialog.jsx';
-import StateMark from '../components/StateMark.jsx';
+import SessionExpiry from '../components/SessionExpiry.jsx';
+import Toasts from '../components/Toasts.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
 import ProductsTab from './admin/ProductsTab.jsx';
 import { pageHref } from '../lib/media.js';
@@ -369,56 +369,6 @@ function Orders({ orders, onChanged, filter, setFilter }) {
   );
 }
 
-/* ------------------------------------------------------- session expiry */
-
-/* A session lasts eight hours. Five minutes before the end the owner is
- * asked whether to stay; at the end, told plainly, rather than finding out
- * when a save fails. Staying renews it, up to a day after the password. */
-const WARN_MS = 5 * 60 * 1000;
-
-function SessionWatch({ expiresAt, onRenewed, onEnded }) {
-  const [now, setNow] = useState(() => Date.now());
-  const [state, setState] = useState(null);     // null | 'renewing' | error message
-  const left = expiresAt - now;
-  useEffect(() => {
-    if (!expiresAt) return;
-    // A tick a second only in the last minutes; before then, once at the warning.
-    const wait = left > WARN_MS ? left - WARN_MS : 1000;
-    const t = setTimeout(() => setNow(Date.now()), Math.min(wait, 2 ** 31 - 1));
-    return () => clearTimeout(t);
-  }, [expiresAt, now]);   // eslint-disable-line react-hooks/exhaustive-deps
-
-  const stay = async () => {
-    setState('renewing');
-    try { const r = await adminRenew(); setState(null); onRenewed(r.expiresAt); }
-    catch (err) { setState(err.message || 'Please sign in again.'); }
-  };
-  const mins = Math.max(0, Math.floor(left / 60000));
-  const secs = String(Math.max(0, Math.floor(left / 1000) % 60)).padStart(2, '0');
-  const ended = expiresAt && left <= 0;
-
-  return (
-    <>
-      <Dialog open={Boolean(expiresAt) && !ended && left <= WARN_MS} tone="warn" labelledBy="sessionTitle" closeOutside={false} onClose={stay}>
-        <StateMark tone="wait" size="lg" />
-        <h2 className="state-panel__title" id="sessionTitle">Your session is about to expire</h2>
-        <p className="state-panel__note">For the shop’s safety you’ll be signed out in <strong className="num" aria-live="off">{mins}:{secs}</strong>. Anything not saved will be lost.</p>
-        {state && state !== 'renewing' && <p className="field__error" role="alert">{state}</p>}
-        <button type="button" className="btn btn--contrast btn--block" onClick={stay} disabled={state === 'renewing'}>
-          {state === 'renewing' ? <><span className="spinner" aria-hidden="true" /> STAYING…</> : 'STAY SIGNED IN'}
-        </button>
-        <button type="button" className="state-panel__cancel" onClick={onEnded}>Sign out now</button>
-      </Dialog>
-      <Dialog open={Boolean(ended)} tone="bad" labelledBy="endedTitle" closeOutside={false} onClose={onEnded}>
-        <StateMark tone="bad" size="lg" />
-        <h2 className="state-panel__title" id="endedTitle">Session expired</h2>
-        <p className="state-panel__note">You’ve been signed out to keep the shop safe. Sign in again to carry on.</p>
-        <button type="button" className="btn btn--contrast btn--block" onClick={onEnded}>SIGN IN AGAIN</button>
-      </Dialog>
-    </>
-  );
-}
-
 /* ------------------------------------------------------------------ page */
 
 export default function Admin() {
@@ -492,8 +442,11 @@ export default function Admin() {
 
   return (
     <div className="admin">
-      <SessionWatch expiresAt={expiresAt} onRenewed={setExpiresAt}
-                    onEnded={() => { setExpiresAt(null); adminLogout().catch(() => {}).finally(() => setSignedIn(false)); }} />
+      <SessionExpiry expiresAt={expiresAt}
+                     onStay={async () => setExpiresAt((await adminRenew()).expiresAt)}
+                     onSignOut={async () => { await adminLogout().catch(() => {}); setExpiresAt(null); setSignedIn(false); }}
+                     onEnded={() => { setExpiresAt(null); setSignedIn(false); }} />
+      <Toasts />
       <header className="admin-header">
         <div className="admin-header__inner">
           <a href={pageHref('/')} className="logo"><Wordmark alt="MASQ. — back to the shop" /></a>

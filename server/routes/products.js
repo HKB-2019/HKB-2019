@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { one } from '../db.js';
 import { loadProducts } from '../lib/catalogue.js';
-import { getSettings, getHomeImages, openZones, NIGERIAN_STATES } from '../lib/settings.js';
+import { getSettings, getHomeImages, openZones, NIGERIAN_STATES, maintenanceNow } from '../lib/settings.js';
 import { currentSession } from '../lib/auth.js';
 import { canSendMail } from '../lib/mail.js';
 
@@ -28,6 +28,7 @@ productsRouter.get('/site', async (req, res) => {
        AND available_at = (SELECT MIN(available_at) FROM products WHERE hidden = FALSE AND available_at > now())
   `);
   const ids = await getHomeImages();
+  const now = maintenanceNow(maintenance);
   res.set('Cache-Control', 'no-store');
   res.json({
     // A photo the owner has not replaced is null: the page keeps its own.
@@ -48,10 +49,16 @@ productsRouter.get('/site', async (req, res) => {
     freeDelivery: freeDelivery.enabled ? { overKobo: freeDelivery.overKobo } : null,
     // Closed for maintenance: the shop shows "We'll be back soon". The owner,
     // signed in to the admin, still sees the shop (and a note saying so).
-    maintenance: maintenance.on
+    maintenance: now.closed
       ? { message: maintenance.message, minutes: maintenance.minutes, ownerView: Boolean(await currentSession(req)) }
       : null,
-    announcement: announcement.on ? { tone: announcement.tone, title: announcement.title, text: announcement.text } : null,
+    // Open, with a line across the top: work going on now, or planned.
+    maintenanceNotice: now.notice ? { message: maintenance.message } : null,
+    maintenanceSoon: now.soon,
+    announcement: announcement.on
+      ? { tone: announcement.tone, title: announcement.title, text: announcement.text,
+          button: announcement.button, link: announcement.link, details: announcement.details }
+      : null,
     // Customer accounts are offered only once the shop can email their codes.
     accounts: canSendMail(),
     states: NIGERIAN_STATES

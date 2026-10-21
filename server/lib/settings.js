@@ -239,7 +239,8 @@ function validFreeDelivery(value) {
 }
 
 /* Maintenance: the shop shows "We'll be back soon" and takes no payments. */
-const MAINTENANCE_DEFAULT = { on: false, message: '', minutes: null };
+const MAINTENANCE_DEFAULT = { on: false, level: 'closed', message: '', minutes: null, startsAt: null };
+const LEVELS = ['closed', 'notice'];
 function validMaintenance(value) {
   if (!value || typeof value !== 'object') throw bad('Maintenance settings are missing.');
   const message = String(value.message ?? '').trim();
@@ -248,22 +249,63 @@ function validMaintenance(value) {
   if (m !== null && m !== undefined && (!Number.isInteger(m) || m < 1 || m > 7 * 24 * 60)) {
     throw bad('Maintenance: the expected time is whole minutes, up to a week.');
   }
-  return { on: value.on === true, message, minutes: Number.isInteger(m) ? m : null };
+  let startsAt = null;
+  if (value.startsAt) {
+    const t = Date.parse(value.startsAt);
+    if (Number.isNaN(t)) throw bad('Maintenance: the start time is not a real date.');
+    if (t > Date.now() + 366 * 24 * 3600_000) throw bad('Maintenance: the start is more than a year away.');
+    startsAt = new Date(t).toISOString();
+  }
+  return {
+    on: value.on === true,
+    level: LEVELS.includes(value.level) ? value.level : 'closed',
+    message, minutes: Number.isInteger(m) ? m : null, startsAt
+  };
 }
 
-/* A line across the top of the shop: news, an offer, a warning. */
+/**
+ * Maintenance as it stands at `now`: `closed` (customers see "We'll be back
+ * soon", payments refused), `notice` (the shop stays open with a line across
+ * the top), and `soon` (a planned start, said ahead). Switched on by hand, it
+ * lasts until switched off; planned, it runs from its start for its minutes
+ * (an hour if none were given) and ends by itself.
+ */
+export function maintenanceNow(m, now = Date.now()) {
+  const start = m.startsAt ? Date.parse(m.startsAt) : null;
+  const end = start !== null ? start + (m.minutes ?? 60) * 60_000 : null;
+  const live = m.on || (start !== null && now >= start && now < end);
+  return {
+    closed: live && m.level !== 'notice',
+    notice: live && m.level === 'notice',
+    soon: !live && start !== null && now < start && start - now < 7 * 24 * 3600_000
+      ? { startsAt: new Date(start).toISOString(), endsAt: new Date(end).toISOString() } : null
+  };
+}
+
+/* A line across the top of the shop: news, an offer, a warning. An optional
+ * button goes to a page (a link) or opens more words (details). */
 const ANNOUNCE_TONES = ['info', 'ok', 'warn'];
-const ANNOUNCEMENT_DEFAULT = { on: false, tone: 'info', title: '', text: '' };
+const ANNOUNCEMENT_DEFAULT = { on: false, tone: 'info', title: '', text: '', button: '', link: '', details: '' };
 function validAnnouncement(value) {
   if (!value || typeof value !== 'object') throw bad('Announcement settings are missing.');
   const tone = ANNOUNCE_TONES.includes(value.tone) ? value.tone : 'info';
   const title = String(value.title ?? '').trim();
   const text = String(value.text ?? '').trim();
+  const button = String(value.button ?? '').trim();
+  const link = String(value.link ?? '').trim();
+  const details = String(value.details ?? '').trim();
   if (title.length > 60) throw bad('Announcement: the title is 60 characters at most.');
   if (text.length > 140) throw bad('Announcement: the line under it is 140 characters at most.');
+  if (button.length > 24) throw bad('Announcement: the button says 24 characters at most.');
+  if (details.length > 600) throw bad('Announcement: the details are 600 characters at most.');
+  // A page of this shop ("/gift-card", "/#drop") or a secure address elsewhere; nothing that could run.
+  if (link && (link.length > 300 || !(/^\/(?!\/)[^\s]*$/.test(link) || /^https:\/\/[^\s]+$/.test(link)))) {
+    throw bad('Announcement: the link is a page of the shop (starting /) or an address starting https://.');
+  }
+  if (button && !link && !details) throw bad('Announcement: a button needs a link or details to show.');
   const on = value.on === true;
   if (on && !title) throw bad('Announcement: give it a title before switching it on.');
-  return { on, tone, title, text };
+  return { on, tone, title, text, button, link, details };
 }
 
 /* -------------------------------------------------------------- store */
@@ -334,8 +376,7 @@ export function deliveryFee(zone, itemsKobo, freeDelivery) {
 
 /** The answer to a payment asked for while the shop is closed for maintenance. */
 export async function closedForMaintenance(res) {
-  const m = await getSetting('maintenance');
-  if (!m.on) return false;
+  if (!maintenanceNow(await getSetting('maintenance')).closed) return false;
   res.status(503).json({ error: 'We’re doing some upgrades, so payments are paused for now. Please try again soon.', code: 'maintenance' });
   return true;
 }

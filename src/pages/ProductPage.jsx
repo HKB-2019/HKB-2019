@@ -12,8 +12,9 @@ import { pop, textIn } from '../lib/feel.js';
 import { askForRestock } from '../lib/api.js';
 import { track } from '../lib/analytics.js';
 import { isEmail } from '../lib/delivery.js';
-import { useEmailCheck, EMAIL_OK, EMAIL_BAD } from '../lib/useEmailCheck.js';
-import FieldNote from '../components/FieldNote.jsx';
+import { useEmailCheck, EMAIL_BAD } from '../lib/useEmailCheck.js';
+import { EmailNote } from '../components/FieldNote.jsx';
+import { ErrorBanner, detailsOf } from '../components/Notices.jsx';
 import { jumpToTop, glideTo } from '../lib/smoothScroll.js';
 import { useGlideToProduct, arrivedByPhoto, FROM_SHOP } from '../lib/pageMorph.js';
 import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel } from '../lib/colours.js';
@@ -184,8 +185,7 @@ function RestockAsk({ product, colour = '' }) {
                {...(state && state !== 'sending' ? { className: 'is-error', 'aria-invalid': true } : {})} />
         <button className="btn btn--ghost" disabled={state === 'sending'}>{state === 'sending' ? '…' : 'NOTIFY ME'}</button>
       </div>
-      <FieldNote error={state && state !== 'sending' ? state : check.state === 'bad' ? EMAIL_BAD : null}
-                 ok={!state && check.state === 'ok' ? EMAIL_OK : null} reserve />
+      <EmailNote check={check} error={state && state !== 'sending' ? state : null} onUse={setEmail} />
     </form>
   );
 }
@@ -225,7 +225,9 @@ function BuyBox({ product, colour, onColour }) {
     if (!got) return;   // the bag has said why (sold out, the most per order)
     // A panel offers the bag or more shopping; the button says so for a
     // moment too, and its name for screen readers stays.
-    openOverlay({ added: got });
+    // Few left in this size (the shop says how many only when it is low): the
+    // owner's amber "Low stock" panel instead, which still says it is in the bag.
+    openOverlay({ added: { ...got, left: chosen.left ?? null } });
     setAdded(true);
     clearTimeout(addedTimer.current);
     addedTimer.current = setTimeout(() => setAdded(false), 1600);
@@ -391,7 +393,7 @@ function MoreLike({ product }) {
 
 export default function ProductPage() {
   const { id } = useParams();
-  const { productById, catalogueStatus, loadCatalogue } = useShop();
+  const { productById, catalogueStatus, catalogueError, loadCatalogue } = useShop();
   const goTo = useSectionLink();
   const product = productById(id);
   const navigate = useNavigate();
@@ -459,9 +461,10 @@ export default function ProductPage() {
     );
   } else if (catalogueStatus === 'error') {
     body = (
-      <div className="pdp-empty" role="alert">
-        <p>This piece could not be loaded.</p>
-        <button className="btn btn--ghost" onClick={loadCatalogue}>TRY AGAIN</button>
+      <div className="pdp-empty">
+        <ErrorBanner layout="panel" picture={catalogueError?.status === 0 ? 'offline' : 'server'}
+                     title="We couldn’t load this page." text="Please try again, or contact us if the problem persists."
+                     onRetry={loadCatalogue} retryLabel="Retry" details={detailsOf(catalogueError)} />
       </div>
     );
   } else if (catalogueStatus === 'ready') {
