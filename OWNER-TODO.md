@@ -5,7 +5,7 @@
 Kept up to date with the project. Every file named here is a link: tap it to open it on GitHub (signed in to your GitHub account). Plain steps; the detailed how-to for
 setting things up is in [the setup guide (DEPLOY.md)](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/DEPLOY.md).
 
-> **Don't forget:** the film prompts are ready ([design/film/FILM-PROMPT.md](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/film/FILM-PROMPT.md)). Make the seven clips in Google Flow (item 15).
+> **Don't forget:** the film prompt is ready ([design/film/FILM-PROMPT.md](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/film/FILM-PROMPT.md)): one prompt, ChatGPT first, then Google Flow (item 15).
 
 ---
 
@@ -55,7 +55,7 @@ setting things up is in [the setup guide (DEPLOY.md)](https://github.com/HKB-201
     - **About page photos** (the hooded man at the top, the hoodie, the jacket, the three craft / culture / community tiles, the vision background). It uses the shop's pictures for now.
 13. **The receipt email's top picture: done.** It uses the bag from your email design. Send a sharper one later if you like.
 14. **The 3D empty-state pictures: done.** The bag, heart, magnifier and box are cut from your empty-states board and show on the empty bag, saved, search and orders screens. Send sharper ones later if you like.
-15. **The brand film: make it.** Pictures chosen 21 Oct (all of the storyboard, the flowing wrap, the masked figure, the carved mask): see [the merged board](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/film/6-merged-selection.webp). The prompts are in [the film prompts (design/film/FILM-PROMPT.md)](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/film/FILM-PROMPT.md): seven clips, with the four reference pictures to upload. Make them in Google Flow (or Seedance 2.5 elsewhere), add the words in editing, then put the film's link in admin → Settings, and it plays on the home page.
+15. **The brand film: make it.** Pictures chosen 21 Oct (all of the storyboard, the flowing wrap, the masked figure, the carved mask): see [the merged board](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/film/6-merged-selection.webp). The prompt is in [the film prompt (design/film/FILM-PROMPT.md)](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/film/FILM-PROMPT.md): one prompt for both the storyboard picture in ChatGPT and the film in Google Flow, cast with Dayo, Ifeoma and Kunle. Run it in ChatGPT first, then in Flow with the new storyboard, add the words in editing, then put the film's link in admin → Settings, and it plays on the home page.
 16. **Brand decisions** ([the brand notes (design/brand/README.md)](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/brand/README.md)). The brand boards differ from the shop on:
     - fonts: Rift Bold needs a paid licence; Clash Grotesk is free;
     - the exact purple;

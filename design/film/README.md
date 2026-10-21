@@ -101,7 +101,7 @@ FOR NOW. · DROP 01 LIMITED EDITION · AVAILABLE SOON · @masq.world.
 
 ## 6. The merged selection (chosen 21 Oct)
 
-All of the storyboard, plus frame 5 of the campaign stills (the flowing wrap), the masked figure from poster 4 and the carved mask from poster 5, with the official MASQ. mask they must use. The prompts are in [FILM-PROMPT.md](FILM-PROMPT.md); the pictures to upload are in [references/](references/).
+All of the storyboard, plus frame 5 of the campaign stills (the flowing wrap), the masked figure from poster 4 and the carved mask from poster 5, with the official MASQ. mask they must use. The one prompt is in [FILM-PROMPT.md](FILM-PROMPT.md); the single pictures are in [references/](references/).
 
 ![The merged selection](6-merged-selection.webp)
 
