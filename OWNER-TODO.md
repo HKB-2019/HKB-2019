@@ -46,7 +46,7 @@ setting things up is in [the setup guide (DEPLOY.md)](https://github.com/HKB-201
 ### Pictures and words only you can give
 
 10. **Product photos, prices and counts.** The shop now holds the 52 pieces drawn in your Shop and Collections designs, with the designs' names, prices and colours. Their photos are cut from your design boards (small and a little soft), and their stock counts are samples. For each piece: send the real photos, and check the price, colours, sizes and counts in admin → Products (and switch off any you won't make). Real descriptions, materials and size & fit go there too.
-11. **Home page photos: nothing to do.** The home page already uses the photos you chose (Dayo and Ifeoma at the top, Ifeoma in the patterned hood for the countdown, the carved violet eyes in the craft band). Change them in admin → Home page only if you want to.
+11. **Home page photos: nothing to do.** The home page already uses the photos you chose (Dayo and Ifeoma at the top, Kunle in the patterned hood for the countdown, the carved violet eyes in the craft band). Change them in admin → Home page only if you want to.
 12. **The Journal.**
     - Read the 10 starter stories I wrote (admin → Journal). Check the facts and the voice; change or hide anything.
     - Give each story a real cover photo; they use the shop's photos for now.
