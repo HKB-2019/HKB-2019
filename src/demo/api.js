@@ -13,6 +13,7 @@ import { GUIDE_CURRENCIES, DEFAULT_RATES } from '../data/currencies.js';
 import { STARTER_STORIES, TOPIC_KEYS, readMinutes } from '../data/journal.js';
 import { COLLECTION_KEYS, categoryOf } from '../data/shop.js';
 import { DESIGN_PIECES, SEASON_PICTURES, FACE_TEE, DESIGN_PERKS, LIMITED_PROMISES, PARTNER_MARKS, FEATURED_COLLAB } from './designSample.js';
+import { designFill } from './designFill.js';
 import { sampleReport } from './sampleAnalytics.js';
 import QRCode from 'qrcode';
 
@@ -219,6 +220,27 @@ const colourPhoto = (c) => (c.photo ? { img: c.photo.img, img2x: c.photo.img2x }
 /* The Shop pages' details. A sample saved before they existed takes the
  * catalogue's own, so an open preview needs no reset. */
 const STARTS = Object.fromEntries([...CATALOGUE, ...DESIGN_PIECES].map(c => [c.id, c]));
+// Each catalogue piece's place in its category, for its sample SKU.
+const PLACE = (() => {
+  const seen = {};
+  return Object.fromEntries(Object.values(STARTS).filter(c => c.id !== 'tee')
+    .map(c => [c.id, (seen[c.category] = (seen[c.category] ?? -1) + 1)]));
+})();
+
+/* Every piece's page drawn like the Face Tee's (src/demo/designFill.js):
+ * whatever the owner hasn't entered yet is filled with a sample, on the shop
+ * only; the admin shows just what was entered. */
+function filled(p) {
+  if (p.id === 'tee' || !(p.id in PLACE)) return p;
+  const f = designFill(p, STARTS[p.id], PLACE[p.id]);
+  return {
+    ...p,
+    description: p.description || f.description, details: p.details || f.details,
+    materials: p.materials || f.materials, fit: p.fit || f.fit, sku: p.sku || f.sku,
+    extras: p.extras.length || p.uploaded ? p.extras : f.extras,
+    rating: p.rating ?? f.rating, reviews: p.reviews ?? f.reviews, closer: p.closer ?? f.closer
+  };
+}
 function pageDetails(p) {
   const seed = STARTS[p.id] ?? {};
   return {
@@ -235,7 +257,8 @@ function pageDetails(p) {
   };
 }
 
-function shape(p, forAdmin) {
+function shape(raw, forAdmin) {
+  const p = forAdmin ? raw : filled(raw);
   const { main, all } = photosOf(p);
   const base = {
     id: p.id, name: p.name, description: p.description, details: p.details, photos: all,
@@ -244,7 +267,7 @@ function shape(p, forAdmin) {
     badge: p.badge, inDrop: p.inDrop, featured: p.featured, inEssentials: p.inEssentials,
     soldOut: p.sizes.length === 0 || p.sizes.every(s => s.stock <= 0),
     ...pageDetails(p),
-    // The design's reviews and close-up, on the Face Tee only (designSample.js).
+    // Sample reviews and close-up film (designSample.js, designFill.js).
     ...(p.rating ? { rating: p.rating, reviews: p.reviews } : {}),
     ...(p.closer ? { closer: p.closer } : {})
   };

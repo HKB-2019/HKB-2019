@@ -323,6 +323,16 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   `reviews`, `closer`), so the live shop shows none of it until the owner
   confirms it. Film panels (Drop 01's Lookbook, the Archive film) play the
   owner's film, or the bundled brand film until one is set.
+- **Every product page like the Face Tee's, in the preview**
+  (src/demo/designFill.js): where the owner hasn't entered them yet, each
+  piece gets two close-up photos cut from its own picture
+  (`assets/img/z-<id>-1/2.webp`), sample words, details, materials, size & fit,
+  a SKU, sample stars and the See-it-closer film. On the shop side only; the
+  admin shows just what was entered, and anything entered there wins.
+- **A soft chime when an order is placed** (src/lib/sound.js), with the
+  confetti: three quiet rising notes made in the browser, no sound file. It
+  plays only where the browser allows sound without a fresh tap, otherwise
+  nothing; `localStorage['masq:sound'] = 'off'` silences it.
 - **The product page** follows the owner's Face Tee design for every piece:
   thumbnails, arrows and full screen; category, SKU, colour, size, a stock line,
   quantity, ADD TO BAG and BUY NOW (straight to delivery); the three promises;
