@@ -98,7 +98,9 @@ setting things up is in `DEPLOY.md`.
 - Address search.
 - The 3D illustrations.
 
-**Pages left to build (your designs are in `design/`, sent 17 and 18 Oct; details in `design/REDESIGN.md`):**
+**Pages left to build.** Everything still to make, shop and admin. "Design in hand" means your design is in `design/` (sent 17 and 18 Oct; details in `design/REDESIGN.md`); "Design needed" means I need a design from you first.
+
+*Shop pages (design in hand):*
 - **Shop: all products**, with the filter column, sort, page numbers and the SHOP ▾ menu.
 - **Category pages:** T-Shirts, Headwear, Bags & Accessories, Accessories and Outerwear.
 - **Outerwear.** I kept the first Outerwear design and marked the new one as replacing it. Compared with the first one, the new version:
@@ -108,7 +110,28 @@ setting things up is in `DEPLOY.md`.
   - drops the play button and the promises strip.
 - **Collection pages:** All Collections, Drop 01 Urban Rituals, Essentials, Limited Edition, Collaborations and Archive, with the COLLECTIONS ▾ menu.
 - **The redesigned product page.**
-- "No items in this category" and "No saved searches": these come with the category pages and saved searches.
+- **Empty states for these pages:** "No products match these filters", "No items in this category" and "No saved searches".
+
+*Admin screens (design needed):*
+- **A dashboard home:** the first screen after signing in, with the day's sales, orders to send, low stock and visitors at a glance. Today the admin opens on Orders, with the money strip on top.
+- **A returns and refunds screen:** see return requests, approve or decline them, and mark the refund made. Today there is only MARK REFUNDED on an order.
+- **A "your shop is in maintenance" view:** what you see in the admin while the shop is closed. Today it's a switch in Settings and a note on the shop.
+- **What the shop pages above need in the admin:** categories and sub-categories, collections, SKU, materials, size & fit, a NEW flag, pre-order, "Complete the look" picks, a partner name for collaborations and a season for the archive, plus each collection's words, photo and story band. I'll build these with the shop pages, in the admin's current style, unless you send a design.
+
+*Customer orders and returns (design needed):*
+- **Order statuses "Out for delivery" and "Delivered"** on the order page. Today it stops at "On its way".
+- **Returns:** request a return, choose items and a reason, then "return requested", "approved" or "declined".
+- **Reviews** on the product page and a "write a review" form, only if you want real reviews.
+
+*Emails (design needed, or I follow the receipt email's design):*
+- **Delivered.**
+- **Refund made.**
+- **Back in stock**, for the waiting list.
+- **Gift card received**, for the person given the card.
+
+*Site-wide (design needed):*
+- **A 404 "page not found" page.** Today an unknown address shows the home page.
+- **A cookie notice.** Not legally required while the shop sets no tracking cookies, but useful if you add ads later.
 
 **Things to confirm for those pages:**
 1. Outerwear title: "Layer Your Identity" or "MASQ. Your Identity"? I'll use "Layer Your Identity" unless you say otherwise.
@@ -121,13 +144,6 @@ setting things up is in `DEPLOY.md`.
 - **Delivery and returns wording:** the designs say "2–5 business days" and "7-day return policy"; the shop today says 1–3 / 3–5 working days and 14-day returns. Which is right? Also "Authenticity guaranteed" and "Premium packaging" on Limited Edition.
 - **Customer faces** ("Trusted by a global community"): left out until there are real customers who agree to be shown.
 - **Reviews and stars:** build real reviews, or leave the stars out?
-
-**Designs I still need from you:**
-- Returns request flow, and reviews (if wanted).
-- A 404 "page not found" page. Today an unknown address shows the home page.
-- A cookie notice. Not legally required while the shop sets no tracking cookies, but useful if you add ads later.
-- An admin dashboard overview.
-- Order emails beyond the receipt and "on its way": delivered, refund made.
 
 ---
 
