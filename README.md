@@ -329,16 +329,17 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   (`assets/img/z-<id>-1/2.webp`), sample words, details, materials, size & fit,
   a SKU, sample stars and the See-it-closer film. On the shop side only; the
   admin shows just what was entered, and anything entered there wins.
-- **Sounds for good news only** (src/lib/sound.js), made in the browser, no
-  sound file. A light **tick** for small wins — every green "it worked"
-  message (added to bag, saved, signed in, address or profile saved, joined
-  the list), the Added-to-your-bag panel, a discount code or gift card
-  applied, a reset link sent. A fuller **chime** for big moments — an order
-  placed (with the confetti), a gift card ready (once per card), a password
-  reset. Never for errors or warnings. Browsers allow page sound only after a
-  tap, and an iPhone only if it is switched on inside that tap, so the first
-  tap anywhere in the shop quietly unlocks it; a phone on silent stays
-  silent. **Sounds on / off** in the footer turns them off for good (kept in
+- **Sounds for good news only** (src/lib/sound.js; the files in
+  `public/assets/sound`, made by `tools/make-sounds.py`). A light **tick** for
+  small wins — every green "it worked" message (added to bag, saved, signed
+  in, address or profile saved, joined the list), the Added-to-your-bag panel,
+  a discount code or gift card applied, a reset link sent. A fuller **chime**
+  for big moments — an order placed (with the confetti), a gift card ready
+  (once per card), a password reset. Never for errors or warnings. They play
+  through an ordinary audio player, like a video's sound, so a phone plays
+  them even on silent; browsers allow it only after a tap, so the first tap
+  anywhere in the shop starts the player on a moment of silence. **Sounds on /
+  off** in the footer turns them off for good (kept in
   `localStorage['masq:sound']`).
 - **The product page** follows the owner's Face Tee design for every piece:
   thumbnails, arrows and full screen; category, SKU, colour, size, a stock line,
