@@ -28,7 +28,9 @@ test('a customer buys a tee, pays, and the owner sees who to send it to', async 
   await expect(page).toHaveURL(/\/order\?/);
   await expect(page.locator('.status__title')).toHaveText('Payment received');
   await expect(page.locator('.status')).toContainText('Delivery to Lekki, Lagos');
-  await expect(page.locator('.status__email')).toContainText('a•••a@example.com');
+  // Email is on in the tests: the shop's own receipt has gone, and says where.
+  await expect(page.locator('.receipt')).toContainText('Receipt sent successfully!');
+  await expect(page.locator('.receipt')).toContainText('a•••a@example.com');
   const reference = new URL(page.url()).searchParams.get('reference');
   expect(reference).toMatch(/^masq-[0-9a-f]{24}$/);
 
