@@ -5,7 +5,7 @@ the same each time. Run: python3 tools/make-sounds.py
   chime.wav    a big moment, played with the confetti: a warm, soft chord
                with high notes twinkling down over it like the confetti
                falling, in a little room of reverb
-  design/sounds/chime-warm.wav  the calmer choice (not used by the shop):
+  design/sounds/2-warm-bells.wav  the calmer choice (not used by the shop):
                three slow bell notes, no twinkle
   silent.wav   a moment of silence, to wake the player on a first tap
 """
@@ -81,7 +81,7 @@ save(OUT + 'chime.wav', reverb(chime, 0.32), 0.42)
 warm = np.zeros(int(2.6 * RATE))
 for f, at in ((392.0, 0.0), (523.25, 0.18), (659.25, 0.36)):
     place(warm, tone(f, 2.2, 0.03, 0.7, overtone=0.12), at)
-save('design/sounds/chime-warm.wav', reverb(warm, 0.3), 0.42)   # not used by the shop: for comparing
+save('design/sounds/2-warm-bells.wav', reverb(warm, 0.3), 0.42)   # not used by the shop: for comparing
 
 with wave.open(OUT + 'silent.wav', 'wb') as w:
     w.setnchannels(1); w.setsampwidth(2); w.setframerate(8000); w.writeframes(b'\x00\x00' * 400)
