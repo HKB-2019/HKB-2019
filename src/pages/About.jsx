@@ -105,7 +105,7 @@ export default function About() {
           <p className="jr-eyebrow">OUR INSPIRATION</p>
           <h2 className="ab-title" id="ab-inspiration">Rooted<br />in Heritage.<br />Designed for<br />Today.</h2>
           <p className="ab-copy">From traditional African symbols, art and stories, we draw inspiration to create contemporary pieces for everyday life. MASQ. reimagines these elements through a modern lens — blending heritage with current culture, street style and global fashion.</p>
-          <Link to="/#essentials" className="btn btn--ghost ab-go">EXPLORE COLLECTIONS <ArrowShort className="btn__arrow" /></Link>
+          <Link to="/collections" className="btn btn--ghost ab-go">EXPLORE COLLECTIONS <ArrowShort className="btn__arrow" /></Link>
         </Reveal>
         <div className="ab-split__photo"><img src={asset(P.inspiration)} alt="" loading="lazy" /></div>
       </section>

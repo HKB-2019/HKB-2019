@@ -10,6 +10,7 @@ import GiftCardOpen from './pages/GiftCardOpen.jsx';
 import Account from './pages/Account.jsx';
 import { JournalHome, JournalTopic, JournalStory } from './pages/Journal.jsx';
 import About from './pages/About.jsx';
+import { ShopPage, CollectionsPage, CollectionPage } from './pages/Shop.jsx';
 import { previewRoutes, PreviewBanner } from './lib/preview.jsx';
 import ErrorBoundary from './components/ErrorPage.jsx';
 
@@ -46,6 +47,10 @@ export default function App() {
         <Route path="/gift-card" element={<GiftCardPage />} />
         <Route path="/gift/:code" element={<GiftCardOpen />} />
         <Route path="/account/*" element={<Account />} />
+        <Route path="/shop" element={<ShopPage />} />
+        <Route path="/shop/:category" element={<ShopPage />} />
+        <Route path="/collections" element={<CollectionsPage />} />
+        <Route path="/collections/:slug" element={<CollectionPage />} />
         <Route path="/about" element={<About />} />
         <Route path="/journal" element={<JournalHome />} />
         <Route path="/journal/story/:slug" element={<JournalStory />} />

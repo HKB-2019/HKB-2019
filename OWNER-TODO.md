@@ -46,7 +46,7 @@ setting things up is in `DEPLOY.md`.
 
 ### Pictures and words only you can give
 
-10. **Product photos** for every piece and every colour, plus real descriptions. The shop uses sample photos today.
+10. **Product photos, prices and counts.** The shop now holds the 52 pieces drawn in your Shop and Collections designs, with the designs' names, prices and colours. Their photos are cut from your design boards (small and a little soft), and their stock counts are samples. For each piece: send the real photos, and check the price, colours, sizes and counts in admin → Products (and switch off any you won't make). Real descriptions, materials and size & fit go there too.
 11. **Home page photos: nothing to do.** The home page already uses the photos you chose (Dayo and Ifeoma at the top, Ifeoma in the patterned hood for the countdown, the carved violet eyes in the craft band). Change them in admin → Home page only if you want to.
 12. **The Journal.**
     - Read the 10 starter stories I wrote (admin → Journal). Check the facts and the voice; change or hide anything.
@@ -89,6 +89,10 @@ setting things up is in `DEPLOY.md`.
 ## 2. Still to build, and the designs I need from you
 
 **Built from your boards since the last list:**
+- The Shop pages: all products and T-Shirts, Headwear, Bags & Accessories, Outerwear and Accessories, with filters, sort and page numbers.
+- The Collections pages: All Collections, Drop 01 Urban Rituals, Essentials, Limited Edition, Collaborations and Archive.
+- The SHOP ▾ and COLLECTIONS ▾ menus, and the redesigned product page (the Face Tee's design, used for every piece).
+- The empty-page messages for these ("No products match these filters", "No items in this category").
 - Action feedback (Undo, Retry, Dismiss, View details, Receipt sent).
 - The receipt email, plus an "on its way" email.
 - The whole Journal: home, six topics, story page and an admin tab.
@@ -102,17 +106,10 @@ setting things up is in `DEPLOY.md`.
 
 **Pages left to build.** Everything still to make, shop and admin. "Design in hand" means your design is in `design/` (sent 17 and 18 Oct; details in `design/REDESIGN.md`); "Design needed" means I need a design from you first.
 
-*Shop pages (design in hand):*
-- **Shop: all products**, with the filter column, sort, page numbers and the SHOP ▾ menu.
-- **Category pages:** T-Shirts, Headwear, Bags & Accessories, Accessories and Outerwear.
-- **Outerwear.** I kept the first Outerwear design and marked the new one as replacing it. Compared with the first one, the new version:
-  - has photos in the sub-category panels;
-  - uses a round bag button for quick add;
-  - adds page numbers;
-  - drops the play button and the promises strip.
-- **Collection pages:** All Collections, Drop 01 Urban Rituals, Essentials, Limited Edition, Collaborations and Archive, with the COLLECTIONS ▾ menu.
-- **The redesigned product page.**
-- **Empty states for these pages:** "No products match these filters", "No items in this category" and "No saved searches".
+*Shop pages:* all built (see above). Left from those designs:
+- **"No saved searches"**: waits for a saved-search feature, if you want one.
+- **Reviews and stars, and the "Trusted by a global community" faces**: left out until they are real (questions below).
+- **Collaborations and Archive** show "on their way" until you confirm real partners and seasons; then you add them on each piece in the admin and they appear.
 
 *Admin screens (design needed: you make them with the prompt in `design/ADMIN-PROMPT.md`, item 18):*
 - **A dashboard home:** the first screen after signing in, with the day's sales, orders to send, low stock and visitors at a glance. Today the admin opens on Orders, with the money strip on top.
@@ -175,6 +172,9 @@ shop.
 | Order page: receipt sent / resend / couldn't send | Brevo |
 | Gift cards: buy (amount, colours, message), paid card with link, top up, the recipient's page | Paystack keys |
 | Journal: home, six topic pages, story page, story not found | — |
+| Shop: all products and five category pages, with filters, sort, page numbers; SHOP ▾ menu | Real photos and counts (item 10) |
+| Collections: the index, Drop 01, Essentials, Limited Edition, Collaborations, Archive; COLLECTIONS ▾ menu | Collaborations and Archive wait for your answers |
+| Product page: thumbnails, arrows, full screen, category, SKU, colour, size, stock line, quantity, Add to bag, Buy now, promises, See it closer, tabs, Complete the Look, You Might Also Like | — |
 | About: story, purpose, inspiration, craft / culture / community, vision, values, sign-up | Your photos |
 | Error page when something breaks; offline message | — |
 | Messages (toasts): done, problem, warning, news, offer, tip, Undo with countdown, Retry | — |

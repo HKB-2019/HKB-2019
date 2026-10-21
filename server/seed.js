@@ -21,14 +21,17 @@ export async function seed({ reset = false } = {}) {
 
     for (const [position, p] of CATALOGUE.entries()) {
       await tx.query(`
-        INSERT INTO products (id, name, price_kobo, img, badge, in_drop, featured, in_essentials, hidden, position)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, FALSE, $9)
+        INSERT INTO products (id, name, price_kobo, img, badge, in_drop, featured, in_essentials, hidden, position,
+                              category, type, collections, is_new)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, FALSE, $9, $10, $11, $12, $13)
         ON CONFLICT (id) DO UPDATE SET
           name = EXCLUDED.name, price_kobo = EXCLUDED.price_kobo, img = EXCLUDED.img,
           badge = EXCLUDED.badge, in_drop = EXCLUDED.in_drop, featured = EXCLUDED.featured,
-          in_essentials = EXCLUDED.in_essentials, hidden = FALSE, position = EXCLUDED.position
+          in_essentials = EXCLUDED.in_essentials, hidden = FALSE, position = EXCLUDED.position,
+          category = EXCLUDED.category, type = EXCLUDED.type, collections = EXCLUDED.collections, is_new = EXCLUDED.is_new
       `, [p.id, p.name, Math.round(p.naira * 100), p.img, p.badge ?? null,
-          Boolean(p.drop), Boolean(p.featured), Boolean(p.essential), position]);
+          Boolean(p.drop), Boolean(p.featured), Boolean(p.essential), position,
+          p.category ?? '', p.type ?? '', p.collections ?? [], Boolean(p.isNew)]);
 
       const colours = p.colours ?? [{ name: '', sizes: p.sizes }];
       for (const [i, c] of colours.entries()) {

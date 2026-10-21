@@ -12,6 +12,10 @@ import { EASE_OUT, UI_IN, UI_OUT } from '../lib/motion.js';
 import Wordmark from './Wordmark.jsx';
 import SwapIcon from './SwapIcon.jsx';
 import { useAccount, initialsOf } from '../store/AccountContext.jsx';
+import { ShopMenu, CollectionsMenu, MobileShopLinks } from './MegaMenu.jsx';
+
+// The menu items that open a wide menu under them (MegaMenu.jsx).
+const MEGA = { shop: ShopMenu, collections: CollectionsMenu };
 
 export default function Header() {
   const { theme, toggle } = useTheme();
@@ -23,13 +27,33 @@ export default function Header() {
   const goTo = useSectionLink();
   // The menu as the owner named it in the admin; hidden items left out.
   const LINKS = ready
-    ? NAV.filter(k => home.nav[k]?.show !== false).map(k => ({ href: NAV_TARGETS[k], label: home.nav[k].label }))
+    ? NAV.filter(k => home.nav[k]?.show !== false).map(k => ({ key: k, href: NAV_TARGETS[k], label: home.nav[k].label }))
     : [];
   const [stuck, setStuck]       = useState(false);
   const [active, setActive]     = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [curOpen, setCurOpen]   = useState(false);
   const curRef = useRef(null);
+  // The wide menu open under SHOP or COLLECTIONS, and which one is open on a phone.
+  const [mega, setMega] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(null);
+  const megaTimer = useRef(null);
+  const megaRef = useRef(null);
+  const openSoon = (key) => { clearTimeout(megaTimer.current); megaTimer.current = setTimeout(() => setMega(key), mega ? 0 : 90); };
+  const closeSoon = () => { clearTimeout(megaTimer.current); megaTimer.current = setTimeout(() => setMega(null), 180); };
+  const closeMega = () => { clearTimeout(megaTimer.current); setMega(null); };
+  useEffect(() => { closeMega(); setMobileOpen(null); }, [pathname]);
+  useEffect(() => () => clearTimeout(megaTimer.current), []);
+  useEffect(() => {
+    if (!mega) return;
+    const onKey = (e) => { if (e.key === 'Escape') { closeMega(); megaRef.current?.querySelector(`[data-mega="${mega}"]`)?.focus(); } };
+    const onDown = (e) => { if (!megaRef.current?.contains(e.target)) closeMega(); };
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onDown);
+    return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('mousedown', onDown); };
+  }, [mega]);
+  const hoverable = typeof window !== 'undefined' && window.matchMedia?.('(hover: hover) and (pointer: fine)').matches;
+  const Mega = mega ? MEGA[mega] : null;
 
   useEffect(() => {
     const onScroll = () => {
@@ -68,7 +92,9 @@ export default function Header() {
   return (
     // At the top of the home page and the Journal's pages the menu sits over
     // a dark photo, so it keeps the dark look there in either theme.
-    <header className={`header${stuck ? ' is-stuck' : ''}${(pathname === '/' || pathname.startsWith('/journal') || pathname === '/about') && !stuck ? ' header--over-dark' : ''}`}>
+    <header ref={megaRef}
+            className={`header${stuck ? ' is-stuck' : ''}${mega ? ' has-mega' : ''}${(pathname === '/' || pathname.startsWith('/journal') || pathname === '/about' || pathname.startsWith('/shop') || pathname.startsWith('/collections')) && !stuck && !mega ? ' header--over-dark' : ''}`}
+            onMouseLeave={hoverable ? closeSoon : undefined}>
       <div className="header__inner">
         <button
           className="burger"
@@ -84,15 +110,31 @@ export default function Header() {
           : <Link to="/" className="logo" onClick={jumpToTop}><Wordmark alt="MASQ. home" /></Link>}
 
         <nav className="nav" aria-label="Primary">
-          {LINKS.map(({ href, label }) => (
-            <a
-              key={href}
-              href={href.startsWith('/') ? href : '/' + href}
-              className={`nav__link${active === href || (href.startsWith('/') && pathname.startsWith(href)) ? ' is-active' : ''}`}
-              aria-current={href.startsWith('/') && pathname.startsWith(href) ? 'page' : undefined}
-              onClick={(e) => go(e, href)}
-            >{label}</a>
-          ))}
+          {LINKS.map(({ key, href, label }) => {
+            const here = active === href || (href.startsWith('/') && pathname.startsWith(href));
+            const link = (
+              <a
+                key={href}
+                href={href.startsWith('/') ? href : '/' + href}
+                className={`nav__link${here || mega === key ? ' is-active' : ''}`}
+                aria-current={href.startsWith('/') && pathname === href ? 'page' : undefined}
+                onClick={(e) => { closeMega(); go(e, href); }}
+              >{label}</a>
+            );
+            if (!MEGA[key]) return link;
+            // The name opens its page; the arrow beside it (or pointing at it)
+            // opens the wide menu.
+            return (
+              <span key={href} className="nav__item" onMouseEnter={hoverable ? () => openSoon(key) : undefined}>
+                {link}
+                <button type="button" className={`nav__more${mega === key ? ' is-open' : ''}`} data-mega={key}
+                        aria-expanded={mega === key} aria-controls="mega" aria-label={`More in ${label}`}
+                        onClick={() => (mega === key ? closeMega() : setMega(key))}>
+                  <ChevronDown />
+                </button>
+              </span>
+            );
+          })}
         </nav>
 
         <div className="utils">
@@ -164,6 +206,20 @@ export default function Header() {
         </div>
       </div>
 
+      <AnimatePresence>
+        {Mega && (
+          <motion.div id="mega" className="mega" key="mega"
+                      onMouseEnter={hoverable ? () => clearTimeout(megaTimer.current) : undefined}
+                      initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6, transition: { duration: UI_OUT, ease: EASE_OUT } }}
+                      transition={{ duration: UI_IN, ease: EASE_OUT }}>
+            <div className="mega__panel">
+              <Mega onGo={closeMega} pathname={pathname} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence initial={false}>
         {menuOpen && (
           <motion.nav
@@ -176,9 +232,18 @@ export default function Header() {
             exit={{ clipPath: 'inset(0 0 100% 0)', opacity: 0, transition: { duration: UI_OUT, ease: EASE_OUT } }}
             transition={{ duration: UI_IN, ease: EASE_OUT }}
           >
-            {LINKS.map(({ href, label }) => (
+            {LINKS.map(({ key, href, label }) => (MEGA[key] ? (
+              <div key={href} className={`mobile-nav__group${mobileOpen === key ? ' is-open' : ''}`}>
+                <div className="mobile-nav__row">
+                  <a href={href} onClick={(e) => go(e, href)}>{label}</a>
+                  <button type="button" aria-expanded={mobileOpen === key} aria-label={`More in ${label}`}
+                          onClick={() => setMobileOpen(o => (o === key ? null : key))}><ChevronDown /></button>
+                </div>
+                {mobileOpen === key && <MobileShopLinks which={key} onGo={() => setMenuOpen(false)} />}
+              </div>
+            ) : (
               <a key={href} href={href.startsWith('/') ? href : '/' + href} onClick={(e) => go(e, href)}>{label}</a>
-            ))}
+            )))}
             {/* On a small phone the bar has no room for it: here instead. */}
             {accountsOn && (
               <Link to="/account" className="mobile-nav__theme mobile-nav__account" onClick={() => setMenuOpen(false)}>

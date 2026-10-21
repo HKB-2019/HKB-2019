@@ -186,5 +186,5 @@ test('"write it for me" drafts the words from the owner’s notes; nothing is li
   await cap.locator('.admin-product__save').getByRole('button', { name: 'SAVE' }).click();
   await expect(cap.locator('.admin-product__save')).toContainText('saved');
   await page.goto('/product/cap');
-  await expect(page.locator('.pdp__text').first()).toHaveText('A structured cap in cotton twill.');
+  await expect(page.locator('.pdp__lede')).toHaveText('A structured cap in cotton twill.');
 });

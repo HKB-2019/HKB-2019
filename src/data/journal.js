@@ -15,7 +15,7 @@ export const TOPICS = [
     second: null,
     side: 'MORE TO READ',
     row: 'MORE STORIES',
-    promo: { title: 'Wear the symbols', text: 'The pieces these stories inspire, from the mask to the pattern.', button: 'SHOP NOW', to: '/#drop' },
+    promo: { title: 'Wear the symbols', text: 'The pieces these stories inspire, from the mask to the pattern.', button: 'SHOP NOW', to: '/shop' },
     quote: 'Symbols survive because they evolve.',
     img: 'assets/img/countdown.webp'
   },
@@ -24,10 +24,10 @@ export const TOPICS = [
     lines: ['Wear', 'Your Story.'],
     sub: 'Style is a language. At MASQ., we see fashion as a form of self-expression — a way to tell your story, honour your roots and move culture forward.',
     scribble: ['STYLE', 'IDENTITY', 'CULTURE', 'ALWAYS'],
-    second: { label: 'SHOP THE LOOKS', to: '/#drop' },
+    second: { label: 'SHOP THE LOOKS', to: '/shop' },
     side: 'TRENDING',
     row: 'EDITOR’S PICKS',
-    promo: { title: 'Shop the Looks', text: 'Explore the pieces featured in our Style & Expression stories.', button: 'SHOP NOW', to: '/#drop' },
+    promo: { title: 'Shop the Looks', text: 'Explore the pieces featured in our Style & Expression stories.', button: 'SHOP NOW', to: '/shop' },
     quote: 'Style is not just what you wear, it’s how you carry your story.',
     img: 'assets/img/prod-tee-black.webp'
   },
@@ -80,10 +80,10 @@ export const TOPICS = [
     lines: ['Our', 'Story in', 'Motion.'],
     sub: 'Collections, campaigns, collaborations and milestones that define the MASQ. journey.',
     scribble: ['PEOPLE', 'CULTURE', 'IDEAS', 'ALWAYS'],
-    second: { label: 'VIEW COLLECTIONS', to: '/#essentials' },
+    second: { label: 'VIEW COLLECTIONS', to: '/collections' },
     side: 'LATEST ANNOUNCEMENTS',
     row: 'CAMPAIGNS & COLLECTIONS',
-    promo: { title: 'Explore Our Collections', text: 'Discover the pieces, the stories and the inspiration behind each collection.', button: 'SHOP NOW', to: '/#drop' },
+    promo: { title: 'Explore Our Collections', text: 'Discover the pieces, the stories and the inspiration behind each collection.', button: 'SHOP NOW', to: '/shop' },
     quote: 'We don’t just make clothes. We tell stories, build culture and create space for what’s next.',
     img: 'assets/img/countdown.webp'
   }

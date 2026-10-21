@@ -64,8 +64,8 @@ export default function Footer({ join = true }) {
           <div className="footer__col">
             <h2 className="footer__head">Shop</h2>
             <ul>
-              {section('#drop', 'The drop')}
-              {section('#essentials', 'The Essentials')}
+              {section('/shop', 'All products')}
+              {section('/collections', 'Collections')}
               {section('/about', 'About MASQ.')}
               {panel('saved', 'Saved pieces')}
               <li><Link to="/gift-card">Gift cards</Link></li>

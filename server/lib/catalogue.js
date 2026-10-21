@@ -39,7 +39,8 @@ export function photoUrls(p) {
 export async function loadProducts({ forAdmin = false } = {}) {
   const products = await query(`
     SELECT id, name, price_kobo, img, image_id, badge, in_drop, featured, in_essentials,
-           hidden, position, description, details, available_at
+           hidden, position, description, details, available_at, created_at,
+           category, type, collections, sku, materials, fit, is_new, preorder, ships_note, partner, season, look
       FROM products p
      ${forAdmin ? '' : `WHERE ${onSale()}`}
      ORDER BY position, id
@@ -79,7 +80,22 @@ export async function loadProducts({ forAdmin = false } = {}) {
       inDrop: p.in_drop,
       featured: p.featured,
       inEssentials: p.in_essentials,
-      soldOut: sizes.length === 0 || sizes.every(s => s.stock <= 0)
+      soldOut: sizes.length === 0 || sizes.every(s => s.stock <= 0),
+      // The Shop and Collections pages, and the product page's details.
+      category: p.category || null,
+      type: p.type || null,
+      collections: p.collections ?? [],
+      sku: p.sku,
+      materials: p.materials,
+      fit: p.fit,
+      isNew: p.is_new,
+      preorder: p.preorder,
+      shipsNote: p.ships_note,
+      partner: p.partner,
+      season: p.season,
+      look: p.look ?? [],
+      // For "Newest": a drop's own time once it has come, else when it was added.
+      addedAt: new Date(p.available_at ?? p.created_at).toISOString()
     };
 
     if (forAdmin) {

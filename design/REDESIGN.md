@@ -9,8 +9,12 @@ photo is not used, at the owner's request), the craft band as designed, the coun
 product panels with round arrows, the manifesto with OUR STORY, the film strip
 playing the brand film, the Essentials as panels, the promises strip, the attached
 JOIN box, the restyled pop-up. `DESIGN.md` is rewritten to this language.
-**Still to build:** categories, collections and product details (C), the Shop and
-category pages and the SHOP menu (D), the new product page (E).
+**Built 21 Oct:** categories, collections and product details (C), the Shop,
+category and collection pages with both menus (D), the new product page (E).
+Outerwear follows the newer design with "Layer Your Identity"; Drop 01's button
+reads SHOP THE COLLECTION. Left out until real: reviews and stars, the
+"Trusted by a global community" faces, the collaboration partners and the
+archive seasons (those two pages say "on their way" until pieces are added).
 
 | File | What it is |
 |---|---|

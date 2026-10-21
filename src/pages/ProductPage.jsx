@@ -4,9 +4,9 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'reac
 import { motion } from 'framer-motion';
 import ShopLayout from '../components/ShopLayout.jsx';
 import { useShop } from '../store/ShopContext.jsx';
-import { srcSet, CARD_SIZES, GALLERY_SIZES } from '../lib/media.js';
+import { srcSet, GALLERY_SIZES } from '../lib/media.js';
 import { useSectionLink } from '../lib/useSectionLink.js';
-import { Heart, Check } from '../components/Icons.jsx';
+import { Heart, Check, CaretLeft, CaretRight, ArrowShort, BagIcon } from '../components/Icons.jsx';
 import SwapIcon from '../components/SwapIcon.jsx';
 import { pop, textIn } from '../lib/feel.js';
 import { askForRestock } from '../lib/api.js';
@@ -16,12 +16,17 @@ import { useEmailCheck, EMAIL_BAD } from '../lib/useEmailCheck.js';
 import { EmailNote } from '../components/FieldNote.jsx';
 import { ErrorBanner, detailsOf } from '../components/Notices.jsx';
 import { jumpToTop, glideTo } from '../lib/smoothScroll.js';
-import { useGlideToProduct, arrivedByPhoto, FROM_SHOP } from '../lib/pageMorph.js';
+import { arrivedByPhoto } from '../lib/pageMorph.js';
 import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel } from '../lib/colours.js';
 import Swatches from '../components/Swatches.jsx';
+import { ProductCard } from '../components/DropGrid.jsx';
+import { useHome } from '../store/ShopContext.jsx';
+import { categoryOf } from '../data/shop.js';
 
 import { EASE_OUT } from '../lib/motion.js';
 const TITLE = document.title;
+/** "THE MASQ. BEANIE" → "The MASQ. Beanie": the page's title as the design sets it. */
+const titleCase = (name) => name.split(' ').map(w => (w.includes('.') || w.length < 2 ? w : w[0] + w.slice(1).toLowerCase())).join(' ');
 
 /* ------------------------------------------------------------- gallery */
 
@@ -99,8 +104,19 @@ function Gallery({ product, colour }) {
           </div>
         ))}
       </div>
-      {product.badge && <span className="card__badge">{product.badge}</span>}
+      {(product.isNew || product.badge) && <span className={`card__badge${product.isNew ? ' card__badge--new' : ''}`}>{product.isNew ? 'NEW' : product.badge}</span>}
       {pictured && <p className="pdp__pictured">Shown in {pictured}</p>}
+      {photos.length > 1 && (
+        <>
+          <button type="button" className="pdp__arrow pdp__arrow--prev" aria-label="Previous photo"
+                  onClick={() => show((index - 1 + photos.length) % photos.length)}><CaretLeft /></button>
+          <button type="button" className="pdp__arrow pdp__arrow--next" aria-label="Next photo"
+                  onClick={() => show((index + 1) % photos.length)}><CaretRight /></button>
+        </>
+      )}
+      <button type="button" className="pdp__full" aria-label="See the photo full screen" onClick={() => enlarge(index)}>
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5" /></svg>
+      </button>
 
       {photos.length > 1 && (
         <>
@@ -224,11 +240,17 @@ function BuyBox({ product, colour, onColour }) {
 
   const chosen = sizes.find(s => s.size === size && s.available);
 
-  const add = () => {
+  // How many to add: up to what is left in this size, and the most per order.
+  const [qty, setQty] = useState(1);
+  const maxQty = Math.min(10, chosen?.left ?? single?.left ?? 10);
+  useEffect(() => { setQty(1); }, [product.id, colour, size]);
+  const add = (buyNow = false) => {
     if (product.soldOut || colourOut) { showSoldOut(product, colour); return; }
     if (!chosen) { setAsked(true); return; }
-    const got = addToCart(product, chosen.size, colour, { quiet: true });
+    const got = addToCart(product, chosen.size, colour, { quiet: true, qty });
     if (!got) return;   // the bag has said why (sold out, the most per order)
+    // Buy now: straight on to the delivery details.
+    if (buyNow) { openOverlay('checkout'); return; }
     // A panel offers the bag or more shopping; the button says so for a
     // moment too, and its name for screen readers stays.
     // Few left in this size (the shop says how many only when it is low): the
@@ -272,14 +294,19 @@ function BuyBox({ product, colour, onColour }) {
 
   return (
     <div className="pdp__info">
-      <h1 className="pdp__name">{product.name}</h1>
+      <p className="pdp__kicker">
+        {categoryOf(product.category) && <span className="pdp__cat">{categoryOf(product.category).name}</span>}
+        {product.sku && <span className="pdp__sku">SKU: {product.sku}</span>}
+      </p>
+      <h1 className="pdp__name">{titleCase(product.name)}</h1>
       <p className={`pdp__price${product.soldOut ? ' card__sold' : ''}`} ref={price}>
         {product.soldOut ? 'SOLD OUT' : format(product.price)}
       </p>
+      {product.description && <p className="pdp__lede">{product.description.split(/\n\s*\n/)[0]}</p>}
 
       {hasColours(product) && (
         <fieldset className="pdp__colours">
-          <legend>COLOUR — {colour.toUpperCase()}{colourOut ? ' (SOLD OUT)' : ''}</legend>
+          <legend>Colour: <strong>{colour}</strong>{colourOut ? ' (sold out)' : ''}</legend>
           <Swatches product={product} value={colour} onChange={pickColour} large />
         </fieldset>
       )}
@@ -287,8 +314,11 @@ function BuyBox({ product, colour, onColour }) {
       {!only && !single && (
         <fieldset className="pdp__sizes">
           <legend>
-            <span>SIZE{chosen ? ` — ${chosen.size}` : ''}</span>
-            <button type="button" className="pdp__guide" onClick={() => openOverlay({ info: 'SIZE_GUIDE' })}>SIZE GUIDE</button>
+            <span>Size:{chosen ? <strong> {chosen.size}</strong> : null}</span>
+            <button type="button" className="pdp__guide" onClick={() => openOverlay({ info: 'SIZE_GUIDE' })}>
+              <svg viewBox="0 0 20 12" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><rect x="1" y="1" width="18" height="10" rx="1" /><path d="M5 1v4M9 1v3M13 1v4M17 1v3" /></svg>
+              Size Guide
+            </button>
           </legend>
           <div className="pdp__size-row">
             {sizes.map(s => (
@@ -300,27 +330,38 @@ function BuyBox({ product, colour, onColour }) {
             ))}
           </div>
           <p className={`pdp__hint${asked ? ' is-error' : ''}`} role={asked ? 'alert' : undefined}>
-            {asked ? 'CHOOSE A SIZE FIRST'
-              : chosen?.left ? `ONLY ${chosen.left} LEFT IN ${chosen.size}`
-              : ' '}
+            {asked ? 'CHOOSE A SIZE FIRST' : ' '}
           </p>
         </fieldset>
       )}
-      {single?.left ? <p className="pdp__hint">ONLY {single.left} LEFT</p> : null}
+      <Stock product={product} chosen={chosen ?? single} out={product.soldOut || colourOut} />
 
       <div className="pdp__actions" ref={actions}>
-        <button className="btn btn--solid pdp__add" onClick={add} disabled={product.soldOut || colourOut}
+        {!(product.soldOut || colourOut) && (
+          <div className="pdp__qty" role="group" aria-label="Quantity">
+            <button type="button" aria-label="One fewer" disabled={qty <= 1} onClick={() => setQty(q => Math.max(1, q - 1))}>−</button>
+            <output aria-live="polite">{qty}</output>
+            <button type="button" aria-label="One more" disabled={qty >= maxQty} onClick={() => setQty(q => Math.min(maxQty, q + 1))}>+</button>
+          </div>
+        )}
+        <button className="btn btn--solid pdp__add" onClick={() => add()} disabled={product.soldOut || colourOut}
                 aria-label={product.soldOut || colourOut ? 'SOLD OUT' : 'ADD TO BAG'}>
           <SwapIcon swap={added} play={textIn}>
-            {product.soldOut || colourOut ? 'SOLD OUT' : added ? addedLabel : 'ADD TO BAG'}
+            {product.soldOut || colourOut ? 'SOLD OUT' : added ? addedLabel : <span className="pdp__add-label"><BagIcon />ADD TO BAG</span>}
           </SwapIcon>
         </button>
         <button className={`pdp__save${saved ? ' is-on' : ''}`} aria-pressed={saved}
                 aria-label={saved ? `Remove ${product.name} from saved` : `Save ${product.name}`}
                 onClick={(e) => { if (!saved) pop(e.currentTarget.firstChild); toggleWish(product.id); }}><Heart /></button>
       </div>
+      {!(product.soldOut || colourOut) && (
+        <button type="button" className="btn btn--ghost pdp__buy" onClick={() => add(true)}>
+          BUY NOW <ArrowShort className="btn__arrow" />
+        </button>
+      )}
 
       <RestockAsk product={product} colour={colour} />
+      <Promises />
 
       {/* A shortcut for the eye and thumb only: the same name, price and
           button are in the box above, where a screen reader finds them. Put
@@ -339,59 +380,164 @@ function BuyBox({ product, colour, onColour }) {
         </button>
       </div>, document.body)}
 
-      {product.description && <p className="pdp__text">{product.description}</p>}
-
-      {product.details && (
-        <details className="pdp__more" open>
-          <summary>DETAILS &amp; CARE</summary>
-          <p className="pdp__text pdp__text--sm">{product.details}</p>
-        </details>
-      )}
-
-      <details className="pdp__more">
-        <summary>DELIVERY &amp; RETURNS</summary>
-        <p className="pdp__text pdp__text--sm">
-          The delivery fee for your address is shown in the bag, before you pay.{' '}
-          <button type="button" className="pdp__inline" onClick={() => openOverlay({ info: 'SHIPPING' })}>Delivery</button>
-          {' · '}
-          <button type="button" className="pdp__inline" onClick={() => openOverlay({ info: 'RETURNS' })}>Returns</button>
-        </p>
-      </details>
     </div>
   );
 }
 
-/* ---------------------------------------------------- you may also like */
+/* ------------------------------------------- stock line and promises */
 
-function MoreLike({ product }) {
-  const { products, format } = useShop();
-  const glide = useGlideToProduct();
-  // Others from the drop first, in the shop's own order; then the rest.
-  const others = products.filter(p => p.id !== product.id);
-  const picks = [...others.filter(p => p.inDrop && !p.soldOut), ...others.filter(p => !p.inDrop || p.soldOut)].slice(0, 4);
-  if (!picks.length) return null;
+/** In stock, low, sold out or pre-order, in one line under the sizes. */
+function Stock({ product, chosen, out }) {
+  if (out) return <p className="pdp__stock pdp__stock--out"><i aria-hidden="true" />Sold out</p>;
+  if (product.preorder) {
+    return <p className="pdp__stock pdp__stock--pre"><i aria-hidden="true" />Pre-order<span>{product.shipsNote || 'Sent as soon as it arrives'}</span></p>;
+  }
+  if (chosen?.left) return <p className="pdp__stock pdp__stock--low"><i aria-hidden="true" />Only {chosen.left} left{chosen.size !== 'ONE SIZE' ? ` in ${chosen.size}` : ''}<span>Ready to ship</span></p>;
+  return <p className="pdp__stock"><i aria-hidden="true" />In stock<span>Ready to ship</span></p>;
+}
 
+const PROMISE_ICONS = [
+  <path key="v" d="M2 6h11v8H2zM13 9h4l3 3v2h-7zM5 16a1.5 1.5 0 1 0 0 .1M16 16a1.5 1.5 0 1 0 0 .1" />,
+  <path key="b" d="M11 2l7 3.5v9L11 18l-7-3.5v-9zM4 5.5l7 3.5 7-3.5M11 9v9" />,
+  <path key="s" d="M11 2l7 2.6v5c0 4.2-2.9 7.3-7 8.9-4.1-1.6-7-4.7-7-8.9v-5zM8 10l2.2 2.2L14.5 8" />
+];
+
+/** The three promises, in the owner's own words (Home page → Words). */
+function Promises() {
+  const { home } = useHome();
+  const perks = [1, 2, 3].map(n => [home[`perk${n}Title`], home[`perk${n}Text`]]).filter(([t]) => t);
+  if (!perks.length) return null;
   return (
-    <section className="section pdp__more-like" aria-labelledby="moreLike">
-      <div className="section__head">
-        <h2 className="section__title" id="moreLike">You may also like</h2>
-        <span className="section__rule" aria-hidden="true" />
+    <ul className="pdp__promises">
+      {perks.map(([t, x], i) => (
+        <li key={t}>
+          <svg viewBox="0 0 22 20" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" aria-hidden="true">{PROMISE_ICONS[i]}</svg>
+          <span><strong>{t}</strong>{x && <em>{x}</em>}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/* ------------------------------------------------------------- tabs */
+
+/** Lines as a ticked list, or paragraphs split at blank lines. */
+function Text({ text, ticks = false }) {
+  if (ticks) {
+    const lines = text.split('\n').map(l => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean);
+    return <ul className="pdp-tabs__ticks">{lines.map(l => <li key={l}>{l}</li>)}</ul>;
+  }
+  return text.split(/\n\s*\n/).map((para, i) => <p key={i}>{para}</p>);
+}
+
+/**
+ * Description, Materials, Size & Fit, Shipping and Returns, as tabs. A tab
+ * shows only when there is something in it: the owner writes the first three
+ * on each product in the admin; the last two are the shop's own pages.
+ */
+function Tabs({ product }) {
+  const { site, openOverlay } = useShop();
+  const pages = site?.pages ?? {};
+  const tabs = [
+    (product.description || product.details) && ['description', 'Description', <>
+      {product.description && <Text text={product.description} />}
+      {product.details && <Text text={product.details} ticks />}
+    </>],
+    product.materials && ['materials', 'Materials', <Text text={product.materials} ticks />],
+    (product.fit || (product.sizes?.length ?? 0) > 1) && ['fit', 'Size & Fit', <>
+      {product.fit && <Text text={product.fit} />}
+      <p><button type="button" className="pdp__inline" onClick={() => openOverlay({ info: 'SIZE_GUIDE' })}>See the size guide</button></p>
+    </>],
+    pages.SHIPPING && ['shipping', 'Shipping', <><Text text={pages.SHIPPING} /><p>The delivery fee for your address is shown in the bag, before you pay.</p></>],
+    pages.RETURNS && ['returns', 'Returns', <Text text={pages.RETURNS} />]
+  ].filter(Boolean);
+  const [open, setOpen] = useState(null);
+  useEffect(() => { setOpen(null); }, [product.id]);
+  if (!tabs.length) return null;
+  const current = tabs.find(t => t[0] === open) ?? tabs[0];
+  // Arrow keys move along the tabs, as in any tab list.
+  const onKey = (e) => {
+    const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    if (!step) return;
+    const i = tabs.findIndex(t => t[0] === current[0]);
+    const next = tabs[(i + step + tabs.length) % tabs.length][0];
+    setOpen(next);
+    document.getElementById(`tab-${next}`)?.focus();
+  };
+  return (
+    <div className="pdp-tabs">
+      <div className="pdp-tabs__list" role="tablist" aria-label="About this piece" onKeyDown={onKey}>
+        {tabs.map(([key, name]) => (
+          <button key={key} id={`tab-${key}`} type="button" role="tab" aria-selected={key === current[0]} aria-controls={`panel-${key}`}
+                  tabIndex={key === current[0] ? 0 : -1} className={key === current[0] ? 'is-on' : ''} onClick={() => setOpen(key)}>{name}</button>
+        ))}
       </div>
-      <div className="grid">
-        {picks.map(p => (
-          <article className="card" key={p.id}>
-            <div className="card__media">
-              <Link to={`/product/${p.id}`} state={FROM_SHOP} onClick={(e) => glide(e, `/product/${p.id}`)} className="card__link" tabIndex={-1} aria-hidden="true">
-                {p.img && <img src={p.img} srcSet={srcSet(p)} sizes={CARD_SIZES} alt="" loading="lazy" />}
-              </Link>
-              {p.badge && <span className="card__badge">{p.badge}</span>}
-            </div>
-            <h3 className="card__name"><Link to={`/product/${p.id}`} state={FROM_SHOP} onClick={(e) => glide(e, `/product/${p.id}`)}>{p.name}</Link></h3>
-            <p className={`card__price${p.soldOut ? ' card__sold' : ''}`}>{p.soldOut ? 'SOLD OUT' : format(p.price)}</p>
-          </article>
+      <div className="pdp-tabs__panel" role="tabpanel" id={`panel-${current[0]}`} aria-labelledby={`tab-${current[0]}`}>{current[2]}</div>
+    </div>
+  );
+}
+
+/** "See it closer": a photo of the piece that opens the close-up view. */
+function Closer({ product }) {
+  const { openOverlay } = useShop();
+  const photos = product.photos?.length ? product.photos : (product.img ? [{ img: product.img, img2x: product.img2x }] : []);
+  if (!photos.length) return null;
+  const i = photos.length > 1 ? 1 : 0;
+  return (
+    <button type="button" className="pdp-closer" onClick={() => openOverlay({ zoom: { photos, index: i, name: product.name } })}>
+      <img src={photos[i].img2x || photos[i].img} alt="" aria-hidden="true" loading="lazy" />
+      <span className="pdp-closer__text">
+        <strong>SEE IT<br />CLOSER</strong>
+        <span>A closer look at the details, texture and craftsmanship.</span>
+        <em>ZOOM IN <ArrowShort /></em>
+      </span>
+    </button>
+  );
+}
+
+/* ------------------------------------------ complete the look, more */
+
+function Row({ id, title, link, pieces }) {
+  const [picking, setPicking] = useState(null);
+  if (!pieces.length) return null;
+  return (
+    <section className="section pdp__more-like" aria-labelledby={id}>
+      <div className="pdp-row__head">
+        <h2 className="pdp-row__title" id={id}>{title}</h2>
+        {link && <Link to={link[0]} className="sh-link pdp-row__link">{link[1]} <ArrowShort /></Link>}
+      </div>
+      <div className="grid" onClick={(e) => { if (!e.target.closest('.card')) setPicking(null); }}>
+        {pieces.map(p => (
+          <ProductCard key={p.id} product={p} bagButton picking={picking === p.id} onPick={setPicking} onClosePick={() => setPicking(null)}
+                       badge={p.isNew ? 'NEW' : undefined} />
         ))}
       </div>
     </section>
+  );
+}
+
+function MoreLike({ product }) {
+  const { products } = useShop();
+  const others = products.filter(p => p.id !== product.id);
+  // Complete the look: the owner's own picks; else pieces of other kinds from
+  // the same collections; else of other kinds at all.
+  const picked = (product.look ?? []).map(id => others.find(p => p.id === id)).filter(Boolean);
+  const shares = (p) => p.collections?.some(c => product.collections?.includes(c));
+  const look = (picked.length ? picked : [
+    ...others.filter(p => p.category !== product.category && shares(p) && !p.soldOut),
+    ...others.filter(p => p.category !== product.category && !shares(p) && !p.soldOut)
+  ]).slice(0, 4);
+  // You might also like: the same category first, then the rest of the drop.
+  const like = [
+    ...others.filter(p => p.category && p.category === product.category && !look.includes(p)),
+    ...others.filter(p => p.category !== product.category && p.inDrop && !look.includes(p))
+  ].slice(0, 4);
+  const cat = categoryOf(product.category);
+  return (
+    <>
+      <Row id="theLook" title="Complete the Look" link={['/collections/drop-01', 'Shop the Full Drop']} pieces={look} />
+      <Row id="moreLike" title="You Might Also Like" link={cat ? [`/shop/${cat.key}`, `View All ${cat.name}`] : ['/shop', 'View All']} pieces={like} />
+    </>
   );
 }
 
@@ -454,14 +600,26 @@ export default function ProductPage() {
               <span aria-hidden="true">←</span> BACK
             </a>
             <nav aria-label="Breadcrumb">
-              <a href={`/${section}`} onClick={(e) => { e.preventDefault(); goTo(section); }}>SHOP</a>
-              <span aria-hidden="true">/</span>
+              <Link to="/">Home</Link>
+              <span aria-hidden="true">›</span>
+              <Link to="/shop">Shop</Link>
+              {categoryOf(product.category) && (
+                <>
+                  <span aria-hidden="true">›</span>
+                  <Link to={`/shop/${product.category}`}>{categoryOf(product.category).name}</Link>
+                </>
+              )}
+              <span aria-hidden="true">›</span>
               <span aria-current="page">{product.name}</span>
             </nav>
           </div>
           <Gallery product={product} colour={colour} />
           <BuyBox product={product} colour={colour} onColour={setColour} />
         </motion.div>
+        <section className="pdp-more" aria-label="About this piece">
+          <Closer product={product} />
+          <Tabs product={product} />
+        </section>
         <MoreLike product={product} />
       </>
     );

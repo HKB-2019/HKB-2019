@@ -7,6 +7,7 @@ import { decodePhoto, MAX_IMAGE_BYTES } from '../lib/images.js';
 import { cleanText, HOME_SLOTS, setHomeImage } from '../lib/settings.js';
 import { rateLimit } from '../lib/limits.js';
 import { draftDescription, writerConfigured } from '../lib/writer.js';
+import { CATEGORIES, COLLECTION_KEYS, categoryOf } from '../../src/data/shop.js';
 
 /* Everything the owner can change about a product: its name, price, badge,
  * where it appears, whether it is on sale, its order, its colours, its sizes
@@ -114,6 +115,34 @@ function cleanAvailableAt(v) {
   return d.toISOString();
 }
 
+/* Where it belongs: a category from src/data/shop.js and a type within it,
+ * or neither. */
+function cleanCategory(v) {
+  if (v === null || v === '' || v === undefined) return '';
+  if (!categoryOf(v)) throw fail(400, `Choose a category: ${CATEGORIES.map(c => c.name).join(', ')}.`);
+  return v;
+}
+function cleanType(category, v) {
+  if (v === null || v === '' || v === undefined) return '';
+  if (!categoryOf(category)?.types.some(([k]) => k === v)) throw fail(400, 'Choose a type from this category’s list.');
+  return v;
+}
+function cleanCollections(v) {
+  if (!Array.isArray(v)) throw fail(400, 'Collections must be a list.');
+  const list = [...new Set(v.map(String))];
+  if (list.some(k => !COLLECTION_KEYS.includes(k))) throw fail(400, 'That collection does not exist.');
+  return COLLECTION_KEYS.filter(k => list.includes(k));
+}
+/** A short line: an SKU, a partner's name, a season, when a pre-order ships. */
+function cleanLine(v, label, max) {
+  if (typeof v !== 'string') throw fail(400, `${label} must be text.`);
+  const s = v.replace(/\s+/g, ' ').trim();
+  if (s.length > max) throw fail(400, `Keep ${label.toLowerCase()} under ${max} characters.`);
+  return s;
+}
+const cleanMaterials = (v) => cleanText(v, { label: 'Materials', max: 1000, allowEmpty: true });
+const cleanFit = (v) => cleanText(v, { label: 'Size and fit', max: 1000, allowEmpty: true });
+
 const bool = (v, label) => {
   if (typeof v !== 'boolean') throw fail(400, `${label} must be on or off.`);
   return v;
@@ -205,7 +234,16 @@ adminProductsRouter.patch('/admin/products/:id', async (req, res) => {
   if ('description' in b)  set('description', cleanDescription(b.description));
   if ('details' in b)      set('details', cleanDetails(b.details));
   if ('availableAt' in b)  set('available_at', cleanAvailableAt(b.availableAt));
-  if (!sets.length) throw fail(400, 'Nothing to change.');
+  if ('collections' in b)  set('collections', cleanCollections(b.collections));
+  if ('sku' in b)          set('sku', cleanLine(b.sku, 'The SKU', 32).toUpperCase());
+  if ('materials' in b)    set('materials', cleanMaterials(b.materials));
+  if ('fit' in b)          set('fit', cleanFit(b.fit));
+  if ('isNew' in b)        set('is_new', bool(b.isNew, 'New'));
+  if ('preorder' in b)     set('preorder', bool(b.preorder, 'Pre-order'));
+  if ('shipsNote' in b)    set('ships_note', cleanLine(b.shipsNote, 'When it ships', 80));
+  if ('partner' in b)      set('partner', cleanLine(b.partner, 'The partner', 40));
+  if ('season' in b)       set('season', cleanLine(b.season, 'The season', 40));
+  if (!sets.length && !('category' in b) && !('type' in b) && !('look' in b)) throw fail(400, 'Nothing to change.');
 
   await transaction(async (tx) => {
     const p = await tx.one('SELECT * FROM products WHERE id = $1 FOR UPDATE', [req.params.id]);
@@ -217,6 +255,24 @@ adminProductsRouter.patch('/admin/products/:id', async (req, res) => {
       if (!p.image_id && !p.img) throw fail(409, 'Add a photo before putting this on sale.');
       const { n } = await tx.one('SELECT COUNT(*) AS n FROM variants WHERE product_id = $1', [p.id]);
       if (!n) throw fail(409, 'Add at least one size before putting this on sale.');
+    }
+
+    // A type belongs to a category: changing the category clears a type that
+    // is not in it, and a type is checked against the category it will have.
+    if ('category' in b || 'type' in b) {
+      const category = 'category' in b ? cleanCategory(b.category) : p.category;
+      const type = 'type' in b ? cleanType(category, b.type)
+        : (categoryOf(category)?.types.some(([k]) => k === p.type) ? p.type : '');
+      set('category', category);
+      set('type', type);
+    }
+    // Other pieces on sale or not, in the owner's order; never itself.
+    if ('look' in b) {
+      if (!Array.isArray(b.look) || b.look.length > 4) throw fail(400, 'Choose up to four pieces to complete the look.');
+      const ids = [...new Set(b.look.map(String))].filter(id => id !== p.id);
+      const found = ids.length ? (await tx.query('SELECT id FROM products WHERE id = ANY($1)', [ids])).map(r => r.id) : [];
+      if (found.length !== ids.length) throw fail(400, 'One of those pieces does not exist.');
+      set('look', ids);
     }
 
     params.push(p.id);

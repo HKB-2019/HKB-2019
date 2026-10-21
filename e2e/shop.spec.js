@@ -350,9 +350,8 @@ test('the footer is grouped, and every link in it goes somewhere', async ({ page
     await expect(page.locator('.modal')).toHaveCount(0);
   }
 
-  // From a product page, a shop link brings the shopper back to that part of the home page.
+  // From a product page, the Shop column opens the Collections page.
   await page.goto('/product/tee');
-  await footer.getByRole('link', { name: 'The Essentials' }).click();
-  await expect(page).toHaveURL(/\/#essentials$/);
-  await expect(page.locator('#essentials')).toBeInViewport();
+  await footer.getByRole('link', { name: 'Collections' }).click();
+  await expect(page).toHaveURL(/\/collections$/);
 });

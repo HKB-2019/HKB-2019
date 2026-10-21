@@ -8,7 +8,7 @@ test('a product card opens its page, where a size is chosen and bought', async (
   await page.goto('/');
   await card(page, 'THE FACE TEE').getByRole('link', { name: 'THE FACE TEE' }).click();
   await expect(page).toHaveURL(/\/product\/tee$/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('THE FACE TEE');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^the face tee$/i);
   await expect(page).toHaveTitle('THE FACE TEE — MASQ.');
 
   // Adding without a size asks for one, instead of guessing.
@@ -19,7 +19,7 @@ test('a product card opens its page, where a size is chosen and bought', async (
   // It comes in colours: the first in stock is chosen, and another can be.
   await expect(page.getByRole('radio', { name: 'Indigo' })).toHaveAttribute('aria-checked', 'true');
   await page.getByRole('radio', { name: 'Black' }).click();
-  await expect(page.getByText('COLOUR — BLACK')).toBeVisible();
+  await expect(page.locator('.pdp__colours legend')).toHaveText('Colour: Black');
   await expect(page).toHaveURL(/\/product\/tee\?colour=Black$/);
 
   await page.getByRole('button', { name: 'L', exact: true }).click();
@@ -41,24 +41,24 @@ test('the size guide, low-stock note and other pieces are on the product page', 
   await page.goto('/product/jacket');
   await expect(page.getByRole('button', { name: 'XL, sold out' })).toBeDisabled();
   await page.getByRole('button', { name: 'M', exact: true }).click();
-  await expect(page.locator('.pdp__hint')).toHaveText('ONLY 2 LEFT IN M');
+  await expect(page.locator('.pdp__stock')).toContainText('Only 2 left in M');
 
-  await page.locator('#main').getByRole('button', { name: 'SIZE GUIDE' }).click();
+  await page.locator('.pdp__guide').click();
   await expect(page.getByRole('dialog')).toContainText('true to size');
   await page.keyboard.press('Escape');
 
-  const more = page.locator('.pdp__more-like .card');
+  const more = page.getByRole('region', { name: 'You Might Also Like' }).locator('.card');
   await expect(more).toHaveCount(4);
   await more.first().getByRole('link').click();
   await expect(page).not.toHaveURL(/\/product\/jacket$/);
-  await expect(page.getByRole('heading', { level: 1 })).not.toHaveText('THE SYMBOL JACKET');
+  await expect(page.getByRole('heading', { level: 1 })).not.toHaveText(/^the symbol jacket$/i);
 });
 
-test('the menu on a product page goes back to that part of the home page', async ({ page }) => {
+test('the menu on a product page opens the Collections page', async ({ page }) => {
   await page.goto('/product/cap');
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'COLLECTIONS' }).click();
-  await expect(page).toHaveURL(/\/#essentials$/);
-  await expect(page.locator('#essentials')).toBeInViewport();
+  await expect(page).toHaveURL(/\/collections$/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Collections');
 });
 
 test('BACK on a product page returns to the same spot, with VIEW ALL still open', async ({ page }) => {
@@ -67,7 +67,7 @@ test('BACK on a product page returns to the same spot, with VIEW ALL still open'
   const jacket = card(page, 'THE SYMBOL JACKET');
   await jacket.scrollIntoViewIfNeeded();
   await jacket.getByRole('link', { name: 'THE SYMBOL JACKET' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('THE SYMBOL JACKET');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^the symbol jacket$/i);
 
   await page.locator('.pdp__back').click();
   await expect(page).toHaveURL(/\/$/);
@@ -76,7 +76,7 @@ test('BACK on a product page returns to the same spot, with VIEW ALL still open'
 
   // The browser's own back does the same.
   await card(page, 'THE SYMBOL JACKET').getByRole('link', { name: 'THE SYMBOL JACKET' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('THE SYMBOL JACKET');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^the symbol jacket$/i);
   await page.goBack();
   await expect(card(page, 'THE SYMBOL JACKET')).toBeInViewport();
 });
@@ -113,8 +113,9 @@ test('a description and extra photos written in the admin appear on the product 
   await expect(tee.locator('.admin-gallery__item img')).toHaveCount(1);
 
   await page.goto('/product/tee');
-  await expect(page.locator('.pdp__text').first()).toHaveText('Heavyweight cotton.\n\nPrinted by hand in Lagos.');
-  await expect(page.getByText('DETAILS & CARE')).toBeVisible();
+  await expect(page.locator('.pdp__lede')).toHaveText('Heavyweight cotton.');
+  await expect(page.locator('.pdp-tabs__panel p')).toHaveText(['Heavyweight cotton.', 'Printed by hand in Lagos.']);
+  await expect(page.locator('.pdp-tabs__ticks li')).toHaveText(['100% cotton', 'Wash cold']);
   await expect(page.locator('.pdp__thumbs button')).toHaveCount(2);
   await page.getByRole('button', { name: 'Show photo 2 of 2' }).click();
   await expect(page.getByRole('button', { name: 'Show photo 2 of 2' })).toHaveAttribute('aria-current', 'true');

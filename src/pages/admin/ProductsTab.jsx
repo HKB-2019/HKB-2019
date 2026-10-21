@@ -8,6 +8,7 @@ import {
 } from '../../lib/api.js';
 import { preparePhoto } from '../../lib/photo.js';
 import { pageHref, NEW_TAB } from '../../lib/media.js';
+import { CATEGORIES, COLLECTIONS, categoryOf } from '../../data/shop.js';
 
 /* Everything about a product the owner can change, one card per product.
  * Text fields save with a button (so a half-typed price is never live);
@@ -59,6 +60,130 @@ function Toggle({ label, checked, onChange, disabled, hint }) {
       <span className="admin-toggle__box" aria-hidden="true" />
       <span>{label}{hint && <em> {hint}</em>}</span>
     </label>
+  );
+}
+
+/* ------------------------------------------------------ the Shop pages */
+
+const sameList = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+/**
+ * Where the piece shows in the Shop and Collections pages, and the product
+ * page's extra details: category and type, collections, NEW, pre-order, SKU,
+ * materials, size and fit, partner, season and "complete the look".
+ * Saved together with one button.
+ */
+function ShopPlace({ product: p, others, onChanged }) {
+  const start = () => ({
+    category: p.category ?? '', type: p.type ?? '', collections: p.collections ?? [],
+    isNew: Boolean(p.isNew), preorder: Boolean(p.preorder), shipsNote: p.shipsNote ?? '',
+    sku: p.sku ?? '', partner: p.partner ?? '', season: p.season ?? '',
+    materials: p.materials ?? '', fit: p.fit ?? '', look: p.look ?? []
+  });
+  const [v, setV] = useState(start);
+  const was = start();
+  // A save elsewhere (or a reload) brings new values.
+  const key = JSON.stringify(was);
+  useEffect(() => { setV(start()); }, [key]);          // eslint-disable-line react-hooks/exhaustive-deps
+  const [state, run] = useAction(onChanged);
+  const set = (k, value) => setV(x => ({ ...x, [k]: value }));
+  const types = categoryOf(v.category)?.types ?? [];
+  const tidy = (t) => t.replace(/\r\n?/g, '\n').trim();
+  const dirty = Object.keys(was).some(k => Array.isArray(was[k]) ? !sameList(was[k], v[k])
+    : typeof was[k] === 'string' ? tidy(v[k]) !== was[k] : v[k] !== was[k]);
+  const toggleIn = (k, item, max = Infinity) => set(k, v[k].includes(item) ? v[k].filter(x => x !== item)
+    : v[k].length >= max ? v[k] : [...v[k], item]);
+
+  return (
+    <form className="admin-shop-place" onSubmit={(e) => { e.preventDefault(); run(() => adminUpdateProduct(p.id, v)); }}>
+      <span className="admin-product__label">In the Shop pages <em>category, collections and the product page’s details</em></span>
+      <div className="admin-product__details">
+        <label className="admin-field">
+          <span>Category</span>
+          <select value={v.category} onChange={(e) => setV(x => ({ ...x, category: e.target.value,
+            type: categoryOf(e.target.value)?.types.some(([t]) => t === x.type) ? x.type : '' }))}>
+            <option value="">None (All Products only)</option>
+            {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.name}</option>)}
+          </select>
+        </label>
+        <label className="admin-field">
+          <span>Type <em>within the category</em></span>
+          <select value={v.type} disabled={!types.length} onChange={(e) => set('type', e.target.value)}>
+            <option value="">{types.length ? 'Not set' : 'Choose a category first'}</option>
+            {types.map(([t, name]) => <option key={t} value={t}>{name}</option>)}
+          </select>
+        </label>
+        <fieldset className="admin-field admin-field--full admin-chips-field">
+          <legend>Collections</legend>
+          <div className="admin-chips">
+            {COLLECTIONS.map(c => (
+              <label key={c.key} className={`admin-chip${v.collections.includes(c.key) ? ' is-on' : ''}`}>
+                <input type="checkbox" checked={v.collections.includes(c.key)} onChange={() => toggleIn('collections', c.key)} />
+                {c.name}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <div className="admin-field admin-field--full admin-shop-place__switches">
+          <Toggle label="NEW" hint="a NEW mark on the piece" checked={v.isNew} onChange={(x) => set('isNew', x)} />
+          <Toggle label="Pre-order" hint="sold before it arrives, with the counts you set" checked={v.preorder} onChange={(x) => set('preorder', x)} />
+        </div>
+        {v.preorder && (
+          <label className="admin-field admin-field--wide">
+            <span>When it ships <em>shown on the product page</em></span>
+            <input value={v.shipsNote} maxLength={80} placeholder="e.g. Ships from 1 December" onChange={(e) => set('shipsNote', e.target.value)} />
+          </label>
+        )}
+        <label className="admin-field">
+          <span>SKU <em>optional</em></span>
+          <input value={v.sku} maxLength={32} placeholder="e.g. MSQ-TS-001" onChange={(e) => set('sku', e.target.value)} />
+        </label>
+        {v.collections.includes('collaborations') && (
+          <label className="admin-field">
+            <span>Partner <em>for a collaboration</em></span>
+            <input value={v.partner} maxLength={40} placeholder="Their name" onChange={(e) => set('partner', e.target.value)} />
+          </label>
+        )}
+        {v.collections.includes('archive') && (
+          <label className="admin-field">
+            <span>Season <em>for the archive</em></span>
+            <input value={v.season} maxLength={40} placeholder="e.g. 2024 — Drop 01" onChange={(e) => set('season', e.target.value)} />
+          </label>
+        )}
+        <label className="admin-field admin-field--wide admin-field--full">
+          <span>Materials <em>the product page’s Materials tab</em></span>
+          <textarea rows={2} maxLength={1000} value={v.materials} placeholder={'e.g. Organic cotton jersey, 240 gsm'}
+                    onChange={(e) => set('materials', e.target.value)} />
+        </label>
+        <label className="admin-field admin-field--wide admin-field--full">
+          <span>Size and fit <em>the Size & Fit tab</em></span>
+          <textarea rows={2} maxLength={1000} value={v.fit} placeholder={'e.g. Relaxed fit. The model is 1.85 m and wears L.'}
+                    onChange={(e) => set('fit', e.target.value)} />
+        </label>
+        {others.length > 0 && (
+          <fieldset className="admin-field admin-field--full admin-chips-field">
+            <legend>Complete the look <em>up to four pieces, in this order; left empty, the shop picks from the same collections</em></legend>
+            <div className="admin-look">
+              {[0, 1, 2, 3].map(i => (
+                <select key={i} aria-label={`Complete the look, piece ${i + 1}`} value={v.look[i] ?? ''}
+                        onChange={(e) => {
+                          const next = [...v.look];
+                          next[i] = e.target.value;
+                          set('look', [...new Set(next.filter(Boolean))]);
+                        }}>
+                  <option value="">—</option>
+                  {others.filter(o => o.id === v.look[i] || !v.look.includes(o.id)).map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                </select>
+              ))}
+            </div>
+          </fieldset>
+        )}
+        <div className="admin-shop-place__save">
+          <button className="admin-action" disabled={!dirty}>UPDATE SHOP DETAILS</button>
+          <Note state={state} />
+        </div>
+      </div>
+    </form>
   );
 }
 
@@ -177,7 +302,7 @@ function Writer({ product: p, current, onDraft }) {
 
 /* ------------------------------------------------------------------ card */
 
-function ProductCard({ product: p, first, last, writer, onChanged, onReordered }) {
+function ProductCard({ product: p, others, first, last, writer, onChanged, onReordered }) {
   const [name, setName] = useState(p.name);
   const [price, setPrice] = useState(String(p.price));
   const [badge, setBadge] = useState(p.badge ?? '');
@@ -337,6 +462,8 @@ function ProductCard({ product: p, first, last, writer, onChanged, onReordered }
         </div>
 
         <DropTime product={p} onChanged={onChanged} />
+
+        <ShopPlace product={p} others={others} onChanged={onChanged} />
 
         <Colours product={p} onChanged={onChanged} />
 
@@ -634,7 +761,7 @@ export default function ProductsTab({ onSummaryChange }) {
       {!products ? <p className="admin-empty">Loading…</p> : (
         <div className="admin-products">
           {products.map((p, i) => (
-            <ProductCard key={p.id} product={p} first={i === 0} last={i === products.length - 1} writer={writer}
+            <ProductCard key={p.id} product={p} others={products.filter(o => o.id !== p.id)} first={i === 0} last={i === products.length - 1} writer={writer}
                          onChanged={onChanged} onReordered={onReordered} />
           ))}
         </div>

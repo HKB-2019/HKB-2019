@@ -300,6 +300,22 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   the stories in the database and a JOURNAL tab in the admin to write,
   schedule, hide, feature and give each a cover photo. Ten starter stories are
   put in once (src/data/journal.js); after that the admin is the Journal.
+- **The Shop and Collections** (`/shop`, `/shop/:category`, `/collections`,
+  `/collections/:slug`; src/pages/Shop.jsx, src/data/shop.js): the owner's
+  designs, with a filter column (category, price, colour, size, collection,
+  availability, partner, season) applied by its button, sort, twelve to a page,
+  and the filters in the address so a filtered page can be shared. Each piece's
+  category, type and collections are set on it in the admin; so are its SKU,
+  materials, size & fit, NEW, pre-order, partner, season and "complete the
+  look" picks. The SHOP ▾ and COLLECTIONS ▾ menus open wide panels
+  (src/components/MegaMenu.jsx). The pieces drawn in the designs are in the
+  catalogue, their photos cut from the boards (`assets/img/d-*`, and the page
+  photos `h-*`, `b-*`, `s-*`) until the owner sends the real ones.
+- **The product page** follows the owner's Face Tee design for every piece:
+  thumbnails, arrows and full screen; category, SKU, colour, size, a stock line,
+  quantity, ADD TO BAG and BUY NOW (straight to delivery); the three promises;
+  See it closer; tabs (Description, Materials, Size & Fit, Shipping, Returns);
+  Complete the Look and You Might Also Like.
 - **About** (`/about`, src/pages/About.jsx): the owner's About board: our
   story, purpose, inspiration, craft / culture / community, vision, values and
   the community sign-up. Reached from ABOUT in the menu and "About MASQ." in

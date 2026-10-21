@@ -56,6 +56,26 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT 
 ALTER TABLE products ADD COLUMN IF NOT EXISTS details     TEXT NOT NULL DEFAULT '';
 -- A drop: on sale from this moment, invisible and unbuyable before it.
 ALTER TABLE products ADD COLUMN IF NOT EXISTS available_at TIMESTAMPTZ;
+-- Where it belongs in the Shop and Collections pages (src/data/shop.js): its
+-- category and the type within it, the collections it is in, and the product
+-- page's details. All optional: a piece without a category still shows under
+-- Shop → All Products.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS category    TEXT    NOT NULL DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS type        TEXT    NOT NULL DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS collections TEXT[]  NOT NULL DEFAULT '{}';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sku         TEXT    NOT NULL DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS materials   TEXT    NOT NULL DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS fit         TEXT    NOT NULL DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS is_new      BOOLEAN NOT NULL DEFAULT FALSE;
+-- Sold before it is made: bought with the counts the owner sets for the
+-- pre-order run, and sent when it arrives (the line says when).
+ALTER TABLE products ADD COLUMN IF NOT EXISTS preorder    BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS ships_note  TEXT    NOT NULL DEFAULT '';
+-- A collaboration's partner, and an archived piece's season ("2024 — Drop 01").
+ALTER TABLE products ADD COLUMN IF NOT EXISTS partner     TEXT    NOT NULL DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS season      TEXT    NOT NULL DEFAULT '';
+-- "Complete the look": other products' ids, in the owner's order.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS look        TEXT[]  NOT NULL DEFAULT '{}';
 
 -- The first version marked the pieces behind VIEW ALL with `is_extra`. Carry
 -- that over once, then drop the column, so this never runs again and never

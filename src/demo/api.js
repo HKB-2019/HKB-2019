@@ -11,6 +11,7 @@ import { HOME_DEFAULT, NAV } from '../data/home.js';
 import { PAGES, PAGES_DEFAULT } from '../data/pages.js';
 import { GUIDE_CURRENCIES, DEFAULT_RATES } from '../data/currencies.js';
 import { STARTER_STORIES, TOPIC_KEYS, readMinutes } from '../data/journal.js';
+import { COLLECTION_KEYS, categoryOf } from '../data/shop.js';
 import { sampleReport } from './sampleAnalytics.js';
 import QRCode from 'qrcode';
 
@@ -146,6 +147,18 @@ function load() {
       const nav = saved.settings?.home?.nav;
       if (nav?.collections?.label === 'ESSENTIALS') nav.collections.label = 'COLLECTIONS';
       if (nav?.journal?.label === 'FILM') nav.journal.label = 'JOURNAL';
+      // The pieces from the owner's Shop designs, added since: appended once,
+      // with ids after the ones already there.
+      const missing = sampleStore().products.filter(p => !saved.products.some(x => x.id === p.id));
+      if (missing.length) {
+        let vid = Math.max(0, ...saved.products.flatMap(p => p.sizes.map(s => s.variantId)));
+        let cid = Math.max(0, ...saved.products.flatMap(p => p.colours.map(c => c.id)));
+        for (const p of missing) {
+          saved.products.push({ ...p, position: saved.products.length,
+            colours: p.colours.map(c => ({ ...c, id: ++cid })),
+            sizes: p.sizes.map(x => ({ ...x, variantId: ++vid })) });
+        }
+      }
       return saved;
     }
   } catch { /* fall through to the sample */ }
@@ -189,6 +202,25 @@ function shopSizes(p, rows) {
 const colourPhoto = (c) => (c.photo ? { img: c.photo.img, img2x: c.photo.img2x }
   : c.img ? { img: c.img, img2x: twin(c.img) } : { img: null, img2x: null });
 
+/* The Shop pages' details. A sample saved before they existed takes the
+ * catalogue's own, so an open preview needs no reset. */
+const STARTS = Object.fromEntries(CATALOGUE.map(c => [c.id, c]));
+function pageDetails(p) {
+  const seed = STARTS[p.id] ?? {};
+  return {
+    category: (p.category ?? seed.category) || null,
+    type: (p.type ?? seed.type) || null,
+    collections: p.collections ?? seed.collections ?? [],
+    sku: p.sku ?? '', materials: p.materials ?? '', fit: p.fit ?? '',
+    isNew: p.isNew ?? Boolean(seed.isNew),
+    preorder: p.preorder ?? false, shipsNote: p.shipsNote ?? '',
+    partner: p.partner ?? '', season: p.season ?? '',
+    look: p.look ?? [],
+    // Newest first: a later place in the catalogue counts as newer.
+    addedAt: p.availableAt ?? p.addedAt ?? new Date(Date.UTC(2026, 8, 1) + (p.position ?? 0) * 86_400_000).toISOString()
+  };
+}
+
 function shape(p, forAdmin) {
   const { main, all } = photosOf(p);
   const base = {
@@ -196,7 +228,8 @@ function shape(p, forAdmin) {
     price: p.priceKobo / 100, priceKobo: p.priceKobo,
     img: main?.img ?? '', img2x: main?.img2x ?? '',
     badge: p.badge, inDrop: p.inDrop, featured: p.featured, inEssentials: p.inEssentials,
-    soldOut: p.sizes.length === 0 || p.sizes.every(s => s.stock <= 0)
+    soldOut: p.sizes.length === 0 || p.sizes.every(s => s.stock <= 0),
+    ...pageDetails(p)
   };
   if (forAdmin) {
     return { ...base, hidden: p.hidden, hasUpload: !!p.uploaded, hasBuiltInPhoto: !!p.img,
@@ -728,6 +761,37 @@ export const adminUpdateProduct = (id, b) => attempt(() => {
   if ('description' in b) p.description = tidy(b.description).slice(0, 2000);
   if ('details' in b) p.details = tidy(b.details).slice(0, 1000);
   if ('availableAt' in b) p.availableAt = b.availableAt || null;
+  // The Shop pages' details, checked as the server checks them.
+  const now = pageDetails(p);
+  if ('category' in b || 'type' in b) {
+    const category = 'category' in b ? (b.category || '') : (now.category ?? '');
+    if (category && !categoryOf(category)) throw new Error('Choose a category.');
+    const fits = (t) => categoryOf(category)?.types.some(([k]) => k === t);
+    const type = 'type' in b ? (b.type || '') : (fits(now.type) ? now.type : '');
+    if (type && !fits(type)) throw new Error('Choose a type from this category’s list.');
+    p.category = category; p.type = type;
+  }
+  if ('collections' in b) {
+    if (!Array.isArray(b.collections) || b.collections.some(k => !COLLECTION_KEYS.includes(k))) throw new Error('That collection does not exist.');
+    p.collections = COLLECTION_KEYS.filter(k => b.collections.includes(k));
+  }
+  const line = (v, max, label) => {
+    const s = String(v ?? '').replace(/\s+/g, ' ').trim();
+    if (s.length > max) throw new Error(`Keep ${label} under ${max} characters.`);
+    return s;
+  };
+  if ('sku' in b) p.sku = line(b.sku, 32, 'the SKU').toUpperCase();
+  if ('materials' in b) p.materials = tidy(b.materials).slice(0, 1000);
+  if ('fit' in b) p.fit = tidy(b.fit).slice(0, 1000);
+  if ('isNew' in b) p.isNew = Boolean(b.isNew);
+  if ('preorder' in b) p.preorder = Boolean(b.preorder);
+  if ('shipsNote' in b) p.shipsNote = line(b.shipsNote, 80, 'when it ships');
+  if ('partner' in b) p.partner = line(b.partner, 40, 'the partner');
+  if ('season' in b) p.season = line(b.season, 40, 'the season');
+  if ('look' in b) {
+    if (!Array.isArray(b.look) || b.look.length > 4) throw new Error('Choose up to four pieces to complete the look.');
+    p.look = [...new Set(b.look)].filter(x => x !== p.id && store.products.some(q => q.id === x));
+  }
   return current(id);
 });
 

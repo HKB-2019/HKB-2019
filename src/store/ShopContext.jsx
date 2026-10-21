@@ -222,7 +222,7 @@ export function ShopProvider({ children }) {
 
   /* Returns what went in, or nothing if it could not. `quiet` leaves the
    * saying-so to the caller (the product page shows its own panel). */
-  const addToCart = useCallback((product, size, colour = '', { quiet = false } = {}) => {
+  const addToCart = useCallback((product, size, colour = '', { quiet = false, qty = 1 } = {}) => {
     const p = products.find(x => x.id === product.id) ?? product;
     if (hasColours(p) && !colour) { toast({ tone: 'warn', title: 'Choose a colour first' }); return; }
     const what = optionLabel(colour, size);
@@ -238,12 +238,15 @@ export function ShopProvider({ children }) {
       return;
     }
     const { img } = photoFor(p, colour);
+    // Several at once (the product page's quantity), up to what may be had.
+    const add = Math.max(1, Math.min(qty, max - (existing?.qty ?? 0)));
+    if (add < qty) toast({ tone: 'warn', title: max < MAX_PER_LINE ? `Only ${max} left in ${what}` : `Up to ${MAX_PER_LINE} per order`, body: `${add} added to your bag.` });
     setCart(items => existing
-      ? items.map(i => i.key === key ? { ...i, qty: i.qty + 1 } : i)
-      : [...items, { key, id: p.id, name: p.name, price: p.price, img, colour, size, qty: 1 }]);
+      ? items.map(i => i.key === key ? { ...i, qty: i.qty + add } : i)
+      : [...items, { key, id: p.id, name: p.name, price: p.price, img, colour, size, qty: add }]);
     if (!quiet) toast({ tone: 'ok', title: 'Added to bag', body: `${p.name} · ${what}`, img, action: { label: 'View bag', onClick: () => setOverlay('cart') } });
     track('add_to_cart', { productId: p.id, size, valueKobo: p.priceKobo });
-    return { name: p.name, what, img, colour, size, price: format(p.price), qty: existing ? existing.qty + 1 : 1 };
+    return { name: p.name, what, img, colour, size, price: format(p.price), qty: (existing?.qty ?? 0) + add };
   }, [products, cart, toast, format, showSoldOut]);
 
   const changeQty = useCallback((key, delta) => {

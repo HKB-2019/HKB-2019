@@ -48,7 +48,7 @@ test('a product page fits a phone, and its photos can be swiped', async ({ page 
   expect(add.status()).toBe(201);
 
   await page.goto('/product/tee');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('THE FACE TEE');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^the face tee$/i);
   await noSidewaysScroll(page);
   await expect(page.locator('.pdp__dots button')).toHaveCount(2);
   await page.locator('.pdp__strip').evaluate(el => el.scrollTo({ left: el.clientWidth }));
@@ -78,7 +78,7 @@ test('on a phone, the name, price and button wait at the foot of the screen', as
   // Once the box itself is in view the bar steps aside.
   await page.locator('.pdp__add').scrollIntoViewIfNeeded();
   await expect(bar).not.toHaveClass(/is-on/);
-  await page.locator('.pdp__text').first().scrollIntoViewIfNeeded();
+  await page.locator('.pdp-tabs').scrollIntoViewIfNeeded();
   await page.mouse.wheel(0, 600);
   await expect(bar).toHaveClass(/is-on/);
   await expect(bar).not.toHaveClass(/pdp__bar--button/);

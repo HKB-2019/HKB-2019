@@ -7,7 +7,7 @@ import { scrollToId } from '../lib/scroll.js';
 import { useGlideToProduct, FROM_SHOP } from '../lib/pageMorph.js';
 import { hasColours, sizesFor, firstColour, onlyChoice, optionLabel, photoFor } from '../lib/colours.js';
 import Swatches, { ColourDots } from './Swatches.jsx';
-import { ArrowShort, Arrow, Heart } from './Icons.jsx';
+import { ArrowShort, Arrow, Heart, BagIcon } from './Icons.jsx';
 
 import { EASE_OUT, EASE_IN_OUT } from '../lib/motion.js';
 import { pop } from '../lib/feel.js';
@@ -51,7 +51,10 @@ export function SizeButtons({ product, onPicked, onColour }) {
   );
 }
 
-function ProductCard({ product, picking, onPick, onClosePick }) {
+/* `badge` replaces the piece's own mark (the Shop pages show NEW or LIMITED
+ * EDITION); `bagButton` swaps the round arrow for the Shop pages' round bag
+ * button, which adds it (or opens its sizes). */
+export function ProductCard({ product, picking, onPick, onClosePick, badge, bagButton = false }) {
   const { wishlist, toggleWish, format, addToCart, showSoldOut } = useShop();
   const glide = useGlideToProduct();
   const base = `/product/${product.id}`;
@@ -59,6 +62,8 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
   const only = onlyChoice(product);
   // The colour being looked at in the quick-add; its photo shows on the card.
   const [shown, setShown] = useState(() => firstColour(product));
+  const [opened, setOpened] = useState(false);
+  useEffect(() => { if (picking) setOpened(true); }, [picking]);
   const pic = hasColours(product) ? photoFor(product, shown) : product;
   // The owner's second photo, if there is one, shows when the card is pointed at.
   const second = !hasColours(product) || shown === firstColour(product) ? product.photos?.[1] : null;
@@ -95,7 +100,7 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
           )}
         </Link>
 
-        {product.badge && <span className="card__badge">{product.badge}</span>}
+        {(badge ?? product.badge) && <span className={`card__badge${badge === 'NEW' ? ' card__badge--new' : ''}`}>{badge ?? product.badge}</span>}
 
         <button
           className={`card__fav${saved ? ' is-on' : ''}`}
@@ -104,12 +109,17 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
           onClick={(e) => { if (!saved) pop(e.currentTarget.firstChild); toggleWish(product.id); }}
         ><Heart /></button>
 
-        <button className="card__quick" onClick={onQuickAdd}>
-          {product.soldOut ? 'SOLD OUT' : only ? 'ADD TO BAG' : 'QUICK ADD'}
-        </button>
+        {/* The Shop pages' cards add from the round bag button instead. */}
+        {!bagButton && (
+          <button className="card__quick" onClick={onQuickAdd}>
+            {product.soldOut ? 'SOLD OUT' : only ? 'ADD TO BAG' : 'QUICK ADD'}
+          </button>
+        )}
 
+        {/* The sizes are made the first time they are asked for: a page of
+            cards would otherwise carry every card's colours and sizes. */}
         <div className={`card__sizes${hasColours(product) ? ' card__sizes--colours' : ''}`} inert={!picking}>
-          <SizeButtons product={product} onPicked={onClosePick} onColour={setShown} />
+          {opened && <SizeButtons product={product} onPicked={onClosePick} onColour={setShown} />}
         </div>
       </div>
 
@@ -123,8 +133,15 @@ function ProductCard({ product, picking, onPick, onClosePick }) {
         </div>
         {/* The same way in as the name, for a thumb: kept out of the tab
             order and from screen readers so the piece is not announced twice. */}
-        <Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)} className="round-arrow"
-              tabIndex={-1} aria-hidden="true"><ArrowShort /></Link>
+        {bagButton ? (
+          <button type="button" className="round-arrow round-arrow--bag" onClick={onQuickAdd} aria-expanded={only || product.soldOut ? undefined : picking}
+                  aria-label={product.soldOut ? `${product.name}: none left` : only ? `Add ${product.name} to bag` : `Choose a size of ${product.name}`}>
+            <BagIcon />
+          </button>
+        ) : (
+          <Link to={to} state={FROM_SHOP} onClick={(e) => glide(e, to)} className="round-arrow"
+                tabIndex={-1} aria-hidden="true"><ArrowShort /></Link>
+        )}
       </div>
     </motion.article>
   );
