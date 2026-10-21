@@ -50,3 +50,37 @@ SCENE 8 — THE MARK. Macro across the Face Tee print on royal-violet cotton: th
 
 AVOID: any words on the picture other than the Face Tee print; titles, captions, watermarks, logos other than MASQ.; a different, redrawn or symmetrical mask; a misspelled print; changed, blended or swapped faces; sunglasses on Ifeoma; plastic or smoothed skin; extra fingers or warped hands; sneakers or shoes in close-up; daylight, bright or white backgrounds; neon; cartoon, 3D-render or painted looks; lens flares; oversaturated colour.
 ```
+
+## Next: the stills back into the storyboard, corrected
+
+The eight stills ChatGPT made ([9-scene-stills.webp](9-scene-stills.webp)) go back into the original storyboard's layout, with their flaws fixed. Attach, in order: 1. [the stills](9-scene-stills.webp), 2. [the original storyboard](1-film-01-storyboard.webp), 3. [the reference pictures A–D](6-merged-selection.webp) (crop to the bottom strip, or attach the whole board). Optional, to hold the faces: Dayo, Ifeoma and Kunle's test shots as 4, 5 and 6.
+
+```
+Attached: 1. our eight new scene stills (the grid of photographs). 2. the original MASQ. Film 01 storyboard. 3. the reference pictures A, B, C and D.
+
+Make ONE new storyboard sheet for MASQ. FILM 01 — "WORN, NOT SPOKEN" that uses the exact layout of image 2 — the header, scene titles, frame boxes, frame numbers, time codes, camera notes, text panels, notes and colour palette, all in the same places — but with every frame re-shot to the standard of image 1: real campaign photographs, the same people, clothes, light and finish. Landscape 3:2, the largest size available.
+
+PUT THE STILLS FROM IMAGE 1 INTO THE STORYBOARD LIKE THIS:
+SCENE 01 — VOID: 1.1 pure black, the words "WE DON'T MAKE CLOTHES." in brush lettering.
+SCENE 02 — MATERIAL LANGUAGE: 2.1 macro of black pebbled leather; 2.2 the official MASQ. mask (picture A) deeply embossed in black leather; 2.3 royal-violet fabric folding; 2.4 macro of black stitching; then the text panel "WE CREATE SYMBOLS."
+SCENE 03 — SYMBOL FORMATION: 3.1 painted fragments in the mask's colours floating in black; 3.2 the fragments locking together into the official MASQ. mask (picture A).
+SCENE 04 — MODEL REVEAL: 4.1 the corridor still from image 1 (the masked figure walking towards camera); 4.2 the unmasking still from image 1 (the carved mask lifted to reveal half of the man's face); 4.3 the revealed still from image 1 (the man in the royal-violet Face Tee, the carved mask in his hand); then the text panel "MODERN IDENTITY WEAR".
+SCENE 05 — PRODUCT DETAILS: 5.1 the macro of the Face Tee print from image 1 (the ring of words "WE WEAR IDENTITY" and "UNAPOLOGETICALLY YOURS"); 5.2 the black cap at 45° with the official MASQ. mask (picture A) embossed tone-on-tone; 5.3 a hand pulling the zip of the black leather backpack with picture A embossed; 5.4 the woman with the flowing violet wrap from image 1; then the text panel "ROOTED IN CULTURE."
+SCENE 06 — MOVEMENT: 6.1 the three walking together from image 1; 6.2 a rear shot of the man in the open black satin bomber with the official MASQ. mask embroidered large on its back; 6.3 the profile still of the man in the white Face Tee and black bomber from image 1.
+SCENE 07 — BRAND STATEMENT: 7.1 a close-up of the Face Tee print on the royal-violet t-shirt; 7.2 the official MASQ. mask (picture A) alone, centred on black; then the text panel "MASQ. IS A LANGUAGE. WORN. NOT SPOKEN."
+SCENE 08 — FINAL FRAME: 8.1 the carved-mask still from image 1, floating in black with paint flecks; then the MASQ. logo on black and "ENTER THE WORLD OF MASQ."
+
+CORRECT THESE THINGS WHILE YOU DO IT:
+1. The carved mask must be exactly picture B everywhere it appears (4.1, 4.2, 4.3, 6.1, 8.1): a long oval polished ebony-black wooden mask, teal panel upper left, ochre-yellow panel upper right, orange-red strip down the right edge, the right eye area left bare black wood, a long sharp nose ridge with a yellow stripe, a small open round mouth, a purple dotted patch lower left and a cobalt-blue dotted band lower right. Not gold all over.
+2. The raffia costume in 4.1 and 4.2 must be black and charcoal like picture C, not brown.
+3. Every printed, embossed and embroidered mask (the t-shirts, leather, cap, backpack, bomber, wrap, 7.2) must be exactly the official MASQ. mask in picture A: the vertical split face, teal left half with a white almond eye, orange-red right half with a round sun-eye, a cream nose ridge, an open red mouth with white teeth bars, five cream strokes on top. Never a different or symmetrical mask.
+4. The violet wrap in 5.4 and 6.1 must look like picture D: deep violet silk with ONE large official MASQ. mask printed on it and small scattered brand symbols — not covered in many small masks.
+5. The Face Tee print, wherever it shows, keeps its full ring of words, spelled exactly: "WE WEAR IDENTITY •" over the top and "UNAPOLOGETICALLY YOURS" under it, "MASQ." in colourful brush letters, and the row of five small symbols.
+6. The black satin bomber has the official MASQ. mask embroidered large on the BACK only; keep its front plain.
+7. Keep each person exactly as in image 1: the same three faces in every frame they appear in, never blended or swapped.
+
+THE LOOK OF EVERY FRAME: shot on an ARRI Alexa 35 with Cooke anamorphic lenses — 32 mm for the corridor, 50 mm for medium shots, 85 mm for portraits, 100 mm macro for details — low and eye-level angles as in image 1; low-key light, one hard side key and a thin rim light, light haze, deep crushed blacks with a blue-violet undertone, warm true skin tones, real skin with visible pores, fine hairs and natural sheen, no smoothing, fine 35 mm film grain. The only bright colours come from the masks and prints.
+
+Spell every word exactly as in image 2, and "MASQ." always with its full stop. No other logos, no watermarks.
+```
+
