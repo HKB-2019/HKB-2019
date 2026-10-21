@@ -3583,6 +3583,15 @@ body:has(.drawer) .toast-wrap{ right:calc(min(430px, 100%) + 20px); }
 .pill--warn{ }
 .acct-empty{ padding:40px 8px; }
 .empty__icon--big{ width:96px; height:96px; }
+/* The owner's 3D pictures: a small dark tile, like the board's panels, in
+   both themes, with the picture's own soft edges fading into it. */
+.empty__icon--art{ width:auto; height:auto; margin-bottom:20px; }
+.empty__art{
+  display:block; width:152px; height:auto; aspect-ratio:160 / 150; object-fit:contain;
+  border-radius:24px; background:radial-gradient(ellipse at 50% 42%, #1b1a21 0%, #0b0a0f 72%);
+  box-shadow:0 1px 0 rgb(255 255 255 / .05) inset, 0 18px 40px -22px rgb(0 0 0 / .6);
+}
+.search__empty .empty__art{ width:132px; }
 .empty__icon--big svg{ width:96px; height:96px; }
 @media (max-width:640px){
   .acct-order{ grid-template-columns:auto minmax(0, 1fr); row-gap:8px; }

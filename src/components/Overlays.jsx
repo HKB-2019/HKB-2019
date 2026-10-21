@@ -13,9 +13,10 @@ import { ErrorBanner, InlineNote, detailsOf } from './Notices.jsx';
 import { useAccount } from '../store/AccountContext.jsx';
 import { suggestEmail } from '../lib/useEmailCheck.js';
 import { countriesAbroad } from '../data/countries.js';
-import { Close, Heart, ArrowShort, BagIcon, Check, SearchIcon } from './Icons.jsx';
+import { Close, Heart, ArrowShort, Check, SearchIcon } from './Icons.jsx';
 import StateMark from './StateMark.jsx';
 import StateArt from './StateArt.jsx';
+import EmptyArt from './EmptyArt.jsx';
 import Dialog, { PieceCard } from './Dialog.jsx';
 import { TrashMark } from './StateMark.jsx';
 import { SizeButtons } from './DropGrid.jsx';
@@ -70,14 +71,14 @@ function ShopButton({ label }) {
   );
 }
 
-/* The owner's empty states: an outline icon that settles in, a title, a line
+/* The owner's empty states: a 3D picture that settles in, a title, a line
  * and the way back to the pieces. */
 function EmptyState({ icon, title, text, button }) {
   return (
     <motion.div className="empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: UI_IN, ease: EASE_OUT }}>
-      <motion.span className="empty__icon" aria-hidden="true"
-                   initial={{ scale: 0.7, rotate: -8, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }}
+      <motion.span className="empty__icon empty__icon--art" aria-hidden="true"
+                   initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                    transition={{ duration: 0.5, delay: 0.08, ease: EASE_OUT }}>{icon}</motion.span>
       <h3 className="empty__title">{title}</h3>
       <p className="empty__text">{text}</p>
@@ -115,7 +116,7 @@ function BagLines() {
   if (cart.length === 0) {
     return (
       <>
-        <EmptyState icon={<BagIcon />} title="Your bag is waiting for something special"
+        <EmptyState icon={<EmptyArt name="bag" />} title="Your bag is waiting for something special"
                     text="Looks like you haven’t added anything yet." button="START SHOPPING" />
         {confirmRemove}
       </>
@@ -747,7 +748,7 @@ function SavedDrawer() {
   return (
     <Drawer label="Saved" title="SAVED" count={items.length}>
       {catalogueStatus === 'ready' && items.length === 0 ? (
-        <EmptyState icon={<Heart />} title="Nothing saved yet"
+        <EmptyState icon={<EmptyArt name="heart" />} title="Nothing saved yet"
                     text="Tap the heart on any piece to keep it here for later." button="EXPLORE THE DROP" />
       ) : items.map(p => (
         <article className="line-item saved-item" key={p.id}>
@@ -881,8 +882,8 @@ function SearchPanel() {
         {words.length > 0 && found.length === 0 ? (
           <motion.div className="empty search__empty" key="none" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: UI_IN, ease: EASE_OUT }}>
-            <motion.span className="empty__icon" aria-hidden="true" initial={{ scale: 0.7, rotate: -12, opacity: 0 }}
-                         animate={{ scale: 1, rotate: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.05, ease: EASE_OUT }}><SearchIcon /></motion.span>
+            <motion.span className="empty__icon empty__icon--art" aria-hidden="true" initial={{ scale: 0.9, opacity: 0 }}
+                         animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, delay: 0.05, ease: EASE_OUT }}><EmptyArt name="search" /></motion.span>
             <h3 className="empty__title">No results found</h3>
             <p className="empty__text">We couldn’t find anything matching “{q.trim()}”. Try a different word, or browse the drop instead.</p>
             <button type="button" className="btn btn--ghost search__again"

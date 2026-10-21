@@ -13,6 +13,7 @@ import { useSectionLink } from '../../lib/useSectionLink.js';
 import FieldNote from '../FieldNote.jsx';
 import PasswordInput from '../PasswordInput.jsx';
 import StateMark, { TrashMark } from '../StateMark.jsx';
+import EmptyArt from '../EmptyArt.jsx';
 import Dialog, { ErrorDialog } from '../Dialog.jsx';
 import { CopyButton } from '../OrderResult.jsx';
 import { ErrorBanner, Loader, detailsOf } from '../Notices.jsx';
@@ -141,12 +142,6 @@ export function Overview() {
 
 /* --------------------------------------------------------------- orders */
 
-const BoxPicture = () => (
-  <svg viewBox="0 0 64 64" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round">
-    <path d="M8 22l24-12 24 12v22L32 56 8 44z" /><path d="M8 22l24 12 24-12M32 34v22" /><path d="M20 16l24 12v8" stroke="var(--ok)" strokeWidth="3" />
-  </svg>
-);
-
 export function Orders() {
   const goTo = useSectionLink();
   const [orders, setOrders] = useState(null);
@@ -172,7 +167,7 @@ export function Orders() {
   } else if (!orders.length) {
     body = (
       <motion.div className="empty acct-empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: UI_IN, ease: EASE_OUT }}>
-        <motion.span className="empty__icon empty__icon--big" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, ease: EASE_OUT }}><BoxPicture /></motion.span>
+        <motion.span className="empty__icon empty__icon--art" aria-hidden="true" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, ease: EASE_OUT }}><EmptyArt name="box" /></motion.span>
         <h2 className="empty__title">You haven’t placed any orders yet.</h2>
         <p className="empty__text">When you place an order with this email, it will appear here.</p>
         <button type="button" className="btn btn--contrast" onClick={() => goTo('#drop')}>START SHOPPING <ArrowShort className="btn__arrow" /></button>
