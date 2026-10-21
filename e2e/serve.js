@@ -28,7 +28,8 @@ Object.assign(process.env, {
   PAYSTACK_CALLBACK_URL: `${shopUrl}/order`,
   SESSION_SECRET: 's'.repeat(48),
   ANTHROPIC_API_KEY: ANTHROPIC_KEY,
-  ANTHROPIC_BASE_URL: `http://localhost:${ANTHROPIC_PORT}`
+  ANTHROPIC_BASE_URL: `http://localhost:${ANTHROPIC_PORT}`,
+  MAIL_DRIVER: 'memory'        // emails kept for the tests to read (GET /outbox on the control port)
 });
 delete process.env.ANTHROPIC_AUTH_TOKEN;
 delete process.env.DATABASE_URL;
@@ -45,6 +46,9 @@ const { giftBuyLimit, giftCheckLimit } = await import('../server/routes/giftcard
 const { subscribeLimit } = await import('../server/routes/subscribe.js');
 const { eventLimit } = await import('../server/routes/analytics.js');
 const { draftLimit } = await import('../server/routes/admin-products.js');
+const { accountLimit, mailLimit } = await import('../server/routes/account.js');
+const { resetMisses } = await import('../server/lib/accounts.js');
+const { outbox } = await import('../server/lib/mail.js');
 const { createApp } = await import('../server/index.js');
 const { HOME_DEFAULT } = await import('../src/data/home.js');
 
@@ -69,6 +73,10 @@ async function reset({ delivery = true } = {}) {
   subscribeLimit.reset();
   eventLimit.reset();
   draftLimit.reset();
+  accountLimit.reset();
+  mailLimit.reset();
+  resetMisses();
+  outbox.length = 0;
 }
 
 await reset();
@@ -81,6 +89,11 @@ createServer(async (req, res) => {
   if (req.method === 'POST' && url.pathname === '/reset') {
     await reset({ delivery: url.searchParams.get('delivery') !== 'off' });
     res.writeHead(204); return res.end();
+  }
+  // The emails the shop "sent", newest last.
+  if (req.method === 'GET' && url.pathname === '/outbox') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(outbox));
   }
   res.writeHead(404); res.end();
 }).listen(CONTROL_PORT);

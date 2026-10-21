@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useFocusTrap } from '../lib/useFocusTrap.js';
 import { Close } from './Icons.jsx';
 import StateArt, { useBadShake } from './StateArt.jsx';
+import StateMark from './StateMark.jsx';
 import { EASE_OUT, UI_IN, UI_OUT } from '../lib/motion.js';
 
 /* One of the owner's big panels as a dialog that can open over anything — the
@@ -81,5 +82,19 @@ export function FactCard({ rows }) {
         </div>
       ))}
     </dl>
+  );
+}
+
+/** The owner's generic error panel: for something that failed for a reason
+ *  the customer cannot fix (the server, the connection). Try again, or ask. */
+export function ErrorDialog({ open, onClose, onRetry, title = 'Something went wrong', text = 'We’re experiencing an issue. Please try again later.', onContact }) {
+  return (
+    <Dialog open={open} tone="bad" labelledBy="errTitle" onClose={onClose}>
+      <StateMark tone="bad" size="lg" />
+      <h2 className="state-panel__title" id="errTitle">{title}</h2>
+      <p className="state-panel__note">{text}</p>
+      {onRetry && <button type="button" className="btn btn--danger btn--block" onClick={onRetry}>TRY AGAIN</button>}
+      {onContact && <button type="button" className="btn btn--ghost btn--block state-panel__second" onClick={onContact}>CONTACT SUPPORT</button>}
+    </Dialog>
   );
 }

@@ -159,6 +159,31 @@ email. If it ever leaks, delete it in the Anthropic console and make another.
 
 ---
 
+## 7. Customer accounts (optional, needs email)
+
+Customers can make an account to see their orders, keep their details for
+checkout, and protect it with a code from an app. Every account starts by
+proving its email with a six-digit code, and a forgotten password is reset by
+an emailed link, so accounts stay **off** until the shop can send email. Until
+then the person icon in the header is *Track an order*, as before.
+
+1. Go to **brevo.com** and make a free account (300 emails a day).
+2. **Senders, domains & dedicated IPs → Senders → Add a sender**: the address
+   customers will see, e.g. `hello@yourshop.com`. Brevo emails it a link to
+   confirm it. (Your own domain is best; *Domains* walks you through it.)
+3. **SMTP & API → API keys → Generate a new API key.** Name it `masq` and copy
+   it — it starts `xkeysib-` and is shown only once.
+4. In Render: service → **Environment**: `BREVO_API_KEY` → paste;
+   `MAIL_FROM` → `MASQ. <hello@yourshop.com>` (the sender from step 2).
+   Save; Render restarts the shop by itself.
+5. The header's person icon now says **Sign in**. Make an account with your
+   own email to see the code arrive.
+
+Sign-in with Google or Apple is not built: each needs the shop's own
+developer account with them (Apple's costs $99 a year). Say when you want it.
+
+---
+
 ## What free costs you
 
 **It falls asleep.** After about fifteen minutes with no visitors, Render

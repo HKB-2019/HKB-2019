@@ -13,7 +13,7 @@ import { useSectionLink } from '../../lib/useSectionLink.js';
 import FieldNote from '../FieldNote.jsx';
 import PasswordInput from '../PasswordInput.jsx';
 import StateMark, { TrashMark } from '../StateMark.jsx';
-import Dialog from '../Dialog.jsx';
+import Dialog, { ErrorDialog } from '../Dialog.jsx';
 import { CopyButton } from '../OrderResult.jsx';
 import { ErrorBanner, Loader, detailsOf } from '../Notices.jsx';
 import { BagIcon, Heart, ArrowShort, Check, Close } from '../Icons.jsx';
@@ -226,9 +226,12 @@ function PhotoUpload() {
       setJob({ ...base, state: 'failed', error: err.message });
     }
   };
+  const [broke, setBroke] = useState(false);
+  const { openOverlay } = useShop();
   const remove = async () => {
+    setBroke(false);
     try { await accountRemovePhoto(); setAccount(a => ({ ...a, hasPhoto: false, photoVersion: Date.now() })); toast({ title: 'Photo removed' }); }
-    catch (err) { toast({ tone: 'bad', title: 'We couldn’t remove the photo.', body: err.message }); }
+    catch { setBroke(true); }
   };
   const kb = (n) => (n > 1_000_000 ? `${(n / 1_000_000).toFixed(1)} MB` : `${Math.round(n / 1000)} KB`);
 
@@ -264,6 +267,8 @@ function PhotoUpload() {
           )}
         </AnimatePresence>
       </div>
+      <ErrorDialog open={broke} onClose={() => setBroke(false)} onRetry={remove}
+                   onContact={() => { setBroke(false); openOverlay({ info: 'CONTACT' }); }} />
     </div>
   );
 }
@@ -420,11 +425,14 @@ function TwoStep({ open, onClose }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [broke, setBroke] = useState(false);
+  const { openOverlay } = useShop();
   useEffect(() => { if (open) { setStage(account.twoFactor ? 'off' : 'choose'); setSetup(null); setCode(''); setPassword(''); setError(null); } }, [open]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   const begin = async () => {
     setBusy(true); setError(null);
-    try { setSetup(await account2faSetup()); setStage('scan'); } catch (err) { setError(err.message); }
+    try { setSetup(await account2faSetup()); setStage('scan'); }
+    catch (err) { if (err.status === 0 || err.status >= 500) setBroke(true); else setError(err.message); }
     setBusy(false);
   };
   const confirm = async (value = code) => {
@@ -495,6 +503,8 @@ function TwoStep({ open, onClose }) {
         </form>
       )}
       <button type="button" className="state-panel__cancel" onClick={onClose}>Cancel</button>
+      <ErrorDialog open={broke} onClose={() => setBroke(false)} onRetry={() => { setBroke(false); begin(); }}
+                   onContact={() => { setBroke(false); onClose(); openOverlay({ info: 'CONTACT' }); }} />
     </Dialog>
   );
 }

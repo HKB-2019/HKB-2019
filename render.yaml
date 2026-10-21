@@ -48,6 +48,15 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
 
+      # Optional: email, which switches on customer accounts (sign-in codes,
+      # password resets). From brevo.com > SMTP & API > API keys. MAIL_FROM is
+      # an address Brevo has verified, e.g. "MASQ. <hello@yourshop.com>".
+      # Both blank keeps accounts off.
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+
       # Optional. Leave it blank and choose the admin password in the browser
       # at /admin, using the one-time code printed in Render's logs.
       - key: ADMIN_PASSWORD_HASH

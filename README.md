@@ -257,6 +257,29 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   Paystack's answer), the date, the items and the estimated delivery; a
   declined card shows the bank's reason. The first time, a panel says so too
   (Order placed!, Payment failed, Card declined, Payment pending).
+- **Customer accounts** (`/account`, server/routes/account.js), once the
+  shop can send email (DEPLOY.md, step 7; `MAIL_DRIVER` in server/lib/mail.js).
+  Sign up with a name, email and password (8+, a letter and a number, with a
+  strength meter), prove the email with a six-digit code (10 minutes, 5 tries,
+  a new one after 45 seconds), then sign in (12 hours, or 30 days with
+  Remember me). A forgotten password is reset by a link (30 minutes, once),
+  which signs every browser out. The account shows the orders placed with its
+  email — only once that email is proven, so nobody sees another's orders by
+  signing up with their address — and fills in checkout. Profile: name,
+  phone, birthday (16 or older), a photo (square, kept small, shown only to
+  its owner). Security: change the password (other browsers signed out),
+  two-step verification with an authenticator app (TOTP; the secret stored
+  encrypted; a code works once), where it is signed in (sign any of them
+  out), the last 30 things that happened, and deleting the account (orders
+  stay in the shop's records). Ten wrong passwords or codes for one email
+  lock it for 15 minutes; answers never say whether an email has an account
+  (except sign-up, which must). Two minutes before a sign-in ends, the
+  session warning offers to stay signed in.
+- **Banners from Settings.** The announcement can carry a button: to a page
+  of the shop or a secure address, or opening longer details. Maintenance can
+  close the shop or only show a notice across the top, now or at a planned
+  time (said ahead, with a countdown on the last day; it switches on and off
+  by itself).
 - **Search** from the magnifier in the header: names, colours, sizes and the
   owner's descriptions of everything on sale.
 - **An admin that runs the shop.** Orders with who and where, `MARK SENT`,
@@ -451,8 +474,9 @@ A pass over the whole codebase before this round found, and fixed:
 
 ### Still to build
 
-- **Customer accounts.** The person icon tracks an order by reference;
-  there is no sign-in for customers yet.
+- **Sign in with Google or Apple**, and codes by SMS: each needs an outside
+  account (Google, Apple, an SMS provider) first.
+- **Saved addresses and cards** on the account; changing an account's email.
 - **Our own emails.** Paystack emails the customer a receipt and the owner a
   payment notice, so nobody is left without word — but the shop does not yet
   send its own confirmation or "your order has shipped".

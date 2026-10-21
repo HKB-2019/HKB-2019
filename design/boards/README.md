@@ -4,10 +4,13 @@ Screens the owner designed and uploaded, kept here so they outlive any one
 working session. Build from these; where a board and `DESIGN.md` disagree,
 ask the owner.
 
-| Board | What it covers | Built? |
+| Board | What it covers | Built |
 |---|---|---|
-| `accounts-and-authentication.webp` | Sign-in (email, Google, Apple), email/OTP verification, profile, password reset, field states, security (password, 2FA, sessions, activity), saved profile, account deletion, sign-out | Not yet: customer accounts are still to build |
-| `banner-variants.webp` | Announcement (default, with button, informational, dismissed), maintenance (scheduled, live, with countdown), persistent error banners, placement, dismissal rules | Partly: announcement and maintenance exist (`SiteNotices.jsx`) |
-| `persistent-error.webp` | Page, form, upload, checkout, network, server, empty-with-error, detailed (expandable), stepper and list errors, with Retry and View details | Partly |
-| `empty-states.webp` | Empty bag, wishlist, search, orders, saved searches, category, order history; small inline versions | Partly: bag, saved list and search exist |
-| `session-expiry-warning.webp` | Session warning as modal, banner, toast and inline; countdown that turns amber then red; progress bar; extended / signing out / signed out | Partly: the admin's warning exists (`Admin.jsx`) |
+| `accounts-and-authentication.webp` | Sign-in, email code, profile, password reset, field states, security, saved profile, delete account, sign-out | Yes (`src/components/account`), except sign-in with Google/Apple, SMS codes, and the Addresses / Payment methods / Notifications sections |
+| `banner-variants.webp` | Announcement (default, with button, informational, closed), maintenance (planned, live, countdown), persistent errors, placement, closing rules | Yes (`SiteNotices.jsx`, `Notices.jsx`) |
+| `persistent-error.webp` | Page, form, upload, checkout, offline, server, empty-with-error, detailed, stepper and list errors | Yes, except the row-level list error (no list loads row by row yet) |
+| `empty-states.webp` | Bag, wishlist, search, orders, saved searches, category, order history, small inline versions | Bag, wishlist, search, orders and the inline rows; not the 3D illustrations (need images), saved searches or category (those features don't exist yet) |
+| `session-expiry-warning.webp` | Countdown panel, colours by time left, bar, action messages | Yes (`SessionExpiry.jsx`), as the panel; the banner, toast and inline versions are alternatives not used |
+| `progress-states.webp` | Loading, processing, pending, button, form, upload, overlay, step states | Yes, across the shop; "Loading MASQ…" for the whole site is not used (pages draw at once) |
+| `inline-feedback.webp`, `inline-feedback-components.webp` | Valid / invalid / warning / helper on every kind of box | Yes, except card fields (Paystack takes cards; the shop never sees them) and address search (needs Google Places) |
+| `modal-variants.webp` | Success, error, confirmation, order result, information, warning, session, delete account, generic error, sizes, scroll | Yes |

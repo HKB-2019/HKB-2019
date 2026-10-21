@@ -286,7 +286,8 @@ test('joining the list is real: the owner sees the address', async ({ page }) =>
 
 test('"track an order" takes a reference to its order page', async ({ page }) => {
   await page.goto('/');
-  await page.locator('.header').getByRole('button', { name: 'Track an order' }).click();
+  // With accounts open, the header's person icon is Sign in; tracking is in the footer.
+  await page.locator('.footer').getByRole('button', { name: 'Track an order' }).click();
   await page.fill('#track-ref', 'not a reference!');
   await page.getByRole('button', { name: 'SEE MY ORDER' }).click();
   await expect(page.locator('.modal .form-msg')).toContainText('does not look like');

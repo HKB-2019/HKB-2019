@@ -65,3 +65,8 @@ export async function fillDelivery(page, { state = 'Lagos' } = {}) {
 }
 
 export const card = (page, name) => page.locator('.card', { hasText: name });
+
+/** The emails the shop has sent since the last reset, newest last. */
+export async function outbox() {
+  return (await fetch(`${CONTROL}/outbox`)).json();
+}
