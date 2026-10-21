@@ -10,6 +10,7 @@ import { zoneFor, naira, isEmail, isPhone, looksNigerian } from '../lib/delivery
 import Amount from './Amount.jsx';
 import { EmailSlip } from './FieldNote.jsx';
 import { ErrorBanner, InlineNote, detailsOf } from './Notices.jsx';
+import { useAccount } from '../store/AccountContext.jsx';
 import { suggestEmail } from '../lib/useEmailCheck.js';
 import { countriesAbroad } from '../data/countries.js';
 import { Close, Heart, ArrowShort, BagIcon, Check, SearchIcon } from './Icons.jsx';
@@ -474,6 +475,12 @@ function DeliveryForm({ onBack, onProblem }) {
   };
   const problems = problemsWith(d, inNigeria);
   const good = (key) => seen[key] && !errors[key] && !problems[key];
+  // Signed in: their email, name and phone are already here (still theirs to change).
+  const { account } = useAccount();
+  useEffect(() => {
+    if (account && !d.email) setDelivery(v => ({ ...v, email: account.email, name: v.name || account.name, phone: v.phone || account.phone }));
+  }, [account]);   // eslint-disable-line react-hooks/exhaustive-deps
+
   // Every box put right: the Delivery step is no longer red.
   const anyError = Object.values(errors).some(Boolean);
   useEffect(() => { if (!anyError) onProblem?.(null); }, [anyError]);   // eslint-disable-line react-hooks/exhaustive-deps

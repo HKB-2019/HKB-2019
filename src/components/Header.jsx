@@ -11,10 +11,13 @@ import { useTheme } from '../lib/theme.js';
 import { EASE_OUT, UI_IN, UI_OUT } from '../lib/motion.js';
 import Wordmark from './Wordmark.jsx';
 import SwapIcon from './SwapIcon.jsx';
+import { useAccount, initialsOf } from '../store/AccountContext.jsx';
 
 export default function Header() {
   const { theme, toggle } = useTheme();
   const { cartQty, currency, setCurrency, openOverlay, wishlist } = useShop();
+  const { account, status: accountStatus } = useAccount();
+  const accountsOn = accountStatus === 'in' || accountStatus === 'out';
   const { home, ready } = useHome();
   const { pathname } = useLocation();
   const goTo = useSectionLink();
@@ -131,10 +134,18 @@ export default function Header() {
             {wishlist.length > 0 && <span className="saved-count" aria-hidden="true">{wishlist.length}</span>}
           </button>
 
-          <button className="icon-btn track-btn" aria-label="Track an order" aria-haspopup="dialog"
-                  onClick={() => openOverlay('track')}>
-            <AccountIcon />
-          </button>
+          {/* With accounts: the customer's own pages (or sign in). Without: track an order. */}
+          {accountsOn ? (
+            <Link to="/account" className={`icon-btn account-btn${account ? ' is-in' : ''}`}
+                  aria-label={account ? `Your account (${account.name})` : 'Sign in'}>
+              {account ? <span className="account-btn__initials" aria-hidden="true">{initialsOf(account.name, account.email)}</span> : <AccountIcon />}
+            </Link>
+          ) : (
+            <button className="icon-btn track-btn" aria-label="Track an order" aria-haspopup="dialog"
+                    onClick={() => openOverlay('track')}>
+              <AccountIcon />
+            </button>
+          )}
 
           <button className="icon-btn cart-btn" aria-label="Open bag" aria-haspopup="dialog"
                   onClick={() => openOverlay('cart')}>
@@ -167,7 +178,12 @@ export default function Header() {
               <a key={href} href={'/' + href} onClick={(e) => go(e, href)}>{label}</a>
             ))}
             {/* On a small phone the bar has no room for it: here instead. */}
-            <button type="button" className="mobile-nav__theme mobile-nav__track" onClick={() => { setMenuOpen(false); openOverlay('track'); }}>
+            {accountsOn && (
+              <Link to="/account" className="mobile-nav__theme mobile-nav__account" onClick={() => setMenuOpen(false)}>
+                <AccountIcon /> {account ? 'Your account' : 'Sign in'}
+              </Link>
+            )}
+            <button type="button" className={`mobile-nav__theme${accountsOn ? '' : ' mobile-nav__track'}`} onClick={() => { setMenuOpen(false); openOverlay('track'); }}>
               <AccountIcon /> Track an order
             </button>
             <button type="button" className="mobile-nav__theme" onClick={toggle}>

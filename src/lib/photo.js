@@ -7,6 +7,9 @@
  * (Safari). What reaches the server is a few hundred KB, which matters on
  * mobile data and in a free database. */
 
+/** A customer's profile photo: square, small. */
+export const AVATAR = { ratio: 1, widths: [256, 512] };
+
 /** Product photos: the 5:6 portrait frame, 700 and 1,400 px wide. */
 export const PRODUCT = { ratio: 5 / 6, widths: [700, 1400] };
 

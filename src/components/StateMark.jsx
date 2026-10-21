@@ -18,7 +18,11 @@ const SIGNS = {
   bad:  ['M8.8 8.8l6.4 6.4', 'M15.2 8.8l-6.4 6.4'],
   warn: ['M12 7.2v6.2', 'M12 16.6v.2'],
   info: ['M12 10.8v6', 'M12 7.4v.2'],
-  wait: ['M12 7.6V12l3 2']
+  wait: ['M12 7.6V12l3 2'],
+  // Signs for the account screens, drawn the same way in any tone.
+  mail: ['M7 8.6h10v7H7z', 'M7.2 8.9l4.8 3.7 4.8-3.7'],
+  lock: ['M8.2 11.2h7.6v5.4H8.2z', 'M9.8 11.2V9.6a2.2 2.2 0 0 1 4.4 0v1.6'],
+  shield: ['M12 6.6l4.6 1.8v3.4c0 2.8-2 4.8-4.6 5.6-2.6-.8-4.6-2.8-4.6-5.6V8.4z', 'M10.1 12.1l1.4 1.4 2.5-2.7']
 };
 
 // The strokes either side of a big mark: the logo's colours, as in the design.
@@ -27,9 +31,9 @@ const BURST = [
   ['#e8336f', 1, -14], ['#f2a51d', 1, 0], ['#7a4dff', 1, 14]
 ];
 
-export default function StateMark({ tone, size, burst = false, delay = 0 }) {
+export default function StateMark({ tone, sign, size, burst = false, delay = 0 }) {
   const calm = useReducedMotion();
-  const paths = SIGNS[tone];
+  const paths = SIGNS[sign ?? tone];
   if (!paths) return null;
   const draw = (at) => calm
     ? { initial: false }

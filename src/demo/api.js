@@ -11,6 +11,7 @@ import { HOME_DEFAULT, NAV } from '../data/home.js';
 import { PAGES, PAGES_DEFAULT } from '../data/pages.js';
 import { GUIDE_CURRENCIES, DEFAULT_RATES } from '../data/currencies.js';
 import { sampleReport } from './sampleAnalytics.js';
+import QRCode from 'qrcode';
 
 const KEY = 'masq:preview-store-7';   // a new number whenever the sample's shape changes
 // The sample data from before KEY's last changes, newest first. Carried over
@@ -1263,3 +1264,191 @@ export const adminDownload = () => fail('Downloads are switched off in this prev
 export function sendEvent() {}
 
 export const adminAnalytics = (range) => settle(sampleReport(range), 300);
+
+/* ------------------------------------------------------ customer accounts */
+
+/* As server/routes/account.js, for the preview. Nothing is emailed: the code
+ * (or the reset link) comes back with the answer, and the screens show it.
+ * One sample account has orders already: ada@example.com, masq-preview-1. */
+
+
+const failWith = (message, status, extra = {}) => new Promise((_, reject) =>
+  setTimeout(() => reject(Object.assign(new Error(message), { status, ...extra })), 200));
+const HOUR = 3_600_000;
+let me = null;                 // the signed-in email, for this visit
+let meEnds = null;
+const codes = new Map();       // `${purpose}|${email}` → code
+const okPassword = (p) => typeof p === 'string' && p.length >= 8 && /\d/.test(p) && /[A-Za-z]/.test(p);
+
+function accounts() {
+  store.accounts ??= [{
+    email: 'ada@example.com', name: 'Ada Obi', phone: '+234 803 000 0001', birthDate: null, gender: '',
+    password: 'masq-preview-1', verified: true, twoFactor: false, totp: null, photo: null,
+    passwordChangedAt: ago(24 * 40), createdAt: ago(24 * 60), events: [{ kind: 'Email verified', device: 'This browser', at: ago(24 * 60) }]
+  }];
+  return store.accounts;
+}
+const find = (email) => accounts().find(a => a.email === String(email ?? '').trim().toLowerCase());
+const event = (a, kind) => { a.events = [{ kind, device: 'This browser', at: new Date().toISOString() }, ...(a.events ?? [])].slice(0, 30); };
+const acctShape = (a) => ({
+  email: a.email, name: a.name, phone: a.phone, birthDate: a.birthDate, gender: a.gender, verified: a.verified,
+  twoFactor: a.twoFactor, hasPhoto: Boolean(a.photo), passwordChangedAt: a.passwordChangedAt, createdAt: a.createdAt, expiresAt: meEnds
+});
+const signIn = (a, remember) => { me = a.email; meEnds = Date.now() + (remember ? 720 : 12) * HOUR; event(a, 'Signed in'); save(); return acctShape(a); };
+const signedInAccount = () => (me && meEnds > Date.now() ? find(me) : null);
+const newCode = (purpose, email) => {
+  const c = purpose === 'verify' ? String(Math.floor(Math.random() * 1e6)).padStart(6, '0') : Math.random().toString(36).slice(2, 14);
+  codes.set(`${purpose}|${email}`, c);
+  return c;
+};
+
+/* An authenticator code, as the app makes it (RFC 6238), with the browser's own crypto. */
+const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function fromB32(t) { let bits = 0, v = 0; const out = []; for (const ch of t) { v = (v << 5) | B32.indexOf(ch); bits += 5; if (bits >= 8) { out.push((v >>> (bits - 8)) & 255); bits -= 8; } } return new Uint8Array(out); }
+async function totp(secret, step) {
+  const key = await crypto.subtle.importKey('raw', fromB32(secret), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const msg = new ArrayBuffer(8); new DataView(msg).setUint32(4, step);
+  const h = new Uint8Array(await crypto.subtle.sign('HMAC', key, msg));
+  const o = h[19] & 15;
+  return String((((h[o] & 127) << 24) | (h[o + 1] << 16) | (h[o + 2] << 8) | h[o + 3]) % 1e6).padStart(6, '0');
+}
+async function totpOk(secret, code) {
+  const step = Math.floor(Date.now() / 30_000);
+  for (const d of [0, -1, 1]) if (await totp(secret, step + d) === code) return true;
+  return false;
+}
+
+export const accountMe = () => (signedInAccount() ? settle(acctShape(signedInAccount())) : failWith('Please sign in.', 401, { code: 'signed_out' }));
+
+export function accountSignUp({ name, email, password, terms }) {
+  const e = String(email ?? '').trim().toLowerCase();
+  if (String(name ?? '').trim().length < 2) return failWith('Please enter your full name.', 400, { field: 'name' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)) return failWith('Please enter a valid email address.', 400, { field: 'email' });
+  if (!okPassword(password)) return failWith('Use at least 8 characters, with a letter and a number.', 400, { field: 'password' });
+  if (terms !== true) return failWith('Please accept the Terms of Sale to continue.', 400, { field: 'terms' });
+  const had = find(e);
+  if (had?.verified) return failWith('An account with this email already exists. Sign in instead.', 409, { field: 'email', code: 'exists' });
+  if (had) Object.assign(had, { name: name.trim(), password });
+  else accounts().push({ email: e, name: name.trim(), phone: '', birthDate: null, gender: '', password, verified: false, twoFactor: false,
+    totp: null, photo: null, passwordChangedAt: new Date().toISOString(), createdAt: new Date().toISOString(), events: [] });
+  save();
+  return settle({ ok: true, email: e, wait: 45, previewCode: newCode('verify', e) }, 500);
+}
+
+export function accountVerify(email, code) {
+  const a = find(email);
+  if (!a || codes.get(`verify|${a.email}`) !== code) return failWith('That code is not right. Check the email and try again.', 400, { field: 'code' });
+  codes.delete(`verify|${a.email}`);
+  if (!a.verified) { a.verified = true; event(a, 'Email verified'); }
+  return settle(signIn(a, false), 400);
+}
+export function accountResend(email) {
+  const a = find(email);
+  return settle({ ok: true, wait: 45, ...(a && !a.verified ? { previewCode: newCode('verify', a.email) } : {}) });
+}
+export function accountLogin(email, password, remember) {
+  const a = find(email);
+  if (!a || a.password !== password) return failWith('That email and password don’t match. Try again or reset your password.', 401);
+  if (!a.verified) return failWith('Please confirm your email first. We’ve sent you a code.', 403, { code: 'unverified', previewCode: newCode('verify', a.email) });
+  if (a.twoFactor) return settle({ twoFactor: true, ticket: `${a.email}|${remember ? 1 : 0}` }, 500);
+  return settle(signIn(a, remember), 500);
+}
+export async function accountLogin2fa(ticket, code) {
+  const [email, remember] = String(ticket).split('|');
+  const a = find(email);
+  if (!a?.twoFactor) return failWith('Please sign in again.', 401, { code: 'ticket' });
+  if (!(await totpOk(a.totp, code))) return failWith('That code is not right. Use the newest code in your authenticator app.', 400, { field: 'code' });
+  event(a, 'Signed in with two-step verification');
+  return settle(signIn(a, remember === '1'));
+}
+export function accountLogout() { const a = signedInAccount(); if (a) { event(a, 'Signed out'); save(); } me = null; meEnds = null; return settle({ ok: true }); }
+export function accountRenew() { if (!signedInAccount()) return failWith('Please sign in.', 401); meEnds = Date.now() + 12 * HOUR; return settle({ ok: true, expiresAt: meEnds }); }
+export function accountForgot(email) {
+  const a = find(email);
+  const token = a ? newCode('reset', a.email) : null;
+  return settle({ ok: true, ...(token ? { previewLink: `/account/reset?email=${encodeURIComponent(a.email)}&token=${token}` } : {}) }, 500);
+}
+export function accountReset(email, token, password) {
+  const a = find(email);
+  if (!okPassword(password)) return failWith('Use at least 8 characters, with a letter and a number.', 400, { field: 'password' });
+  if (!a || codes.get(`reset|${a.email}`) !== token) return failWith('This reset link has expired or was already used. Ask for a new one.', 400, { code: 'expired' });
+  codes.delete(`reset|${a.email}`);
+  Object.assign(a, { password, verified: true, passwordChangedAt: new Date().toISOString() });
+  event(a, 'Password reset by email link'); me = null; save();
+  return settle({ ok: true });
+}
+export function accountSave({ name, phone, birthDate, gender }) {
+  const a = signedInAccount();
+  if (!a) return failWith('Please sign in.', 401);
+  if (String(name ?? '').trim().length < 2) return failWith('Please enter your full name.', 400, { field: 'name' });
+  if (phone && String(phone).replace(/\D/g, '').length < 7) return failWith('Please enter a valid phone number.', 400, { field: 'phone' });
+  if (birthDate) { const d = new Date(birthDate); const s = new Date(); s.setFullYear(s.getFullYear() - 16); if (d > s) return failWith('You must be 16 or older to have an account.', 400, { field: 'birthDate' }); }
+  Object.assign(a, { name: name.trim(), phone: phone ?? '', birthDate: birthDate || null, gender: gender ?? '' });
+  event(a, 'Profile updated'); save();
+  return settle(acctShape(a), 600);
+}
+export function accountPassword(currentPw, password) {
+  const a = signedInAccount();
+  if (!a) return failWith('Please sign in.', 401);
+  if (a.password !== currentPw) return failWith('Your current password is not right.', 400, { field: 'current' });
+  if (!okPassword(password)) return failWith('Use at least 8 characters, with a letter and a number.', 400, { field: 'password' });
+  Object.assign(a, { password, passwordChangedAt: new Date().toISOString() });
+  event(a, 'Password changed'); save();
+  return settle({ ok: true }, 500);
+}
+export const accountSessions = () => (signedInAccount() ? settle([{ id: 1, device: 'This browser', signedInAt: ago(1), lastSeenAt: new Date().toISOString(), current: true }]) : failWith('Please sign in.', 401));
+export const accountEndSession = () => settle({ ok: true });
+export const accountEndOthers = () => settle({ ok: true });
+export const accountActivity = () => (signedInAccount() ? settle(signedInAccount().events ?? []) : failWith('Please sign in.', 401));
+export async function account2faSetup() {
+  const a = signedInAccount();
+  if (!a) return failWith('Please sign in.', 401);
+  a.totp = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => B32[b & 31]).join('');
+  save();
+  const url = `otpauth://totp/${encodeURIComponent(`MASQ.:${a.email}`)}?secret=${a.totp}&issuer=MASQ.`;
+  return settle({ secret: a.totp, qr: await QRCode.toDataURL(url, { margin: 1, width: 360 }) }, 400);
+}
+export async function account2faOn(code) {
+  const a = signedInAccount();
+  if (!a?.totp) return failWith('Start again: the setup has expired.', 400);
+  if (!(await totpOk(a.totp, code))) return failWith('That code is not right. Use the newest code in your authenticator app.', 400, { field: 'code' });
+  a.twoFactor = true; event(a, 'Two-step verification turned on'); save();
+  return settle(acctShape(a));
+}
+export function account2faOff(password) {
+  const a = signedInAccount();
+  if (!a || a.password !== password) return failWith('Your password is not right.', 400, { field: 'password' });
+  Object.assign(a, { twoFactor: false, totp: null }); event(a, 'Two-step verification turned off'); save();
+  return settle(acctShape(a));
+}
+export function accountOrders() {
+  const a = signedInAccount();
+  if (!a) return failWith('Please sign in.', 401);
+  const mine = store.orders.filter(o => o.email.toLowerCase() === a.email && ['paid', 'refund_due', 'refunded', 'pending'].includes(o.status));
+  return settle(mine.map(o => ({
+    reference: o.reference, status: o.status === 'paid' && o.fulfilledAt ? 'sent' : o.status, createdAt: o.createdAt, paidAt: o.paidAt,
+    totalKobo: totalOf(o), itemCount: o.items.reduce((n, i) => n + i.qty, 0),
+    items: o.items.slice(0, 3).map(i => ({ name: i.name, colour: i.colour || null, size: i.size, qty: i.qty,
+      img: store.products.find(p => p.name === i.name)?.img ?? null }))
+  })).sort((x, y) => y.createdAt.localeCompare(x.createdAt)), 500);
+}
+export function accountDelete(password) {
+  const a = signedInAccount();
+  if (!a || a.password !== password) return failWith('Your password is not right.', 400, { field: 'password' });
+  store.accounts = accounts().filter(x => x !== a); me = null; save();
+  return settle({ ok: true }, 500);
+}
+export const accountRemovePhoto = () => { const a = signedInAccount(); if (a) { a.photo = null; save(); } return settle({ ok: true }); };
+export const accountPhotoUrl = () => signedInAccount()?.photo ?? '';
+export function accountUploadPhoto(image, onProgress, signal) {
+  // A pretend upload that moves like a real one.
+  return new Promise((resolve, reject) => {
+    let share = 0;
+    const t = setInterval(() => {
+      share = Math.min(1, share + 0.12 + Math.random() * 0.1);
+      onProgress?.(share);
+      if (share >= 1) { clearInterval(t); const a = signedInAccount(); if (a) { a.photo = image; save(); } resolve({ ok: true }); }
+    }, 160);
+    signal?.addEventListener('abort', () => { clearInterval(t); reject(Object.assign(new Error('Upload cancelled.'), { code: 'cancelled' })); });
+  });
+}

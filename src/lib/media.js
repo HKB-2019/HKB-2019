@@ -17,7 +17,7 @@ export const asset = (path) => import.meta.env.BASE_URL + path.replace(/^\/+/, '
 // By width, not by screen density: the browser then takes the larger copy
 // whenever the space on screen needs it — a wide product page on an ordinary
 // laptop screen included — rather than only on a sharp (2x) screen. Product
-// photos are made 700 and 1400 wide (src/pages/admin/photo.js); the sample
+// photos are made 700 and 1400 wide (src/lib/photo.js); the sample
 // ones are within a few pixels of that.
 export const srcSet = (p) => (p.img2x ? `${p.img} 700w, ${p.img2x} 1400w` : undefined);
 

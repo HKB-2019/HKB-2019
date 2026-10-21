@@ -6,7 +6,7 @@ import {
   adminAddColour, adminUpdateColour, adminRemoveColour, adminUploadColourPhoto, adminRemoveColourPhoto,
   adminWriterStatus, adminDraftDescription
 } from '../../lib/api.js';
-import { preparePhoto } from './photo.js';
+import { preparePhoto } from '../../lib/photo.js';
 import { pageHref, NEW_TAB } from '../../lib/media.js';
 
 /* Everything about a product the owner can change, one card per product.

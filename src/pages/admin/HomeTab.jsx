@@ -4,7 +4,7 @@ import {
 } from '../../lib/api.js';
 import { asset, pageHref, NEW_TAB } from '../../lib/media.js';
 import { NAV } from '../../data/home.js';
-import { preparePhoto, HOME } from './photo.js';
+import { preparePhoto, HOME } from '../../lib/photo.js';
 
 /* The home page: its wide photos, every line of words on it, and the
  * menu. Each photo saves the moment it is chosen; the words save together

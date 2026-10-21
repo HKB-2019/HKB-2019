@@ -7,6 +7,7 @@ import OrderStatus from './pages/OrderStatus.jsx';
 import ProductPage from './pages/ProductPage.jsx';
 import GiftCardPage from './pages/GiftCardPage.jsx';
 import GiftCardOpen from './pages/GiftCardOpen.jsx';
+import Account from './pages/Account.jsx';
 import { previewRoutes, PreviewBanner } from './lib/preview.jsx';
 import ErrorBoundary from './components/ErrorPage.jsx';
 
@@ -42,6 +43,7 @@ export default function App() {
         {/* buy a gift card; where Paystack sends its buyer back */}
         <Route path="/gift-card" element={<GiftCardPage />} />
         <Route path="/gift/:code" element={<GiftCardOpen />} />
+        <Route path="/account/*" element={<Account />} />
         <Route path="/admin" element={<Suspense fallback={null}><Admin /></Suspense>} />
         {previewRoutes}
         <Route path="*" element={<Storefront />} />

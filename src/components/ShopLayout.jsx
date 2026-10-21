@@ -4,6 +4,8 @@ import Footer from './Footer.jsx';
 import Overlays from './Overlays.jsx';
 import Toasts from './Toasts.jsx';
 import { SiteBar, Maintenance } from './SiteNotices.jsx';
+import SessionExpiry from './SessionExpiry.jsx';
+import { useAccount } from '../store/AccountContext.jsx';
 import { useShop } from '../store/ShopContext.jsx';
 import { startSmoothScroll } from '../lib/smoothScroll.js';
 
@@ -12,6 +14,7 @@ import { startSmoothScroll } from '../lib/smoothScroll.js';
  * each page, so a change made in the admin shows the next time anyone looks. */
 export default function ShopLayout({ children }) {
   const { loadCatalogue, site } = useShop();
+  const { account, status, stay, signOut, ended } = useAccount();
   useEffect(() => { loadCatalogue(); }, [loadCatalogue]);
   useEffect(() => startSmoothScroll(), []);
 
@@ -33,6 +36,10 @@ export default function ShopLayout({ children }) {
       <main id="main" tabIndex={-1}>{children}</main>
       <Footer />
       <Overlays />
+      {status === 'in' && (
+        <SessionExpiry expiresAt={account.expiresAt} onStay={stay} onSignOut={signOut} onEnded={ended}
+                       saved="Your bag and saved pieces stay as they are when you stay signed in." />
+      )}
       <Toasts />
     </>
   );

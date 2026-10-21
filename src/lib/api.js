@@ -75,6 +75,59 @@ export const openGiftCard  = (code) => request('/gift-cards/open', { method: 'PO
 export const topUpGiftCard = (topup) => request('/gift-cards/topups', { method: 'POST', body: JSON.stringify(topup) });
 export const getTopup      = (reference) => request(`/gift-cards/topups/${encodeURIComponent(reference)}`);
 
+/* ------------------------------------------------------ customer accounts */
+
+const accountRequest = (path, options = {}) => request('/account' + path, { credentials: 'same-origin', ...options });
+const send = (method, json) => ({ method, body: JSON.stringify(json ?? {}) });
+
+export const accountMe        = ()     => accountRequest('/me');
+export const accountSignUp    = (b)    => accountRequest('/signup', send('POST', b));
+export const accountVerify    = (email, code) => accountRequest('/verify', send('POST', { email, code }));
+export const accountResend    = (email) => accountRequest('/resend', send('POST', { email }));
+export const accountLogin     = (email, password, remember) => accountRequest('/login', send('POST', { email, password, remember }));
+export const accountLogin2fa  = (ticket, code) => accountRequest('/login/2fa', send('POST', { ticket, code }));
+export const accountLogout    = ()     => accountRequest('/logout', send('POST'));
+export const accountRenew     = ()     => accountRequest('/renew', send('POST'));
+export const accountForgot    = (email) => accountRequest('/forgot', send('POST', { email }));
+export const accountReset     = (email, token, password) => accountRequest('/reset', send('POST', { email, token, password }));
+export const accountSave      = (b)    => accountRequest('/me', send('PATCH', b));
+export const accountPassword  = (current, password) => accountRequest('/password', send('POST', { current, password }));
+export const accountSessions  = ()     => accountRequest('/sessions');
+export const accountEndSession = (id)  => accountRequest(`/sessions/${id}`, { method: 'DELETE' });
+export const accountEndOthers = ()     => accountRequest('/sessions/sign-out-others', send('POST'));
+export const accountActivity  = ()     => accountRequest('/activity');
+export const account2faSetup  = ()     => accountRequest('/2fa/setup', send('POST'));
+export const account2faOn     = (code) => accountRequest('/2fa/enable', send('POST', { code }));
+export const account2faOff    = (password) => accountRequest('/2fa/disable', send('POST', { password }));
+export const accountOrders    = ()     => accountRequest('/orders');
+export const accountDelete    = (password) => accountRequest('', send('DELETE', { password }));
+export const accountRemovePhoto = ()   => accountRequest('/photo', { method: 'DELETE' });
+export const accountPhotoUrl  = (v = '') => `${BASE}/api/account/photo${v ? `?v=${v}` : ''}`;
+
+/**
+ * Upload a profile photo (a data URL), reporting how much has gone (0–1) as
+ * it goes: fetch cannot tell, so this one uses XMLHttpRequest.
+ */
+export function accountUploadPhoto(image, onProgress, signal) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', `${BASE}/api/account/photo`);
+    xhr.withCredentials = true;
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress?.(e.loaded / e.total); };
+    xhr.onload = () => {
+      let body = {};
+      try { body = JSON.parse(xhr.responseText); } catch { /* not JSON */ }
+      if (xhr.status >= 200 && xhr.status < 300) resolve(body);
+      else reject(Object.assign(new Error(body.error || friendly(xhr.status)), { status: xhr.status, at: Date.now() }));
+    };
+    xhr.onerror = () => reject(Object.assign(new Error('Could not reach the shop. Check your connection and try again.'), { status: 0, code: 'network', at: Date.now() }));
+    xhr.onabort = () => reject(Object.assign(new Error('Upload cancelled.'), { code: 'cancelled' }));
+    signal?.addEventListener('abort', () => xhr.abort());
+    xhr.send(JSON.stringify({ image }));
+  });
+}
+
 /* ---------------------------------------------------------------- admin */
 
 const adminRequest = (path, options = {}) =>
