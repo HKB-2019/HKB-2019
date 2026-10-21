@@ -68,7 +68,7 @@ export default function Header() {
   return (
     // At the top of the home page and the Journal's pages the menu sits over
     // a dark photo, so it keeps the dark look there in either theme.
-    <header className={`header${stuck ? ' is-stuck' : ''}${(pathname === '/' || pathname.startsWith('/journal')) && !stuck ? ' header--over-dark' : ''}`}>
+    <header className={`header${stuck ? ' is-stuck' : ''}${(pathname === '/' || pathname.startsWith('/journal') || pathname === '/about') && !stuck ? ' header--over-dark' : ''}`}>
       <div className="header__inner">
         <button
           className="burger"

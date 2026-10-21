@@ -27,7 +27,7 @@ export default function Footer({ join = true }) {
   const social = SOCIAL.filter(([key]) => site?.social?.[key]);
 
   const section = (hash, label) => (
-    <li><a href={`/${hash}`} onClick={(e) => { e.preventDefault(); goTo(hash); }}>{label}</a></li>
+    <li><a href={hash.startsWith('/') ? hash : `/${hash}`} onClick={(e) => { e.preventDefault(); goTo(hash); }}>{label}</a></li>
   );
   const page = (key, label) => (
     <li><button type="button" onClick={() => openOverlay({ info: key })}>{label}</button></li>
@@ -66,7 +66,7 @@ export default function Footer({ join = true }) {
             <ul>
               {section('#drop', 'The drop')}
               {section('#essentials', 'The Essentials')}
-              {section('#craft', 'About MASQ.')}
+              {section('/about', 'About MASQ.')}
               {panel('saved', 'Saved pieces')}
               <li><Link to="/gift-card">Gift cards</Link></li>
               <li><Link to="/gift-card?topup">Top up a gift card</Link></li>

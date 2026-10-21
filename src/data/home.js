@@ -5,7 +5,7 @@
 /** The menu items, in order, and the section each one scrolls to. */
 export const NAV = ['shop', 'collections', 'about', 'journal'];
 // A section of the home page (#…), or a page of its own (/…).
-export const NAV_TARGETS = { shop: '#drop', collections: '#essentials', about: '#craft', journal: '/journal' };
+export const NAV_TARGETS = { shop: '#drop', collections: '#essentials', about: '/about', journal: '/journal' };
 
 export const HOME_DEFAULT = {
   heroEyebrow:     'URBAN RITUALS',

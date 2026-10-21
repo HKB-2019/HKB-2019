@@ -48,6 +48,7 @@ setting things up is in `DEPLOY.md`.
     - Give each story a real cover photo; they use the shop's photos for now.
     - People & Creatives needs real people. Lifestyle & Community needs real events. I won't invent either.
     - Photos for the top of each Journal page. Today they reuse the shop's pictures.
+    - **About page photos** (the hooded man at the top, the hoodie, the jacket, the three craft / culture / community tiles, the vision background). It uses the shop's pictures for now.
 13. **The receipt email's top picture:** the green-lit black MASQ. bag from the email design.
 14. **The 3D empty-state illustrations** (bag, heart, magnifier, box). Send them, or say yes to making them with Kling (uses your credits).
 15. **The brand film.** Go through the film boards (`design/film/README.md`): Film 01 "Worn, Not Spoken", the Ori One reel, and the two posters. Choose what goes in, and we'll write a **Seedance 2.5** prompt for video generation on **Google Flow**. When the film is made, put its link in admin → Settings, and it plays on the home page.
@@ -84,6 +85,7 @@ setting things up is in `DEPLOY.md`.
 - Action feedback (Undo, Retry, Dismiss, View details, Receipt sent).
 - The receipt email, plus an "on its way" email.
 - The whole Journal: home, six topics, story page and an admin tab.
+- The About page.
 - Saved addresses, notification settings and change email.
 
 **Waiting on you (see section 1):**
@@ -105,7 +107,6 @@ setting things up is in `DEPLOY.md`.
 - A 404 "page not found" page. Today an unknown address shows the home page.
 - A cookie notice. Not legally required while the shop sets no tracking cookies, but useful if you add ads later.
 - An admin dashboard overview.
-- An About page, if you want more than the home page's craft section.
 - Order emails beyond the receipt and "on its way": delivered, refund made.
 
 ---
@@ -136,6 +137,7 @@ shop.
 | Order page: receipt sent / resend / couldn't send | Brevo |
 | Gift cards: buy (amount, colours, message), paid card with link, top up, the recipient's page | Paystack keys |
 | Journal: home, six topic pages, story page, story not found | — |
+| About: story, purpose, inspiration, craft / culture / community, vision, values, sign-up | Your photos |
 | Error page when something breaks; offline message | — |
 | Messages (toasts): done, problem, warning, news, offer, tip, Undo with countdown, Retry | — |
 

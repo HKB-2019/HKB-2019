@@ -300,6 +300,10 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   the stories in the database and a JOURNAL tab in the admin to write,
   schedule, hide, feature and give each a cover photo. Ten starter stories are
   put in once (src/data/journal.js); after that the admin is the Journal.
+- **About** (`/about`, src/pages/About.jsx): the owner's About board: our
+  story, purpose, inspiration, craft / culture / community, vision, values and
+  the community sign-up. Reached from ABOUT in the menu and "About MASQ." in
+  the footer. Its photos are the shop's own until the owner sends theirs.
 - **Banners from Settings.** The announcement can carry a button: to a page
   of the shop or a secure address, or opening longer details. Maintenance can
   close the shop or only show a notice across the top, now or at a planned
