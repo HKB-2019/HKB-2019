@@ -2,8 +2,8 @@
 
 **Shop preview (with the admin inside):** https://claude.ai/artifact/C7GwTxuGrFtSpHnCw5n6yF
 
-Kept up to date with the project. Plain steps; the detailed how-to for
-setting things up is in `DEPLOY.md`.
+Kept up to date with the project. Every file named here is a link: tap it to open it on GitHub (signed in to your GitHub account). Plain steps; the detailed how-to for
+setting things up is in [the setup guide (DEPLOY.md)](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/DEPLOY.md).
 
 > **Don't forget:** pick the pictures from the film boards so we can write the
 > **Seedance 2.5** prompt for the brand film on **Google Flow** (item 15).
@@ -56,8 +56,8 @@ setting things up is in `DEPLOY.md`.
     - **About page photos** (the hooded man at the top, the hoodie, the jacket, the three craft / culture / community tiles, the vision background). It uses the shop's pictures for now.
 13. **The receipt email's top picture: done.** It uses the bag from your email design. Send a sharper one later if you like.
 14. **The 3D empty-state pictures: done.** The bag, heart, magnifier and box are cut from your empty-states board and show on the empty bag, saved, search and orders screens. Send sharper ones later if you like.
-15. **The brand film: select the pictures.** Go through the film boards (`design/film/README.md`): Film 01 "Worn, Not Spoken", the Ori One reel, and the two posters. Pick the pictures that go in, and we'll write a **Seedance 2.5** prompt for video generation on **Google Flow**. When the film is made, put its link in admin → Settings, and it plays on the home page.
-16. **Brand decisions** (`design/brand/README.md`). The brand boards differ from the shop on:
+15. **The brand film: select the pictures.** Go through [the film boards (design/film/README.md)](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/film/README.md): Film 01 "Worn, Not Spoken", the Ori One reel, and the two posters. Pick the pictures that go in, and we'll write a **Seedance 2.5** prompt for video generation on **Google Flow**. When the film is made, put its link in admin → Settings, and it plays on the home page.
+16. **Brand decisions** ([the brand notes (design/brand/README.md)](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/brand/README.md)). The brand boards differ from the shop on:
     - fonts: Rift Bold needs a paid licence; Clash Grotesk is free;
     - the exact purple;
     - the four collections (Ori, Egungun, Code, Neo Masq);
@@ -66,7 +66,7 @@ setting things up is in `DEPLOY.md`.
 
     Tell me which way each goes.
 17. **Kling credits for the banner photos.** You chose to have the Journal and About banner photos cleaned up with Kling (the words printed on them removed, made sharp). Your Kling account has 0 credits today, so top it up first; I'll tell you the cost before using any.
-18. **Admin designs from ChatGPT.** Paste the eight messages in `design/ADMIN-PROMPT.md` into ChatGPT, one at a time, and send me the boards. The prompt lists everything the admin already does, so nothing is lost, plus the new screens (dashboard, returns, collections, maintenance view).
+18. **Admin designs from ChatGPT.** Paste the eight messages in [the admin prompt (design/ADMIN-PROMPT.md)](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/ADMIN-PROMPT.md) into ChatGPT, one at a time, and send me the boards. The prompt lists everything the admin already does, so nothing is lost, plus the new screens (dashboard, returns, collections, maintenance view).
 19. **Ori One (the shoe).** If it's going on sale, I need photos, sizes, price and stock. Or say "coming soon" and I'll add a waiting list.
 
 ### Accounts needed for features not built yet (only when you want them)
@@ -88,7 +88,7 @@ setting things up is in `DEPLOY.md`.
 
 ## 2. Still to build, and the designs I need from you
 
-**Built from your boards since the last list:**
+**Already built (all done and working in the preview):**
 - The Shop pages: all products and T-Shirts, Headwear, Bags & Accessories, Outerwear and Accessories, with filters, sort and page numbers.
 - The Collections pages: All Collections, Drop 01 Urban Rituals, Essentials, Limited Edition, Collaborations and Archive.
 - The SHOP ▾ and COLLECTIONS ▾ menus, and the redesigned product page (the Face Tee's design, used for every piece).
@@ -104,14 +104,14 @@ setting things up is in `DEPLOY.md`.
 - Saved cards.
 - Address search.
 
-**Pages left to build.** Everything still to make, shop and admin. "Design in hand" means your design is in `design/` (sent 17 and 18 Oct; details in `design/REDESIGN.md`); "Design needed" means I need a design from you first.
+**Pages left to build.** Everything still to make, shop and admin. "Design in hand" means your design is in [your designs folder (design/)](https://github.com/HKB-2019/HKB-2019/tree/claude/website-interactive-buttons-di7yqt/design) (sent 17 and 18 Oct; details in [the redesign notes (design/REDESIGN.md)](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/REDESIGN.md)); "Design needed" means I need a design from you first.
 
 *Shop pages:* all built (see above). Left from those designs:
 - **"No saved searches"**: waits for a saved-search feature, if you want one.
 - **Reviews and stars, and the "Trusted by a global community" faces**: left out until they are real (questions below).
 - **Collaborations and Archive** show "on their way" until you confirm real partners and seasons; then you add them on each piece in the admin and they appear.
 
-*Admin screens (design needed: you make them with the prompt in `design/ADMIN-PROMPT.md`, item 18):*
+*Admin screens (design needed: you make them with the prompt in [the admin prompt (design/ADMIN-PROMPT.md)](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/ADMIN-PROMPT.md), item 18):*
 - **A dashboard home:** the first screen after signing in, with the day's sales, orders to send, low stock and visitors at a glance. Today the admin opens on Orders, with the money strip on top.
 - **A returns and refunds screen:** see return requests, approve or decline them, and mark the refund made. Today there is only MARK REFUNDED on an order.
 - **A "your shop is in maintenance" view:** what you see in the admin while the shop is closed. Today it's a switch in Settings and a note on the shop.

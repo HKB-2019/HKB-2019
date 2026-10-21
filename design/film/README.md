@@ -1,8 +1,7 @@
 # MASQ. film boards
 
-Five boards the owner shared for the brand film, written down here because the
-pictures themselves came through the chat only (not as files). To keep the
-pictures with the project, add them to this folder.
+Five boards the owner shared for the brand film. The pictures are in this
+folder; each is shown under its heading below (tap one to see it full size).
 
 **Owner's next step:** go through these and choose what goes in, so we can
 write a **Seedance 2.5** prompt for the video, to be made in **Google Flow**.
@@ -10,6 +9,8 @@ The shop already has a film slot on the home page (the film strip, and the
 admin's film link), so the finished video can go straight there.
 
 ## 1. Film 01 — "Worn, Not Spoken" (storyboard frames)
+
+![Film 01 storyboard](1-film-01-storyboard.webp)
 
 About 40 seconds · 16:9 · 24 fps · 4K. Every shot on black or dark ground,
 directional and dramatic light, slow and intentional movement, a grade with
@@ -41,6 +42,8 @@ Palette from the mask: teal, amber, violet, red, cream.
 
 ## 2. Campaign stills (eight frames)
 
+![Campaign stills](2-campaign-stills.webp)
+
 01 The Presence: man in the violet mask tee, hands in pockets, dark ground ·
 02 Back Authority: black bomber from behind, the mask on the back ·
 03 The Artifact: black leather backpack with the embossed mask and MASQ. tab ·
@@ -51,6 +54,8 @@ Palette from the mask: teal, amber, violet, red, cream.
 08 The Essentials: phone case, earbuds case and a violet laptop sleeve, embossed.
 
 ## 3. "Ori One — Drop 01" (30-second reel, frame by frame)
+
+![Ori One reel](3-ori-one-reel.webp)
 
 Sound: low pulse, drums, ambient vocals. Tone: bold, cultural, futuristic.
 
@@ -71,11 +76,15 @@ Sound: low pulse, drums, ambient vocals. Tone: bold, cultural, futuristic.
 
 ## 4. Poster — masked figure
 
+![Poster: masked figure](4-poster-masked-figure.webp)
+
 A figure in a fringed black robe and the painted mask walking down a dim
 corridor. "IDENTITY IS NOT WORN. IT IS REVEALED." · ORI ONE. · ROOTED IN
 CULTURE. MADE FOR NOW. · DROP 01 LIMITED EDITION · MASQ.WORLD.
 
 ## 5. Poster — Ori One Onyx
+
+![Poster: Ori One Onyx](5-poster-ori-one-onyx.webp)
 
 The painted mask above the black Ori One shoe. "IDENTITY IS NOT WORN. IT IS
 REVEALED." · WHO ARE YOU WEARING? · ORI ONE. ONYX · ROOTED IN CULTURE. MADE

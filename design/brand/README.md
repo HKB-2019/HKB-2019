@@ -1,13 +1,14 @@
 # MASQ. brand boards
 
-Two brand-identity boards the owner shared, written down here because the
-pictures came through the chat only (not as files). Add the pictures to this
-folder to keep them with the project.
+Two brand-identity boards the owner shared. The pictures are in this folder,
+each shown under its heading below.
 
 They are kept as reference. `DESIGN.md` still rules the shop's look; where
 these boards differ from it (noted at the end), the owner decides which wins.
 
 ## Board 1 — mark, pillars, palette, patterns, applications
+
+![Brand board 1](1-mark-pillars-palette.webp)
 
 - **Logo mark / icon:** the painted mask — split face (cream left with teal,
   orange right with a target eye), red mouth with bars, five cream strokes on
@@ -25,6 +26,8 @@ these boards differ from it (noted at the end), the owner decides which wins.
 - **Applications:** black tee, tote, hoodie, cap, gift box, swing tag, all with the mask.
 
 ## Board 2 — the full brand sheet
+
+![Brand board 2](2-full-brand-sheet.webp)
 
 - **Line:** MASQ. — WE WEAR IDENTITY. "MASQ is a cultural streetwear brand
   that reimagines identity through design. Rooted in African heritage, symbols
