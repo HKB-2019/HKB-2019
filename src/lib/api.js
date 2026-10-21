@@ -66,6 +66,7 @@ export const subscribe = (email) =>
   request('/subscribe', { method: 'POST', body: JSON.stringify({ email }) });
 
 export const getOrder = (reference) => request(`/orders/${encodeURIComponent(reference)}`);
+export const resendReceipt = (reference) => request(`/orders/${encodeURIComponent(reference)}/receipt`, { method: 'POST', body: '{}' });
 
 /* Gift cards: buy one (a payment of its own), see it once paid, check one in the bag. */
 export const buyGiftCard   = (card) => request('/gift-cards', { method: 'POST', body: JSON.stringify(card) });

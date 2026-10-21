@@ -3,6 +3,8 @@ import { one, query } from '../db.js';
 import { reconcile } from '../lib/orders.js';
 import { paystackConfigured } from '../lib/paystack.js';
 import { getSetting } from '../lib/settings.js';
+import { rateLimit } from '../lib/limits.js';
+import { sendReceipt, receiptState } from '../lib/receipts.js';
 
 export const ordersRouter = Router();
 
@@ -20,7 +22,7 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
   const load = () => one(`
     SELECT id, reference, email, status, subtotal_kobo, shipping_kobo, discount_code, discount_kobo, gift_kobo,
            currency, address, paid_at, fulfilled_at, courier, tracking, refunded_at, created_at,
-           payment_method, delivery_zone
+           payment_method, delivery_zone, receipt_sent_at, receipt_count
       FROM orders WHERE reference = $1
   `, [reference]);
 
@@ -38,6 +40,13 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
     const status = await reconcile(reference, { onVerify: (d) => { paystackStatus = d.status; gatewaySaid = d.gateway_response; } });
     // ↑ never releases stock from here
     if (status !== order.status) order = await load();
+  }
+
+  // Paid, and no receipt yet (the webhook usually sends it): send it now, so
+  // the page can say where it went.
+  if (order.status === 'paid' && !order.receipt_sent_at) {
+    const sent = await sendReceipt(reference, { req }).catch((err) => { console.error(`[mail] receipt for ${reference}:`, err.message); return null; });
+    if (sent) order = await load();
   }
 
   const items = await query(`
@@ -92,11 +101,30 @@ ordersRouter.get('/orders/:reference', async (req, res) => {
     failureReason: notPaid && gatewaySaid && !/^approved|successful/i.test(gatewaySaid)
       ? String(gatewaySaid).replace(/[^\p{L}\p{N} .,'-]/gu, '').slice(0, 80) : null,
     deliveryEstimate,
+    // The shop's own receipt by email (null until the shop can send email).
+    receipt: order.status === 'paid' ? receiptState(order) : null,
     itemCount: items.reduce((n, i) => n + i.qty, 0),
     items: items.map(i => ({
       name: i.name, colour: i.colour || null, size: i.size, qty: i.qty, unitPriceKobo: i.unit_price_kobo
     }))
   });
+});
+
+/* POST /api/orders/:reference/receipt — "Resend receipt". Only ever to the
+ * email on the order, 45 seconds apart, five in all. */
+export const receiptLimit = rateLimit({ windowMs: 60 * 60_000, max: 10, message: 'Too many emails asked for. Please wait a while and try again.' });
+
+ordersRouter.post('/orders/:reference/receipt', receiptLimit, async (req, res) => {
+  const order = await one('SELECT status, email, receipt_sent_at, receipt_count FROM orders WHERE reference = $1', [req.params.reference]);
+  if (!order) return res.status(404).json({ error: 'Order not found.' });
+  const state = receiptState(order);
+  if (!state) return res.status(404).json({ error: 'Receipts by email are not set up yet.' });
+  if (order.status !== 'paid') return res.status(409).json({ error: 'A receipt goes once the payment is confirmed.' });
+  if (state.left === 0) return res.status(429).json({ error: 'We’ve sent this receipt the most times we can. Please contact us if it hasn’t arrived.', code: 'max' });
+  if (state.wait > 0) return res.status(429).json({ error: `Please wait ${state.wait} seconds before asking again.`, wait: state.wait });
+  const sent = await sendReceipt(req.params.reference, { again: true, req });
+  if (!sent) return res.status(429).json({ error: 'Please wait a moment before asking again.', wait: 45 });
+  res.json({ ok: true, email: maskEmail(order.email), receipt: sent });
 });
 
 /** ada.obi@gmail.com → a•••i@gmail.com */

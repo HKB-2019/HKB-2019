@@ -98,13 +98,48 @@ export function ShopProvider({ children }) {
    * none. action: { label, onClick }, a button on the card (Undo, View bag).
    * ms: how long it stays, longer for a problem; null keeps it until it is
    * dismissed. key: a new one with the same key replaces the old. A plain
-   * string is a title. At most three at once. */
+   * string is a title. At most three at once.
+   *   undo   { onUndo, done }: Undo with its seconds counting down in a ring
+   *          (10 seconds); undone, a second card says so (`done`).
+   *   once   a name: shown once a visit, never again until the next (tips,
+   *          news that is not urgent).
+   *   sign   'promo' (a drop, an offer) or 'tip' (a hint): the mark's sign.
+   *   busy   a turning ring in place of the mark (Retrying…). */
   const toast = useCallback((message, tone) => {
-    const t = typeof message === 'string' ? { title: message, tone } : message;
+    const t = typeof message === 'string' ? { title: message, tone } : { ...message };
+    if (t.once) {
+      try {
+        if (sessionStorage.getItem(`masq:once:${t.once}`)) return;
+        sessionStorage.setItem(`masq:once:${t.once}`, '1');
+      } catch { /* private window: shown, not remembered */ }
+    }
+    if (t.undo) {
+      const { onUndo, done } = t.undo;
+      t.undo = { onUndo: () => { onUndo(); toast({ key: t.key, tone: 'ok', title: done ?? 'Restored.' }); } };
+    }
     const id = ++toastId.current;
-    const ms = t.ms === null ? null : t.ms ?? (t.tone === 'bad' ? 6000 : t.action ? 6000 : 4500);
+    const ms = t.ms === null ? null : t.ms ?? (t.undo ? 10000 : t.tone === 'bad' ? 6000 : t.action ? 6000 : 4500);
     setToasts(list => [...list.filter(x => !t.key || x.key !== t.key).slice(-2), { ...t, id, ms }]);
   }, []);
+
+  /* Something that did not go, with Retry: "Retrying…" while it runs, then
+   * done, or "Still having trouble" after two misses, and after three a way
+   * to contact us instead of trying again (no hammering the server).
+   *   { key, title, body?, run, done: { title, body? } } */
+  const failed = useCallback(({ key, title, body, run, done }) => {
+    const miss = (n, err) => toast({
+      key, tone: 'bad', ms: null,
+      title: n >= 2 ? 'Still having trouble.' : title,
+      body: n >= 2 ? 'Please try again or contact us.' : (body ?? err?.message),
+      action: n < 3 ? { label: 'Retry', onClick: () => attempt(n) } : { label: 'Contact us', onClick: () => setOverlay({ info: 'CONTACT' }) }
+    });
+    const attempt = async (n) => {
+      toast({ key, busy: true, tone: 'info', title: 'Retrying…', body: 'Please wait while we try again.', ms: null });
+      try { await run(); toast({ key, tone: 'ok', title: done?.title ?? 'Done.', body: done?.body }); }
+      catch (err) { miss(n + 1, err); }
+    };
+    miss(0);
+  }, [toast]);
   const dismissToast = useCallback((id) => setToasts(list => list.filter(x => x.id !== id)), []);
 
   /* Offline: said once, and kept until the connection is back. */
@@ -238,8 +273,8 @@ export function ShopProvider({ children }) {
     const line = cart[at];
     setCart(items => items.filter(i => i.key !== key));
     toast({
-      tone: 'bad', title: 'Item removed', body: `${line.name} · ${optionLabel(line.colour ?? '', line.size)}`, img: line.img,
-      action: { label: 'Undo', onClick: () => setCart(items => items.some(i => i.key === key) ? items
+      key: `bag-${key}`, tone: 'ok', title: `“${line.name}” removed from your bag.`, body: optionLabel(line.colour ?? '', line.size), img: line.img,
+      undo: { done: 'Item restored to your bag.', onUndo: () => setCart(items => items.some(i => i.key === key) ? items
         : [...items.slice(0, at), line, ...items.slice(at)]) }
     });
   }, [cart, toast]);
@@ -249,8 +284,8 @@ export function ShopProvider({ children }) {
     setWishlist(list => on ? list.filter(w => w !== id) : [...list, id]);
     const p = products.find(x => x.id === id);
     toast(on
-      ? { title: 'Removed from saved', body: p?.name, img: p?.img,
-          action: { label: 'Undo', onClick: () => setWishlist(list => list.includes(id) ? list : [...list, id]) } }
+      ? { key: `saved-${id}`, title: 'Removed from saved', body: p?.name, img: p?.img,
+          undo: { done: 'Saved again.', onUndo: () => setWishlist(list => list.includes(id) ? list : [...list, id]) } }
       : { tone: 'ok', title: 'Saved to your list', body: p?.name, img: p?.img,
           action: { label: 'View saved', onClick: () => setOverlay('saved') } });
   }, [wishlist, products, toast]);
@@ -300,7 +335,7 @@ export function ShopProvider({ children }) {
     wishlist, toggleWish,
     currency, setCurrency, format,
     overlay, openOverlay, closeOverlay,
-    toasts, toast, dismissToast
+    toasts, toast, dismissToast, failed
   };
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;

@@ -173,7 +173,7 @@ function AddressForm({ open, editing, first, onClose, onSaved }) {
 }
 
 export function Addresses() {
-  const { toast } = useShop();
+  const { toast, failed } = useShop();
   const [list, setList] = useState(null);
   const [error, setError] = useState(null);
   const [retrying, setRetrying] = useState(false);
@@ -191,7 +191,11 @@ export function Addresses() {
   const act = async (id, run, done) => {
     setBusy(id);
     try { setList(await run()); if (done) toast({ key: 'address', tone: 'ok', title: done }); }
-    catch (err) { toast({ key: 'address', tone: 'bad', title: 'That didn’t work.', body: err.message }); }
+    catch (err) {
+      if (err.status === 404) { toast({ key: 'address', tone: 'bad', title: 'That didn’t work.', body: err.message }); load(); }
+      else failed({ key: 'address', title: 'That didn’t work.', body: err.message, done: done ? { title: done } : undefined,
+        run: async () => setList(await run()) });
+    }
     setBusy(null);
   };
   const remove = async () => {

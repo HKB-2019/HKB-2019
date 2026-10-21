@@ -15,19 +15,33 @@ import StateMark from './StateMark.jsx';
 
 const EASE = [0.23, 1, 0.32, 1];
 
+/* The seconds left to undo, in a ring that empties with them. */
+function UndoRing({ ms, secs }) {
+  return (
+    <span className="toast__ring" aria-hidden="true">
+      <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" /><circle cx="20" cy="20" r="17" className="toast__ring-run" style={{ animationDuration: `${ms}ms` }} /></svg>
+      <b>{secs}</b>
+    </span>
+  );
+}
+
 function Toast({ t, onDone, phone }) {
   const [held, setHeld] = useState(false);
   const left = useRef(t.ms);
+  const [secs, setSecs] = useState(() => Math.ceil((t.ms ?? 0) / 1000));
   useEffect(() => {
     if (held || !t.ms) return;
     const from = Date.now();
     const timer = setTimeout(onDone, left.current);
-    return () => { clearTimeout(timer); left.current -= Date.now() - from; };
-  }, [held, onDone, t.ms]);
+    // An undo counts its seconds down where they can be seen.
+    const tick = t.undo ? setInterval(() => setSecs(Math.max(1, Math.ceil((left.current - (Date.now() - from)) / 1000))), 250) : null;
+    return () => { clearTimeout(timer); clearInterval(tick); left.current -= Date.now() - from; };
+  }, [held, onDone, t.ms, t.undo]);
 
-  const action = t.action && (
-    <button type="button" className={`toast__action${t.img ? ' toast__action--under' : ''}`} onClick={() => { t.action.onClick(); onDone(); }}>
-      {t.action.label}
+  const act = t.undo ? { label: 'Undo', onClick: t.undo.onUndo } : t.action;
+  const action = act && (
+    <button type="button" className={`toast__action${t.img ? ' toast__action--under' : ''}`} onClick={() => { act.onClick(); onDone(); }}>
+      {act.label}
     </button>
   );
   const hold = () => setHeld(true);
@@ -35,7 +49,7 @@ function Toast({ t, onDone, phone }) {
   const from = phone ? { y: -18 } : { x: 36 };
   return (
     <motion.div
-      className={`toast${t.tone ? ` toast--${t.tone}` : ''}${held ? ' is-held' : ''}`}
+      className={`toast${t.tone ? ` toast--${t.tone}` : ''}${t.undo ? ' toast--undo' : ''}${held ? ' is-held' : ''}`}
       role={t.tone === 'bad' ? 'alert' : undefined}
       onPointerEnter={hold} onPointerLeave={go} onFocus={hold} onBlur={go}
       layout="position"
@@ -45,15 +59,17 @@ function Toast({ t, onDone, phone }) {
       animate={{ opacity: 1, x: 0, y: 0, scale: 1, transition: { duration: 0.3, ease: EASE } }}
       exit={{ opacity: 0, ...(phone ? { y: -10 } : { x: 24 }), transition: { duration: 0.2, ease: EASE } }}
     >
-      <StateMark tone={t.tone} delay={0.08} />
+      {t.busy ? <span className="spinner toast__spin" aria-hidden="true" />
+        : t.undo && t.ms ? <UndoRing ms={t.ms} secs={secs} />
+        : <StateMark tone={t.tone} sign={t.sign} delay={0.08} />}
       {t.img && <img className="toast__img" src={t.img} alt="" />}
       <div className="toast__text">
         <p className="toast__title">{t.title}</p>
         {t.body && <p className="toast__body">{t.body}</p>}
         {/* With a photo as well there is no room beside the words: under them. */}
-        {t.action && t.img && action}
+        {act && t.img && action}
       </div>
-      {t.action && !t.img && action}
+      {act && !t.img && action}
       <span className="toast__stripe" aria-hidden="true"><i /><i /><i /></span>
       <button type="button" className="toast__close" aria-label="Close message" onClick={onDone}><Close /></button>
       {t.ms ? <span className="toast__time" style={{ animationDuration: `${t.ms}ms` }} aria-hidden="true" /> : null}

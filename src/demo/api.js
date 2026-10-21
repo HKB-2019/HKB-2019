@@ -465,6 +465,8 @@ export function getOrder(reference) {
     paymentMethod: ['paid', 'refunded', 'refund_due'].includes(o.status) ? o.paymentMethod ?? 'Visa •••• 4081' : null,
     failureReason: o.status === 'failed' ? o.failureReason ?? null : null,
     itemCount: o.items.reduce((n, i) => n + i.qty, 0),
+    // As if the shop had sent its own receipt when the order was paid.
+    receipt: o.status === 'paid' ? receiptOf(o) : null,
     deliveryEstimate: (() => {
       const days = o.status === 'paid' && !o.fulfilledAt && o.paidAt && store.settings.delivery[o.zone]?.days;
       if (!days) return null;
@@ -472,6 +474,21 @@ export function getOrder(reference) {
       return { from: day(days.min), to: day(days.max) };
     })()
   });
+}
+
+function receiptOf(o) {
+  const sentAt = o.receiptAt ?? o.paidAt;
+  const wait = Math.max(0, Math.ceil(45 - (Date.now() - new Date(sentAt).getTime()) / 1000));
+  return { sentAt, wait, left: 5 - (o.receipts ?? 1) };
+}
+export function resendReceipt(reference) {
+  const o = store.orders.find(x => x.reference === reference);
+  if (!o || o.status !== 'paid') return failWith('A receipt goes once the payment is confirmed.', 409, {});
+  const r = receiptOf(o);
+  if (r.left <= 0) return failWith('We’ve sent this receipt the most times we can. Please contact us if it hasn’t arrived.', 429, { code: 'max' });
+  if (r.wait > 0) return failWith(`Please wait ${r.wait} seconds before asking again.`, 429, { wait: r.wait });
+  o.receiptAt = new Date().toISOString(); o.receipts = (o.receipts ?? 1) + 1; save();
+  return settle({ ok: true, email: mask(o.email), receipt: receiptOf(o) }, 700);
 }
 
 export function subscribe(email) {

@@ -1,5 +1,5 @@
-/* Sending email: the codes that prove an email address and the links that set
- * a new password.
+/* Sending email: the codes that prove an email address, the links that set
+ * a new password, and an order's receipt and "on its way" note.
  *
  * Which way, from MAIL_DRIVER (or worked out from what is set):
  *
@@ -15,6 +15,10 @@
  * door), so with `none` the shop does not offer accounts at all. */
 
 export const outbox = [];
+
+/** The shop's own address, for links in emails ("https://masq.ng"). */
+export const publicOrigin = (req) => (process.env.RENDER_EXTERNAL_URL || process.env.PUBLIC_URL ||
+  (req ? `${req.protocol}://${req.get('host')}` : '')).replace(/\/$/, '');
 
 export function mailDriver() {
   const set = process.env.MAIL_DRIVER;
@@ -58,20 +62,24 @@ const textOf = ({ heading, lines = [], big, button }) =>
   [heading, '', ...lines, ...(big ? ['', big] : []), ...(button ? ['', `${button.label}: ${button.href}`] : [])].join('\n');
 
 /**
- * Send one message. `message` is { heading, lines, big?, button? }. Resolves
- * when it has gone (or been kept); rejects with a plain message if it could not.
+ * Send one message. `message` is { heading, lines, big?, button? }, drawn in
+ * the plain layout above — or `html` and `text` made elsewhere (an order's
+ * emails, server/lib/emails.js), with `message` still saying what is in it.
+ * Resolves when it has gone (or been kept); rejects with a plain message if
+ * it could not.
  */
-export async function sendMail({ to, subject, message, kind }) {
+export async function sendMail({ to, subject, message, kind, html, text }) {
   const driver = mailDriver();
-  if (driver === 'memory') { outbox.push({ to, subject, kind, ...message, text: textOf(message) }); return; }
-  if (driver === 'log') { console.log(`[mail] to ${to} · ${subject}\n${textOf(message)}\n`); return; }
+  const plain = text ?? textOf(message);
+  if (driver === 'memory') { outbox.push({ to, subject, kind, ...message, text: plain, html: html ?? render(message) }); return; }
+  if (driver === 'log') { console.log(`[mail] to ${to} · ${subject}\n${plain}\n`); return; }
   if (driver !== 'brevo' || !canSendMail()) {
     throw Object.assign(new Error('Email is not set up on this shop yet.'), { status: 503, expose: true });
   }
   const res = await fetch(process.env.BREVO_API_BASE || 'https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ sender: sender(), to: [{ email: to }], subject, htmlContent: render(message), textContent: textOf(message) }),
+    body: JSON.stringify({ sender: sender(), to: [{ email: to }], subject, htmlContent: html ?? render(message), textContent: plain }),
     signal: AbortSignal.timeout(10_000)
   }).catch(() => null);
   if (!res?.ok) {

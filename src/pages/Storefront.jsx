@@ -81,6 +81,14 @@ export default function Storefront() {
   // "Back to your bag" from an unfinished payment lands with the bag open.
   const [params, setParams] = useSearchParams();
   useEffect(() => {
+    // A link from an email to one of the shop's pages ("/?page=contact").
+    const page = String(params.get('page') ?? '').toUpperCase().replace(/-/g, '_');
+    if (['FAQ', 'SHIPPING', 'RETURNS', 'CONTACT', 'PRIVACY', 'SIZE_GUIDE', 'TERMS'].includes(page)) {
+      openOverlay({ info: page });
+      params.delete('page');
+      setParams(params, { replace: true });
+      return;
+    }
     const bag = params.get('bag');
     if (bag !== 'open' && bag !== 'checkout') return;
     // "Use a different payment method": straight to the delivery step.

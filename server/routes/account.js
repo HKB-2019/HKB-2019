@@ -4,7 +4,7 @@ import { one, query, transaction } from '../db.js';
 import { hashPassword, verifyPassword } from '../lib/auth.js';
 import { isEmail, normEmail, deliveryDetails } from '../lib/validate.js';
 import { rateLimit } from '../lib/limits.js';
-import { canSendMail, sendMail } from '../lib/mail.js';
+import { canSendMail, sendMail, publicOrigin } from '../lib/mail.js';
 import { decodePhoto } from '../lib/images.js';
 import { photoUrls } from '../lib/catalogue.js';
 import {
@@ -36,8 +36,7 @@ function open(_req, res, next) {
 accountRouter.use('/account', open);
 accountUploadRouter.use('/account', open);
 
-const origin = (req) => (process.env.RENDER_EXTERNAL_URL || process.env.PUBLIC_URL ||
-  `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+const origin = publicOrigin;
 
 /* -------------------------------------------------------------- emails */
 

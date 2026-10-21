@@ -386,7 +386,7 @@ const sixteenAgo = () => { const d = new Date(); d.setFullYear(d.getFullYear() -
 
 export function Profile() {
   const { account, setAccount } = useAccount();
-  const { toast } = useShop();
+  const { toast, failed } = useShop();
   const [f, setF] = useState(() => ({
     name: account.name, phone: account.phone.replace(/^\+234\s?/, ''), birthDate: account.birthDate ?? '', gender: account.gender
   }));
@@ -396,22 +396,27 @@ export function Profile() {
   const set = (k) => (v) => { setF(x => ({ ...x, [k]: v })); setErrors(x => ({ ...x, [k]: null, form: null })); };
   const young = f.birthDate && f.birthDate > sixteenAgo();
 
+  // What is in the boxes, as the server takes it; also what Retry sends again.
+  const send = async () => {
+    const me = await accountSave({ name: f.name.trim(), phone: fullPhone(f.phone), birthDate: f.birthDate || null, gender: f.gender });
+    setAccount(a => ({ ...a, ...me }));
+  };
   const save = async (e) => {
     e.preventDefault();
     if (f.name.trim().length < 2) { setErrors({ name: 'Please enter your full name.' }); return; }
     if (young) { setErrors({ birthDate: 'You must be 16 or older.' }); return; }
     setState('saving');
     try {
-      const me = await accountSave({ name: f.name.trim(), phone: fullPhone(f.phone), birthDate: f.birthDate || null, gender: f.gender });
-      setAccount(a => ({ ...a, ...me }));
+      await send();
       setState('saved');
       toast({ key: 'profile', tone: 'ok', title: 'Profile updated', body: 'Your changes have been saved successfully.' });
       setTimeout(() => setState(null), 1800);
     } catch (err) {
       setState(null);
       if (err.field) setErrors({ [err.field]: err.message });
-      // A save that did not go: kept on screen until tried again.
-      else toast({ key: 'profile', tone: 'bad', title: 'We couldn’t save your changes.', body: err.message, ms: null, action: { label: 'Retry', onClick: () => save(new Event('submit')) } });
+      // A save that did not go: kept on screen, with Retry, until it does.
+      else failed({ key: 'profile', title: 'We couldn’t save your changes.', body: err.message, run: send,
+        done: { title: 'Profile updated', body: 'Your changes have been saved successfully.' } });
     }
   };
   const bad = (k) => (errors[k] ? { 'aria-invalid': true, className: 'is-error' } : {});

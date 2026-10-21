@@ -6,6 +6,8 @@ import { motion, useReducedMotion } from 'framer-motion';
  *   warn  a "!"    (worth a look)       amber
  *   info  an "i"   (news)               blue
  *   wait  a clock  (still happening)    amber
+ *   promo a loudhailer (a drop, an offer)  violet
+ *   tip   a bulb   (a small hint)       amber
  * It draws itself in when it appears: the ring first, then the sign, as a pen
  * would. `burst` adds the short brand-coloured strokes either side, for the
  * big panels. Decoration only: the words beside it say the same. With
@@ -24,7 +26,10 @@ const SIGNS = {
   lock: ['M8.2 11.2h7.6v5.4H8.2z', 'M9.8 11.2V9.6a2.2 2.2 0 0 1 4.4 0v1.6'],
   shield: ['M12 6.6l4.6 1.8v3.4c0 2.8-2 4.8-4.6 5.6-2.6-.8-4.6-2.8-4.6-5.6V8.4z', 'M10.1 12.1l1.4 1.4 2.5-2.7'],
   pin: ['M12 17.4s-4.2-3.9-4.2-7a4.2 4.2 0 0 1 8.4 0c0 3.1-4.2 7-4.2 7z', 'M12 9.2v2.2'],
-  bell: ['M8.2 14.8V11a3.8 3.8 0 0 1 7.6 0v3.8l1 1.2H7.2z', 'M10.8 17.6h2.4']
+  bell: ['M8.2 14.8V11a3.8 3.8 0 0 1 7.6 0v3.8l1 1.2H7.2z', 'M10.8 17.6h2.4'],
+  // A new drop, an offer: a loudhailer. A tip: a bulb.
+  promo: ['M7.4 10.6h2.4l5-2.8v8.4l-5-2.8H7.4z', 'M9.8 13.4l.8 3', 'M16.8 10.8v2.4'],
+  tip: ['M12 6.8a3.6 3.6 0 0 0-2.2 6.5v1.5h4.4v-1.5A3.6 3.6 0 0 0 12 6.8z', 'M10.4 17h3.2']
 };
 
 // The strokes either side of a big mark: the logo's colours, as in the design.

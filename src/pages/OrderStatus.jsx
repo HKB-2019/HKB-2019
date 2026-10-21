@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getOrder } from '../lib/api.js';
+import { getOrder, resendReceipt } from '../lib/api.js';
 import { useShop } from '../store/ShopContext.jsx';
 import Wordmark from '../components/Wordmark.jsx';
 import StateMark from '../components/StateMark.jsx';
@@ -148,7 +148,9 @@ export default function OrderStatus() {
               {status === 'paid' && (
                 <div className="state-card state-card--note status__note">
                   <Truck />
-                  <p><strong>No delivery updates yet</strong><span>We’ll email you when your order leaves the studio, with a tracking number.</span></p>
+                  <p><strong>No delivery updates yet</strong><span>{order.receipt
+                    ? 'We’ll email you when your order leaves the studio, with a tracking number.'
+                    : 'When it leaves the studio, the courier and tracking number appear on this page.'}</span></p>
                 </div>
               )}
 
@@ -196,9 +198,9 @@ export default function OrderStatus() {
                       </p>
                     </>
                   )}
-                  <p className="status__email">
-                    {['paid', 'refunded'].includes(order.status) ? 'Receipt to' : 'Order for'} {order.email}
-                  </p>
+                  {order.receipt
+                    ? <ReceiptCard reference={reference} email={order.email} receipt={order.receipt} />
+                    : <p className="status__email">{['paid', 'refunded'].includes(order.status) ? 'Receipt to' : 'Order for'} {order.email}</p>}
                 </>
               )}
             </>
@@ -216,6 +218,58 @@ export default function OrderStatus() {
       </motion.main>
       {!error && <OrderResult order={order} status={status} waited={waited} reference={reference}
                               onRecheck={() => { setWaited(false); setRound(r => r + 1); }} />}
+    </div>
+  );
+}
+
+/* The owner's "Receipt sent to email": said only once the email service has
+ * taken it, to the address on the order (part hidden), with Resend. A send
+ * that fails says so, with Retry. */
+function ReceiptCard({ reference, email, receipt }) {
+  const { toast } = useShop();
+  const [state, setState] = useState(receipt.sentAt ? 'sent' : 'none');   // none | sending | sent | failed
+  const [wait, setWait] = useState(receipt.wait ?? 0);
+  const [left, setLeft] = useState(receipt.left ?? 0);
+  const [problem, setProblem] = useState(null);
+  useEffect(() => {
+    if (wait <= 0) return;
+    const t = setTimeout(() => setWait(w => w - 1), 1000);
+    return () => clearTimeout(t);
+  }, [wait]);
+  const send = async () => {
+    setState('sending'); setProblem(null);
+    try {
+      const r = await resendReceipt(reference);
+      setState('sent'); setWait(r.receipt?.wait ?? 45); setLeft(r.receipt?.left ?? 0);
+      toast({ key: 'receipt', tone: 'ok', sign: 'mail', title: 'We’ve sent your receipt.', body: `Check your email (${r.email ?? email}).` });
+    } catch (err) {
+      if (err.wait) { setState('sent'); setWait(err.wait); return; }
+      if (err.code === 'max') { setState('sent'); setLeft(0); setProblem(err.message); return; }
+      setState('failed'); setProblem(err.message);
+    }
+  };
+  if (state === 'failed') {
+    return (
+      <div className="receipt receipt--bad" role="alert">
+        <StateMark tone="bad" />
+        <p><strong>We couldn’t send your receipt.</strong><span>{problem || 'Please try again.'}</span></p>
+        <button type="button" className="btn btn--ghost receipt__go" onClick={send}>RETRY</button>
+      </div>
+    );
+  }
+  return (
+    <div className={`receipt${state === 'sent' ? ' receipt--ok' : ''}`} role="status">
+      {state === 'sending' ? <span className="spinner receipt__spin" aria-hidden="true" /> : <StateMark tone={state === 'sent' ? 'ok' : 'info'} sign="mail" />}
+      <p>
+        <strong>{state === 'sent' ? 'Receipt sent successfully!' : state === 'sending' ? 'Sending your receipt…' : 'Your receipt by email'}</strong>
+        <span>{state === 'sent' ? <>Your receipt has been sent to {email}.</> : <>We’ll send it to {email}.</>}</span>
+        {problem && state === 'sent' && <span className="receipt__note">{problem}</span>}
+      </p>
+      {left > 0 && (
+        <button type="button" className="btn btn--ghost receipt__go" onClick={send} disabled={state === 'sending' || wait > 0}>
+          {state === 'none' ? 'EMAIL MY RECEIPT' : wait > 0 ? `RESEND (${wait}s)` : 'RESEND RECEIPT'}
+        </button>
+      )}
     </div>
   );
 }

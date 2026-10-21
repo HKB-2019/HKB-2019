@@ -3,6 +3,7 @@ import express from 'express';
 import { one, query } from '../db.js';
 import { verifyWebhookSignature } from '../lib/paystack.js';
 import { reconcile, releaseStock } from '../lib/orders.js';
+import { sendReceipt } from '../lib/receipts.js';
 import { reconcileGift, isGiftReference, isTopupReference } from '../lib/giftcards.js';
 
 export const webhookRouter = Router();
@@ -68,6 +69,7 @@ webhookRouter.post(
         console.log(`[webhook] gift ${reference} → ${status}`);
       } else if (event.event === 'charge.success') {
         const status = await reconcile(reference);
+        if (status === 'paid') await sendReceipt(reference, { req }).catch(err => console.error(`[mail] receipt for ${reference}:`, err.message));
         if (status === null) console.warn(`[webhook] charge.success for unknown reference ${reference}`);
         else console.log(`[webhook] ${reference} → ${status}`);
       } else if (event.event === 'charge.failed') {

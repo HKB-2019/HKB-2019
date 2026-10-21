@@ -10,7 +10,7 @@ const pad = (n) => String(n).padStart(2, '0');
  * admin). When the time comes, the shop reloads its catalogue and the pieces
  * appear — nobody has to switch anything on. */
 export default function DropCountdown() {
-  const { site, loadCatalogue } = useShop();
+  const { site, loadCatalogue, toast } = useShop();
   const { home, images } = useHome();
   const photo = images.countdown;
   const at = site?.nextDrop?.at ? new Date(site.nextDrop.at).getTime() : null;
@@ -25,7 +25,15 @@ export default function DropCountdown() {
   const left = at ? at - now : 0;
   useEffect(() => {
     // A second's grace so the server's clock has passed it too.
-    if (at && left <= 0) { const t = setTimeout(loadCatalogue, 1500); return () => clearTimeout(t); }
+    if (at && left <= 0) {
+      const t = setTimeout(() => {
+        loadCatalogue();
+        // Only for someone who watched it happen, not on every later visit.
+        if (left > -5000) toast({ tone: 'promo', title: 'The drop is live now.', body: 'Explore the latest pieces from MASQ.', once: `drop-${at}`,
+          action: { label: 'Shop now', onClick: () => scrollToId('drop') } });
+      }, 1500);
+      return () => clearTimeout(t);
+    }
   }, [at, left <= 0, loadCatalogue]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!at || left <= 0) return null;

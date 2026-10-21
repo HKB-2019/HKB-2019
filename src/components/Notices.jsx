@@ -1,7 +1,8 @@
 import { useId, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import StateMark from './StateMark.jsx';
-import { Close } from './Icons.jsx';
+import { Close, Copy, Check } from './Icons.jsx';
+import { useShop } from '../store/ShopContext.jsx';
 import { EASE_OUT, UI_IN, UI_OUT } from '../lib/motion.js';
 
 /* Messages that stay where they are, from the owner's boards:
@@ -56,9 +57,28 @@ const Retry = () => (
  * details: { code?, message?, time?, reference? } — shown on "View details",
  * so whoever the customer contacts can find out what happened.
  */
+/* Under the details: copy the reference for whoever is helping, or ask us. */
+function DetailActions({ reference, support }) {
+  const { openOverlay } = useShop();
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(reference); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* not allowed: nothing */ }
+  };
+  return (
+    <div className="err-banner__help">
+      {reference && (
+        <button type="button" className="btn btn--ghost" onClick={copy}>
+          {copied ? <Check /> : <Copy />} {copied ? 'Copied' : 'Copy reference'}
+        </button>
+      )}
+      {support && <button type="button" className="btn btn--ghost" onClick={() => openOverlay({ info: 'CONTACT' })}>Contact support</button>}
+    </div>
+  );
+}
+
 export function ErrorBanner({
   title, text, onRetry, retryLabel = 'Try again', retrying = false, details, onClose,
-  layout = 'banner', picture, action, className = ''
+  layout = 'banner', picture, action, className = '', support = true
 }) {
   const [open, setOpen] = useState(false);
   const id = useId();
@@ -101,11 +121,12 @@ export function ErrorBanner({
       )}
       <AnimatePresence initial={false}>
         {open && rows?.length > 0 && (
-          <motion.dl id={id} className="err-banner__details"
+          <motion.div id={id} className="err-banner__details"
                      initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
                      exit={{ opacity: 0, height: 0, transition: { duration: UI_OUT } }} transition={{ duration: UI_IN, ease: EASE_OUT }}>
-            {rows.map(([k, v]) => <div key={k}><dt>{k}:</dt><dd>{v}</dd></div>)}
-          </motion.dl>
+            <dl>{rows.map(([k, v]) => <div key={k}><dt>{k}:</dt><dd>{v}</dd></div>)}</dl>
+            {(details.reference || support) && <DetailActions reference={details.reference} support={support} />}
+          </motion.div>
         )}
       </AnimatePresence>
     </motion.div>

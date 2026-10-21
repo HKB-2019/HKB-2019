@@ -36,12 +36,18 @@ function Gallery({ product, colour }) {
   const photos = own ? [{ img: own.img, img2x: own.img2x }, ...base.slice(1)] : base;
   // Picked a colour nobody has photographed yet: say which colour is shown.
   const pictured = hasColours(product) && !own && colour !== product.colours[0].name ? product.colours[0].name : null;
-  const { openOverlay } = useShop();
+  const { openOverlay, toast } = useShop();
   const [index, setIndex] = useState(0);
   const [lens, setLens] = useState(null);   // where the mouse is over the photo, in %, and whether it is there
   const lensReady = useRef(false);           // the sharp copy is fetched on the first hover only
   const strip = useRef(null);
   const enlarge = (i) => openOverlay({ zoom: { photos, index: i, name: product.name } });
+  // A hint, once a visit: the photos open up close.
+  useEffect(() => {
+    if (!product) return;
+    const t = setTimeout(() => toast({ tone: 'tip', title: 'Tip: tap a photo to see it up close.', once: 'tip-zoom' }), 2500);
+    return () => clearTimeout(t);
+  }, [Boolean(product)]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   // With a mouse, the photo under the pointer shows close up, from the
   // sharper copy. Touch screens tap through to the full-screen view instead.

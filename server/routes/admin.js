@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { sendShipped } from '../lib/receipts.js';
 import { one, query, transaction } from '../db.js';
 import { onSale } from '../lib/catalogue.js';
 import { openZones, getSettings, setSetting, SETTING_KEYS, ZONE_LABELS } from '../lib/settings.js';
@@ -249,6 +250,8 @@ adminRouter.post('/admin/orders/:reference/fulfil', requireAdmin, async (req, re
 
   await query(`UPDATE orders SET fulfilled_at = COALESCE(fulfilled_at, now()), courier = $2, tracking = $3
                 WHERE id = $1`, [order.id, courier, tracking]);
+  // The customer is told by email, once (when the shop can send email).
+  await sendShipped(req.params.reference, req);
   res.json({ ok: true, alreadyFulfilled: Boolean(order.fulfilled_at) });
 });
 

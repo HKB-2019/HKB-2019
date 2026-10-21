@@ -190,6 +190,11 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS campaign      TEXT;
 -- How it was paid, as the customer would recognise it ("Visa •••• 4242",
 -- "Bank transfer", "Gift card"): the card's brand and last four only.
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method TEXT;
+-- The shop's own emails: the receipt (when it last went, how many times) and
+-- the "on its way" note (once).
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS receipt_sent_at TIMESTAMPTZ;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS receipt_count   INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS sent_email_at   TIMESTAMPTZ;
 
 -- `refunded` came later: the owner returned the money from Paystack's
 -- dashboard and marked it here. Older databases have the status check

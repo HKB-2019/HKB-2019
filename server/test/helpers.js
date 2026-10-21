@@ -47,6 +47,7 @@ export async function startShop() {
   const { eventLimit } = await import('../routes/analytics.js');
   const { giftBuyLimit, giftCheckLimit } = await import('../routes/giftcards.js');
   const { accountLimit, mailLimit } = await import('../routes/account.js');
+  const { receiptLimit } = await import('../routes/orders.js');
   const { resetMisses } = await import('../lib/accounts.js');
   const { outbox } = await import('../lib/mail.js');
   const { createApp } = await import('../index.js');
@@ -82,6 +83,7 @@ export async function startShop() {
     giftCheckLimit.reset();
     accountLimit.reset();
     mailLimit.reset();
+    receiptLimit.reset();
     resetMisses();
     outbox.length = 0;
   };

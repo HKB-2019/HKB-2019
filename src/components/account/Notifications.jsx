@@ -29,7 +29,7 @@ function Switch({ id, title, text, on, busy, onChange }) {
 }
 
 export function Notifications() {
-  const { toast } = useShop();
+  const { toast, failed } = useShop();
   const [n, setN] = useState(null);
   const [error, setError] = useState(null);
   const [retrying, setRetrying] = useState(false);
@@ -47,7 +47,11 @@ export function Notifications() {
     const was = n;
     setN(x => ({ ...x, [key]: value })); setBusy(key);
     try { setN(await accountSetNotifications({ [key]: value })); toast({ key: 'prefs', tone: 'ok', title: said }); }
-    catch (err) { setN(was); toast({ key: 'prefs', tone: 'bad', title: 'We couldn’t save that.', body: err.message }); }
+    catch (err) {
+      setN(was);
+      failed({ key: 'prefs', title: 'We couldn’t save that.', body: err.message, done: { title: said },
+        run: async () => { setN(await accountSetNotifications({ [key]: value })); } });
+    }
     setBusy(null);
   };
   const drop = async (id) => {

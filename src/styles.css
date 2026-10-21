@@ -3319,7 +3319,8 @@ body:has(.drawer) .toast-wrap{ right:calc(min(430px, 100%) + 20px); }
   border:1px solid rgb(var(--ink-rgb) / .14); border-radius:8px; background:rgb(var(--bg-rgb) / .6);
   font:13px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
 }
-.err-banner__details div{ display:grid; grid-template-columns:120px minmax(0, 1fr); gap:10px; }
+.err-banner__details dl{ margin:0; }
+.err-banner__details dl > div{ display:grid; grid-template-columns:120px minmax(0, 1fr); gap:10px; }
 .err-banner__details dt{ color:var(--ink-dim); }
 .err-banner__details dd{ margin:0; overflow-wrap:anywhere; }
 @media (max-width:640px){
@@ -3327,7 +3328,7 @@ body:has(.drawer) .toast-wrap{ right:calc(min(430px, 100%) + 20px); }
   .err-banner > .err-banner__actions{ grid-column:1 / -1; }
   .err-banner > .err-banner__actions .btn{ flex:1; }
   .err-banner__close{ grid-row:1; grid-column:3; }
-  .err-banner__details div{ grid-template-columns:1fr; gap:0; }
+  .err-banner__details dl > div{ grid-template-columns:1fr; gap:0; }
 }
 /* the panel kind: a picture, centred words, the buttons under them */
 .err-banner--panel{ grid-template-columns:minmax(0, 1fr); justify-items:center; text-align:center; padding:30px 24px 26px; }
@@ -3749,3 +3750,40 @@ body:has(.drawer) .toast-wrap{ right:calc(min(430px, 100%) + 20px); }
 .alerts-list__x{ display:grid; place-items:center; flex:none; width:44px; height:44px; color:var(--ink-dim); border-radius:10px; }
 .alerts-list__x:hover{ color:var(--bad); background:rgb(var(--bad-rgb) / .08); }
 .alerts-list__x svg{ width:12px; height:12px; }
+
+/* action feedback: an undo's seconds in a ring, Retrying…, promo and tip */
+.toast--promo{ --tone-rgb:var(--violet-soft-rgb); --tone:var(--violet-soft); }
+.toast--tip{ --tone-rgb:var(--amber-rgb); --tone:var(--amber); }
+.state-mark--promo{ color:var(--violet-soft); }
+.state-mark--tip{ color:var(--amber); }
+.toast__ring{ position:relative; flex:none; display:grid; place-items:center; width:38px; height:38px; color:var(--tone); }
+.toast__ring svg{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); fill:none; stroke-width:2.4; }
+.toast__ring circle:first-child{ stroke:rgb(var(--tone-rgb) / .2); }
+.toast__ring-run{ stroke:currentColor; stroke-linecap:round; stroke-dasharray:106.8; stroke-dashoffset:0; animation:ring-run linear forwards; }
+.toast.is-held .toast__ring-run{ animation-play-state:paused; }
+.toast__ring b{ font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink); }
+@keyframes ring-run{ to{ stroke-dashoffset:106.8; } }
+.toast__spin{ width:30px; height:30px; margin:4px; color:var(--tone); }
+@media (prefers-reduced-motion: reduce){ .toast__ring-run{ animation:none; } }
+@media (max-width:420px){ .toast__ring{ width:32px; height:32px; } }
+.err-banner__help{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; font-family:var(--font-body, inherit); }
+.err-banner__help .btn{ height:38px; padding:0 14px; font-size:12px; gap:8px; }
+.err-banner__help svg{ width:14px; height:14px; }
+
+/* the order page: the receipt by email */
+.receipt{
+  --tone-rgb:var(--info-rgb);
+  display:grid; grid-template-columns:auto minmax(0, 1fr) auto; align-items:center; gap:12px; margin:16px 0 4px; padding:14px 14px 14px 16px;
+  text-align:left; border:1px solid rgb(var(--tone-rgb) / .4); border-radius:12px; background:rgb(var(--tone-rgb) / .07);
+}
+.receipt--ok{ --tone-rgb:var(--ok-rgb); }
+.receipt--bad{ --tone-rgb:var(--bad-rgb); }
+.receipt p{ margin:0; min-width:0; }
+.receipt strong{ display:block; font-size:14px; }
+.receipt span{ display:block; font-size:13px; color:var(--ink-dim); overflow-wrap:anywhere; }
+.receipt__note{ margin-top:4px; }
+.receipt__go{ height:38px; padding:0 14px; font-size:11px; white-space:nowrap; }
+.receipt__spin{ width:26px; height:26px; color:var(--info); }
+@media (max-width:480px){ .receipt{ grid-template-columns:auto minmax(0, 1fr); } .receipt__go{ grid-column:2; justify-self:start; } }
+/* on a phone an undo shows its seconds, not the photo: room for the words */
+@media (max-width:640px){ .toast--undo .toast__img{ display:none; } }
