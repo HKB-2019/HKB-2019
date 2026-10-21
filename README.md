@@ -334,8 +334,9 @@ is no dotenv dependency and no `require('dotenv')` to forget.
   small wins — every green "it worked" message (added to bag, saved, signed
   in, address or profile saved, joined the list), the Added-to-your-bag panel,
   a discount code or gift card applied, a reset link sent. A fuller **chime**
-  for big moments — an order placed (with the confetti), a gift card ready
-  (once per card), a password reset. Never for errors or warnings. They play
+  for a gift card ready (once per card) and a password reset; and with the
+  confetti when an order is placed, the sound of confetti itself (a soft poof
+  from each side, then paper rustling down, in stereo). Never for errors or warnings. They play
   through an ordinary audio player, like a video's sound, so a phone plays
   them even on silent; browsers allow it only after a tap, so the first tap
   anywhere in the shop starts the player on a moment of silence. **Sounds on /

@@ -1,10 +1,12 @@
 import { asset } from './media.js';
 
 /* The shop's sounds, for good news only: a light tick when something small
- * works (added to the bag, saved, a code applied, signed in) and, for the
- * big moments (an order placed, a gift card ready), a soft chord with high
- * notes twinkling down like the confetti that falls with it. Two short files
- * in public/assets/sound, made by tools/make-sounds.py.
+ * works (added to the bag, saved, a code applied, signed in); with the
+ * confetti when an order is placed, the sound of confetti itself — a soft
+ * poof of air from each side and paper rustling down; and for the other big
+ * moments (a gift card ready, a password reset) a soft chord with high notes
+ * twinkling down. Short files in public/assets/sound, made by
+ * tools/make-sounds.py and tools/make-sound-options.py.
  *
  * They play through an ordinary <audio> player, the way a video's sound
  * does, so a phone plays them even with its ring switch on silent. A browser
@@ -16,7 +18,7 @@ import { asset } from './media.js';
 
 const KEY = 'masq:sound';
 // `?v=`: raised when a sound is remade, so browsers fetch the new one.
-const FILES = { tick: 'assets/sound/tick.wav?v=2', chime: 'assets/sound/chime.wav?v=2', silent: 'assets/sound/silent.wav' };
+const FILES = { tick: 'assets/sound/tick.wav?v=2', chime: 'assets/sound/chime.wav?v=2', confetti: 'assets/sound/confetti.wav?v=1', silent: 'assets/sound/silent.wav' };
 const listeners = new Set();
 let player = null;
 
@@ -42,7 +44,7 @@ function unlock() {
   if (player || typeof Audio === 'undefined') return stop();
   player = new Audio(asset(FILES.silent));
   player.play()?.catch(() => {});
-  [FILES.tick, FILES.chime].forEach(f => { const a = new Audio(); a.preload = 'auto'; a.src = asset(f); });
+  [FILES.tick, FILES.chime, FILES.confetti].forEach(f => { const a = new Audio(); a.preload = 'auto'; a.src = asset(f); });
   stop();
 }
 function stop() { TAPS.forEach(t => window.removeEventListener(t, unlock, true)); }
@@ -61,5 +63,8 @@ function play(file) {
 /** A small win: two quick, quiet notes. */
 export const tick = () => play(FILES.tick);
 
-/** A big moment: three rising notes from the major chord. */
+/** A big moment: a soft chord with high notes twinkling down. */
 export const chime = () => play(FILES.chime);
+
+/** With the confetti: a soft poof from each side and paper rustling down. */
+export const confetti = () => play(FILES.confetti);

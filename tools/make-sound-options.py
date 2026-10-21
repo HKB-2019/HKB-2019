@@ -1,5 +1,6 @@
 """Makes choices for the shop's confetti chime, to listen to and pick from,
-in design/sounds (none is used by the shop until chosen).
+in design/sounds. Number 15, the confetti poof, was chosen: it is also
+written to public/assets/sound/confetti.wav.
 Run: python3 tools/make-sound-options.py"""
 import struct, wave
 import numpy as np
@@ -249,7 +250,11 @@ def poof():
     place(x, puff(), 0.0, 0.8)
     place(x, flutter(2.6, 260, 0.8), 0.04, 0.7)
     return reverb(x, 0.25)
-save_stereo('15-confetti-poof.wav', *both_sides(poof))
+_l, _r = both_sides(poof)
+save_stereo('15-confetti-poof.wav', _l.copy(), _r.copy())
+OUT_SHOP = OUT; OUT = 'public/assets/sound/'
+save_stereo('confetti.wav', _l, _r)   # chosen by the owner, 21 Oct: plays with the confetti
+OUT = OUT_SHOP
 
 # 16. Soft party popper: a muffled pop (no bang), then the rustle.
 def popper():

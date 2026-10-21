@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import Dialog, { FactCard } from './Dialog.jsx';
 import StateMark from './StateMark.jsx';
 import { ArrowShort, CardIcon, Copy, Check } from './Icons.jsx';
-import { chime } from '../lib/sound.js';
+import { confetti as confettiSound } from '../lib/sound.js';
 
 /* The owner's panels for coming back from paying: "Order placed!" (with a
- * short burst of confetti in the logo's colours and a soft chime), "Payment failed", "Card
+ * short burst of confetti in the logo's colours, and its sound), "Payment failed", "Card
  * declined", and "Payment pending" while the bank is still deciding. Each is
  * said once per order and outcome: reloading the order page, or opening it
  * again from the receipt, shows the page alone. The page under the panel
@@ -85,7 +85,7 @@ export default function OrderResult({ order, status, waited, reference, onRechec
     if (!kind || seen(reference, kind)) { if (open && open !== kind) setOpen(null); return; }
     markSeen(reference, kind);
     setOpen(kind);
-    if (kind === 'placed') { setTimeout(celebrate, 380); setTimeout(chime, 380); }
+    if (kind === 'placed') { setTimeout(celebrate, 380); setTimeout(confettiSound, 380); }
   }, [kind, reference]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   const close = () => setOpen(null);

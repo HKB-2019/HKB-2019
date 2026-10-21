@@ -1,12 +1,12 @@
 # Confetti chime: the choices
 
 The sound that plays with the confetti (an order placed, a gift card ready).
-Listen and pick one; the shop uses **1. Sparkle** until you choose.
+**Chosen 21 Oct: 15. Confetti poof**, played with the confetti when an order is placed. 1. Sparkle stays for the other big moments (a gift card ready, a password reset).
 Made by `tools/make-sounds.py` (1–2) and `tools/make-sound-options.py` (3–8).
 
 | # | Name | What it sounds like |
 |---|---|---|
-| 1 | Sparkle (in the shop now) | A warm chord swelling in, high notes twinkling down like the confetti falling |
+| 1 | Sparkle (in the shop: gift card ready, password reset) | A warm chord swelling in, high notes twinkling down like the confetti falling |
 | 2 | Warm bells | Three slow, low bells; the calmest |
 | 3 | Kalimba | An African thumb piano playing a bright five-note rise; ties to the brand's roots |
 | 4 | Harp | A soft upward sweep of plucked strings, settling on a chord; elegant |
@@ -34,7 +34,7 @@ Built from the sound confetti really makes: a soft "poof" of air as it bursts, t
 
 | # | Name | What it sounds like |
 |---|---|---|
-| 15 | Confetti poof | A soft puff of air from each side, then the paper rustle |
+| 15 | **Confetti poof (chosen: plays with the confetti)** | A soft puff of air from each side, then the paper rustle |
 | 16 | Soft party popper | A muffled pop (no bang), then the rustle |
 | 17 | Poof and sparkle | The burst and rustle, with a few soft twinkles falling with it |
 | 18 | Flutter | Just the paper pieces drifting down; the gentlest |
