@@ -14,6 +14,7 @@ if (process.env.TEST_DATABASE_URL) process.env.DATABASE_URL = process.env.TEST_D
 else { process.env.PGLITE_DIR = 'memory://'; delete process.env.DATABASE_URL; }
 process.env.PAYSTACK_SECRET_KEY = SECRET_KEY;
 process.env.SESSION_SECRET = 'x'.repeat(48);
+process.env.MAIL_DRIVER = 'memory';        // emails kept in server/lib/mail.js `outbox`
 delete process.env.NODE_ENV;
 delete process.env.PAYSTACK_API_BASE;
 
@@ -45,6 +46,9 @@ export async function startShop() {
   const { subscribeLimit } = await import('../routes/subscribe.js');
   const { eventLimit } = await import('../routes/analytics.js');
   const { giftBuyLimit, giftCheckLimit } = await import('../routes/giftcards.js');
+  const { accountLimit, mailLimit } = await import('../routes/account.js');
+  const { resetMisses } = await import('../lib/accounts.js');
+  const { outbox } = await import('../lib/mail.js');
   const { createApp } = await import('../index.js');
   const { createServer } = await import('node:http');
 
@@ -76,6 +80,10 @@ export async function startShop() {
     eventLimit.reset();
     giftBuyLimit.reset();
     giftCheckLimit.reset();
+    accountLimit.reset();
+    mailLimit.reset();
+    resetMisses();
+    outbox.length = 0;
   };
 
   /** Signed in as the admin; returns the Cookie header to send. */

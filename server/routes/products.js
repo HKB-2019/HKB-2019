@@ -3,6 +3,7 @@ import { one } from '../db.js';
 import { loadProducts } from '../lib/catalogue.js';
 import { getSettings, getHomeImages, openZones, NIGERIAN_STATES } from '../lib/settings.js';
 import { currentSession } from '../lib/auth.js';
+import { canSendMail } from '../lib/mail.js';
 
 export const productsRouter = Router();
 
@@ -51,6 +52,8 @@ productsRouter.get('/site', async (req, res) => {
       ? { message: maintenance.message, minutes: maintenance.minutes, ownerView: Boolean(await currentSession(req)) }
       : null,
     announcement: announcement.on ? { tone: announcement.tone, title: announcement.title, text: announcement.text } : null,
+    // Customer accounts are offered only once the shop can email their codes.
+    accounts: canSendMail(),
     states: NIGERIAN_STATES
   });
 });

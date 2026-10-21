@@ -9,10 +9,10 @@ import { onSale } from '../lib/catalogue.js';
 import { applyCode } from '../lib/discounts.js';
 import { usableCard, spendCard, recordSpend } from '../lib/giftcards.js';
 import { attribution } from '../lib/analytics.js';
+import { isEmail } from '../lib/validate.js';
 
 export const checkoutRouter = Router();
 
-const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v ?? '').trim());
 
 /* Every checkout holds stock for half an hour, so a script calling this in a
  * loop could empty the shelves during a drop without paying for anything.

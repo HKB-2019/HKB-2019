@@ -2,10 +2,10 @@ import { Router } from 'express';
 import { one, query } from '../db.js';
 import { onSale } from '../lib/catalogue.js';
 import { rateLimit } from '../lib/limits.js';
+import { isEmail } from '../lib/validate.js';
 
 export const subscribeRouter = Router();
 
-const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) && v.length <= 254;
 
 export const subscribeLimit = rateLimit({
   windowMs: 10 * 60_000,

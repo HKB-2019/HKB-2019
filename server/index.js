@@ -15,6 +15,7 @@ import { adminCustomersRouter } from './routes/admin-customers.js';
 import { giftCardsRouter } from './routes/giftcards.js';
 import { adminGiftCardsRouter } from './routes/admin-giftcards.js';
 import { analyticsRouter } from './routes/analytics.js';
+import { accountRouter, accountUploadRouter } from './routes/account.js';
 import { one } from './db.js';
 import { photoUrls, onSale } from './lib/catalogue.js';
 import { getHomeImages } from './lib/settings.js';
@@ -65,7 +66,13 @@ function errorHandler(err, _req, res, _next) {
   // (an outside service being down, say), so they are shown and not logged
   // as a fault of ours.
   if (status >= 500 && !err.expose) console.error('[server]', err);
-  res.status(status).json({ error: status >= 500 && !err.expose ? 'Something went wrong.' : err.message });
+  const told = status < 500 || err.expose;
+  res.status(status).json({
+    error: told ? err.message : 'Something went wrong.',
+    // Which box it is about, and a word the page can act on ('unverified', 'expired').
+    ...(told && err.field ? { field: err.field } : {}),
+    ...(told && err.code && typeof err.code === 'string' ? { code: err.code } : {})
+  });
 }
 
 /* ------------------------------------------------------- link previews */
@@ -162,6 +169,7 @@ export function createApp() {
   // Photo uploads need a bigger body than anything else, and must check the
   // admin is signed in before reading it. They bring their own parser.
   app.use('/api', adminUploadRouter);
+  app.use('/api', accountUploadRouter);
 
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
@@ -178,6 +186,7 @@ export function createApp() {
   app.use('/api', giftCardsRouter);
   app.use('/api', adminGiftCardsRouter);
   app.use('/api', analyticsRouter);
+  app.use('/api', accountRouter);
 
   // An address under /api that matched nothing is a mistake, and says so in
   // JSON — not a copy of the home page.
@@ -218,7 +227,7 @@ export function createApp() {
         (/^[a-z0-9.-]+(:\d{1,5})?$/i.test(host) ? `${req.protocol}://${host}` : '')).replace(/\/$/, '');
       res.set({ 'Content-Security-Policy': CSP, 'Cache-Control': 'no-cache' });
       // The back room, and a gift card opened by its code, are not for search engines.
-      if (req.path.startsWith('/admin') || req.path.startsWith('/gift/')) res.set('X-Robots-Tag', 'noindex, nofollow');
+      if (req.path.startsWith('/admin') || req.path.startsWith('/gift/') || req.path.startsWith('/account')) res.set('X-Robots-Tag', 'noindex, nofollow');
       const meta = await pageMeta(req.path);
       if (meta?.missing) res.status(404);
       res.type('html').send(fillMeta(html, meta, origin).replaceAll('__ORIGIN__', origin));

@@ -3,6 +3,7 @@ import { one, query } from '../db.js';
 import { initializeTransaction, paystackConfigured } from '../lib/paystack.js';
 import { rateLimit } from '../lib/limits.js';
 import { closedForMaintenance } from '../lib/settings.js';
+import { isEmail } from '../lib/validate.js';
 import {
   checkAmount, newCode, newGiftReference, isGiftReference, reconcileGift, usableCard, giftNaira,
   cleanGiftCode, cleanDesign, cardToTopUp, newTopupReference, isTopupReference
@@ -13,7 +14,6 @@ import {
 
 export const giftCardsRouter = Router();
 
-const isEmail = (v) => typeof v === 'string' && v.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
 const words = (v, max) => String(v ?? '').replace(/\r\n?/g, '\n').replace(/[ \t]+/g, ' ').trim().slice(0, max);
 
 /* Each purchase starts a payment, and each check tries a code: both limited. */
