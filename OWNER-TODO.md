@@ -192,6 +192,8 @@ shop.
 
 ### Emails (can only be seen once Brevo is set up)
 
+You can see the two order emails now, filled with a sample order: [the receipt](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/emails/receipt-sample.html) and [on its way](https://github.com/HKB-2019/HKB-2019/blob/claude/website-interactive-buttons-di7yqt/design/emails/on-its-way-sample.html) (open the file, then Download, and open it in your browser).
+
 | Email | When |
 |---|---|
 | Six-digit code | Signing up |
