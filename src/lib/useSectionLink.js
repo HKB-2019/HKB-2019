@@ -10,7 +10,8 @@ export function useSectionLink() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   return useCallback((hash) => {
-    if (pathname === '/') scrollToId(hash);
+    if (hash.startsWith('/')) navigate(hash);          // a page of its own (the Journal)
+    else if (pathname === '/') scrollToId(hash);
     else navigate('/' + hash);
   }, [pathname, navigate]);
 }

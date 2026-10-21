@@ -468,14 +468,14 @@ adminProductsRouter.delete('/admin/products/:id/photos/:photoId', async (req, re
 export const adminUploadRouter = Router();
 
 /** The ordinary and the double-width copy of one photo, checked. */
-function bothSizes(body) {
+export function bothSizes(body) {
   const small = decodePhoto(body?.image, 'standard');
   const large = decodePhoto(body?.image2x, 'sharp-screen');
   if (small.mime !== large.mime) throw fail(400, 'The two sizes of the photo do not match.');
   return { small, large };
 }
 
-const uploadBody = express.json({ limit: Math.ceil(MAX_IMAGE_BYTES * 2 * 1.4) });   // two photos, base64
+export const uploadBody = express.json({ limit: Math.ceil(MAX_IMAGE_BYTES * 2 * 1.4) });   // two photos, base64
 
 adminUploadRouter.post(
   '/admin/products/:id/image',

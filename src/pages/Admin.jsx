@@ -14,6 +14,7 @@ import { Sun, Moon } from '../components/Icons.jsx';
 import SettingsTab from './admin/SettingsTab.jsx';
 import ListTab from './admin/ListTab.jsx';
 import HomeTab from './admin/HomeTab.jsx';
+import JournalTab from './admin/JournalTab.jsx';
 import SalesTab from './admin/SalesTab.jsx';
 import StockTab from './admin/StockTab.jsx';
 import CustomersTab from './admin/CustomersTab.jsx';
@@ -29,6 +30,7 @@ const TABS = [
   ['sales', 'SALES'],
   ['products', 'PRODUCTS'],
   ['home', 'HOME PAGE'],
+  ['journal', 'JOURNAL'],
   ['stock', 'STOCK'],
   ['list', 'LIST'],
   ['settings', 'SETTINGS']
@@ -491,6 +493,7 @@ export default function Admin() {
             {tab === 'stock' && <StockTab onChanged={refreshSummary} />}
             {tab === 'customers' && <CustomersTab onChanged={refreshSummary} />}
             {tab === 'home' && <HomeTab />}
+            {tab === 'journal' && <JournalTab />}
             {tab === 'sales' && <SalesTab />}
             {tab === 'visitors' && (
               <Suspense fallback={<p className="admin-empty">Loading…</p>}><VisitorsTab /></Suspense>

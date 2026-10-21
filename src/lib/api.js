@@ -220,6 +220,17 @@ export const adminUploadHomeImage = (slot, image, image2x) =>
   adminRequest(`/admin/home/image/${slot}`, { method:'POST', body: JSON.stringify({ image, image2x }) });
 export const adminRemoveHomeImage = (slot) => adminRequest(`/admin/home/image/${slot}`, { method:'DELETE' });
 
+/* The Journal: stories for the shop, and the owner's writing desk. */
+export const getJournal       = ()     => request('/journal');
+export const getStory         = (slug) => request(`/journal/${encodeURIComponent(slug)}`);
+export const adminJournal     = ()     => adminRequest('/admin/journal');
+export const adminAddStory    = (b)    => adminRequest('/admin/journal', { method:'POST', body: JSON.stringify(b) });
+export const adminSaveStory   = (slug, b) => adminRequest(`/admin/journal/${encodeURIComponent(slug)}`, { method:'PUT', body: JSON.stringify(b) });
+export const adminDeleteStory = (slug) => adminRequest(`/admin/journal/${encodeURIComponent(slug)}`, { method:'DELETE' });
+export const adminStoryImage  = (slug, image, image2x) =>
+  adminRequest(`/admin/journal/${encodeURIComponent(slug)}/image`, { method:'POST', body: JSON.stringify({ image, image2x }) });
+export const adminRemoveStoryImage = (slug) => adminRequest(`/admin/journal/${encodeURIComponent(slug)}/image`, { method:'DELETE' });
+
 /* ------------------------------------------------ admin: settings and list */
 
 export const adminSettings      = ()            => adminRequest('/admin/settings');

@@ -16,7 +16,9 @@ export const SOCIAL = [
   ['x', 'X', XIcon]
 ];
 
-export default function Footer() {
+/* `join`: false on pages with a sign-up of their own (the Journal), so the
+ * form is not there twice. */
+export default function Footer({ join = true }) {
   const { openOverlay, site, toast } = useShop();
   const { home } = useHome();
   const goTo = useSectionLink();
@@ -42,12 +44,12 @@ export default function Footer() {
           <p className="footer__tagline"><Lines text={home.heroSub} /></p>
           {/* The mailing list on every page, with the owner's email checks:
               "Looks good!" or "Please enter a valid email address." */}
-          <div className="footer__join">
+          {join && <div className="footer__join">
             <h2 className="footer__head" id="footer-join">Join the list</h2>
             <p className="footer__join-note">New drops and restocks, before anyone else.</p>
             <JoinForm id="footer-email"
                       onJoined={() => toast({ tone: 'ok', title: 'You’re on the list', body: 'Welcome to the world of MASQ.' })} />
-          </div>
+          </div>}
           {social.length > 0 && (
             <div className="footer__social">
               {social.map(([key, label, Icon]) => (

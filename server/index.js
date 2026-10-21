@@ -10,6 +10,7 @@ import { ordersRouter } from './routes/orders.js';
 import { subscribeRouter } from './routes/subscribe.js';
 import { adminRouter } from './routes/admin.js';
 import { adminProductsRouter, adminUploadRouter } from './routes/admin-products.js';
+import { journalRouter, adminJournalRouter, journalUploadRouter } from './routes/journal.js';
 import { adminSalesRouter } from './routes/admin-sales.js';
 import { adminCustomersRouter } from './routes/admin-customers.js';
 import { giftCardsRouter } from './routes/giftcards.js';
@@ -169,6 +170,7 @@ export function createApp() {
   // Photo uploads need a bigger body than anything else, and must check the
   // admin is signed in before reading it. They bring their own parser.
   app.use('/api', adminUploadRouter);
+  app.use('/api', journalUploadRouter);
   app.use('/api', accountUploadRouter);
 
   app.use(express.json({ limit: '100kb' }));
@@ -187,6 +189,8 @@ export function createApp() {
   app.use('/api', adminGiftCardsRouter);
   app.use('/api', analyticsRouter);
   app.use('/api', accountRouter);
+  app.use('/api', journalRouter);
+  app.use('/api', adminJournalRouter);
 
   // An address under /api that matched nothing is a mistake, and says so in
   // JSON — not a copy of the home page.

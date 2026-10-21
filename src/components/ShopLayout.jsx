@@ -12,7 +12,7 @@ import { startSmoothScroll } from '../lib/smoothScroll.js';
 /* What every customer-facing page shares: the header with the bag, the
  * footer, the drawers and the toasts. The catalogue is fetched on arrival at
  * each page, so a change made in the admin shows the next time anyone looks. */
-export default function ShopLayout({ children }) {
+export default function ShopLayout({ children, footerJoin = true }) {
   const { loadCatalogue, site } = useShop();
   const { account, status, stay, signOut, ended } = useAccount();
   useEffect(() => { loadCatalogue(); }, [loadCatalogue]);
@@ -34,7 +34,7 @@ export default function ShopLayout({ children }) {
       }}>Skip to content</a>
       <Header />
       <main id="main" tabIndex={-1}>{children}</main>
-      <Footer />
+      <Footer join={footerJoin} />
       <Overlays />
       {status === 'in' && (
         <SessionExpiry expiresAt={account.expiresAt} onStay={stay} onSignOut={signOut} onEnded={ended}

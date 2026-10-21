@@ -10,6 +10,7 @@ import { CATALOGUE } from '../data/catalogue.js';
 import { HOME_DEFAULT, NAV } from '../data/home.js';
 import { PAGES, PAGES_DEFAULT } from '../data/pages.js';
 import { GUIDE_CURRENCIES, DEFAULT_RATES } from '../data/currencies.js';
+import { STARTER_STORIES, TOPIC_KEYS, readMinutes } from '../data/journal.js';
 import { sampleReport } from './sampleAnalytics.js';
 import QRCode from 'qrcode';
 
@@ -848,6 +849,63 @@ export const adminRemoveGalleryPhoto = (id, photoId) =>
   attempt(() => { const p = product(id); p.extras = p.extras.filter(x => x.id !== photoId); return current(id); });
 
 /* -------------------------------------------------- admin: home page */
+
+/* ------------------------------------------------------------ journal */
+
+/* As server/routes/journal.js: the starter stories, then whatever the owner writes. */
+function journal() {
+  store.journal ??= STARTER_STORIES.map(st => ({ slug: st.slug, topic: st.topic, title: st.title, dek: st.dek, body: st.body,
+    quote: st.quote ?? '', author: 'MASQ. Editorial Team', img: st.img ?? '', upload: null,
+    featured: Boolean(st.featured), pick: Boolean(st.pick), hidden: false, publishedAt: `${st.date}T08:00:00.000Z` }));
+  return store.journal;
+}
+const storyLive = (st) => !st.hidden && new Date(st.publishedAt) <= new Date();
+const storyShape = (st, full) => ({
+  slug: st.slug, topic: st.topic, title: st.title, dek: st.dek, author: st.author,
+  img: st.upload?.img ?? (st.img || null), img2x: st.upload?.img2x ?? (st.img ? twin(st.img) : null),
+  publishedAt: st.publishedAt, readMinutes: readMinutes(st.body), featured: st.featured, pick: st.pick,
+  ...(full ? { body: st.body, quote: st.quote } : {})
+});
+const byDate = (a, b) => b.publishedAt.localeCompare(a.publishedAt);
+export const getJournal = () => settle(journal().filter(storyLive).sort(byDate).map(st => storyShape(st)), 300);
+export function getStory(slug) {
+  const st = journal().find(x => x.slug === slug && storyLive(x));
+  if (!st) return fail('That story isn’t here. It may have moved.', 404);
+  const related = journal().filter(x => storyLive(x) && x.slug !== slug)
+    .sort((a, b) => (b.topic === st.topic) - (a.topic === st.topic) || byDate(a, b)).slice(0, 3);
+  return settle({ ...storyShape(st, true), related: related.map(x => storyShape(x)) }, 300);
+}
+const adminStories = () => journal().slice().sort(byDate).map(st => ({ ...storyShape(st, true), hidden: st.hidden, live: storyLive(st), hasUpload: Boolean(st.upload) }));
+function checkStory(b) {
+  if (!TOPIC_KEYS.includes(b.topic)) throw Object.assign(new Error('Choose a topic.'), { field: 'topic' });
+  if (String(b.title ?? '').trim().length < 3) throw Object.assign(new Error('Title: write at least 3 characters.'), { field: 'title' });
+  if (String(b.body ?? '').trim().length < 20) throw Object.assign(new Error('Story: write at least 20 characters.'), { field: 'body' });
+  return { topic: b.topic, title: b.title.trim(), dek: String(b.dek ?? '').trim(), body: b.body.trim(), quote: String(b.quote ?? '').trim(),
+    author: String(b.author ?? '').trim() || 'MASQ. Editorial Team', featured: b.featured === true, pick: b.pick === true, hidden: b.hidden === true,
+    publishedAt: b.publishedAt ? new Date(b.publishedAt).toISOString() : new Date().toISOString() };
+}
+const storyFail = (err) => failWith(err.message, 400, { field: err.field });
+export const adminJournal = () => settle(adminStories());
+export function adminAddStory(b) {
+  let st; try { st = checkStory(b); } catch (err) { return storyFail(err); }
+  const base = st.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'story';
+  let slug = base; for (let n = 2; journal().some(x => x.slug === slug); n++) slug = `${base}-${n}`;
+  journal().push({ ...st, slug, img: '', upload: null }); save();
+  return settle({ slug, stories: adminStories() }, 500);
+}
+export function adminSaveStory(slug, b) {
+  const row = journal().find(x => x.slug === slug);
+  if (!row) return fail('That story has gone. Refresh the list.', 404);
+  try { Object.assign(row, checkStory(b)); } catch (err) { return storyFail(err); }
+  save(); return settle(adminStories(), 500);
+}
+export function adminDeleteStory(slug) { store.journal = journal().filter(x => x.slug !== slug); save(); return settle(adminStories()); }
+export function adminStoryImage(slug, image, image2x) {
+  const row = journal().find(x => x.slug === slug);
+  if (!row) return fail('That story has gone. Refresh the list.', 404);
+  row.upload = { img: image, img2x: image2x }; save(); return settle(adminStories(), 600);
+}
+export function adminRemoveStoryImage(slug) { const row = journal().find(x => x.slug === slug); if (row) { row.upload = null; save(); } return settle(adminStories()); }
 
 export const adminUploadHomeImage = (slot, image, image2x) =>
   attempt(() => { store.homeImages[slot] = { img: image, img2x: image2x }; return { ok: true }; }, 600);

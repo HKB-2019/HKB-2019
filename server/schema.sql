@@ -509,3 +509,27 @@ CREATE TABLE IF NOT EXISTS account_addresses (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS account_addresses_account ON account_addresses (account_id);
+
+-- The Journal's stories (src/data/journal.js has the topics and the stories
+-- it starts with). Plain text with a little structure: blank lines for
+-- paragraphs, "## " for headings, "> " for a quote. A story is shown once it
+-- is not hidden and its publish time has come. The cover is an upload
+-- (image_id) or a photo the shop ships with (img).
+CREATE TABLE IF NOT EXISTS journal_stories (
+  slug         TEXT        PRIMARY KEY,
+  topic        TEXT        NOT NULL,
+  title        TEXT        NOT NULL,
+  dek          TEXT        NOT NULL DEFAULT '',
+  body         TEXT        NOT NULL DEFAULT '',
+  quote        TEXT        NOT NULL DEFAULT '',
+  author       TEXT        NOT NULL DEFAULT 'MASQ. Editorial Team',
+  img          TEXT        NOT NULL DEFAULT '',
+  image_id     INTEGER     REFERENCES images(id) ON DELETE SET NULL,
+  featured     BOOLEAN     NOT NULL DEFAULT FALSE,
+  pick         BOOLEAN     NOT NULL DEFAULT FALSE,
+  hidden       BOOLEAN     NOT NULL DEFAULT FALSE,
+  published_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS journal_stories_published ON journal_stories (published_at DESC);

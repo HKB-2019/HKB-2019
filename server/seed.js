@@ -14,7 +14,8 @@ export async function seed({ reset = false } = {}) {
                                product_colours, product_photos, products, images, subscribers,
                                discount_codes, stock_alerts, stock_log, events, analytics_daily,
                                gift_card_topups, gift_card_uses, gift_cards,
-                               account_events, account_codes, account_sessions, account_addresses, accounts
+                               account_events, account_codes, account_sessions, account_addresses, accounts,
+                               journal_stories
                       RESTART IDENTITY CASCADE`);
     }
 

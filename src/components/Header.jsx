@@ -36,6 +36,7 @@ export default function Header() {
       setStuck(window.pageYOffset > 24);
       let current = '';
       for (const href of Object.values(NAV_TARGETS)) {
+        if (!href.startsWith('#')) continue;
         const el = document.querySelector(href);
         if (el && el.getBoundingClientRect().top <= 140 && el.getBoundingClientRect().bottom > 140) current = href;
       }
@@ -65,9 +66,9 @@ export default function Header() {
   };
 
   return (
-    // At the top of the home page the menu sits over the dark photo, so it
-    // keeps the dark look there in either theme.
-    <header className={`header${stuck ? ' is-stuck' : ''}${pathname === '/' && !stuck ? ' header--over-dark' : ''}`}>
+    // At the top of the home page and the Journal's pages the menu sits over
+    // a dark photo, so it keeps the dark look there in either theme.
+    <header className={`header${stuck ? ' is-stuck' : ''}${(pathname === '/' || pathname.startsWith('/journal')) && !stuck ? ' header--over-dark' : ''}`}>
       <div className="header__inner">
         <button
           className="burger"
@@ -86,8 +87,9 @@ export default function Header() {
           {LINKS.map(({ href, label }) => (
             <a
               key={href}
-              href={'/' + href}
-              className={`nav__link${active === href ? ' is-active' : ''}`}
+              href={href.startsWith('/') ? href : '/' + href}
+              className={`nav__link${active === href || (href.startsWith('/') && pathname.startsWith(href)) ? ' is-active' : ''}`}
+              aria-current={href.startsWith('/') && pathname.startsWith(href) ? 'page' : undefined}
               onClick={(e) => go(e, href)}
             >{label}</a>
           ))}
@@ -175,7 +177,7 @@ export default function Header() {
             transition={{ duration: UI_IN, ease: EASE_OUT }}
           >
             {LINKS.map(({ href, label }) => (
-              <a key={href} href={'/' + href} onClick={(e) => go(e, href)}>{label}</a>
+              <a key={href} href={href.startsWith('/') ? href : '/' + href} onClick={(e) => go(e, href)}>{label}</a>
             ))}
             {/* On a small phone the bar has no room for it: here instead. */}
             {accountsOn && (

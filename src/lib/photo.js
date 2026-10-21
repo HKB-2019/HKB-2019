@@ -10,6 +10,9 @@
 /** A customer's profile photo: square, small. */
 export const AVATAR = { ratio: 1, widths: [256, 512] };
 
+/** A Journal story's cover: its own shape, wide enough for the top of the story page. */
+export const STORY = { ratio: null, widths: [900, 1800] };
+
 /** Product photos: the 5:6 portrait frame, 700 and 1,400 px wide. */
 export const PRODUCT = { ratio: 5 / 6, widths: [700, 1400] };
 
