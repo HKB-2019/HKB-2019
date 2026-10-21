@@ -50,9 +50,11 @@ test('a product page fits a phone, and its photos can be swiped', async ({ page 
   await page.goto('/product/tee');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^the face tee$/i);
   await noSidewaysScroll(page);
-  await expect(page.locator('.pdp__dots button')).toHaveCount(2);
+  // The photo strip as a row under the photo, as on the design; a swipe moves it on.
+  await expect(page.locator('.pdp__thumbs button')).toHaveCount(2);
+  await expect(page.locator('.pdp__thumbs')).toBeVisible();
   await page.locator('.pdp__strip').evaluate(el => el.scrollTo({ left: el.clientWidth }));
-  await expect(page.locator('.pdp__dots button').nth(1)).toHaveClass(/is-active/);
+  await expect(page.locator('.pdp__thumbs button').nth(1)).toHaveClass(/is-active/);
 
   await page.getByRole('button', { name: 'M', exact: true }).tap();
   await page.getByRole('button', { name: 'ADD TO BAG' }).tap();

@@ -225,8 +225,11 @@ export function CheckoutSteps({ at, problem }) {
 }
 
 /* While the payment is being set up: the server checks every price and size,
- * holds the pieces, and opens a payment with Paystack, in one go. The first
- * two tick when its answer comes back; the last turns until the page goes. */
+ * holds the pieces, and opens a payment with Paystack, in one go. The steps
+ * tick one after another at a steady pace, so the shopper can read each
+ * (`stage`: 'checking', then 'holding', then 'opening'); the last turns until
+ * the page goes. */
+const STAGE_DONE = { checking: 0, holding: 1, opening: 2 };
 function Processing({ stage, giftOnly }) {
   const steps = ['Checking prices and stock', 'Holding your pieces', giftOnly ? 'Placing your order' : 'Opening Paystack’s secure page'];
   return (
@@ -240,12 +243,12 @@ function Processing({ stage, giftOnly }) {
         <p className="processing__note">Please don’t close this window.</p>
         <ol className="processing__steps">
           {steps.map((label, i) => {
-            const done = stage === 'opening' ? i < 2 : false;
-            const now = stage === 'opening' ? i === 2 : i < 2;
+            const done = i < STAGE_DONE[stage];
+            const now = i === STAGE_DONE[stage];
             return (
               <li key={label} className={done ? 'is-done' : now ? 'is-now' : ''}>
                 <span className="processing__dot" aria-hidden="true">
-                  {done ? <StateMark tone="ok" delay={i * 0.12} /> : <span className="spinner" />}
+                  {done ? <StateMark tone="ok" /> : now ? <span className="spinner" /> : <span className="processing__wait" />}
                 </span>
                 {label}
               </li>
@@ -521,6 +524,9 @@ function DeliveryForm({ onBack, onProblem }) {
     if (!open) { setServerError({ message: 'Sorry — we don’t deliver there yet.' }); return; }
 
     setBusy('checking'); setServerError(null);
+    // Each step stays long enough to be read, however quick the server is.
+    const started = Date.now();
+    const atLeast = (ms) => new Promise(r => setTimeout(r, Math.max(0, started + ms - Date.now())));
     // Kept for next time, if they asked; the order goes ahead either way.
     if (account && keep && picked === null) {
       await accountAddAddress({ name: d.name, phone: d.phone, address: d.address }).catch(() => {});
@@ -528,9 +534,12 @@ function DeliveryForm({ onBack, onProblem }) {
     try {
       const { authorizationUrl, reference } = await startCheckout(d, cart, applied ? discountCode : undefined, visitId(), gift?.code);
       track('checkout', { valueKobo: total });
+      await atLeast(900);
+      setBusy('holding');
+      await atLeast(1700);
       setBusy('opening');
-      // A moment for the ticks to land before the page changes.
-      await new Promise(r => setTimeout(r, 450));
+      // A moment on the last step before the page changes.
+      await atLeast(2600);
       // Paid in full by a gift card: nothing for Paystack, straight to the order.
       if (!authorizationUrl) { closeOverlay(); navigate(`/order?reference=${encodeURIComponent(reference)}`); return; }
       if (authorizationUrl.startsWith('#')) closeOverlay();   // the preview's pretend payment page, in this page

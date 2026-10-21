@@ -2299,8 +2299,6 @@ body:has(.drawer) .toast-wrap{ right:calc(min(430px, 100%) + 20px); }
   .pdp{ grid-template-columns:1fr; padding-inline:0; gap:22px; }
   .pdp__crumbs, .pdp__info{ padding-inline:var(--pad); }
   .pdp__info{ position:static; }
-  .pdp__thumbs{ display:none; }
-  .pdp__dots{ display:flex; margin-top:14px; }
   .pdp--loading{ grid-template-columns:1fr; }
   .pdp{ padding-bottom:calc(clamp(40px,5vw,72px) + 76px); }   /* room for the bar */
 }
@@ -3180,6 +3178,7 @@ body:has(.drawer) .toast-wrap{ right:calc(min(430px, 100%) + 20px); }
 .processing__dot{ display:grid; place-items:center; width:20px; height:20px; flex:none; }
 .processing__dot .state-mark{ width:20px; height:20px; }
 .processing__dot .spinner{ width:14px; height:14px; color:var(--violet-soft); }
+.processing__wait{ width:8px; height:8px; border-radius:50%; border:1.5px solid var(--line); }   /* a step still to come */
 .processing__steps li:not(.is-now):not(.is-done) .spinner{ animation:none; opacity:.35; border-right-color:currentColor; }
 .processing__lock{ display:flex; align-items:center; justify-content:center; gap:6px; margin:0; font-size:12px; color:var(--ink-faint); }
 .processing__lock svg{ width:13px; height:13px; }
@@ -4599,9 +4598,20 @@ a:hover > * > .jr-go, a:hover .jr-go{ background:var(--violet); border-color:var
   .pdp__gallery{ grid-template-columns:minmax(0, 1fr); gap:0; }
   .pdp__strip{ grid-column:1; border-radius:0; }
   .pdp__frame{ border-radius:0; }
-  .pdp__thumbs, .pdp__arrow{ display:none; }
+  .pdp__arrow{ display:none; }
   .pdp__gallery .card__badge{ left:14px; }
-  .pdp__dots{ grid-column:1; }
+  /* the design's strip of photos, turned to a row under the photo */
+  .pdp__thumbs{
+    display:flex; grid-column:1 / -1; grid-row:2; width:100%; box-sizing:border-box;
+    flex-direction:row; gap:8px; margin:0; padding:10px var(--pad) 2px;
+    overflow-x:auto; scrollbar-width:none; overscroll-behavior-x:contain;
+  }
+  .pdp__gallery:has(.pdp__thumbs) .pdp__strip{ grid-column:1; }   /* one column: the photo, then its row */
+  /* the full-screen button stays on the photo, above the row */
+  .pdp__gallery:has(.pdp__thumbs) .pdp__full{ bottom:calc(76px + 14px); }
+  .pdp__thumbs::-webkit-scrollbar{ display:none; }
+  .pdp__thumbs button{ flex:none; width:64px; }
+  .pdp__dots{ display:none; }
   .pdp-more{ grid-template-columns:minmax(0, 1fr); }
   .pdp__promises{ grid-template-columns:minmax(0, 1fr); }
 }

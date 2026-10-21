@@ -31,7 +31,8 @@ const TITLE = document.title;
 
 /**
  * The main photo and any extra ones. On a wide screen: one large photo and a
- * row of thumbnails. On a phone: a strip to swipe through, with dots.
+ * row of thumbnails. On a phone: a strip to swipe through, with the
+ * thumbnails in a row underneath.
  */
 function Gallery({ product, colour }) {
   // A colour with a photo of its own shows it first, in place of the main one.

@@ -37,15 +37,25 @@ export function onSoundChange(fn) {
   return () => listeners.delete(fn);
 }
 
-/* Inside the first tap: start the player on silence (which is what lets it
- * play later), and fetch the two sounds so they start at once. */
-const TAPS = ['pointerdown', 'touchend', 'keydown'];
+/* Inside a tap or click: start the player on silence (which is what lets it
+ * play later), and fetch the sounds so they start at once. Browsers differ in
+ * which events count — a desktop Safari may ignore the press and accept the
+ * click — so it tries on each until one is allowed, then stops listening. */
+const TAPS = ['pointerdown', 'mousedown', 'touchstart', 'touchend', 'pointerup', 'click', 'keydown'];
+let unlocked = false;
+let fetched = false;
 function unlock() {
-  if (player || typeof Audio === 'undefined') return stop();
-  player = new Audio(asset(FILES.silent));
-  player.play()?.catch(() => {});
-  [FILES.tick, FILES.chime, FILES.confetti].forEach(f => { const a = new Audio(); a.preload = 'auto'; a.src = asset(f); });
-  stop();
+  if (unlocked || typeof Audio === 'undefined') return;
+  try {
+    player ??= new Audio();
+    if (!player.paused && !unlocked) return;          // a try already under way
+    player.src = asset(FILES.silent);
+    player.play()?.then(() => { unlocked = true; stop(); }).catch(() => {});
+  } catch { /* no sound is fine */ }
+  if (!fetched) {
+    fetched = true;
+    [FILES.tick, FILES.chime, FILES.confetti].forEach(f => { const a = new Audio(); a.preload = 'auto'; a.src = asset(f); });
+  }
 }
 function stop() { TAPS.forEach(t => window.removeEventListener(t, unlock, true)); }
 if (typeof window !== 'undefined') TAPS.forEach(t => window.addEventListener(t, unlock, true));
