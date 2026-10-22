@@ -17,3 +17,9 @@ Earlier this year, the founder had a dream.
 **Klae is a premier AMOLED debit card for business men and women:** send and receive money, make video calls, send short mail and handle business from the card itself. The full vision is in [`VISION.md`](VISION.md).
 
 In the dream, the card's square face buffering and its screen showing a place and a person are what the Premier card does: an AMOLED screen that wakes, and a video call live on the card.
+
+## Where we are
+
+1. **Design the card** with ChatGPT: [`design/CARD-PROMPTS.md`](design/CARD-PROMPTS.md).
+2. Design the website from the chosen card.
+3. Build the website.
