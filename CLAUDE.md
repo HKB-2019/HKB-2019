@@ -2,6 +2,8 @@
 
 The shop and its admin: React + Vite in `src/`, Express + Postgres in `server/`. `README.md` explains how everything works; `DEPLOY.md` how to put it live.
 
+`klae/` is a separate project, Klae, which shares this repository but is not part of the shop: start with `klae/README.md`.
+
 ## Design skills in this project
 
 `.claude/skills/` holds third-party design rulebooks, installed at the owner's request:
