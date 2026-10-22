@@ -1,81 +1,97 @@
-# Klae: the idea, expanded
+# Klae: the Premier AMOLED Card
 
-This builds on the dream in [`README.md`](README.md). It is a proposal to react to, not a decision: change anything that doesn't match what you saw.
+This is the founder's direction for Klae. It grew out of the dream in [`README.md`](README.md).
 
 ## In one sentence
 
-**Klae is a debit card that answers "where is it happening, and who's there?"** The card that pays for life's gatherings also opens them: it shows you the venue, the people you're looking for, and the way in.
+**A premier AMOLED debit card by Klae, for business men and women.** It lets you send and receive money, make video calls, send short mail and handle the rest of your business from the card in your hand.
 
-## Why a debit card
+## Where the dream fits
 
-In the dream it was a debit card, not a phone, and that choice makes sense:
+In the dream, a debit card came alive: a square face buffered like an app opening, and a screen on the card showed a venue and the person you were looking for. The Premier card is that moment made real:
 
-- **Money already goes where people gather.** A ticket, a gate fee, food and drinks, a gift for the graduate, a contribution to the party. The debit card is there at every celebration.
-- **Everyone carries one.** A debit card is in almost every wallet, including people who would never download another app.
-- **Tapping is something people already trust.** People tap and hand over their debit cards every day. Klae gives that same gesture a second meaning: *show me*.
-- **It belongs to a person.** A debit card is tied to one name and one account, so whatever the card shows is about the holder's own life and the people they've chosen.
+- **The square face buffering** is the card waking: its AMOLED screen lighting up.
+- **The screen showing a place and a person** is a video call, live on the card.
+- **"Wow, I didn't know this was possible"** is what a business contact should feel when you take out your Klae card.
 
-## The moment, as Klae would make it
+## Who it's for
 
-The dream, played as a product:
+Business men and women who run their work on the move: founders, executives, traders, importers and exporters, professionals and owners of growing businesses, in Nigeria and the diaspora. They move money every day, they're always on calls, and the card in their wallet says something about them.
 
-1. **A gathering exists.** Someone (the graduate, a friend, the family) creates a *gathering* in Klae: the graduation, the venue, the time, who's invited.
-2. **The card joins it.** You join by paying something linked to it (a ticket, a contribution, a gift) or by accepting an invitation. From then on, your debit card knows about this gathering.
-3. **You ask.** "Where are they celebrating?"
-4. **The card wakes up.** A square face appears and buffers, like an app opening, just like the dream.
-5. **The reveal.** The screen shows the venue, and the friends who are already there and have chosen to be seen.
-6. **You share it.** Like the person in the dream, you can show your card to a friend who's lost, and they see the gathering too. One tap passes the invitation on.
-7. **"Wow, I didn't know this was possible."**
+## What the card does
 
-## What Klae could do
+### Money
+- **Send money:** choose a contact or enter an account, confirm with a fingerprint on the card.
+- **Receive money:** the screen shows a payment request or your account details for the payer, with no slips of paper.
+- **Pay anywhere:** it's still a debit card, so it works by tap at any terminal.
+- **Live balance and alerts:** every movement shows on the card as it happens, and only to you.
+- **Currencies:** naira first, with dollars, pounds and euros for people who trade abroad.
 
-- **Gatherings:** graduations first, then birthdays, weddings, naming ceremonies, reunions, concerts.
-- **Find the place:** venue, directions, the right gate or hall, and the time things start.
-- **Find your people:** friends show they've *arrived* by tapping in at the venue. Nothing is tracked before that, and they can hide again at any time.
-- **Give at the gathering:** send money to the graduate or chip in for the celebration straight from the card, in naira. It fits how celebrations already work in Nigeria.
-- **Show to share:** the card shows a gathering to someone nearby without giving away anything else.
-- **Keep the memory:** afterwards, the card keeps the gathering: where it was, who came, what was given.
+### Calls
+- **Video calls** on the card's screen, with the people you do business with.
+- **Voice calls**, and answering or declining a call from your phone.
 
-## Three ways to build it
+### Short mail
+- **Brief messages** in and out: read, reply with a short note or a saved reply, mark for later.
+- Short by design: the card is for quick decisions, and long work stays on the laptop.
 
-The dream's card has its own screen. That can be the destination without being the first step:
+### Business
+- **Invoices and receipts:** send an invoice, see when it's paid, keep the receipt.
+- **Approvals:** approve or decline a payment your team has prepared.
+- **Exchange business cards:** tap two Klae cards together, or show your card, to swap contact details.
+- **Calendar:** your next meeting, where it is and who's coming.
+- **Expenses:** every card payment tagged to a client or project as you go.
 
-| Stage | What it is | What it needs |
+## Premium, made physical
+
+- **The AMOLED screen:** deep blacks and bright colour, edge to edge on the face of the card.
+- **The body:** metal, with a weight you notice when you take it out.
+- **Security built in:** a fingerprint sensor on the card, the card number and security code shown only on demand (and changing), and instant lock from the app if the card is lost.
+- **Membership:** by application or invitation, with a personal concierge line.
+
+## What it takes to build
+
+A normal bank card is 0.76 mm thick. Putting a bright screen, a battery, a radio, a fingerprint sensor and especially a **camera, microphone and speaker** into it is the main engineering challenge. Klae can take one of two routes:
+
+| | **Standard-thickness card** | **Slightly thicker card device** |
 |---|---|---|
-| **1. Klae with any debit card** | An app or web page. Link your existing debit card; tapping it to your phone opens the gathering. | No bank partner yet. Payments through a provider such as Paystack, which the MASQ. shop already uses. |
-| **2. The Klae debit card** | A debit card issued under the Klae name with a partner bank or card issuer. Tapping it to any phone opens Klae. | A licensed issuing partner, card design, sign-up checks (KYC). |
-| **3. The card from the dream** | A Klae debit card with its own small screen (e-paper, powered by the tap, like the display cards banks already issue) that buffers and shows the venue on the card itself. | A card manufacturer and the card's own software, built on top of stage 2. |
+| Thickness | 0.76 mm, like any bank card | Around 2–4 mm, still fits a wallet |
+| Screen, money, short mail, approvals, alerts | On the card | On the card |
+| Video calls | On the paired phone, started from the card | On the card itself: its own camera, mic and speaker |
+| Connection | Bluetooth to the owner's phone | Its own mobile data (eSIM), plus Bluetooth |
+| Pay by tap | Yes | Yes |
+| Insert into ATMs and chip readers | Yes | No: tap only |
+| Charging | Wireless | Wireless |
 
-Stage 1 can show the dream moment on a phone straight away. Stage 3 is the moment exactly as you saw it.
+Either way, the card works with a **Klae app** on the phone, for setting it up, longer reading and backups.
 
-## Who it's for first
+A sensible order: launch the **premium metal Klae debit card and app** first (accounts, payments, the brand), then the **AMOLED card**.
 
-**Graduations.** That's where the dream took place, and they're the right first case: many guests, big campuses, friends scattered across halls and venues, families travelling in, money given as gifts. If Klae makes graduation day easier, it can work for every gathering after that.
+## Partners Klae will need
+
+- **A licensed bank or card issuer** to hold accounts and issue the debit card (in Nigeria, licensed by the Central Bank of Nigeria).
+- **A card network:** Visa, Mastercard or Verve, which must certify a card with a screen.
+- **A card manufacturer** that already makes display or biometric cards.
+- **Device approval** from the Nigerian Communications Commission if the card has its own radio or mobile data.
+- **Payment security standards** (PCI DSS) for everything that touches card details.
 
 ## Promises Klae keeps
 
-- **Nobody is shown without saying yes.** You see a friend only if they chose to be seen, at that gathering, at that moment.
-- **The card shows gatherings, never balances.** Showing your card to someone never shows your money.
-- **Location ends when the gathering ends.**
-- **Money is handled by licensed partners**, never held loosely.
-
-## What Klae is not
-
-- Not a tracking app: it only knows where you are at gatherings you chose to join.
-- Not a social feed: it's for being together in person.
-- Not just another banking app: payments are the way in, but the gathering is what matters.
+- **Your money is shown only to you.** The screen hides balances and card details until your fingerprint unlocks them.
+- **Money is held by licensed partners**, never loosely.
+- **A lost card is a dead card:** lock it in one tap and it shows nothing.
 
 ## Questions only you can answer
 
-1. Does stage 1 → 2 → 3 feel right, or should Klae start with the physical card?
-2. In the dream, was the card someone else's that they showed you, or did it become yours? Should "show to share" be at the heart of Klae?
-3. Graduations first, or a different gathering?
-4. What does the name *Klae* mean to you, and how should it look and feel?
-5. Who is building Klae with you: a bank, a fintech partner, friends, investors?
+1. **Thin or thicker?** Should the card keep standard thickness (video calls through the phone), or be a slightly thicker device that makes video calls on its own?
+2. **Price and access:** a yearly fee, a minimum balance, invitation only?
+3. **Personal, business or both:** one card per person, or company cards for a team?
+4. **Where first:** Nigeria, the diaspora, or both at once?
+5. **What does *Klae* mean** to you, and how should the card look? Colour, metal, the logo on the screen.
+6. **Partners:** are you already talking to a bank, a fintech or a card maker?
 
 ## Next steps
 
-- Agree on this vision, or reshape it.
-- A first **concept page**: the debit card waking up, buffering, and revealing the graduation venue and the friend. That's the dream as something you can show people.
-- Pictures of the dream moment, for a pitch or social posts.
-- A short **pitch**: the problem, the moment, the three stages.
+- A **concept page** for the Premier card: the card waking up on its AMOLED screen, then moving through money, a video call, short mail and an invoice.
+- **Renders of the card** for a pitch or social posts.
+- A **one-page pitch** for partners and investors.
