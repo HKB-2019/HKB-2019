@@ -5,10 +5,10 @@ For ChatGPT. **Send the messages in the same chat, in order**, and wait for each
 | # | Makes | Attach |
 |---|---|---|
 | 1 | The brief and the Klae wordmark (three options) | nothing |
-| 2 | Three directions for the card, side by side | nothing |
-| 3 | The chosen card, front, in detail | nothing |
+| 2 | The card in the types you shortlist, side by side | nothing |
+| 3 | Your chosen type, front, in detail | nothing |
 | 4 | The back of the card | nothing |
-| 5 | Waking up: the square face buffering (from the dream) | nothing |
+| 5 | The square face: the card buffering as it wakes (from the dream) | nothing |
 | 6 | Send money | nothing |
 | 7 | Receive money | nothing |
 | 8 | Video call | nothing |
@@ -17,7 +17,36 @@ For ChatGPT. **Send the messages in the same chat, in order**, and wait for each
 | 11 | In a hand, in real life | nothing |
 | 12 | Side view: the two thicknesses | nothing |
 
-**Before message 2, choose** a wordmark from message 1 (A, B or C). **Before message 3, choose** a direction from message 2, and replace `[DIRECTION]` and `[WORDMARK]` in messages 3 to 12 with your choices.
+**Before message 2, choose** a wordmark from message 1 (A, B or C), and up to four card types from the list below. **Before message 3, choose** the one type to design in detail. Replace `[WORDMARK]`, `[TYPES]` and `[TYPE]` in the messages with your choices.
+
+## The card
+
+Every Klae Premier card has the same two features:
+
+- **Edge to edge:** the whole front is one black AMOLED glass screen in a thin metal frame. Only the chip sits in a small window in the glass, in its usual place; the fingerprint is read through the screen, at a marked spot.
+- **The square face:** the card's own loading symbol. Whenever the card wakes or opens something, a small square forms in the centre of the screen and buffers, just as in the dream.
+
+The **type** is the metal: it shows on the frame around the screen, the edges and the whole back.
+
+## Card types to choose from
+
+| Type | The metal | Feels like |
+|---|---|---|
+| **Titanium** | Raw grey titanium, fine brushed grain | Engineered, light, strong |
+| **Gold** | Warm champagne gold, satin | Classic wealth, warm |
+| **Rose Gold** | Soft pink gold, satin | Warm, modern, refined |
+| **Platinum** | Bright white-silver, polished | Rare, clean, top table |
+| **Obsidian** | Deep matte black | Quiet power, private banking |
+| **Graphite** | Dark grey, satin | Understated, technical |
+| **Pearl** | White ceramic with a soft sheen | Light, calm, unusual |
+| **Carbon** | Woven black carbon fibre | Fast, sporty, precise |
+| **Bronze** | Dark warm bronze, brushed | Earthy, heritage |
+| **Midnight** | Deep blue, anodised | Calm, trustworthy |
+| **Emerald** | Deep green, anodised | Growth, money, a nod to Nigeria's green |
+
+A suggested range of four, from first card to the top: **Titanium → Gold → Platinum → Obsidian** (by invitation only).
+
+Avoid names other cards already own: Black, Infinite, Signature, World Elite, Centurion, Reserve and Sapphire.
 
 **Every time:**
 - Ask for the largest size and download the full file, never a screenshot.
@@ -47,26 +76,35 @@ C: a custom wordmark where the K has one small distinctive detail, minimal and m
 No icons, no taglines, no gradients. The name must be spelt exactly Klae.
 ```
 
-## 2. Three directions for the card
+## 2. The card in your shortlisted types
 
 ```
 I choose wordmark [WORDMARK]. Use it on the card from now on.
 
-Now show me three design directions for the Klae Premier card, side by side, front faces only, lying flat on a dark stone surface, soft overhead studio light, photographed straight down. Each is a standard bank-card shape (85.6 × 54 mm, rounded corners). Label them 1, 2 and 3 underneath.
+Here is the card's design, the same for every version. A standard bank-card shape (85.6 × 54 mm, rounded corners). Edge to edge: the whole front is one black AMOLED glass screen in a thin metal frame, about 1 mm wide. The gold-coloured EMV chip sits in a small window in the glass, top left, where a chip usually is. The fingerprint is read through the screen, at a small marked circle bottom right. A small contactless symbol and a small plain rectangle reading "NETWORK" (a placeholder for the card-network logo) are shown on the screen, bottom left and bottom right. No card number on the front: it shows on the screen only when asked.
 
-All three have, on the front: the Klae wordmark, a gold-coloured EMV chip, a small contactless symbol, a small fingerprint sensor (a slim oval), and a small plain rectangle reading "NETWORK" in the bottom-right corner as a placeholder for the card-network logo. No card number on the front: it shows on the screen only when asked.
+The screen shows the home screen: true black, the Klae wordmark small at the top, the time 09:41 in the centre, in white.
 
-1. "The square face": obsidian-black brushed metal, with a square AMOLED screen set into the face (about 22 mm square, sharp black glass, lit with a soft clock and the Klae wordmark). A square face is how the card first appeared to me in a dream.
-2. "Edge to edge": the whole front is one black AMOLED glass screen in a thin champagne-gold metal frame, showing a calm dark home screen with the time and the Klae wordmark.
-3. "Titanium": raw grey titanium with a fine brushed grain, and a slim horizontal AMOLED strip screen across the upper third, showing the time and a balance hidden behind dots.
+The type of card is the metal of the frame, the edges and the back. Show me these types side by side, front faces only, lying flat on a dark stone surface, soft overhead studio light, photographed straight down, each labelled with its name underneath:
+
+[TYPES]
 
 Real product photograph, never a 3D render. Every word spelt exactly as I wrote it.
 ```
 
-## 3. The chosen card, front
+Replace `[TYPES]` with up to four lines from the table above, for example:
 
 ```
-I choose direction [DIRECTION]. This is the Klae Premier card: keep it exactly like this in every image from now on.
+Titanium: raw grey titanium, fine brushed grain.
+Gold: warm champagne gold, satin.
+Platinum: bright white-silver, polished.
+Obsidian: deep matte black.
+```
+
+## 3. Your chosen type, front
+
+```
+I choose [TYPE]. This is the Klae Premier card: keep it exactly like this in every image from now on.
 
 Show it alone, front face, at a slight angle on the same dark stone, with a soft reflection along its edge, so we can see the metal, the glass and the details clearly. The screen shows the home screen: the time 09:41, the date "Thu 22 Oct", and three small icons for Pay, Calls and Mail, in a thin white line style with one muted gold accent. Name on the card, small, near the bottom left: ADAEZE OKAFOR.
 
@@ -79,10 +117,10 @@ Large, sharp, true to life; real product photograph.
 Now the back of the same card, photographed the same way. Keep it simple and premium: the same metal finish, a slim magnetic stripe across the top, a signature panel, small fine print with "Issued by [Partner Bank]" and "Klae Premier", and a tiny wireless-charging mark. No screen on the back. Every word spelt exactly as written.
 ```
 
-## 5. Waking up: the square face
+## 5. The square face
 
 ```
-This is the most important picture. In my dream, someone flipped out this card, and on its face a square appeared, buffering as if an app was about to open.
+This is the most important picture. In my dream, someone flipped out this card, and on its face a square appeared, buffering as if an app was about to open. We call it the square face: it is the card's own loading symbol, shown whenever the card wakes or opens something.
 
 Show the card in a hand at night, close up, in a calm dark room. The screen is waking up: true black, and in its centre a small glowing square slowly forming, drawn in a thin gold line, partly complete, as if loading. Nothing else on the screen. The light from the screen touches the fingertips a little. Real photograph, shallow depth of field, slight film grain.
 ```
@@ -92,7 +130,7 @@ Show the card in a hand at night, close up, in a calm dark room. The screen is w
 ```
 Now design the screens. Show the same card flat on the dark stone, straight down, with the screen showing "Send money":
 
-At the top: "Send to" and the name "Tunde Bakare, Bakare Logistics". In the centre, large: ₦2,500,000.00. Underneath: "For: Invoice 0142". At the bottom: "Touch to confirm" with a small arrow pointing to the fingerprint sensor, which glows softly in gold.
+At the top: "Send to" and the name "Tunde Bakare, Bakare Logistics". In the centre, large: ₦2,500,000.00. Underneath: "For: Invoice 0142". At the bottom: "Touch to confirm" with a small arrow pointing to the fingerprint circle at the bottom right of the screen, which glows softly in gold.
 
 Screen style for every screen from now on: true black background, white text in a clean modern sans-serif, one muted gold accent colour, generous spacing, nothing cluttered. Every word and number exactly as written; the naira sign is ₦.
 ```
@@ -146,4 +184,4 @@ Same design on both; labels exactly as written.
 
 ---
 
-**When you're done:** put your favourite pictures in `klae/design/`, or send them to me in this chat, and tell me the wordmark, the direction and the thickness you chose. They become the design for the Klae website.
+**When you're done:** put your favourite pictures in `klae/design/`, or send them to me in this chat, and tell me the wordmark, the type and the thickness you chose. They become the design for the Klae website.

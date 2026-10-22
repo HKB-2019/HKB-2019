@@ -44,7 +44,9 @@ Business men and women who run their work on the move: founders, executives, tra
 
 ## Premium, made physical
 
-- **The AMOLED screen:** deep blacks and bright colour, edge to edge on the face of the card.
+- **Edge to edge:** the whole front is one AMOLED glass screen, deep blacks and bright colour, in a thin metal frame.
+- **The square face:** the card's own loading symbol. When the card wakes or opens anything, a small square forms on the screen and buffers, as in the dream.
+- **Card types:** the metal of the frame, edges and back, such as Titanium, Gold, Platinum or Obsidian. The full list to choose from is in [`design/CARD-PROMPTS.md`](design/CARD-PROMPTS.md).
 - **The body:** metal, with a weight you notice when you take it out.
 - **Security built in:** a fingerprint sensor on the card, the card number and security code shown only on demand (and changing), and instant lock from the app if the card is lost.
 - **Membership:** by application or invitation, with a personal concierge line.
@@ -92,6 +94,6 @@ A sensible order: launch the **premium metal Klae debit card and app** first (ac
 
 ## Next steps
 
-- A **concept page** for the Premier card: the card waking up on its AMOLED screen, then moving through money, a video call, short mail and an invoice.
+- A **concept page** for the Premier card: the square face buffering as the card wakes, then moving through money, a video call, short mail and an invoice.
 - **Renders of the card** for a pitch or social posts.
 - A **one-page pitch** for partners and investors.
