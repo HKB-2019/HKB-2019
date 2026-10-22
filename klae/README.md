@@ -33,4 +33,4 @@ Still to be decided, together, before anything is built:
 
 ## What comes next
 
-This folder is the start. The next pieces can be added as they are decided: a written vision, a first concept page showing the debit card waking up and revealing the venue, and pictures of the moment from the dream.
+The idea is expanded in [`VISION.md`](VISION.md): what Klae does, why a debit card, three ways to build it, and the promises it keeps. Next: a first concept page showing the debit card waking up and revealing the venue, and pictures of the moment from the dream.
